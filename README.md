@@ -48,6 +48,10 @@ Project ref: `naqjjykcglxiobkmdllj`
 
 The publishable key may be used by a client app. Secret/service-role credentials must remain server-side and must never be committed.
 
+## Week 2 progress
+
+The current Auth/Profile slice includes signup/login, email confirmation callback and resend UI, password recovery/reset, role onboarding, profile editing, and avatar upload UI. Database migrations add email-confirmation synchronization, optional phone/interests, owner-scoped avatar storage, and a restricted onboarding RPC. These flows are implemented but still require live SMTP and end-to-end browser verification before launch.
+
 ## Current implementation status
 
 - Supabase foundation: 8 migrations applied; 28 public tables with RLS enabled.
