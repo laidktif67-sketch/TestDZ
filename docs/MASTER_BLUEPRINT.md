@@ -304,7 +304,7 @@ Last checked: 2026-11-06.
 - [x] Added owner-scoped `avatars` Storage bucket: public image reads, owner-folder writes, 2 MiB limit, JPEG/PNG/WebP only.
 - [x] Added role onboarding RPC: users can select tester, developer or both; admin/support roles cannot be self-assigned.
 - [x] Moved SECURITY DEFINER onboarding implementation to non-exposed `private` schema; exposed public wrapper is SECURITY INVOKER.
-- [x] Applied migrations 009, 010 and 011; total migration history is now 11.
+- [x] Applied migrations 009, 010, 011 and 012; total migration history is now 12.
 - [x] Latest Supabase security advisor returned no findings.
 
 ### Frontend work committed
@@ -318,7 +318,7 @@ Last checked: 2026-11-06.
 - [x] Arabic RTL responsive styles and public environment-variable example.
 
 ### Not yet verified / launch blockers
-- GitHub Actions exposed one TypeScript error in the profile loader; a fix was pushed. The latest CI run must pass before calling the frontend build green.
+- GitHub Actions exposed TypeScript nullability issues in profile/dashboard loaders; fixes were pushed. The latest CI run must pass before calling the frontend build green.
 - No live signup/confirmation/reset E2E has been run yet.
 - SMTP delivery and custom Resend are not configured or verified. Keep Supabase Auth's confirmation requirement enabled; configure a production SMTP provider and DNS before public launch.
 - Add exact local and deployment redirect URLs in Supabase Auth URL Configuration (including `http://localhost:5173/auth/callback`, `http://localhost:5173/reset-password`, and the eventual production URLs).
