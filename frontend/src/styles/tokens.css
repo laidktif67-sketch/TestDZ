@@ -1,0 +1,36 @@
+/* TestDZ design tokens — v1.0 */
+:root {
+  color-scheme: dark;
+  --tdz-primary-50:#ecfdf5; --tdz-primary-100:#d1fae5; --tdz-primary-200:#a7f3d0;
+  --tdz-primary-300:#6ee7b7; --tdz-primary-400:#34d399; --tdz-primary-500:#10b981;
+  --tdz-primary-600:#059669; --tdz-primary-700:#047857; --tdz-primary-800:#065f46; --tdz-primary-900:#064e3b;
+  --tdz-accent-500:#ef4444; --tdz-accent-600:#dc2626;
+  --tdz-neutral-0:#fff; --tdz-neutral-50:#f9fafb; --tdz-neutral-100:#f3f4f6;
+  --tdz-neutral-200:#e5e7eb; --tdz-neutral-300:#d1d5db; --tdz-neutral-400:#9ca3af;
+  --tdz-neutral-500:#6b7280; --tdz-neutral-600:#4b5563; --tdz-neutral-700:#374151;
+  --tdz-neutral-800:#1f2937; --tdz-neutral-900:#111827; --tdz-neutral-950:#030712;
+  --tdz-success:#10b981; --tdz-warning:#f59e0b; --tdz-error:#ef4444; --tdz-info:#3b82f6;
+  --tdz-space-1:4px; --tdz-space-2:8px; --tdz-space-3:12px; --tdz-space-4:16px;
+  --tdz-space-5:20px; --tdz-space-6:24px; --tdz-space-8:32px; --tdz-space-10:40px;
+  --tdz-space-12:48px; --tdz-space-16:64px;
+  --tdz-radius-sm:6px; --tdz-radius-md:10px; --tdz-radius-lg:14px; --tdz-radius-xl:20px; --tdz-radius-full:9999px;
+  --tdz-shadow-sm:0 1px 2px rgba(0,0,0,.18); --tdz-shadow-md:0 4px 12px rgba(0,0,0,.22);
+  --tdz-shadow-lg:0 12px 28px rgba(0,0,0,.28); --tdz-shadow-xl:0 20px 48px rgba(0,0,0,.34);
+  --tdz-fast:150ms ease; --tdz-base:200ms ease; --tdz-slow:300ms ease;
+  --tdz-z-dropdown:1000; --tdz-z-sticky:1020; --tdz-z-modal-backdrop:1040;
+  --tdz-z-modal:1050; --tdz-z-popover:1060; --tdz-z-toast:1070; --tdz-z-tooltip:1080;
+  --tdz-bg:#071b18; --tdz-surface:#0d2621; --tdz-surface-raised:#102e27;
+  --tdz-border:rgba(190,225,210,.13); --tdz-border-strong:rgba(190,225,210,.25);
+  --tdz-text:#e8f3ef; --tdz-muted:#9bb4a9; --tdz-text-inverse:#05251b;
+}
+[data-theme="light"] {
+  color-scheme:light;
+  --tdz-bg:#f8faf9; --tdz-surface:#fff; --tdz-surface-raised:#f1f5f3;
+  --tdz-border:#e2e8e5; --tdz-border-strong:#cbd5d1;
+  --tdz-text:#10251e; --tdz-muted:#64756d; --tdz-text-inverse:#fff;
+  --tdz-shadow-sm:0 1px 2px rgba(15,23,42,.05); --tdz-shadow-md:0 4px 12px rgba(15,23,42,.08);
+  --tdz-shadow-lg:0 12px 28px rgba(15,23,42,.10); --tdz-shadow-xl:0 20px 48px rgba(15,23,42,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+:focus-visible{outline:2px solid var(--tdz-primary-400);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
