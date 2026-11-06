@@ -24,8 +24,8 @@ describe("Modal", () => {
 
   it("closes when the backdrop itself is pressed", () => {
     const onClose = vi.fn();
-    const { container } = render(<Modal open onClose={onClose} title="Dialog">Body</Modal>);
-    const backdrop = container.querySelector(".tdz-modal-backdrop");
+    render(<Modal open onClose={onClose} title="Dialog">Body</Modal>);
+    const backdrop = document.querySelector(".tdz-modal-backdrop");
     expect(backdrop).not.toBeNull();
     fireEvent.mouseDown(backdrop!);
     expect(onClose).toHaveBeenCalledOnce();
