@@ -292,3 +292,45 @@ Last verified: 2026-11-06.
 - Payments remain disabled; no production activation before signature verification and idempotency tests.
 - Plan prices are draft configuration, not a published commercial commitment.
 - No live beta claim until E2E, RLS, build and deployment checks pass.
+
+## Week 2 — Auth and Profiles implementation log
+
+Last checked: 2026-11-06.
+
+### Database work completed
+- [x] Reused the existing `auth.users` bootstrap trigger; it creates `profiles`, default `tester` role and wallet.
+- [x] Added optional phone, interests and onboarding completion timestamp to `profiles`.
+- [x] Added an Auth email-confirmation trigger that synchronizes `profiles.is_verified` from `auth.users.email_confirmed_at`.
+- [x] Added owner-scoped `avatars` Storage bucket: public image reads, owner-folder writes, 2 MiB limit, JPEG/PNG/WebP only.
+- [x] Added role onboarding RPC: users can select tester, developer or both; admin/support roles cannot be self-assigned.
+- [x] Moved SECURITY DEFINER onboarding implementation to non-exposed `private` schema; exposed public wrapper is SECURITY INVOKER.
+- [x] Applied migrations 009, 010 and 011; total migration history is now 11.
+- [x] Latest Supabase security advisor returned no findings.
+
+### Frontend work committed
+- [x] Existing React/Vite app extended (not recreated).
+- [x] Signup/login with optional phone, full name and password length validation.
+- [x] Email confirmation callback route and resend screen.
+- [x] Forgot/reset password routes.
+- [x] Onboarding role selection and optional interest tags.
+- [x] Profile editing and owner-scoped avatar upload UI (2 MiB client check).
+- [x] Dashboard reads role assignments from `user_roles`; no fake activity data.
+- [x] Arabic RTL responsive styles and public environment-variable example.
+
+### Not yet verified / launch blockers
+- GitHub Actions exposed one TypeScript error in the profile loader; a fix was pushed. The latest CI run must pass before calling the frontend build green.
+- No live signup/confirmation/reset E2E has been run yet.
+- SMTP delivery and custom Resend are not configured or verified. Keep Supabase Auth's confirmation requirement enabled; configure a production SMTP provider and DNS before public launch.
+- Add exact local and deployment redirect URLs in Supabase Auth URL Configuration (including `http://localhost:5173/auth/callback`, `http://localhost:5173/reset-password`, and the eventual production URLs).
+- The client enforces a basic 8-character + letter + digit password rule; matching server-side Auth password policy still needs confirmation in project Auth settings.
+- Email resend/reset throttling is currently delegated to Supabase Auth defaults; no custom per-user 3/hour limiter has been implemented.
+- Avatar upload validates type and size but does not yet perform client-side compression.
+- Playwright E2E suite and 10 passing scenarios remain outstanding.
+
+### Decisions
+- `events` is the transactional outbox, not an audit log; `audit_logs` remains the separate immutable administrative record.
+- `profiles.is_verified` mirrors Supabase Auth email confirmation; it is not editable by the client.
+- Phone is optional and is not treated as verified.
+- Supabase Auth email delivery is used during development. Resend is deferred until a sender domain is configured.
+- Email templates remain Arabic-first for V1.
+- Onboarding may be skipped; default role is tester.
