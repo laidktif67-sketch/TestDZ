@@ -8,7 +8,7 @@ TestDZ is an Algeria-first platform that helps Android developers organize close
 - Repository: private
 - Backend: dedicated Supabase project
 - Database region: eu-west-3 (Paris)
-- Frontend: not scaffolded yet
+- Frontend: React + TypeScript + Vite application
 - Payments: disabled by default
 - Trials and referrals: disabled by default
 
