@@ -48,6 +48,18 @@ Project ref: `naqjjykcglxiobkmdllj`
 
 The publishable key may be used by a client app. Secret/service-role credentials must remain server-side and must never be committed.
 
+## Run the frontend locally
+
+```bash
+cd frontend
+cp .env.example .env
+# Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env
+npm install
+npm run dev
+```
+
+Only the Supabase publishable key belongs in the browser. Never put a secret/service-role key in any `VITE_` variable.
+
 ## Development workflow
 
 - Review each migration before applying it.
