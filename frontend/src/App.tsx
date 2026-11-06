@@ -134,9 +134,10 @@ function DashboardPage() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    if (!supabase) { setLoading(false); return; }
-    supabase.auth.getSession().then(async ({ data }) => { setSession(data.session); if (data.session) { const { data: roleRows } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id); setRoles((roleRows ?? []).map((row: { role: string }) => row.role)); } setLoading(false); });
-    const { data } = supabase.auth.onAuthStateChange(async (_event, nextSession) => { setSession(nextSession); if (nextSession) { const { data: roleRows } = await supabase.from("user_roles").select("role").eq("user_id", nextSession.user.id); setRoles((roleRows ?? []).map((row: { role: string }) => row.role)); } else setRoles([]); });
+    const client = supabase;
+    if (!client) { setLoading(false); return; }
+    client.auth.getSession().then(async ({ data }) => { setSession(data.session); if (data.session) { const { data: roleRows } = await client.from("user_roles").select("role").eq("user_id", data.session.user.id); setRoles((roleRows ?? []).map((row: { role: string }) => row.role)); } setLoading(false); });
+    const { data } = client.auth.onAuthStateChange(async (_event, nextSession) => { setSession(nextSession); if (nextSession) { const { data: roleRows } = await client.from("user_roles").select("role").eq("user_id", nextSession.user.id); setRoles((roleRows ?? []).map((row: { role: string }) => row.role)); } else setRoles([]); });
     return () => data.subscription.unsubscribe();
   }, []);
   if (loading) return <div className="loading-screen">جارٍ تحميل حسابك...</div>;
