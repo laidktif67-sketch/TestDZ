@@ -48,6 +48,16 @@ Project ref: `naqjjykcglxiobkmdllj`
 
 The publishable key may be used by a client app. Secret/service-role credentials must remain server-side and must never be committed.
 
+## Current implementation status
+
+- Supabase foundation: 8 migrations applied; 28 public tables with RLS enabled.
+- RLS: 38 policies; latest Supabase security advisor check returned no findings.
+- Plan catalog: Free, Plus and Pro seeded with draft DZD prices.
+- Frontend: React + TypeScript + Vite baseline and initial PWA configuration.
+- Trial and payment activation remain disabled until their workflows are implemented and verified.
+
+See [the execution tracker](docs/MASTER_BLUEPRINT.md#15-execution-tracker--operational-plan) for completed work and next milestones.
+
 ## Run the frontend locally
 
 ```bash
