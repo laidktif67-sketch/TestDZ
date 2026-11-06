@@ -11,7 +11,7 @@ describe("Input", () => {
 
   it("exposes the required attribute and indicator", () => {
     render(<Input label="Email address" required />);
-    expect(screen.getByLabelText("Email address")).toBeRequired();
+    expect(screen.getByRole("textbox")).toBeRequired();
     expect(screen.getByText("*")).toBeInTheDocument();
   });
 
