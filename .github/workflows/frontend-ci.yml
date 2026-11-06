@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   frontend:
-    name: Typecheck and production build
+    name: Unit tests, typecheck and production build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,6 +31,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install
+      - name: Unit tests
+        run: npm test
       - name: TypeScript typecheck
         run: npm run typecheck
       - name: Production build
