@@ -260,3 +260,35 @@ All 28 public tables currently have RLS enabled. Several operational tables inte
 - Do not create fake production users, apps, cohorts or payments.
 - Do not claim Play Store compliance based solely on TestDZ activity.
 - Do not expose service-role credentials in the frontend or repository.
+
+## 15. Execution tracker — operational plan
+
+Last verified: 2026-11-06.
+
+### Completed foundation work
+- [x] Independent Supabase project created in eu-west-3; existing Achrili project was not modified.
+- [x] Eight ordered migrations are recorded in Supabase.
+- [x] 28 public tables verified; RLS enabled on all 28.
+- [x] 38 RLS policies verified.
+- [x] Auth bootstrap and invoker-safe subscription read function are present.
+- [x] Free, Plus and Pro monthly plan catalog seeded (draft prices: 0 / 990 / 2490 DZD).
+- [x] Outbox `events` is backend-write-only; authenticated users have admin-only read access.
+- [x] Supabase security advisor returned no findings after the latest migration.
+- [x] Separate GitHub repository and React/Vite frontend baseline exist.
+
+### Remaining execution order
+1. Auth UI and end-to-end signup/verification/reset/profile tests.
+2. Storage bucket and secure app CRUD with plan-limit enforcement.
+3. Test/assignment lifecycle and daily check-in RPCs.
+4. Cohort formation and scheduled processing.
+5. Atomic wallet ledger RPCs and reward rules.
+6. Subscription lifecycle and access checks.
+7. Chargily test-mode checkout and verified webhook; production payments remain disabled until end-to-end verification.
+8. Developer, tester and admin dashboards; trust/safety, notifications, PWA and beta.
+
+### Explicit launch gates
+- Founder must resolve the medical-exception conflict in the assignment policy before completion RPCs are implemented.
+- Trial remains disabled by default.
+- Payments remain disabled; no production activation before signature verification and idempotency tests.
+- Plan prices are draft configuration, not a published commercial commitment.
+- No live beta claim until E2E, RLS, build and deployment checks pass.
