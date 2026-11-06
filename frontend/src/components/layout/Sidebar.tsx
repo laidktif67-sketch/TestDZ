@@ -9,7 +9,7 @@ const menus:Record<Role,Array<{label:string;to:string;icon:string}>>={
  admin:[{label:"لوحة الإدارة",to:"/admin",icon:"⌂"},{label:"المستخدمون",to:"/admin/users",icon:"♙"},{label:"التطبيقات",to:"/admin/apps",icon:"▣"}]
 };
 export function Sidebar({role="developer",collapsed=false,onToggle,onSignOut}:SidebarProps){
- const [dark,setDark]=useState(()=>typeof document!=="undefined"?(document.documentElement.dataset.theme!=="light"):true);
+ const [dark,setDark]=useState(()=>{try{return localStorage.getItem("testdz-theme")!=="light";}catch{return true;}});
  useEffect(()=>{document.documentElement.dataset.theme=dark?"dark":"light";try{localStorage.setItem("testdz-theme",dark?"dark":"light");}catch{}},[dark]);
  useEffect(()=>{try{const saved=localStorage.getItem("testdz-theme");if(saved==="light"||saved==="dark")setDark(saved==="dark");}catch{}},[]);
  return <aside className={cn("tdz-sidebar",collapsed&&"tdz-sidebar--collapsed")} aria-label="القائمة الجانبية">
