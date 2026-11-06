@@ -15,7 +15,7 @@ TestDZ is an Algeria-first platform that helps Android developers organize close
 ## Documentation
 
 - [Master Blueprint v2.0](docs/MASTER_BLUEPRINT.md) — canonical product, architecture, data and implementation reference.
-- [Architecture notes](docs/ARCHITECTURE.md) — concise technical guardrails.
+- [Architecture notes](docs/ARCHITECTURE.md) — concise technical guardrails.\n- [Week 4 Design System](docs/WEEK_4_DESIGN_SYSTEM.md) — UI tokens, components, layout primitives and verification checklist.
 
 ## Core principles
 
