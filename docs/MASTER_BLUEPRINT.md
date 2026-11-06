@@ -233,6 +233,8 @@ Completed in dedicated TestDZ Supabase project:
 - Append-only protection for points ledger and audit logs
 - Restricted client update grants for app/test records
 - Auth user bootstrap trigger for profile, tester role and wallet
+- React/Vite frontend scaffold, RTL landing page, sign-in/sign-up flow, session-aware dashboard shell and PWA manifest
+- GitHub Actions CI workflow for frontend typecheck and production build
 - Caller-scoped `get_active_subscription()`
 - Coupon redemption payment index
 
