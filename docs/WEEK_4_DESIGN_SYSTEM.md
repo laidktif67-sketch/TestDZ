@@ -9,7 +9,7 @@ This branch introduces reusable UI primitives without changing authentication, S
 - `src/styles/tokens.css`: semantic color, spacing, radius, shadow, motion and stacking tokens; dark by default with a light theme override.
 - `src/styles/design-system.css`: shared component and application-shell styles.
 - `src/lib/cn.ts`: tiny class-name join helper; no additional runtime dependency.
-- `src/components/ui`: Button, Input, Card family, Badge, Progress, Avatar, Modal, Toast provider/hook and Tooltip.
+- `src/components/ui`: Button, Input, Card family, Badge, Progress, Avatar, Modal, Toast provider/hook and Tooltip.\n- `src/components/dashboard`: KPI card with caller-supplied values and icon content.\n- `src/components/shared`: EmptyState with optional caller-supplied actions.
 - `src/components/layout`: Sidebar, TopBar and AppShell.
 - `src/components/layout/DesignSystemDemo.tsx`: isolated component showcase with no backend calls or seeded production data.
 
@@ -22,7 +22,7 @@ import { AppShell } from "./components/layout";
 
 Wrap a page that needs toast notifications in `ToastProvider`, then call `useToast().show({ title, kind: "success" })` from descendants.
 
-The showcase is available at `/design-system` only in Vite development mode. It redirects to the home page in production builds.
+The showcase is available at `/design-system` only in Vite development mode. It includes visual-only placeholders (`—`) rather than fabricated account metrics. It redirects to the home page in production builds.
 
 ## Guardrails
 
