@@ -96,11 +96,11 @@ function AuthPage() {
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin + "/auth" },
+          options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin + "/auth/callback" },
         });
         if (authError) throw authError;
         if (data.session) navigate("/dashboard");
-        else setMessage("تم إنشاء الطلب. تحقق من بريدك الإلكتروني لتأكيد الحساب قبل تسجيل الدخول.");
+        else setMessage("تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيده قبل تسجيل الدخول.");
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (authError) throw authError;
@@ -123,8 +123,8 @@ function AuthPage() {
         <label>كلمة المرور<input type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="8 أحرف على الأقل" dir="ltr" /></label>
         <button className="button button-primary button-large submit-button" type="submit" disabled={busy}>{busy ? "جارٍ المعالجة..." : mode === "signup" ? "إنشاء الحساب" : "دخول"}</button>
       </form>
-      <p className="switch-auth">{mode === "signup" ? "لديك حساب بالفعل؟" : "ليس لديك حساب؟"} <button type="button" onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setMessage(""); }}>{mode === "signup" ? "سجّل الدخول" : "أنشئ حساباً"}</button></p>
-      <p className="legal-note">بالمتابعة، أنت توافق على استخدام TestDZ وفق شروط المنصة وسياسة الخصوصية عند نشرهما.</p>
+      <p className="switch-auth">{mode === "signin" && <Link to="/forgot-password">نسيت كلمة المرور؟</Link>}　{mode === "signup" ? "لديك حساب بالفعل؟" : "ليس لديك حساب؟"} <button type="button" onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setMessage(""); }}>{mode === "signup" ? "سجّل الدخول" : "أنشئ حساباً"}</button></p>
+      <p className="legal-note"><Link to="/verify-email">لم تصلك رسالة التأكيد؟</Link><br/>بالمتابعة، أنت توافق على استخدام TestDZ وفق شروط المنصة وسياسة الخصوصية عند نشرهما.</p>
     </div></section></main>;
 }
 
