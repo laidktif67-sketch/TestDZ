@@ -11,6 +11,7 @@ on:
           - 016a
           - 016b
           - 016c
+          - 016d
       mode:
         description: Execution mode (safe connection test by default)
         type: choice
@@ -103,13 +104,14 @@ jobs:
             016a) FILE="supabase/tests/verify_preconditions_016a.sql" ;;
             016b) FILE="supabase/tests/verify_preconditions_016b.sql" ;;
             016c) FILE="supabase/tests/verify_preconditions_016c.sql" ;;
+            016d) FILE="supabase/tests/verify_preconditions_016d.sql" ;;
             *) echo "Unsupported migration selection"; exit 1 ;;
           esac
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
 
   verify-only:
     needs: []
-    if: github.ref == 'refs/heads/feat/week-4-design-system' && inputs.mode == 'verify-only' && inputs.migration == '016b'
+    if: github.ref == 'refs/heads/feat/week-4-design-system' && inputs.mode == 'verify-only' && (inputs.migration == '016b' || inputs.migration == '016d')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: development
@@ -129,12 +131,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
 
-      - name: Verify 016b (post-apply check only)
+      - name: Verify selected migration (post-apply check only)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          MIGRATION: ${{ inputs.migration }}
         run: |
           set -euo pipefail
-          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/tests/verify_016b.sql
+          case "$MIGRATION" in
+            016b) FILE="supabase/tests/verify_016b.sql" ;;
+            016d) FILE="supabase/tests/verify_016d.sql" ;;
+            *) echo "Unsupported verify-only migration"; exit 1 ;;
+          esac
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
 
   test-connection:
     needs: verify-preconditions
@@ -237,6 +245,9 @@ jobs:
             016c)
               EXPECTED_VERSION="20261107000300"
               ;;
+            016d)
+              EXPECTED_VERSION="20261108000100"
+              ;;
             *)
               echo "Unsupported migration selection"
               exit 1
@@ -304,6 +315,9 @@ jobs:
             016c)
               EXPECTED_VERSION="20261107000300"
               ;;
+            016d)
+              EXPECTED_VERSION="20261108000100"
+              ;;
             *)
               echo "Unsupported migration selection"
               exit 1
@@ -344,6 +358,7 @@ jobs:
             016a) FILE="supabase/tests/verify_016a.sql" ;;
             016b) FILE="supabase/tests/verify_016b.sql" ;;
             016c) FILE="supabase/tests/verify_016c.sql" ;;
+            016d) FILE="supabase/tests/verify_016d.sql" ;;
             *) echo "Unsupported migration selection"; exit 1 ;;
           esac
           if ! psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"; then

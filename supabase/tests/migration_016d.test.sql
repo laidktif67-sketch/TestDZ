@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(11);
+SELECT plan(15);
 
 DO $setup$
 DECLARE v_user uuid; v_app uuid; v_test uuid; v_i integer;
@@ -213,6 +213,97 @@ BEGIN
 END
 $test$;
 SELECT ok(true, 'create_cohort rejects non-admin callers');
+
+
+-- TEST 12: duplicate test IDs are rejected.
+DO $test$
+DECLARE v_ids uuid[];
+BEGIN
+ SELECT pg_catalog.array_agg(v ORDER BY substring(k from '[0-9]+')::integer) INTO v_ids
+ FROM c16d_fx WHERE k LIKE 'test%' AND substring(k from '[0-9]+')::integer BETWEEN 1 AND 12;
+ v_ids := v_ids || (SELECT v FROM c16d_fx WHERE k='test1');
+ BEGIN
+  PERFORM public.create_cohort('016d duplicate test IDs',13,v_ids);
+  RAISE EXCEPTION 'TEST FAIL: DUPLICATE_TESTS was not raised';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM NOT LIKE '%DUPLICATE_TESTS%' THEN RAISE; END IF;
+ END;
+END
+$test$;
+SELECT ok(true,'create_cohort rejects duplicate test IDs with DUPLICATE_TESTS');
+
+-- TEST 13: add rejects a test/owner already represented in the partial cohort.
+DO $test$
+BEGIN
+ BEGIN
+  PERFORM public.add_cohort_test((SELECT v FROM c16d_fx WHERE k='partial_cohort'),
+                                 (SELECT v FROM c16d_fx WHERE k='test14'));
+  RAISE EXCEPTION 'TEST FAIL: DUPLICATE_DEVELOPERS_OR_TEST was not raised';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM NOT LIKE '%DUPLICATE_DEVELOPERS_OR_TEST%' THEN RAISE; END IF;
+ END;
+END
+$test$;
+SELECT ok(true,'add_cohort_test rejects a duplicate test/owner');
+
+-- TEST 14: one-member partial cohort grows by 2*n = 2 assignments.
+DO $test$
+DECLARE v_cohort uuid; v_added integer;
+BEGIN
+ INSERT INTO public.cohorts(name,capacity,status)
+ VALUES('016d one-member partial cohort',13,'forming') RETURNING id INTO v_cohort;
+ INSERT INTO c16d_fx VALUES('small_cohort',v_cohort);
+ INSERT INTO public.cohort_tests(cohort_id,test_id,developer_id)
+ SELECT v_cohort,t.id,t.developer_id FROM public.tests t
+ WHERE t.id=(SELECT v FROM c16d_fx WHERE k='test26');
+ v_added:=public.add_cohort_test(v_cohort,(SELECT v FROM c16d_fx WHERE k='test27'));
+ INSERT INTO c16d_results VALUES('small_added_count',v_added);
+END
+$test$;
+SELECT ok(
+ (SELECT n=2 FROM c16d_results WHERE k='small_added_count')
+ AND (SELECT count(*)=2 FROM public.assignments WHERE cohort_id=(SELECT v FROM c16d_fx WHERE k='small_cohort')),
+ 'one-member partial cohort adds 2*n assignments and has a complete matrix');
+
+-- TEST 15: removal preserves check-in, play-opt-in, and assignment activity.
+DO $test$
+DECLARE v_cohort uuid:=(SELECT v FROM c16d_fx WHERE k='small_cohort'); v_assignment uuid; v_tester uuid;
+BEGIN
+ SELECT a.id,a.tester_id INTO v_assignment,v_tester
+ FROM public.assignments a
+ WHERE a.cohort_id=v_cohort AND a.test_id=(SELECT v FROM c16d_fx WHERE k='test27') LIMIT 1;
+
+ INSERT INTO public.checkins(assignment_id,tester_id,checkin_date,note)
+ VALUES(v_assignment,v_tester,current_date,'016d check-in activity guard');
+ BEGIN
+  PERFORM public.remove_cohort_test(v_cohort,(SELECT v FROM c16d_fx WHERE k='test27'));
+  RAISE EXCEPTION 'TEST FAIL: check-in HAS_ACTIVITY was not raised';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM NOT LIKE '%HAS_ACTIVITY%' THEN RAISE; END IF;
+ END;
+ DELETE FROM public.checkins WHERE assignment_id=v_assignment;
+
+ INSERT INTO public.play_opt_in_events(assignment_id,tester_id,event_type,occurred_at)
+ VALUES(v_assignment,v_tester,'opted_in',now());
+ BEGIN
+  PERFORM public.remove_cohort_test(v_cohort,(SELECT v FROM c16d_fx WHERE k='test27'));
+  RAISE EXCEPTION 'TEST FAIL: play-opt-in HAS_ACTIVITY was not raised';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM NOT LIKE '%HAS_ACTIVITY%' THEN RAISE; END IF;
+ END;
+ DELETE FROM public.play_opt_in_events WHERE assignment_id=v_assignment;
+
+ UPDATE public.assignments SET status='active' WHERE id=v_assignment;
+ BEGIN
+  PERFORM public.remove_cohort_test(v_cohort,(SELECT v FROM c16d_fx WHERE k='test27'));
+  RAISE EXCEPTION 'TEST FAIL: non-pending assignment HAS_ACTIVITY was not raised';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM NOT LIKE '%HAS_ACTIVITY%' THEN RAISE; END IF;
+ END;
+ UPDATE public.assignments SET status='pending' WHERE id=v_assignment;
+END
+$test$;
+SELECT ok(true,'remove_cohort_test blocks check-ins, play-opt-in events, and non-pending assignments');
 
 SELECT * FROM finish();
 ROLLBACK;
