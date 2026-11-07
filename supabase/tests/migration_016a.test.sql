@@ -1,6 +1,7 @@
 -- ============================================================
 -- Test Suite: migration 016a
 -- Asserts cohort_tests table structure + constraints + RLS
+-- Note: pgTAP does not provide has_constraint(); using ok(EXISTS(...))
 -- ============================================================
 
 BEGIN;
@@ -17,24 +18,39 @@ SELECT has_table(
 -- ============================================================
 -- TEST 2: tests_id_developer_unique constraint exists
 -- ============================================================
-SELECT has_constraint(
-  'tests', 'tests_id_developer_unique',
-  'TEST 2: tests_id_developer_unique exists on tests'
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.tests'::regclass
+      AND conname = 'tests_id_developer_unique'
+      AND contype = 'u'
+  ),
+  'TEST 2: tests_id_developer_unique exists on public.tests'
 );
 
 -- ============================================================
 -- TEST 3: cohort_tests composite FK to tests
 -- ============================================================
-SELECT has_constraint(
-  'cohort_tests', 'cohort_tests_test_developer_fk',
-  'TEST 3: cohort_tests_test_developer_fk exists'
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.cohort_tests'::regclass
+      AND conname = 'cohort_tests_test_developer_fk'
+      AND contype = 'f'
+  ),
+  'TEST 3: cohort_tests_test_developer_fk exists (composite FK)'
 );
 
 -- ============================================================
 -- TEST 4: cohort_tests UNIQUE(cohort_id, developer_id)
 -- ============================================================
-SELECT has_constraint(
-  'cohort_tests', 'cohort_tests_developer_unique',
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.cohort_tests'::regclass
+      AND conname = 'cohort_tests_developer_unique'
+      AND contype = 'u'
+  ),
   'TEST 4: cohort_tests_developer_unique exists'
 );
 
@@ -50,9 +66,13 @@ SELECT has_index(
 -- TEST 6: RLS enabled on cohort_tests
 -- ============================================================
 SELECT ok(
-  (SELECT relrowsecurity FROM pg_class c
-   JOIN pg_namespace n ON n.oid = c.relnamespace
-   WHERE n.nspname='public' AND c.relname='cohort_tests'),
+  (
+    SELECT relrowsecurity 
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' 
+      AND c.relname = 'cohort_tests'
+  ),
   'TEST 6: RLS enabled on public.cohort_tests'
 );
 
@@ -61,10 +81,10 @@ SELECT ok(
 -- ============================================================
 SELECT ok(
   EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE schemaname='public' 
-      AND tablename='cohort_tests' 
-      AND policyname='cohort_tests_select_participants'
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'cohort_tests'
+      AND policyname = 'cohort_tests_select_participants'
   ),
   'TEST 7: SELECT policy cohort_tests_select_participants exists'
 );
