@@ -1,6 +1,6 @@
 \ir verify_016a.sql
 -- Verify 016b after application.
-DO $
+DO $verify$
 BEGIN
   IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations) <> 17 THEN
     RAISE EXCEPTION 'Expected exactly 17 migration history rows after 016b';
@@ -61,4 +61,4 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'feedback_one_per_assignment UNIQUE index missing';
   END IF;
-END $$;
+END $verify$;
