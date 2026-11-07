@@ -263,7 +263,7 @@ JOIN public.tests t ON t.id = c.test_id
 WHERE c.test_id IS NOT NULL
 ON CONFLICT (cohort_id, test_id) DO NOTHING;
 
-DO $
+DO $migration$
 DECLARE
   v_orphans int;
   v_wrong_owner int;
@@ -337,7 +337,7 @@ BEGIN
   END IF;
   
   RAISE NOTICE '✅ Data migration verified';
-END $$;
+END $migration$;
 
 -- ============================================================
 -- PHASE 3: Attach triggers
