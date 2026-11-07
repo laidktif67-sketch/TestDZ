@@ -31,7 +31,7 @@ SELECT ok(
 SELECT ok(
   NOT EXISTS (SELECT 1 FROM pg_policies
               WHERE schemaname='public' AND tablename='cohorts'
-                AND policyname='cohorts_select_participants' AND qual LIKE '%test_id%'),
+                AND policyname='cohorts_select_participants' AND COALESCE(qual, '') LIKE '%test_id%'),
   'TEST 3: RLS policy no test_id reference'
 );
 
