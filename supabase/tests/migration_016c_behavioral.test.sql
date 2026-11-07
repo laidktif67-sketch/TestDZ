@@ -286,7 +286,30 @@ BEGIN
     VALUES (v_cohort_b, v_test4, v_dev4);
     RAISE EXCEPTION 'TEST 14 FAIL: test in 2 active cohorts allowed';
   EXCEPTION WHEN unique_violation THEN
-    NULL;
+    DECLARE
+      v_constraint text;
+    BEGIN
+      GET STACKED DIAGNOSTICS v_constraint = CONSTRAINT_NAME;
+
+      IF v_constraint IS DISTINCT FROM 'cohort_tests_test_one_active' THEN
+        RAISE EXCEPTION
+          'TEST 14 FAIL: unique_violation on unexpected constraint/index: %',
+          COALESCE(v_constraint, '<NULL>');
+      END IF;
+
+      -- Confirm the conflicting active row is the same test in another cohort.
+      IF NOT EXISTS (
+        SELECT 1
+        FROM public.cohort_tests
+        WHERE test_id = v_test4
+          AND is_active = true
+          AND cohort_id = v_cohort_a
+      ) THEN
+        RAISE EXCEPTION
+          'TEST 14 FAIL: expected active test conflict in cohort % was not found',
+          v_cohort_a;
+      END IF;
+    END;
   END;
   
   UPDATE public.cohorts SET status='ready' WHERE id=v_cohort_a;
