@@ -1,4 +1,3 @@
-\ir verify_016b.sql
 -- Verify 016c after application.
 DO $$
 DECLARE
