@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   verify-preconditions:
-    if: github.ref == 'refs/heads/feat/week-4-design-system'
+    if: github.ref == 'refs/heads/feat/week-4-design-system' && inputs.mode != 'verify-only'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: development
