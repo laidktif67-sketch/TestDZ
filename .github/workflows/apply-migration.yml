@@ -45,14 +45,43 @@ jobs:
           test "$SUPABASE_PROJECT_REF" = "naqjjykcglxiobkmdllj"
           python3 - <<'PY'
           import os
+          import re
+          import sys
           from urllib.parse import unquote, urlparse
 
           ref = os.environ["SUPABASE_PROJECT_REF"]
-          parsed = urlparse(os.environ["SUPABASE_DB_URL"])
-          host = parsed.hostname or ""
-          user = unquote(parsed.username or "")
+          url = os.environ["SUPABASE_DB_URL"]
+
+          # A DNS hostname must not be wrapped in square brackets.
+          if re.search(r'@\[[A-Za-z0-9.-]+\](?=:\d|/|$)', url):
+              print("ERROR: SUPABASE_DB_URL has brackets around a DNS hostname.", file=sys.stderr)
+              print("Remove [ ] from the hostname (for example: aws-1-eu-west-3.pooler.supabase.com).", file=sys.stderr)
+              print("Square brackets are for IP literals such as IPv6, not DNS hostnames.", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              parsed = urlparse(url)
+              host = parsed.hostname or ""
+              user = unquote(parsed.username or "")
+              port = parsed.port
+          except ValueError:
+              print("ERROR: SUPABASE_DB_URL is malformed (check hostname brackets and port).", file=sys.stderr)
+              sys.exit(1)
+
+          if parsed.scheme not in ("postgres", "postgresql") or not host:
+              print("ERROR: SUPABASE_DB_URL must be a valid PostgreSQL URL with a hostname.", file=sys.stderr)
+              sys.exit(1)
+
           if ref not in host and ref not in user:
-              raise SystemExit("SUPABASE_DB_URL does not identify the approved TestDZ project")
+              print("ERROR: SUPABASE_DB_URL does not identify the approved TestDZ project.", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"hostname: {host}")
+          print(f"user: {user}")
+          print(f"port: {port}")
+          print(f"database: {parsed.path.lstrip('/') or 'postgres'}")
+          print(f"url length: {len(url)}")
+          print(f"project ref: {ref}")
           PY
 
       - name: Verify remote migration preconditions
