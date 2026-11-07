@@ -1,0 +1,16 @@
+\ir verify_016a.sql
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM supabase_migrations.schema_migrations
+    WHERE version='20261107000200'
+  ) THEN
+    RAISE EXCEPTION '016b is already recorded; refusing duplicate application';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM supabase_migrations.schema_migrations
+    WHERE version='20261107000300'
+  ) THEN
+    RAISE EXCEPTION '016c is already recorded before 016b';
+  END IF;
+END $$;
