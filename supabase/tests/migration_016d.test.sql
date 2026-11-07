@@ -112,6 +112,15 @@ BEGIN
   WHERE t.id IN (SELECT v FROM c16d_fx
     WHERE k LIKE 'test%' AND substring(k from '[0-9]+')::integer BETWEEN 14 AND 25);
 
+  -- Seed the complete assignment matrix for the 12 existing members (132 rows).
+  INSERT INTO public.assignments (cohort_id, test_id, tester_id)
+  SELECT test_row.cohort_id, test_row.test_id, tester_row.developer_id
+  FROM public.cohort_tests AS test_row
+  JOIN public.cohort_tests AS tester_row
+    ON tester_row.cohort_id=test_row.cohort_id
+   AND tester_row.developer_id <> test_row.developer_id
+  WHERE test_row.cohort_id=v_cohort;
+
   v_added := public.add_cohort_test(v_cohort, (SELECT v FROM c16d_fx WHERE k='test26'));
   INSERT INTO c16d_results VALUES ('added_count', v_added);
   IF v_added <> 24 THEN
