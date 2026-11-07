@@ -3,6 +3,8 @@ DO $verify$
 DECLARE v_count integer;
 BEGIN
  IF (SELECT count(*) FROM supabase_migrations.schema_migrations)<>18 THEN RAISE EXCEPTION 'Expected exactly 18 migration history rows before 016d'; END IF;
+ IF (SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version='20261107000100')<>1 THEN RAISE EXCEPTION '016a must be recorded exactly once before 016d'; END IF;
+ IF (SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version='20261107000200')<>1 THEN RAISE EXCEPTION '016b must be recorded exactly once before 016d'; END IF;
  IF (SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version='20261107000300')<>1 THEN RAISE EXCEPTION '016c must be recorded exactly once before 016d'; END IF;
  IF EXISTS(SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20261108000100') THEN RAISE EXCEPTION '016d is already recorded; refusing duplicate application'; END IF;
  IF to_regclass('public.cohort_tests') IS NULL OR to_regclass('public.assignments') IS NULL
