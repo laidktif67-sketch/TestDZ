@@ -263,12 +263,13 @@ JOIN public.tests t ON t.id = c.test_id
 WHERE c.test_id IS NOT NULL
 ON CONFLICT (cohort_id, test_id) DO NOTHING;
 
-DO $$
+DO $
 DECLARE
   v_orphans int;
   v_wrong_owner int;
   v_inactive_mismatch int;
   v_preexisting_mismatch int;
+  v_preexisting_mismatch_detail text;
 BEGIN
   SELECT COUNT(*) INTO v_orphans
   FROM public.cohorts c
@@ -297,9 +298,42 @@ BEGIN
   FROM public.cohorts c
   JOIN public.cohort_tests ct ON ct.cohort_id = c.id
   WHERE (c.test_id IS NULL OR ct.test_id != c.test_id)
-    AND ct.is_active != (c.status IN ('forming', 'ready', 'running'));
+    AND ct.is_active IS DISTINCT FROM (c.status IN ('forming', 'ready', 'running'));
+
   IF v_preexisting_mismatch > 0 THEN
-    RAISE WARNING 'Pre-existing is_active mismatches (not migrated): %', v_preexisting_mismatch;
+    -- Keep the migration non-blocking, but include actionable details in CI logs.
+    -- Cap the sample to avoid unbounded log output on large datasets.
+    SELECT string_agg(
+      format(
+        'cohort=%s test=%s current=%s expected=%s status=%s',
+        mismatch.cohort_id,
+        mismatch.test_id,
+        mismatch.current_is_active,
+        mismatch.expected_is_active,
+        mismatch.status
+      ),
+      '; ' ORDER BY mismatch.cohort_id, mismatch.test_id
+    )
+    INTO v_preexisting_mismatch_detail
+    FROM (
+      SELECT
+        c.id AS cohort_id,
+        ct.test_id,
+        ct.is_active AS current_is_active,
+        (c.status IN ('forming', 'ready', 'running')) AS expected_is_active,
+        c.status
+      FROM public.cohorts c
+      JOIN public.cohort_tests ct ON ct.cohort_id = c.id
+      WHERE (c.test_id IS NULL OR ct.test_id != c.test_id)
+        AND ct.is_active IS DISTINCT FROM (c.status IN ('forming', 'ready', 'running'))
+      ORDER BY c.id, ct.test_id
+      LIMIT 50
+    ) AS mismatch;
+
+    RAISE WARNING
+      'Pre-existing is_active mismatches (not migrated): % row(s). First up to 50: [%]',
+      v_preexisting_mismatch,
+      v_preexisting_mismatch_detail;
   END IF;
   
   RAISE NOTICE '✅ Data migration verified';
