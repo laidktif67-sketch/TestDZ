@@ -179,13 +179,23 @@ if [ "$WAITING" -lt 2 ]; then
 fi
 echo "✓ Both INSERTs waiting on lock ($WAITING active)"
 
-echo "Releasing lock (TERM LOCK_PID=$LOCK_PID)..."
-kill -TERM "$LOCK_PID" 2>/dev/null || true
+echo "Releasing database lock (terminate lock-holder backend)..."
+TERMINATED=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
+  SELECT pg_terminate_backend(pid)
+  FROM pg_stat_activity
+  WHERE application_name = '$LOCK_APP'
+    AND pid <> pg_backend_pid();")
+if [ "$TERMINATED" != "t" ]; then
+  echo "FAIL: could not terminate lock-holder backend (result=$TERMINATED)"
+  exit 1
+fi
 for _ in 1 2 3 4 5 6 7 8 9 10; do
   kill -0 "$LOCK_PID" 2>/dev/null || break
   sleep 0.2
 done
-kill -KILL "$LOCK_PID" 2>/dev/null || true
+if kill -0 "$LOCK_PID" 2>/dev/null; then
+  kill -KILL "$LOCK_PID" 2>/dev/null || true
+fi
 wait "$LOCK_PID" 2>/dev/null || true
 LOCK_PID=""
 
@@ -230,8 +240,9 @@ fi
 
 FAILED=$(if [ "$E1" -ne 0 ]; then cat "$LOG1"; else cat "$LOG2"; fi)
 if ! echo "$FAILED" | grep -q "COHORT_FULL"; then
-  echo "FAIL: wrong error (expected COHORT_FULL)"
-  echo "$FAILED"
+  echo "FAIL: wrong error (expected COHORT_FULL); exit codes: ins1=$E1 ins2=$E2"
+  echo "=== ins1 log ==="; cat "$LOG1"
+  echo "=== ins2 log ==="; cat "$LOG2"
   exit 1
 fi
 
