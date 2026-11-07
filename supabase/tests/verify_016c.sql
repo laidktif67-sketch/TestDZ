@@ -28,7 +28,8 @@ BEGIN
    AND t.tgrelid=to_regclass('public.' || e.table_name)
    AND t.tgenabled='O'
    AND NOT t.tgisinternal
-  JOIN pg_proc p ON p.oid=t.tgfoid AND p.proname=e.function_name;
+  JOIN pg_proc p ON p.oid=t.tgfoid AND p.proname=e.function_name
+  JOIN pg_namespace pn ON pn.oid=p.pronamespace AND pn.nspname='private';
 
   IF v_trigger_count <> 6 THEN
     RAISE EXCEPTION 'Expected 6 enabled non-internal triggers on the correct tables; found %', v_trigger_count;
