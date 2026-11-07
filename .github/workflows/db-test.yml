@@ -2,16 +2,10 @@ name: TestDZ Database CI
 
 on:
   push:
-    branches:
-      - main
-      - "feat/week-5-*"
-    paths:
-      - "supabase/**"
-      - ".github/workflows/db-test.yml"
+    branches: [main, "feat/week-5-*"]
+    paths: ["supabase/**", ".github/workflows/db-test.yml"]
   pull_request:
-    paths:
-      - "supabase/**"
-      - ".github/workflows/db-test.yml"
+    paths: ["supabase/**", ".github/workflows/db-test.yml"]
 
 permissions:
   contents: read
@@ -21,24 +15,190 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ============================================================
+  # JOB 1: Fresh CI (schema + behavioral + rls + concurrency)
+  # ============================================================
   database:
-    name: Fresh Supabase migration + baseline tests
+    name: Fresh — migrations + pgTAP + concurrency
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install pinned Supabase CLI
-        uses: supabase/setup-cli@v3
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.84.2
 
-      - name: Start isolated Supabase stack
+      - name: Ensure psql
+        run: |
+          if ! command -v psql &>/dev/null; then
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+
+      - name: Start Supabase
         run: supabase start
 
-      - name: Replay all migrations on a clean database
+      - name: Reset database (all migrations)
         run: supabase db reset --local --no-seed
 
-      - name: Run database baseline tests
+      - name: Run pgTAP tests
         run: supabase test db --local
+
+      - name: Setup DB URL
+        run: |
+          DB_URL=$(supabase status -o json | jq -r '.DB_URL')
+          if [ -z "$DB_URL" ] || [ "$DB_URL" = "null" ]; then
+            echo "❌ DB_URL not available"; supabase status; exit 1
+          fi
+          echo "SUPABASE_DB_URL=$DB_URL" >> $GITHUB_ENV
+
+      - name: Run concurrency test
+        run: bash supabase/tests/migration_016c_concurrency.sh
+
+  # ============================================================
+  # JOB 2: Upgrade CI (legacy success)
+  # ============================================================
+  upgrade:
+    name: Upgrade — legacy data migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+
+      - name: Ensure psql
+        run: |
+          if ! command -v psql &>/dev/null; then
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+
+      # ⚠️ MOVE 016c OUT BEFORE `supabase start`
+      - name: Move 016c out
+        run: |
+          F=supabase/migrations/20261107000300_cohort_triggers_data_migration.sql
+          [ -f "$F" ] || { echo "❌ $F not found"; exit 1; }
+          mv "$F" /tmp/
+          echo "Moved: $F → /tmp/"
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Reset to 016b
+        run: supabase db reset --local --no-seed
+
+      - name: Restore 016c (must succeed)
+        if: always()
+        run: |
+          F=/tmp/20261107000300_cohort_triggers_data_migration.sql
+          if [ ! -f "$F" ]; then
+            echo "❌ 016c not in /tmp"
+            exit 1
+          fi
+          mv "$F" supabase/migrations/
+          [ -f supabase/migrations/20261107000300_cohort_triggers_data_migration.sql ] \
+            || { echo "❌ restore failed"; exit 1; }
+          echo "✓ 016c restored"
+
+      - name: Setup DB URL
+        run: |
+          DB_URL=$(supabase status -o json | jq -r '.DB_URL')
+          echo "SUPABASE_DB_URL=$DB_URL" >> $GITHUB_ENV
+
+      - name: Prepare legacy data
+        run: bash supabase/tests/migration_016c_upgrade_prepare.sh
+
+      - name: Verify 016c not in history before apply
+        run: |
+          HISTORY=$(psql "$SUPABASE_DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+            SELECT COUNT(*) FROM supabase_migrations.schema_migrations
+            WHERE version = '20261107000300';")
+          if [ "$HISTORY" -ne 0 ]; then
+            echo "❌ 016c already in history"
+            exit 1
+          fi
+          echo "✓ 016c not in history"
+
+      - name: Apply 016c
+        run: supabase migration up --local
+
+      - name: Verify upgrade
+        run: bash supabase/tests/migration_016c_upgrade_verify.sh
+
+  # ============================================================
+  # JOB 3: Upgrade Negative (rollback)
+  # ============================================================
+  upgrade-negative:
+    name: Upgrade — negative (rollback)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+
+      - name: Ensure psql
+        run: |
+          if ! command -v psql &>/dev/null; then
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+
+      # ⚠️ MOVE 016c OUT BEFORE `supabase start`
+      - name: Move 016c out
+        run: |
+          F=supabase/migrations/20261107000300_cohort_triggers_data_migration.sql
+          [ -f "$F" ] || { echo "❌ $F not found"; exit 1; }
+          mv "$F" /tmp/
+          echo "Moved: $F → /tmp/"
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Reset to 016b
+        run: supabase db reset --local --no-seed
+
+      - name: Restore 016c (must succeed)
+        if: always()
+        run: |
+          F=/tmp/20261107000300_cohort_triggers_data_migration.sql
+          if [ ! -f "$F" ]; then
+            echo "❌ 016c not in /tmp"
+            exit 1
+          fi
+          mv "$F" supabase/migrations/
+          [ -f supabase/migrations/20261107000300_cohort_triggers_data_migration.sql ] \
+            || { echo "❌ restore failed"; exit 1; }
+          echo "✓ 016c restored"
+
+      - name: Setup DB URL
+        run: |
+          DB_URL=$(supabase status -o json | jq -r '.DB_URL')
+          echo "SUPABASE_DB_URL=$DB_URL" >> $GITHUB_ENV
+
+      - name: Create conflicting legacy data
+        run: bash supabase/tests/migration_016c_upgrade_conflict.sh
+
+      - name: Apply 016c — must fail
+        run: |
+          set +e
+          supabase migration up --local > /tmp/016c_apply.log 2>&1
+          EXIT=$?
+          set -e
+          if [ "$EXIT" -eq 0 ]; then
+            echo "❌ 016c succeeded but should fail"
+            cat /tmp/016c_apply.log
+            exit 1
+          fi
+          if ! grep -q "016c_CONFLICT" /tmp/016c_apply.log; then
+            echo "❌ wrong error (expected 016c_CONFLICT)"
+            cat /tmp/016c_apply.log
+            exit 1
+          fi
+          echo "✅ 016c failed with expected 016c_CONFLICT"
+
+      - name: Verify rollback (must prove no changes)
+        run: bash supabase/tests/migration_016c_upgrade_rollback_verify.sh
