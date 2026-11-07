@@ -41,7 +41,7 @@ jobs:
       - name: Reset database (all migrations)
         run: supabase db reset --local --no-seed
 
-      - name: Run pgTAP tests
+      - name: Run pgTAP tests (schema + behavioral)
         run: supabase test db --local
 
       - name: Setup DB URL
@@ -51,6 +51,9 @@ jobs:
             echo "❌ DB_URL not available"; supabase status; exit 1
           fi
           echo "SUPABASE_DB_URL=$DB_URL" >> $GITHUB_ENV
+
+      - name: Run RLS test (bash)
+        run: bash supabase/tests/migration_016c_rls.sh
 
       - name: Run concurrency test
         run: bash supabase/tests/migration_016c_concurrency.sh
