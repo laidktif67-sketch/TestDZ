@@ -1,6 +1,9 @@
 \ir verify_016a.sql
-DO $$
+DO $
 BEGIN
+  IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations) <> 16 THEN
+    RAISE EXCEPTION 'Expected exactly 16 migration history rows before 016b';
+  END IF;
   IF EXISTS (
     SELECT 1 FROM supabase_migrations.schema_migrations
     WHERE version='20261107000200'
