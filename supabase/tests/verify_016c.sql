@@ -5,18 +5,21 @@ DECLARE
   v_trigger_count integer;
   v_function_count integer;
 BEGIN
+  IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations) <> 18 THEN
+    RAISE EXCEPTION 'Expected exactly 18 migration history rows after 016c';
+  END IF;
   IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations WHERE version='20261107000300') <> 1 THEN
     RAISE EXCEPTION '016c migration history row missing or duplicated';
   END IF;
 
-  WITH expected(trigger_name, table_name) AS (
+  WITH expected(trigger_name, table_name, function_name) AS (
     VALUES
-      ('trg_cohorts_validate_status','cohorts'),
-      ('trg_cohorts_sync_is_active','cohorts'),
-      ('trg_cohort_tests_capacity','cohort_tests'),
-      ('trg_cohorts_check_capacity_update','cohorts'),
-      ('trg_cohort_tests_prevent_key_update','cohort_tests'),
-      ('trg_assignments_prevent_self_test','assignments')
+      ('trg_cohorts_validate_status','cohorts','cohorts_validate_status_transition'),
+      ('trg_cohorts_sync_is_active','cohorts','cohorts_sync_is_active'),
+      ('trg_cohort_tests_capacity','cohort_tests','cohort_tests_capacity'),
+      ('trg_cohorts_check_capacity_update','cohorts','cohorts_check_capacity_update'),
+      ('trg_cohort_tests_prevent_key_update','cohort_tests','cohort_tests_prevent_key_update'),
+      ('trg_assignments_prevent_self_test','assignments','assignments_prevent_self_test')
   )
   SELECT COUNT(*) INTO v_trigger_count
   FROM expected e
@@ -24,7 +27,8 @@ BEGIN
     ON t.tgname=e.trigger_name
    AND t.tgrelid=to_regclass('public.' || e.table_name)
    AND t.tgenabled='O'
-   AND NOT t.tgisinternal;
+   AND NOT t.tgisinternal
+  JOIN pg_proc p ON p.oid=t.tgfoid AND p.proname=e.function_name;
 
   IF v_trigger_count <> 6 THEN
     RAISE EXCEPTION 'Expected 6 enabled non-internal triggers on the correct tables; found %', v_trigger_count;
