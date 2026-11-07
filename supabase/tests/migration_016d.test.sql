@@ -35,6 +35,17 @@ BEGIN
   RETURNING id INTO v_test;
   INSERT INTO c16d_fx VALUES ('test27', v_test);
 
+  -- A second test owned by dev26 isolates the duplicate-owner guard in add_cohort_test.
+  INSERT INTO public.apps (developer_id, name, package_name, category, status)
+  VALUES ((SELECT v FROM c16d_fx WHERE k='dev26'),
+    '016d Duplicate Add Owner App', 'com.testdz.016d.duplicate-add-owner', 'tools', 'published')
+  RETURNING id INTO v_app;
+  INSERT INTO public.tests (app_id, developer_id, title, status, min_testers)
+  VALUES (v_app, (SELECT v FROM c16d_fx WHERE k='dev26'),
+    '016d Duplicate Add Owner Test', 'recruiting', 12)
+  RETURNING id INTO v_test;
+  INSERT INTO c16d_fx VALUES ('test28', v_test);
+
   INSERT INTO public.user_roles (user_id, role)
   VALUES ((SELECT v FROM c16d_fx WHERE k='dev1'), 'admin');
   PERFORM pg_catalog.set_config('request.jwt.claim.sub',
@@ -232,31 +243,32 @@ END
 $test$;
 SELECT ok(true,'create_cohort rejects duplicate test IDs with DUPLICATE_TESTS');
 
--- TEST 13: add rejects a test/owner already represented in the partial cohort.
+-- TEST 13: add rejects a different test whose owner is already in the cohort.
 DO $test$
+DECLARE v_cohort uuid;
 BEGIN
+ INSERT INTO public.cohorts(name,capacity,status)
+ VALUES('016d duplicate add owner cohort',13,'forming') RETURNING id INTO v_cohort;
+ INSERT INTO c16d_fx VALUES('small_cohort',v_cohort);
+ INSERT INTO public.cohort_tests(cohort_id,test_id,developer_id)
+ SELECT v_cohort,t.id,t.developer_id FROM public.tests t
+ WHERE t.id=(SELECT v FROM c16d_fx WHERE k='test26');
  BEGIN
-  PERFORM public.add_cohort_test((SELECT v FROM c16d_fx WHERE k='partial_cohort'),
-                                 (SELECT v FROM c16d_fx WHERE k='test14'));
+  PERFORM public.add_cohort_test(v_cohort,(SELECT v FROM c16d_fx WHERE k='test28'));
   RAISE EXCEPTION 'TEST FAIL: DUPLICATE_DEVELOPERS_OR_TEST was not raised';
  EXCEPTION WHEN OTHERS THEN
   IF SQLERRM NOT LIKE '%DUPLICATE_DEVELOPERS_OR_TEST%' THEN RAISE; END IF;
  END;
 END
 $test$;
-SELECT ok(true,'add_cohort_test rejects a duplicate test/owner');
+SELECT ok(true,'add_cohort_test rejects a different test with a duplicate developer owner');
 
 -- TEST 14: one-member partial cohort grows by 2*n = 2 assignments.
 DO $test$
-DECLARE v_cohort uuid; v_added integer;
+DECLARE v_added integer;
 BEGIN
- INSERT INTO public.cohorts(name,capacity,status)
- VALUES('016d one-member partial cohort',13,'forming') RETURNING id INTO v_cohort;
- INSERT INTO c16d_fx VALUES('small_cohort',v_cohort);
- INSERT INTO public.cohort_tests(cohort_id,test_id,developer_id)
- SELECT v_cohort,t.id,t.developer_id FROM public.tests t
- WHERE t.id=(SELECT v FROM c16d_fx WHERE k='test26');
- v_added:=public.add_cohort_test(v_cohort,(SELECT v FROM c16d_fx WHERE k='test27'));
+ v_added:=public.add_cohort_test((SELECT v FROM c16d_fx WHERE k='small_cohort'),
+                                 (SELECT v FROM c16d_fx WHERE k='test27'));
  INSERT INTO c16d_results VALUES('small_added_count',v_added);
 END
 $test$;
