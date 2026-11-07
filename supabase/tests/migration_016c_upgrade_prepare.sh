@@ -10,7 +10,7 @@ echo "=== Prepare legacy data (4 states) ==="
 echo "RUN_ID: $RUN_ID"
 echo "IDS_FILE: $IDS_FILE"
 
-U=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+U=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO auth.users (id, instance_id, aud, role, email, email_confirmed_at, raw_user_meta_data)
   VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000000',
           'authenticated', 'authenticated', 'legacy_$RUN_ID@testdz.local', now(),
@@ -18,25 +18,25 @@ U=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
 [ -z "$U" ] && { echo "FAIL: user not created"; exit 1; }
 echo "User: $U"
 
-P=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+P=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   SELECT COUNT(*) FROM public.profiles WHERE id='$U';")
 [ "$P" -ne 1 ] && { echo "FAIL: profile not created by trigger"; exit 1; }
 
 echo "LEGACY_USER=$U" > "$IDS_FILE"
 
 for state in forming running completed cancelled; do
-  A=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+  A=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
     INSERT INTO public.apps (developer_id, name, package_name, category, status)
     VALUES ('$U', 'Legacy $state', 'com.testdz.lg_${state}_${RUN_ID}', 'tools', 'published')
     RETURNING id;")
   [ -z "$A" ] && { echo "FAIL: app not created ($state)"; exit 1; }
   
-  T=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+  T=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
     INSERT INTO public.tests (app_id, developer_id, title, status, min_testers)
     VALUES ('$A', '$U', 'Legacy $state', 'recruiting', 12) RETURNING id;")
   [ -z "$T" ] && { echo "FAIL: test not created ($state)"; exit 1; }
   
-  C=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+  C=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
     INSERT INTO public.cohorts (name, capacity, status, test_id)
     VALUES ('L_${state}_${RUN_ID}', 13, '$state', '$T') RETURNING id;")
   [ -z "$C" ] && { echo "FAIL: cohort not created ($state)"; exit 1; }
