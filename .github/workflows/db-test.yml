@@ -39,7 +39,39 @@ jobs:
         run: supabase start
 
       - name: Reset database (all migrations)
-        run: supabase db reset --local --no-seed
+        shell: bash
+        run: |
+          log_file=/tmp/supabase-db-reset.log
+          for attempt in 1 2 3; do
+            echo "▶️ Database reset attempt $attempt/3"
+            if supabase db reset --local --no-seed >"$log_file" 2>&1; then
+              cat "$log_file"
+              echo "✅ Reset succeeded (attempt $attempt)"
+              exit 0
+            fi
+
+            cat "$log_file"
+            if grep -Fq '127.0.0.1:54321/storage/v1/bucket' "$log_file" &&
+               grep -Fq 'context deadline exceeded' "$log_file"; then
+              if [ "$attempt" -lt 3 ]; then
+                echo "⚠️ Detected transient Storage API timeout; retrying reset in 10s..."
+                sleep 10
+                continue
+              fi
+              echo "❌ Storage API timed out on all 3 reset attempts"
+              echo "Docker containers:"
+              docker ps -a
+              storage_container="$(docker ps -a --format '{{.Names}}' | grep -m1 'storage' || true)"
+              if [ -n "$storage_container" ]; then
+                echo "Storage container logs ($storage_container):"
+                docker logs "$storage_container" 2>&1 | tail -80
+              fi
+              exit 1
+            fi
+
+            echo "❌ Reset failed for a reason other than the known transient Storage timeout; not retrying."
+            exit 1
+          done
 
       - name: Run pgTAP tests (schema + behavioral)
         run: supabase test db --local
