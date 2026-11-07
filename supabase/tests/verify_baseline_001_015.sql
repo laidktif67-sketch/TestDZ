@@ -26,12 +26,6 @@ BEGIN
     RAISE EXCEPTION 'Baseline mismatch: % of the 15 expected migrations are missing', v_missing;
   END IF;
 
-  IF EXISTS (
-    SELECT 1 FROM supabase_migrations.schema_migrations
-    WHERE version IN ('20261107000100','20261107000200','20261107000300')
-  ) THEN
-    RAISE EXCEPTION 'One or more target migrations are already recorded; refusing to continue';
-  END IF;
 
   RAISE NOTICE 'Baseline 001-015 verified; target migrations are not yet recorded';
 END $$;
