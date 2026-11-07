@@ -2,6 +2,9 @@
 -- Verify 016a after application.
 DO $$
 BEGIN
+  IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations) <> 16 THEN
+    RAISE EXCEPTION 'Expected exactly 16 migration history rows after 016a';
+  END IF;
   IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations WHERE version='20261107000100') <> 1 THEN
     RAISE EXCEPTION '016a migration history row missing or duplicated';
   END IF;
@@ -14,6 +17,7 @@ BEGIN
     SELECT 1 FROM pg_constraint
     WHERE conrelid='public.tests'::regclass
       AND conname='tests_id_developer_unique' AND contype='u'
+      AND position('UNIQUE (id, developer_id)' in pg_get_constraintdef(oid)) > 0
   ) THEN
     RAISE EXCEPTION 'tests_id_developer_unique missing';
   END IF;
@@ -39,6 +43,7 @@ BEGIN
     WHERE conrelid='public.cohort_tests'::regclass
       AND conname='cohort_tests_test_developer_fk' AND contype='f'
       AND convalidated
+      AND position('FOREIGN KEY (test_id, developer_id)' in pg_get_constraintdef(oid)) > 0
   ) THEN
     RAISE EXCEPTION 'cohort_tests_test_developer_fk missing or unvalidated';
   END IF;
