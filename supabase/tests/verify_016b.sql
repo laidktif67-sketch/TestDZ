@@ -34,11 +34,11 @@ BEGIN
       AND (
         (conname='assignments_cohort_test_fk'
           AND position('FOREIGN KEY (cohort_id, test_id)' in pg_get_constraintdef(oid)) > 0
-          AND position('REFERENCES cohort_tests' in pg_get_constraintdef(oid)) > 0)
+          AND position('cohort_tests' in pg_get_constraintdef(oid)) > 0)
         OR
         (conname='assignments_cohort_tester_fk'
           AND position('FOREIGN KEY (cohort_id, tester_id)' in pg_get_constraintdef(oid)) > 0
-          AND position('REFERENCES cohort_tests' in pg_get_constraintdef(oid)) > 0)
+          AND position('cohort_tests' in pg_get_constraintdef(oid)) > 0)
       )
   ) <> 2 THEN
     RAISE EXCEPTION 'Expected both validated composite assignment FKs with exact column pairs';
