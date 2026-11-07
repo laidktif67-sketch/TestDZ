@@ -139,6 +139,8 @@ DECLARE
   v_owner_id uuid;
   v_inserted integer;
   v_expected integer;
+  v_existing_assignments integer;
+  v_total_assignments integer;
 BEGIN
   IF NOT private.is_admin() THEN
     RAISE EXCEPTION 'ADMIN_ONLY' USING ERRCODE = '42501';
@@ -166,6 +168,14 @@ BEGIN
   END IF;
   IF v_capacity <> 13 THEN
     RAISE EXCEPTION 'INVALID_CAPACITY: expected 13';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_existing_assignments
+  FROM public.assignments AS a
+  WHERE a.cohort_id = p_cohort_id;
+  IF v_existing_assignments <> v_member_count * (v_member_count - 1) THEN
+    RAISE EXCEPTION 'ASSIGNMENT_MATRIX_INCOMPLETE: expected %, found %',
+      v_member_count * (v_member_count - 1), v_existing_assignments;
   END IF;
 
   SELECT t.developer_id INTO v_owner_id
@@ -203,9 +213,14 @@ BEGIN
   GET DIAGNOSTICS v_inserted = ROW_COUNT;
   v_expected := 2 * v_member_count;
 
-  IF v_inserted <> v_expected THEN
-    RAISE EXCEPTION 'ASSIGNMENT_COUNT_MISMATCH: expected %, inserted %',
-      v_expected, v_inserted;
+  SELECT pg_catalog.count(*) INTO v_total_assignments
+  FROM public.assignments AS a
+  WHERE a.cohort_id = p_cohort_id;
+
+  IF v_inserted <> v_expected
+     OR v_total_assignments <> (v_member_count + 1) * v_member_count THEN
+    RAISE EXCEPTION 'ASSIGNMENT_COUNT_MISMATCH: expected delta %, inserted %, total %',
+      v_expected, v_inserted, v_total_assignments;
   END IF;
 
   RETURN v_inserted;
@@ -231,6 +246,8 @@ DECLARE
   v_expected integer;
   v_deleted integer;
   v_member_deleted integer;
+  v_existing_assignments integer;
+  v_total_assignments integer;
 BEGIN
   IF NOT private.is_admin() THEN
     RAISE EXCEPTION 'ADMIN_ONLY' USING ERRCODE = '42501';
@@ -262,6 +279,14 @@ BEGIN
   FROM public.cohort_tests AS ct
   WHERE ct.cohort_id = p_cohort_id;
   v_expected := 2 * (v_member_count - 1);
+
+  SELECT pg_catalog.count(*) INTO v_existing_assignments
+  FROM public.assignments AS a
+  WHERE a.cohort_id = p_cohort_id;
+  IF v_existing_assignments <> v_member_count * (v_member_count - 1) THEN
+    RAISE EXCEPTION 'ASSIGNMENT_MATRIX_INCOMPLETE: expected %, found %',
+      v_member_count * (v_member_count - 1), v_existing_assignments;
+  END IF;
 
   IF EXISTS (
     SELECT 1
@@ -312,6 +337,14 @@ BEGIN
   IF v_member_deleted <> 1 THEN
     RAISE EXCEPTION 'COHORT_TEST_DELETE_MISMATCH: expected 1, deleted %',
       v_member_deleted;
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_total_assignments
+  FROM public.assignments AS a
+  WHERE a.cohort_id = p_cohort_id;
+  IF v_total_assignments <> (v_member_count - 1) * (v_member_count - 2) THEN
+    RAISE EXCEPTION 'ASSIGNMENT_COUNT_MISMATCH: expected remaining %, found %',
+      (v_member_count - 1) * (v_member_count - 2), v_total_assignments;
   END IF;
 
   RETURN v_deleted;
