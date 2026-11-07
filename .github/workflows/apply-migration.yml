@@ -19,6 +19,7 @@ on:
         options:
           - test-connection
           - apply
+          - verify-only
 
 permissions:
   contents: read
@@ -105,6 +106,35 @@ jobs:
             *) echo "Unsupported migration selection"; exit 1 ;;
           esac
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
+
+  verify-only:
+    needs: []
+    if: github.ref == 'refs/heads/feat/week-4-design-system' && inputs.mode == 'verify-only' && inputs.migration == '016b'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: development
+    steps:
+      - name: Checkout the dispatched commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set up pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Verify 016b (post-apply check only)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/tests/verify_016b.sql
 
   test-connection:
     needs: verify-preconditions
