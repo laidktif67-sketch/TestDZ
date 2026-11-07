@@ -1,7 +1,10 @@
 \ir verify_016a.sql
 -- Verify 016b after application.
-DO $$
+DO $
 BEGIN
+  IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations) <> 17 THEN
+    RAISE EXCEPTION 'Expected exactly 17 migration history rows after 016b';
+  END IF;
   IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations WHERE version='20261107000200') <> 1 THEN
     RAISE EXCEPTION '016b migration history row missing or duplicated';
   END IF;
@@ -30,10 +33,12 @@ BEGIN
       AND contype='f' AND convalidated
       AND (
         (conname='assignments_cohort_test_fk'
-          AND position('FOREIGN KEY (cohort_id, test_id)' in pg_get_constraintdef(oid)) > 0)
+          AND position('FOREIGN KEY (cohort_id, test_id)' in pg_get_constraintdef(oid)) > 0
+          AND position('REFERENCES cohort_tests' in pg_get_constraintdef(oid)) > 0)
         OR
         (conname='assignments_cohort_tester_fk'
-          AND position('FOREIGN KEY (cohort_id, tester_id)' in pg_get_constraintdef(oid)) > 0)
+          AND position('FOREIGN KEY (cohort_id, tester_id)' in pg_get_constraintdef(oid)) > 0
+          AND position('REFERENCES cohort_tests' in pg_get_constraintdef(oid)) > 0)
       )
   ) <> 2 THEN
     RAISE EXCEPTION 'Expected both validated composite assignment FKs with exact column pairs';
