@@ -116,7 +116,7 @@ jobs:
       - name: Checkout the approved base branch
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Set up pinned Supabase CLI
         uses: supabase/setup-cli@v3
@@ -130,8 +130,8 @@ jobs:
 
       - name: Validate target project and database URL
         env:
-          SUPABASE_PROJECT_REF: \${{ secrets.SUPABASE_PROJECT_REF }}
-          SUPABASE_DB_URL: \${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
           test "$SUPABASE_PROJECT_REF" = "naqjjykcglxiobkmdllj"
@@ -144,7 +144,7 @@ jobs:
           ref = os.environ["SUPABASE_PROJECT_REF"]
           url = os.environ["SUPABASE_DB_URL"]
 
-          if re.search(r'@\\[[A-Za-z0-9.-]+\\](?=:\\d|/|$)', url):
+          if re.search(r'@\[[A-Za-z0-9.-]+\](?=:\d|/|$)', url):
               print("ERROR: SUPABASE_DB_URL has brackets around a DNS hostname.", file=sys.stderr)
               sys.exit(1)
 
@@ -174,16 +174,16 @@ jobs:
 
       - name: Test PostgreSQL connection (read-only)
         env:
-          SUPABASE_DB_URL: \${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -c "SELECT 1;"
 
       - name: Link only to the approved development project
         env:
-          SUPABASE_ACCESS_TOKEN: \${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: \${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_REF: \${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
           set -euo pipefail
           test "$SUPABASE_PROJECT_REF" = "naqjjykcglxiobkmdllj"
@@ -191,7 +191,7 @@ jobs:
 
       - name: Keep the complete applied history and only the selected pending migration
         env:
-          MIGRATION: \${{ inputs.migration }}
+          MIGRATION: ${{ inputs.migration }}
         run: |
           set -euo pipefail
           case "$MIGRATION" in
@@ -212,14 +212,14 @@ jobs:
               exit 1
               ;;
           esac
-          test -f "$EXPECTED_VERSION"_*.sql
+          test -f "supabase/migrations/$EXPECTED_VERSION"_*.sql
           echo "Dry-run target version: $EXPECTED_VERSION"
 
       - name: Preview selected migration only (dry-run)
         env:
-          SUPABASE_ACCESS_TOKEN: \${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: \${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_DB_URL: \${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
           supabase db push --dry-run --remote="$SUPABASE_DB_URL"
