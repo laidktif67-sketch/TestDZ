@@ -55,7 +55,7 @@ trap cleanup EXIT
 
 echo "=== Creating concurrency fixtures (RUN_ID=$RUN_ID) ==="
 
-U1=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+U1=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO auth.users (id, instance_id, aud, role, email, email_confirmed_at, raw_user_meta_data)
   VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000000',
           'authenticated', 'authenticated', 'conc1_$RUN_ID@testdz.local', now(),
@@ -63,7 +63,7 @@ U1=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
 [ -z "$U1" ] && { echo "FAIL: user1"; exit 1; }
 USER_IDS+=("$U1")
 
-U2=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+U2=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO auth.users (id, instance_id, aud, role, email, email_confirmed_at, raw_user_meta_data)
   VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000000',
           'authenticated', 'authenticated', 'conc2_$RUN_ID@testdz.local', now(),
@@ -71,31 +71,31 @@ U2=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
 [ -z "$U2" ] && { echo "FAIL: user2"; exit 1; }
 USER_IDS+=("$U2")
 
-A1=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+A1=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO public.apps (developer_id, name, package_name, category, status)
   VALUES ('$U1', 'ConcApp1', 'com.testdz.conc1_$RUN_ID', 'tools', 'published') RETURNING id;")
 [ -z "$A1" ] && { echo "FAIL: app1"; exit 1; }
 APP_IDS+=("$A1")
 
-A2=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+A2=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO public.apps (developer_id, name, package_name, category, status)
   VALUES ('$U2', 'ConcApp2', 'com.testdz.conc2_$RUN_ID', 'tools', 'published') RETURNING id;")
 [ -z "$A2" ] && { echo "FAIL: app2"; exit 1; }
 APP_IDS+=("$A2")
 
-T1=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+T1=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO public.tests (app_id, developer_id, title, status, min_testers)
   VALUES ('$A1', '$U1', 'ConcTest1', 'recruiting', 12) RETURNING id;")
 [ -z "$T1" ] && { echo "FAIL: test1"; exit 1; }
 TEST_IDS+=("$T1")
 
-T2=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+T2=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO public.tests (app_id, developer_id, title, status, min_testers)
   VALUES ('$A2', '$U2', 'ConcTest2', 'recruiting', 12) RETURNING id;")
 [ -z "$T2" ] && { echo "FAIL: test2"; exit 1; }
 TEST_IDS+=("$T2")
 
-CID=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+CID=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   INSERT INTO public.cohorts (name, capacity, status)
   VALUES ('conc_$RUN_ID', 1, 'forming') RETURNING id;")
 [ -z "$CID" ] && { echo "FAIL: cohort"; exit 1; }
@@ -118,7 +118,7 @@ TIMEOUT_SECONDS=15
 START_TS=$(date +%s)
 LOCK_ACQUIRED=0
 while [ $(( $(date +%s) - START_TS )) -lt "$TIMEOUT_SECONDS" ]; do
-  READY=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+  READY=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
     SELECT COUNT(*) FROM pg_stat_activity
     WHERE application_name = '$LOCK_APP'
       AND state = 'active'
@@ -158,7 +158,7 @@ WAIT_TIMEOUT_SECONDS=15
 WAIT_START_TS=$(date +%s)
 WAITING=0
 while [ $(( $(date +%s) - WAIT_START_TS )) -lt "$WAIT_TIMEOUT_SECONDS" ]; do
-  WAITING=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+  WAITING=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
     SELECT COUNT(*) FROM pg_stat_activity
     WHERE application_name IN ('ins1_$RUN_ID','ins2_$RUN_ID')
       AND state = 'active'
@@ -235,7 +235,7 @@ if ! echo "$FAILED" | grep -q "COHORT_FULL"; then
   exit 1
 fi
 
-COUNT=$(psql "$DB_URL" -tA -v ON_ERROR_STOP=1 -c "
+COUNT=$(psql "$DB_URL" -qAt -v ON_ERROR_STOP=1 -c "
   SELECT COUNT(*) FROM public.cohort_tests WHERE cohort_id='$CID';")
 if [ "$COUNT" -ne 1 ]; then
   echo "FAIL: expected 1 row, got $COUNT"
