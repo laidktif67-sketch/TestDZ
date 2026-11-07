@@ -89,6 +89,7 @@ SELECT is(
   1::bigint,
   'TEST 1: Developer sees own cohort'
 );
+SET LOCAL role = 'postgres';
 ROLLBACK TO SAVEPOINT sp1;
 RELEASE SAVEPOINT sp1;
 
@@ -105,6 +106,7 @@ SELECT is(
   1::bigint,
   'TEST 2: Tester sees cohort'
 );
+SET LOCAL role = 'postgres';
 ROLLBACK TO SAVEPOINT sp2;
 RELEASE SAVEPOINT sp2;
 
@@ -121,6 +123,7 @@ SELECT is(
   0::bigint,
   'TEST 3: Outsider blocked'
 );
+SET LOCAL role = 'postgres';
 ROLLBACK TO SAVEPOINT sp3;
 RELEASE SAVEPOINT sp3;
 
@@ -137,6 +140,7 @@ SELECT is(
   1::bigint,
   'TEST 4: Admin sees cohort'
 );
+SET LOCAL role = 'postgres';
 ROLLBACK TO SAVEPOINT sp4;
 RELEASE SAVEPOINT sp4;
 
