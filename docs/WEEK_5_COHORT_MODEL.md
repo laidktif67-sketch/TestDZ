@@ -107,7 +107,26 @@ A migration/test harness is not acceptable unless it proves all of the following
 - No service-role secret or production test data is added to the repository.
 - All pre-existing migration files remain immutable.
 
-## 7. Release gate
+
+## 8. Confirmed live-database findings (read-only audit, 2026-11-07)
+
+The live TestDZ database was inspected without changing its schema or data:
+
+- PostgreSQL 17.11; 28 public tables.
+- `cohorts`, `assignments`, and `tests` currently contain zero rows.
+- Applied migration history ends at `20261106001500_harden_app_validation`.
+- The live unique constraint is `assignments_cohort_id_tester_id_key` on `(cohort_id, tester_id)`.
+- `cohorts.test_id` has a foreign key to `tests(id)`.
+- The cohort SELECT policy currently references `cohorts.test_id` and contains the malformed tester predicate `a.cohort_id = a.id`.
+- Authenticated currently has SELECT grants on cohorts and assignments; no direct INSERT/UPDATE grants were observed for those roles.
+- Cohort and assignment tables have only their `set_updated_at` triggers in the inspected trigger inventory.
+- Supabase security advisors returned no lints during this audit.
+
+Migration 016 must explicitly drop/recreate the cohort SELECT policy before dropping `cohorts.test_id`, and must replace the malformed tester predicate with a membership-based predicate that does not create RLS recursion. Preserve the current read-only client grant boundary unless the approved API design requires a narrower explicit change.
+
+The zero-row observation is a snapshot, not a permanent assumption. Re-run preflight checks immediately before applying any migration.
+
+## 9. Release gate
 
 1. Review the final relational model and migration SQL.
 2. Validate the migration against a disposable PostgreSQL test database or isolated test environment.
