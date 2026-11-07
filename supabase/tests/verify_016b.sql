@@ -1,4 +1,3 @@
-\ir verify_016a.sql
 -- Verify 016b after application.
 DO $verify$
 BEGIN
