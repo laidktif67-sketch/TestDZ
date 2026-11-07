@@ -28,8 +28,15 @@ BEGIN
     WHERE conrelid='public.assignments'::regclass
       AND conname IN ('assignments_cohort_test_fk','assignments_cohort_tester_fk')
       AND contype='f' AND convalidated
+      AND (
+        (conname='assignments_cohort_test_fk'
+          AND position('FOREIGN KEY (cohort_id, test_id)' in pg_get_constraintdef(oid)) > 0)
+        OR
+        (conname='assignments_cohort_tester_fk'
+          AND position('FOREIGN KEY (cohort_id, tester_id)' in pg_get_constraintdef(oid)) > 0)
+      )
   ) <> 2 THEN
-    RAISE EXCEPTION 'Expected both validated composite assignment FKs';
+    RAISE EXCEPTION 'Expected both validated composite assignment FKs with exact column pairs';
   END IF;
 
   IF NOT EXISTS (
