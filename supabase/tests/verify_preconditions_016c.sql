@@ -1,5 +1,5 @@
 \ir verify_016b.sql
-DO $
+DO $verify$
 BEGIN
   IF (SELECT COUNT(*) FROM supabase_migrations.schema_migrations) <> 17 THEN
     RAISE EXCEPTION 'Expected exactly 17 migration history rows before 016c';
@@ -10,4 +10,4 @@ BEGIN
   ) THEN
     RAISE EXCEPTION '016c is already recorded; refusing duplicate application';
   END IF;
-END $$;
+END $verify$;
