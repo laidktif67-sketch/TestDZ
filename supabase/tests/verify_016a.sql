@@ -21,6 +21,14 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conrelid='public.cohort_tests'::regclass
+      AND conname='cohort_tests_pkey' AND contype='p'
+  ) THEN
+    RAISE EXCEPTION 'cohort_tests primary key missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.cohort_tests'::regclass
       AND conname='cohort_tests_developer_unique' AND contype='u'
   ) THEN
     RAISE EXCEPTION 'cohort_tests_developer_unique missing';
@@ -61,6 +69,13 @@ BEGIN
       AND cmd='SELECT'
   ) THEN
     RAISE EXCEPTION 'cohort_tests_select_participants policy missing';
+  END IF;
+
+  IF NOT has_table_privilege('authenticated','public.cohort_tests','SELECT')
+     OR has_table_privilege('authenticated','public.cohort_tests','INSERT')
+     OR has_table_privilege('authenticated','public.cohort_tests','UPDATE')
+     OR has_table_privilege('authenticated','public.cohort_tests','DELETE') THEN
+    RAISE EXCEPTION 'cohort_tests grants do not match SELECT-only access';
   END IF;
 
   IF NOT EXISTS (
