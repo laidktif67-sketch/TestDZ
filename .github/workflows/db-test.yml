@@ -1,0 +1,44 @@
+name: TestDZ Database CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/week-5-*"
+    paths:
+      - "supabase/**"
+      - ".github/workflows/db-test.yml"
+  pull_request:
+    paths:
+      - "supabase/**"
+      - ".github/workflows/db-test.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  database:
+    name: Fresh Supabase migration + baseline tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+
+      - name: Start isolated Supabase stack
+        run: supabase start
+
+      - name: Replay all migrations on a clean database
+        run: supabase db reset --local --no-seed
+
+      - name: Run database baseline tests
+        run: supabase test db --local
