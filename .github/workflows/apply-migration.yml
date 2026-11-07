@@ -11,6 +11,14 @@ on:
           - 016a
           - 016b
           - 016c
+      mode:
+        description: Execution mode (safe connection test by default)
+        type: choice
+        required: true
+        default: test-connection
+        options:
+          - test-connection
+          - apply
 
 permissions:
   contents: read
@@ -98,9 +106,127 @@ jobs:
           esac
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
 
+  test-connection:
+    needs: verify-preconditions
+    if: github.ref == 'refs/heads/feat/week-4-design-system' && inputs.mode == 'test-connection'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: development
+    steps:
+      - name: Checkout the approved base branch
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.sha }}
+
+      - name: Set up pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 3.2.0
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Validate target project and database URL
+        env:
+          SUPABASE_PROJECT_REF: \${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_URL: \${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_REF" = "naqjjykcglxiobkmdllj"
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+          from urllib.parse import unquote, urlparse
+
+          ref = os.environ["SUPABASE_PROJECT_REF"]
+          url = os.environ["SUPABASE_DB_URL"]
+
+          if re.search(r'@\\[[A-Za-z0-9.-]+\\](?=:\\d|/|$)', url):
+              print("ERROR: SUPABASE_DB_URL has brackets around a DNS hostname.", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              parsed = urlparse(url)
+              host = parsed.hostname or ""
+              user = unquote(parsed.username or "")
+              port = parsed.port
+          except ValueError:
+              print("ERROR: SUPABASE_DB_URL is malformed (check hostname brackets and port).", file=sys.stderr)
+              sys.exit(1)
+
+          if parsed.scheme not in ("postgres", "postgresql") or not host:
+              print("ERROR: SUPABASE_DB_URL must be a valid PostgreSQL URL with a hostname.", file=sys.stderr)
+              sys.exit(1)
+          if ref not in host and ref not in user:
+              print("ERROR: SUPABASE_DB_URL does not identify the approved TestDZ project.", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"hostname: {host}")
+          print(f"user: {user}")
+          print(f"port: {port}")
+          print(f"database: {parsed.path.lstrip('/') or 'postgres'}")
+          print(f"url length: {len(url)}")
+          print(f"project ref: {ref}")
+          PY
+
+      - name: Test PostgreSQL connection (read-only)
+        env:
+          SUPABASE_DB_URL: \${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -c "SELECT 1;"
+
+      - name: Link only to the approved development project
+        env:
+          SUPABASE_ACCESS_TOKEN: \${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: \${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: \${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_REF" = "naqjjykcglxiobkmdllj"
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Keep the complete applied history and only the selected pending migration
+        env:
+          MIGRATION: \${{ inputs.migration }}
+        run: |
+          set -euo pipefail
+          case "$MIGRATION" in
+            016a)
+              rm -- supabase/migrations/20261107000200_assignments_feedback_constraints.sql
+              rm -- supabase/migrations/20261107000300_cohort_triggers_data_migration.sql
+              EXPECTED_VERSION="20261107000100"
+              ;;
+            016b)
+              rm -- supabase/migrations/20261107000300_cohort_triggers_data_migration.sql
+              EXPECTED_VERSION="20261107000200"
+              ;;
+            016c)
+              EXPECTED_VERSION="20261107000300"
+              ;;
+            *)
+              echo "Unsupported migration selection"
+              exit 1
+              ;;
+          esac
+          test -f "$EXPECTED_VERSION"_*.sql
+          echo "Dry-run target version: $EXPECTED_VERSION"
+
+      - name: Preview selected migration only (dry-run)
+        env:
+          SUPABASE_ACCESS_TOKEN: \${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: \${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: \${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          supabase db push --dry-run --remote="$SUPABASE_DB_URL"
+
   apply:
     needs: verify-preconditions
-    if: github.ref == 'refs/heads/feat/week-4-design-system'
+    if: github.ref == 'refs/heads/feat/week-4-design-system' && inputs.mode == 'apply'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: development
