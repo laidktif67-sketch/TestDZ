@@ -27,5 +27,5 @@ BEGIN
   END IF;
 
 
-  RAISE NOTICE 'Baseline 001-015 verified; target migrations are not yet recorded';
+  RAISE NOTICE 'Baseline migrations 001-015 verified';
 END $$;
