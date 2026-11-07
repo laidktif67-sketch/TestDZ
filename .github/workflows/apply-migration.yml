@@ -132,17 +132,19 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          supabase db push --remote --dry-run
+          supabase db push --dry-run --remote="$SUPABASE_DB_URL"
 
       - name: Apply selected migration
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          if ! supabase db push --remote --yes; then
+          if ! supabase db push --yes --remote="$SUPABASE_DB_URL"; then
             echo "::error::Migration push failed. No automatic rollback is claimed; inspect supabase_migrations.schema_migrations and the database schema before retrying."
             exit 1
           fi
