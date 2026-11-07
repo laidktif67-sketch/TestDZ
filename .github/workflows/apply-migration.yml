@@ -222,7 +222,7 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          supabase db push --dry-run --remote="$SUPABASE_DB_URL"
+          supabase db push --dry-run --db-url="$SUPABASE_DB_URL"
 
   apply:
     needs: verify-preconditions
@@ -290,7 +290,7 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          supabase db push --dry-run --remote="$SUPABASE_DB_URL"
+          supabase db push --dry-run --db-url="$SUPABASE_DB_URL"
 
       - name: Apply selected migration
         env:
@@ -299,7 +299,7 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           set -euo pipefail
-          if ! supabase db push --yes --remote="$SUPABASE_DB_URL"; then
+          if ! supabase db push --yes --db-url="$SUPABASE_DB_URL"; then
             echo "::error::Migration push failed. No automatic rollback is claimed; inspect supabase_migrations.schema_migrations and the database schema before retrying."
             exit 1
           fi
