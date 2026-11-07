@@ -121,7 +121,7 @@ jobs:
       - name: Set up pinned Supabase CLI
         uses: supabase/setup-cli@v3
         with:
-          version: 3.2.0
+          version: 2.84.2
 
       - name: Install PostgreSQL client
         run: |
@@ -239,7 +239,7 @@ jobs:
       - name: Set up pinned Supabase CLI
         uses: supabase/setup-cli@v3
         with:
-          version: 3.2.0
+          version: 2.84.2
 
       - name: Install PostgreSQL client
         run: |
