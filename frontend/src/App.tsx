@@ -148,7 +148,8 @@ function LandingPage() {
       };
 
       reveal(".lp-features article", ".lp-features", 0.13);
-      reveal(".lp-section-title", ".lp-how", 0.1);
+      reveal(".lp-how .lp-section-title", ".lp-how", 0.1);
+      reveal(".lp-community .lp-section-title", ".lp-community", 0.1);
       reveal(".lp-steps article", ".lp-steps", 0.16);
       reveal(".lp-promo > *", ".lp-promo", 0.1);
       reveal(".lp-community article", ".lp-community", 0.12);
