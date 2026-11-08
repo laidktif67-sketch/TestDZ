@@ -456,3 +456,4 @@ html:lang(fr),
 .lp-faq-illustration{align-items:flex-end}
 .lp-faq-image{width:130%;max-width:520px;max-height:430px;transform:translateY(-34px);transform-origin:bottom center}
 @media(max-width:900px){.lp-faq-image{width:115%;max-width:360px;max-height:310px;transform:translateY(-18px)}}
+@media(max-width:560px){.lp-faq-illustration{min-height:175px}.lp-faq-image{width:min(94%,290px);max-height:255px;transform:translateY(-12px)}}
