@@ -41,34 +41,34 @@ type LandingLanguage = "en" | "fr" | "ar";
 const landingCopy = {
   en: {
     home: "Home", features: "Features", developers: "For Developers", testers: "For Testers", how: "How it works", signIn: "Sign In", getStarted: "Get Started",
-    heroLead: "Test. Learn.", heroAccent: "Grow.", heroBody: "A comprehensive platform for closed tests, where developers create tests and testers earn rewards by participating.",
+    heroLead: "Test. Learn.", heroAccent: "Grow.", heroBody: "One platform for developers to validate their apps and testers to shape better digital products.", developerCta: "I’m a developer", testerCta: "I’m a tester", developerPath: "Build with confidence", testerPath: "Test real products", visualLabel: "Two paths, one testing community",
     exploreTests: "Explore Tests", activeUsers: "Active Users", userRating: "User Rating", days: "Days", overview: "Overview", myTests: "My Tests", dashboard: "Dashboard", activeTests: "Active Tests", totalUsers: "Total Users", rewards: "Rewards", completed: "Test completed", feedback: "Feedback received", earned: "Reward earned",
     secure: "Secure & Fair", secureBody: "Advanced anti-fraud system for a transparent tester experience.", fourteen: "14-Day Tests", fourteenBody: "Limited-time tests to ensure real skills and knowledge.", earn: "Earn Rewards", earnBody: "Get points and rewards for your efforts.", everyone: "For Everyone", everyoneBody: "Testers, developers and admins in one platform.",
     howTitle: "How TestDZ Works?", howBody: "A simple and effective process in 3 easy steps", create: "Create Your Account", createBody: "Join TestDZ as a tester, developer or admin.", take: "Take or Create Tests", takeBody: "Participate in tests or design your own tests.", grow: "Earn & Grow", growBody: "Get rewards and track your progress.",
     promoTitle: "Tests are open for", promoAccent: "only 14 days!", promoBody: "Don’t miss your chance to participate.", exploreActive: "Explore Active Tests",
-    community: "What Our Community Says", quote1: "“TestDZ is an amazing platform! I love the fair system and rewards.”", quote2: "“A great platform for developers to share their tests and get feedback.”", quote3: "“Simple, secure and very useful. Highly recommended!”", tester: "Tester", developer: "Developer",
+    tester: "Tester", developer: "Developer",
     faqTitle: "Frequently Asked Questions", faqIntro: "Find answers to common questions about TestDZ.", viewFaq: "View All FAQs", faq1q: "How does the 14-day test work?", faq1a: "Testers participate in an organized test cycle and share feedback throughout the testing period.", faq2q: "Can I earn real rewards?", faq2a: "Eligible activities can earn points and rewards according to the platform rules.", faq3q: "Is TestDZ free to use?", faq3a: "You can create an account and explore the platform. Available features may depend on your role and plan.", faq4q: "How can I become a developer?", faq4a: "Create an account and choose the developer role during onboarding.",
     about: "About", terms: "Terms of Service", privacy: "Privacy Policy", contact: "Contact", copyright: "© 2026 TestDZ. All rights reserved.", languageLabel: "Choose language", illustration: "Illustration of the TestDZ testing dashboard"
   },
   fr: {
     home: "Accueil", features: "Fonctionnalités", developers: "Développeurs", testers: "Testeurs", how: "Fonctionnement", signIn: "Connexion", getStarted: "Commencer",
-    heroLead: "Tester. Apprendre.", heroAccent: "Progresser.", heroBody: "Une plateforme complète de tests fermés : les développeurs créent des tests et les testeurs gagnent des récompenses en participant.",
+    heroLead: "Tester. Apprendre.", heroAccent: "Progresser.", heroBody: "Une plateforme pour aider les développeurs à valider leurs applications et les testeurs à améliorer les produits numériques.", developerCta: "Je suis développeur", testerCta: "Je suis testeur", developerPath: "Développez en confiance", testerPath: "Testez de vrais produits", visualLabel: "Deux parcours, une communauté de test",
     exploreTests: "Découvrir les tests", activeUsers: "Utilisateurs actifs", userRating: "Note des utilisateurs", days: "Jours", overview: "Vue d’ensemble", myTests: "Mes tests", dashboard: "Tableau de bord", activeTests: "Tests actifs", totalUsers: "Utilisateurs", rewards: "Récompenses", completed: "Test terminé", feedback: "Avis reçu", earned: "Récompense obtenue",
     secure: "Sûr et équitable", secureBody: "Un système anti-fraude avancé pour une expérience transparente.", fourteen: "Tests de 14 jours", fourteenBody: "Des tests limités dans le temps pour valoriser les compétences réelles.", earn: "Gagnez des récompenses", earnBody: "Recevez des points et des récompenses pour vos efforts.", everyone: "Pour tous", everyoneBody: "Testeurs, développeurs et administrateurs sur une seule plateforme.",
     howTitle: "Comment fonctionne TestDZ ?", howBody: "Un processus simple et efficace en 3 étapes", create: "Créez votre compte", createBody: "Rejoignez TestDZ comme testeur, développeur ou administrateur.", take: "Participez ou créez des tests", takeBody: "Participez aux tests ou concevez les vôtres.", grow: "Gagnez et progressez", growBody: "Obtenez des récompenses et suivez vos progrès.",
     promoTitle: "Les tests sont ouverts", promoAccent: "pendant 14 jours !", promoBody: "Ne manquez pas votre chance de participer.", exploreActive: "Voir les tests actifs",
-    community: "Les avis de notre communauté", quote1: "« TestDZ est une plateforme formidable ! J’apprécie son équité et ses récompenses. »", quote2: "« Une excellente plateforme pour partager ses tests et recevoir des avis. »", quote3: "« Simple, sécurisée et très utile. Je la recommande ! »", tester: "Testeur", developer: "Développeur",
+    tester: "Testeur", developer: "Développeur",
     faqTitle: "Questions fréquentes", faqIntro: "Retrouvez les réponses aux questions courantes sur TestDZ.", viewFaq: "Toutes les questions", faq1q: "Comment fonctionne le test de 14 jours ?", faq1a: "Les testeurs suivent un cycle organisé et partagent leurs retours pendant toute la période.", faq2q: "Puis-je gagner de vraies récompenses ?", faq2a: "Les activités éligibles permettent de gagner des points et des récompenses selon les règles de la plateforme.", faq3q: "TestDZ est-elle gratuite ?", faq3a: "Vous pouvez créer un compte et découvrir la plateforme. Les fonctionnalités dépendent de votre rôle et de votre offre.", faq4q: "Comment devenir développeur ?", faq4a: "Créez un compte et choisissez le rôle développeur lors de votre inscription.",
     about: "À propos", terms: "Conditions d’utilisation", privacy: "Confidentialité", contact: "Contact", copyright: "© 2026 TestDZ. Tous droits réservés.", languageLabel: "Choisir la langue", illustration: "Illustration du tableau de bord TestDZ"
   },
   ar: {
     home: "الرئيسية", features: "المميزات", developers: "للمطورين", testers: "للمختبرين", how: "كيف تعمل المنصة", signIn: "تسجيل الدخول", getStarted: "ابدأ الآن",
-    heroLead: "اختبر. تعلّم.", heroAccent: "وتطوّر.", heroBody: "منصة متكاملة للاختبارات المغلقة؛ ينشئ المطورون الاختبارات ويكسب المختبرون المكافآت مقابل المشاركة.",
+    heroLead: "اختبر. تعلّم.", heroAccent: "وتطوّر.", heroBody: "منصة تجمع المطورين والمختبرين للتحقق من التطبيقات وتحسين المنتجات الرقمية من خلال تجارب وملاحظات حقيقية.", developerCta: "أنا مطور", testerCta: "أنا مختبر", developerPath: "طوّر بثقة", testerPath: "اختبر منتجات حقيقية", visualLabel: "مساران ومجتمع واحد للاختبار",
     exploreTests: "اكتشف الاختبارات", activeUsers: "مستخدم نشط", userRating: "تقييم المستخدمين", days: "يوماً", overview: "نظرة عامة", myTests: "اختباراتي", dashboard: "لوحة التحكم", activeTests: "اختبارات نشطة", totalUsers: "إجمالي المستخدمين", rewards: "المكافآت", completed: "اكتمل الاختبار", feedback: "تم استلام الملاحظات", earned: "تم كسب المكافأة",
     secure: "آمنة وعادلة", secureBody: "نظام متقدم لمكافحة الاحتيال يضمن تجربة شفافة للمختبرين.", fourteen: "اختبارات لمدة 14 يوماً", fourteenBody: "اختبارات محددة المدة لقياس المهارات والمعرفة الحقيقية.", earn: "اكسب المكافآت", earnBody: "احصل على النقاط والمكافآت مقابل جهودك.", everyone: "منصة للجميع", everyoneBody: "المختبرون والمطورون والمسؤولون في منصة واحدة.",
     howTitle: "كيف تعمل TestDZ؟", howBody: "عملية بسيطة وفعالة في ثلاث خطوات", create: "أنشئ حسابك", createBody: "انضم إلى TestDZ كمختبر أو مطور أو مسؤول.", take: "شارك أو أنشئ اختباراً", takeBody: "شارك في الاختبارات أو صمّم اختباراتك الخاصة.", grow: "اكسب وتطوّر", growBody: "احصل على المكافآت وتابع تقدمك.",
     promoTitle: "الاختبارات متاحة", promoAccent: "لمدة 14 يوماً فقط!", promoBody: "لا تفوّت فرصتك في المشاركة.", exploreActive: "اكتشف الاختبارات النشطة",
-    community: "ماذا يقول مجتمعنا؟", quote1: "« TestDZ منصة رائعة! أحب نظامها العادل والمكافآت التي تقدمها. »", quote2: "« منصة ممتازة للمطورين لمشاركة اختباراتهم والحصول على الملاحظات. »", quote3: "« بسيطة وآمنة ومفيدة جداً. أنصح بها! »", tester: "مختبر", developer: "مطور",
+    tester: "مختبر", developer: "مطور",
     faqTitle: "الأسئلة الشائعة", faqIntro: "اعثر على إجابات لأكثر الأسئلة شيوعاً حول TestDZ.", viewFaq: "عرض جميع الأسئلة", faq1q: "كيف يعمل اختبار الـ14 يوماً؟", faq1a: "يشارك المختبرون في دورة اختبار منظمة ويقدمون ملاحظاتهم طوال فترة الاختبار.", faq2q: "هل يمكنني كسب مكافآت حقيقية؟", faq2a: "تمنح الأنشطة المؤهلة نقاطاً ومكافآت وفقاً لقواعد المنصة.", faq3q: "هل استخدام TestDZ مجاني؟", faq3a: "يمكنك إنشاء حساب واستكشاف المنصة. وقد تختلف الميزات حسب دورك وباقتك.", faq4q: "كيف أصبح مطوراً؟", faq4a: "أنشئ حساباً واختر دور المطور أثناء التسجيل.",
     about: "عن المنصة", terms: "شروط الاستخدام", privacy: "سياسة الخصوصية", contact: "اتصل بنا", copyright: "© 2026 TestDZ. جميع الحقوق محفوظة.", languageLabel: "اختر اللغة", illustration: "رسم توضيحي للوحة تحكم TestDZ"
   }
@@ -107,10 +107,9 @@ function LandingPage() {
       const intro = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.75 } });
       intro
         .from(".lp-hero-copy h1", { y: 28, opacity: 0 })
-        .from(".lp-hero-copy h2", { y: 22, opacity: 0 }, "-=0.48")
         .from(".lp-hero-copy > p", { y: 18, opacity: 0 }, "-=0.42")
         .from(".lp-hero-buttons", { y: 16, opacity: 0 }, "-=0.38")
-        .from(".lp-proof", { y: 12, opacity: 0 }, "-=0.35");
+        .from(".lp-role-cards", { y: 12, opacity: 0, stagger: 0.1 }, "-=0.35");
 
       gsap.from(".lp-hero-art", {
         y: 28,
@@ -119,31 +118,6 @@ function LandingPage() {
         duration: 1,
         ease: "power2.out",
         delay: 0.12,
-      });
-
-      gsap.to(".lp-code", {
-        y: -11,
-        rotate: -4,
-        duration: 2.8,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
-      });
-      gsap.to(".lp-cloud", {
-        y: 9,
-        x: 5,
-        duration: 3.4,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
-      });
-      gsap.to(".lp-trophy", {
-        y: -8,
-        rotate: 5,
-        duration: 3.1,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
       });
 
       const reveal = (selector: string, trigger: string, stagger = 0.12) => {
@@ -164,7 +138,6 @@ function LandingPage() {
       reveal(".lp-features article", ".lp-features", 0.13);
       reveal(".lp-steps article", ".lp-steps", 0.16);
       reveal(".lp-promo > *", ".lp-promo", 0.1);
-      reveal(".lp-quotes article", ".lp-quotes", 0.14);
       reveal(".lp-faq-illustration, .lp-faq-copy, .lp-faq-list details", ".lp-faq", 0.08);
     }, root);
 
@@ -181,18 +154,24 @@ function LandingPage() {
         <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); window.requestAnimationFrame(() => ScrollTrigger.refresh()); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
       </header>
 
-      <section className="lp-hero" id="home">
+      <section className="lp-hero lp-hero-v2" id="home">
         <div className="lp-hero-copy">
-          <h1>TestDZ</h1><h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
+          <span className="lp-hero-eyebrow"><span className="lp-live-dot" /> TestDZ · {t.visualLabel}</span>
+          <h1>Test. Learn. <span>Grow.</span></h1>
           <p>{t.heroBody}</p>
-          <div className="lp-hero-buttons"><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted} <LpIcon name="arrow" size={16}/></Link><a className="lp-secondary" href="#how-it-works">{t.exploreTests} <LpIcon name="play" size={14}/></a></div>
-          <div className="lp-proof"><div className="lp-avatars"><i>JD</i><i>AM</i><i>SK</i><i>RL</i></div><strong>50K+<small>{t.activeUsers}</small></strong><b className="lp-proof-divider"/><strong><span className="lp-star">★</span> 4.8/5<small>{t.userRating}</small></strong></div>
+          <div className="lp-role-cards">
+            <Link className="lp-role-card lp-role-developer" to="/auth?mode=signup"><span className="lp-role-icon"><LpIcon name="code" size={23}/></span><span className="lp-role-copy"><strong>{t.developerCta}</strong><small>{t.developerPath}</small></span><LpIcon name="arrow" size={19}/></Link>
+            <Link className="lp-role-card lp-role-tester" to="/auth?mode=signup"><span className="lp-role-icon"><LpIcon name="shield" size={23}/></span><span className="lp-role-copy"><strong>{t.testerCta}</strong><small>{t.testerPath}</small></span><LpIcon name="arrow" size={19}/></Link>
+          </div>
+          <a className="lp-hero-discover" href="#how-it-works">{t.exploreTests} <LpIcon name="arrow" size={15}/></a>
         </div>
-        <div className="lp-hero-art" aria-label={t.illustration}>
-          <div className="lp-art-glow"/>
-          <div className="lp-float lp-code"><LpIcon name="code" size={30}/></div><div className="lp-float lp-cloud"><LpIcon name="cloud" size={27}/></div><div className="lp-float lp-trophy"><LpIcon name="trophy" size={54}/></div><div className="lp-days"><LpIcon name="calendar" size={16}/>14<small>{t.days}</small></div>
-          <div className="lp-laptop"><div className="lp-screen"><div className="lp-screen-sidebar"><b>TestDZ</b><span>◈ {t.overview}</span><span>▦ {t.myTests}</span><span>♙ {t.testers}</span><span>▤ {t.rewards}</span></div><div className="lp-screen-main"><div className="lp-screen-top">{t.dashboard} <i>● ● ●</i></div><div className="lp-stats"><b>{t.activeTests}<strong>12</strong></b><b>{t.totalUsers}<strong>2,450</strong></b><b>{t.rewards}<strong>850</strong></b></div><div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/></div><div className="lp-test-rows"><i/><i/><i/></div></div></div><div className="lp-laptop-base"/></div>
-          <div className="lp-checklist"><b><LpIcon name="check" size={13}/></b><span>{t.completed}</span><b><LpIcon name="check" size={13}/></b><span>{t.feedback}</span><b><LpIcon name="check" size={13}/></b><span>{t.earned}</span></div>
+        <div className="lp-hero-art lp-hero-art-v2" role="img" aria-label={t.visualLabel}>
+          <div className="lp-visual-orbit lp-orbit-one"/><div className="lp-visual-orbit lp-orbit-two"/>
+          <div className="lp-visual-core"><span className="lp-core-mark"><LpIcon name="flask" size={48}/></span><strong>TestDZ</strong><small>{t.visualLabel}</small></div>
+          <div className="lp-path-node lp-path-developer"><span className="lp-path-icon"><LpIcon name="code" size={25}/></span><span><strong>{t.developerCta}</strong><small>{t.developerPath}</small></span></div>
+          <div className="lp-path-node lp-path-tester"><span className="lp-path-icon"><LpIcon name="shield" size={25}/></span><span><strong>{t.testerCta}</strong><small>{t.testerPath}</small></span></div>
+          <svg className="lp-path-lines" viewBox="0 0 560 390" fill="none" aria-hidden="true"><path d="M280 192 C205 190 195 105 105 105" stroke="#6CA5FF" strokeWidth="2.5" strokeDasharray="6 8"/><path d="M280 205 C355 208 370 292 455 292" stroke="#42C9B0" strokeWidth="2.5" strokeDasharray="6 8"/><circle cx="105" cy="105" r="6" fill="#6CA5FF"/><circle cx="455" cy="292" r="6" fill="#42C9B0"/></svg>
+          <span className="lp-visual-spark lp-spark-a">✳</span><span className="lp-visual-spark lp-spark-b">✦</span>
         </div>
       </section>
 
@@ -213,12 +192,6 @@ function LandingPage() {
       </section>
 
       <section className="lp-promo" id="testers"><div className="lp-hourglass"><LpIcon name="hourglass" size={58}/></div><div><h2>{t.promoTitle}<br/><span>{t.promoAccent}</span></h2><p>{t.promoBody}</p></div><div className="lp-promo-calendar"><LpIcon name="calendar" size={70}/></div><a href="#features">{t.exploreActive} <LpIcon name="arrow" size={16}/></a></section>
-
-      <section className="lp-testimonials"><div className="lp-section-title"><h2>{t.community}</h2></div><div className="lp-quotes">
-        <article><div className="lp-person">SB</div><div><p>{t.quote1}</p><b>Sarah Benali</b><small>{t.tester}</small><strong>★★★★★</strong></div></article>
-        <article><div className="lp-person">MS</div><div><p>{t.quote2}</p><b>Mohamed Saci</b><small>{t.developer}</small><strong>★★★★★</strong></div></article>
-        <article><div className="lp-person">AK</div><div><p>{t.quote3}</p><b>Amina Khelifi</b><small>{t.tester}</small><strong>★★★★★</strong></div></article>
-      </div><div className="lp-dots">● ● ●</div></section>
 
       <section className="lp-faq" id="faq">
         <div className="lp-faq-illustration" aria-hidden="true"><svg viewBox="0 0 220 190" role="img"><path d="M12 184c20-48 45-54 72-34 18 14 35 10 51-5 23-22 52-8 73 39" fill="#c9e1ff"/><path d="M50 183c-5-37 5-69 34-83 31-15 68 2 76 35l-5 48Z" fill="#075cf5"/><path d="M78 95c-9-42 11-69 42-68 31 1 48 28 38 62-7 24-23 38-43 36-18-2-31-13-37-30Z" fill="#f1bd91"/><path d="M75 83c-10-45 10-66 43-66 33 0 51 23 44 56-12-6-18-19-21-28-14 18-35 27-66 29Z" fill="#142c65"/><path d="M99 96h3m31 0h3M112 112q10 7 19-1" stroke="#17305d" strokeWidth="3" strokeLinecap="round" fill="none"/><path d="M99 85q7-6 14 0m15 0q7-6 14 0" stroke="#17305d" strokeWidth="3" fill="none"/><path d="M109 126q-14 11-25 26m50-23q13 10 22 26" stroke="#f1bd91" strokeWidth="13" strokeLinecap="round" fill="none"/></svg><span>?</span></div>
