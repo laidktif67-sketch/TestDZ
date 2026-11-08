@@ -785,3 +785,14 @@ html:lang(fr),
 .auth-input{transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
 @media(max-width:560px){.auth-avatars span{font-size:8px}.auth-socials .social-logo{width:19px;height:19px;flex-basis:19px}}
 @media(prefers-reduced-motion:reduce){.auth-socials button,.auth-reference-submit{transition:none}}
+
+
+/* Consistent line-icon system for authentication fields. */
+.auth-field-icon{display:grid;place-items:center;flex:0 0 22px;width:22px;height:22px;color:#7285a5}
+.auth-field-icon svg,.auth-show-password svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.auth-input:focus-within .auth-field-icon{color:#2563eb}
+.auth-input:focus-within{border-color:#8bb5ff;box-shadow:0 0 0 3px rgba(37,99,235,.09)}
+.auth-show-password{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#7285a5;cursor:pointer}
+.auth-show-password:hover{background:#edf4ff;color:#1d4ed8}
+.auth-reference-fields .auth-input input{min-width:0}
+@media(max-width:560px){.auth-field-icon{flex-basis:20px;width:20px;height:20px}.auth-field-icon svg,.auth-show-password svg{width:19px;height:19px}}
