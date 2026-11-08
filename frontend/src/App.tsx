@@ -9,55 +9,73 @@ function Brand() {
   return <Link className="brand" to="/" aria-label="TestDZ الصفحة الرئيسية"><span className="brand-mark">T</span><span>Test<span className="brand-accent">DZ</span></span></Link>;
 }
 
+function LpIcon({ name, size = 24 }: { name: string; size?: number }) {
+  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
+  switch (name) {
+    case "flask": return <svg {...common}><path d="M9 3h6M10 3v6l-5.5 9.2A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.8L14 9V3"/><path d="M7.5 15h9M9 12h6"/></svg>;
+    case "moon": return <svg {...common}><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z"/></svg>;
+    case "arrow": return <svg {...common}><path d="M4 12h15M13 6l6 6-6 6"/></svg>;
+    case "play": return <svg {...common}><path d="m8 5 11 7-11 7z" fill="currentColor" stroke="none"/></svg>;
+    case "code": return <svg {...common}><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg>;
+    case "cloud": return <svg {...common}><path d="M7 18h10a4 4 0 0 0 .4-8A6 6 0 0 0 6 9a4.5 4.5 0 0 0 1 9Z"/></svg>;
+    case "shield": return <svg {...common}><path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.3 2.3 4.8-5"/></svg>;
+    case "bolt": return <svg {...common}><path d="M13 2 4 13h7l-1 9 10-13h-7l0-7Z" fill="currentColor" stroke="none"/></svg>;
+    case "gift": return <svg {...common}><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M12 10v11M2 7h20v3H2zM12 7H8.5a2.5 2.5 0 1 1 2.5-2.5V7Zm0 0h3.5A2.5 2.5 0 1 0 13 4.5V7Z"/></svg>;
+    case "users": return <svg {...common}><path d="M16 20v-1.5a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 4a3.5 3.5 0 0 1 0 6.8M17 14.5a4 4 0 0 1 4 4V20"/></svg>;
+    case "user-plus": return <svg {...common}><circle cx="9" cy="8" r="4"/><path d="M2.5 21v-1.5A4.5 4.5 0 0 1 7 15h4a4.5 4.5 0 0 1 4.5 4.5V21M19 8v6M16 11h6"/></svg>;
+    case "clipboard": return <svg {...common}><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6a1.5 1.5 0 0 0-1.5-1.5h-3A1.5 1.5 0 0 0 9 4.5ZM8 11h8M8 15h8"/></svg>;
+    case "trophy": return <svg {...common}><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v2a4 4 0 0 0 4 4M17 6h3v2a4 4 0 0 1-4 4"/></svg>;
+    case "hourglass": return <svg {...common}><path d="M6 3h12M6 21h12M7 3c0 5 2 6 5 9-3 3-5 4-5 9M17 3c0 5-2 6-5 9 3 3 5 4 5 9"/><path d="M9 7h6M9 17h6"/></svg>;
+    case "calendar": return <svg {...common}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M7 14h3M14 14h3M7 17h3"/></svg>;
+    case "check": return <svg {...common}><path d="m5 12 4 4L19 6"/></svg>;
+    case "plus": return <svg {...common}><path d="M12 5v14M5 12h14"/></svg>;
+    default: return <svg {...common}><circle cx="12" cy="12" r="9"/></svg>;
+  }
+}
+
 function LandingPage() {
   return (
     <main className="landing-en" dir="ltr" lang="en">
       <header className="lp-header">
-        <Link className="lp-brand" to="/" aria-label="TestDZ home"><span className="lp-flask">⚗</span><span>TestDZ</span></Link>
+        <Link className="lp-brand" to="/" aria-label="TestDZ home"><span className="lp-flask"><LpIcon name="flask" size={29} /></span><span>TestDZ</span></Link>
         <nav className="lp-nav" aria-label="Main navigation">
-          <a className="active" href="#home">Home</a>
-          <a href="#features">Features</a>
-          <a href="#developers">For Developers⌄</a>
-          <a href="#testers">For Testers⌄</a>
-          <a href="#pricing">Pricing</a>
-          <a href="#faq">FAQ</a>
+          <a className="active" href="#home">Home</a><a href="#features">Features</a><a href="#developers">For Developers⌄</a><a href="#testers">For Testers⌄</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
         </nav>
-        <div className="lp-header-actions"><Link className="lp-signin" to="/auth">Sign In</Link><Link className="lp-cta" to="/auth?mode=signup">Get Started</Link></div>
+        <div className="lp-header-actions"><span className="lp-theme-icon"><LpIcon name="moon" size={18}/></span><Link className="lp-signin" to="/auth">Sign In</Link><Link className="lp-cta" to="/auth?mode=signup">Get Started</Link></div>
       </header>
 
       <section className="lp-hero" id="home">
         <div className="lp-hero-copy">
-          <h1>TestDZ</h1>
-          <h2>Test. Learn. <span>Grow.</span></h2>
+          <h1>TestDZ</h1><h2>Test. Learn. <span>Grow.</span></h2>
           <p>A comprehensive platform for closed tests, where developers create tests and testers earn rewards by participating.</p>
-          <div className="lp-hero-buttons"><Link className="lp-cta" to="/auth?mode=signup">Get Started <span>→</span></Link><a className="lp-secondary" href="#how-it-works">Explore Tests <span>▶</span></a></div>
-          <div className="lp-proof"><div className="lp-avatars"><i>JD</i><i>AM</i><i>SK</i><i>RL</i></div><strong>50K+<small>Active Users</small></strong><b className="lp-proof-divider"/><strong>⭐ 4.8/5<small>User Rating</small></strong></div>
+          <div className="lp-hero-buttons"><Link className="lp-cta" to="/auth?mode=signup">Get Started <LpIcon name="arrow" size={16}/></Link><a className="lp-secondary" href="#how-it-works">Explore Tests <LpIcon name="play" size={14}/></a></div>
+          <div className="lp-proof"><div className="lp-avatars"><i>JD</i><i>AM</i><i>SK</i><i>RL</i></div><strong>50K+<small>Active Users</small></strong><b className="lp-proof-divider"/><strong><span className="lp-star">★</span> 4.8/5<small>User Rating</small></strong></div>
         </div>
         <div className="lp-hero-art" aria-label="Illustration of the TestDZ testing dashboard">
           <div className="lp-art-glow"/>
-          <div className="lp-float lp-code">‹ / ›</div><div className="lp-float lp-cloud">☁</div><div className="lp-float lp-trophy">🏆</div><div className="lp-days">14<br/><small>Days</small></div>
+          <div className="lp-float lp-code"><LpIcon name="code" size={30}/></div><div className="lp-float lp-cloud"><LpIcon name="cloud" size={27}/></div><div className="lp-float lp-trophy"><LpIcon name="trophy" size={54}/></div><div className="lp-days"><LpIcon name="calendar" size={16}/>14<small>Days</small></div>
           <div className="lp-laptop"><div className="lp-screen"><div className="lp-screen-sidebar"><b>TestDZ</b><span>◈ Overview</span><span>▦ My Tests</span><span>♙ Testers</span><span>▤ Rewards</span></div><div className="lp-screen-main"><div className="lp-screen-top">Dashboard <i>● ● ●</i></div><div className="lp-stats"><b>Active Tests<strong>12</strong></b><b>Total Users<strong>2,450</strong></b><b>Rewards<strong>850</strong></b></div><div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/></div><div className="lp-test-rows"><i/><i/><i/></div></div></div><div className="lp-laptop-base"/></div>
-          <div className="lp-checklist"><b>✓</b><span>Test completed</span><b>✓</b><span>Feedback received</span><b>✓</b><span>Reward earned</span></div>
+          <div className="lp-checklist"><b><LpIcon name="check" size={13}/></b><span>Test completed</span><b><LpIcon name="check" size={13}/></b><span>Feedback received</span><b><LpIcon name="check" size={13}/></b><span>Reward earned</span></div>
         </div>
       </section>
 
       <section className="lp-features" id="features">
-        <article><span className="lp-feature-icon green">✓</span><h3>Secure &amp; Fair</h3><p>Advanced anti-fraud system for a transparent tester experience.</p></article>
-        <article><span className="lp-feature-icon blue">ϟ</span><h3>14-Day Tests</h3><p>Limited-time tests to ensure real skills and knowledge.</p></article>
-        <article><span className="lp-feature-icon purple">♔</span><h3>Earn Rewards</h3><p>Get points and rewards for your efforts.</p></article>
-        <article><span className="lp-feature-icon cyan">♟</span><h3>For Everyone</h3><p>Testers, developers and admins in one platform.</p></article>
+        <article><span className="lp-feature-icon green"><LpIcon name="shield" size={30}/></span><h3>Secure &amp; Fair</h3><p>Advanced anti-fraud system for a transparent tester experience.</p></article>
+        <article><span className="lp-feature-icon blue"><LpIcon name="bolt" size={30}/></span><h3>14-Day Tests</h3><p>Limited-time tests to ensure real skills and knowledge.</p></article>
+        <article><span className="lp-feature-icon purple"><LpIcon name="gift" size={30}/></span><h3>Earn Rewards</h3><p>Get points and rewards for your efforts.</p></article>
+        <article><span className="lp-feature-icon cyan"><LpIcon name="users" size={30}/></span><h3>For Everyone</h3><p>Testers, developers and admins in one platform.</p></article>
       </section>
 
       <section className="lp-how" id="how-it-works">
         <div className="lp-section-title"><h2>How TestDZ Works?</h2><p>A simple and effective process in 3 easy steps</p></div>
         <div className="lp-steps">
-          <article><b className="lp-step-number">1</b><span>♟</span><h3>Create Your Account</h3><p>Join TestDZ as a tester, developer or admin.</p></article><i>→</i>
-          <article><b className="lp-step-number">2</b><span>▤</span><h3>Take or Create Tests</h3><p>Participate in tests or design your own tests.</p></article><i>→</i>
-          <article><b className="lp-step-number">3</b><span>🏆</span><h3>Earn &amp; Grow</h3><p>Get rewards and track your progress.</p></article>
+          <article><b className="lp-step-number">1</b><span><LpIcon name="user-plus" size={32}/></span><h3>Create Your Account</h3><p>Join TestDZ as a tester, developer or admin.</p></article><i>→</i>
+          <article><b className="lp-step-number">2</b><span><LpIcon name="clipboard" size={32}/></span><h3>Take or Create Tests</h3><p>Participate in tests or design your own tests.</p></article><i>→</i>
+          <article><b className="lp-step-number">3</b><span><LpIcon name="trophy" size={32}/></span><h3>Earn &amp; Grow</h3><p>Get rewards and track your progress.</p></article>
         </div>
       </section>
 
-      <section className="lp-promo" id="testers"><div className="lp-hourglass">⌛</div><div><h2>Tests are open for<br/>only <span>14 days!</span></h2><p>Don’t miss your chance to participate.</p></div><a href="#features">Explore Active Tests <b>→</b></a></section>
+      <section className="lp-promo" id="testers"><div className="lp-hourglass"><LpIcon name="hourglass" size={58}/></div><div><h2>Tests are open for<br/>only <span>14 days!</span></h2><p>Don’t miss your chance to participate.</p></div><div className="lp-promo-calendar"><LpIcon name="calendar" size={70}/></div><a href="#features">Explore Active Tests <LpIcon name="arrow" size={16}/></a></section>
 
       <section className="lp-testimonials"><div className="lp-section-title"><h2>What Our Community Says</h2></div><div className="lp-quotes">
         <article><div className="lp-person">SB</div><div><p>“TestDZ is an amazing platform! I love the fair system and rewards.”</p><b>Sarah Benali</b><small>Tester</small><strong>★★★★★</strong></div></article>
@@ -65,12 +83,17 @@ function LandingPage() {
         <article><div className="lp-person">AK</div><div><p>“Simple, secure and very useful. Highly recommended!”</p><b>Amina Khelifi</b><small>Tester</small><strong>★★★★★</strong></div></article>
       </div><div className="lp-dots">● ● ●</div></section>
 
-      <section className="lp-faq" id="faq"><div className="lp-faq-illustration">🙋‍♂️<span>?</span></div><div className="lp-faq-copy"><h2>Frequently Asked Questions</h2><p>Find answers to common questions about TestDZ.</p><a href="#faq">View All FAQs →</a></div><div className="lp-faq-list"><details><summary>How does the 14-day test work?</summary><p>Testers participate in an organized test cycle and share feedback throughout the testing period.</p></details><details><summary>Can I earn real rewards?</summary><p>Eligible activities can earn points and rewards according to the platform rules.</p></details><details><summary>Is TestDZ free to use?</summary><p>You can create an account and explore the platform. Available features may depend on your role and plan.</p></details><details><summary>How can I become a developer?</summary><p>Create an account and choose the developer role during onboarding.</p></details></div></section>
+      <section className="lp-faq" id="faq">
+        <div className="lp-faq-illustration" aria-hidden="true"><svg viewBox="0 0 220 190" role="img"><path d="M12 184c20-48 45-54 72-34 18 14 35 10 51-5 23-22 52-8 73 39" fill="#c9e1ff"/><path d="M50 183c-5-37 5-69 34-83 31-15 68 2 76 35l-5 48Z" fill="#075cf5"/><path d="M78 95c-9-42 11-69 42-68 31 1 48 28 38 62-7 24-23 38-43 36-18-2-31-13-37-30Z" fill="#f1bd91"/><path d="M75 83c-10-45 10-66 43-66 33 0 51 23 44 56-12-6-18-19-21-28-14 18-35 27-66 29Z" fill="#142c65"/><path d="M99 96h3m31 0h3M112 112q10 7 19-1" stroke="#17305d" strokeWidth="3" strokeLinecap="round" fill="none"/><path d="M99 85q7-6 14 0m15 0q7-6 14 0" stroke="#17305d" strokeWidth="3" fill="none"/><path d="M109 126q-14 11-25 26m50-23q13 10 22 26" stroke="#f1bd91" strokeWidth="13" strokeLinecap="round" fill="none"/></svg><span>?</span></div>
+        <div className="lp-faq-copy"><h2>Frequently Asked Questions</h2><p>Find answers to common questions about TestDZ.</p><a href="#faq">View All FAQs <LpIcon name="arrow" size={15}/></a></div>
+        <div className="lp-faq-list"><details><summary>How does the 14-day test work?</summary><p>Testers participate in an organized test cycle and share feedback throughout the testing period.</p></details><details><summary>Can I earn real rewards?</summary><p>Eligible activities can earn points and rewards according to the platform rules.</p></details><details><summary>Is TestDZ free to use?</summary><p>You can create an account and explore the platform. Available features may depend on your role and plan.</p></details><details><summary>How can I become a developer?</summary><p>Create an account and choose the developer role during onboarding.</p></details></div>
+      </section>
 
-      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask">⚗</span><span>TestDZ</span></Link><nav><a href="#features">About</a><a href="#terms">Terms of Service</a><a href="#privacy">Privacy Policy</a><a href="#contact">Contact</a></nav><div className="lp-social">◉　𝕏　▶　in</div><small>© 2026 TestDZ. All rights reserved.</small></footer>
+      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask"><LpIcon name="flask" size={29}/></span><span>TestDZ</span></Link><nav><a href="#features">About</a><a href="#terms">Terms of Service</a><a href="#privacy">Privacy Policy</a><a href="#contact">Contact</a></nav><div className="lp-social" aria-label="Social links">◉　𝕏　▶　in</div><small>© 2026 TestDZ. All rights reserved.</small></footer>
     </main>
   );
 }
+
 function translateAuthError(message: string) {
   const value = message.toLowerCase();
   if (value.includes("already registered") || value.includes("already been registered")) return "هذا البريد مسجل بالفعل. جرّب تسجيل الدخول.";
