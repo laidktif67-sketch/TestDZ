@@ -291,6 +291,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -303,7 +305,10 @@ function AuthPage() {
       setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة.");
       return;
     }
-    if (mode === "signup" && (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password))) { setError("كلمة المرور يجب أن تحتوي على حرف ورقم، وبحد أدنى 8 أحرف."); return; }
+    if (mode === "signup" && (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password))) {
+      setError("كلمة المرور يجب أن تحتوي على حرف ورقم، وبحد أدنى 8 أحرف.");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "signup") {
@@ -327,19 +332,67 @@ function AuthPage() {
     }
   }
 
-  return <main className="auth-layout"><div className="auth-side"><Brand /><div className="auth-side-copy"><span className="eyebrow">TESTDZ PLATFORM</span><h1>مساحة واحدة<br /><span>لاختبار أفضل.</span></h1><p>تابع مهامك، شارك ملاحظاتك، وساعد تطبيقات Android على التحسن.</p></div><span className="auth-side-foot">TestDZ · Algeria first</span></div><section className="auth-panel"><div className="auth-panel-top"><Link to="/">العودة للرئيسية</Link></div><div className="auth-form-wrap"><span className="eyebrow">{mode === "signup" ? "انضم إلى TestDZ" : "مرحباً بعودتك"}</span><h2>{mode === "signup" ? "أنشئ حسابك" : "تسجيل الدخول"}</h2><p className="form-intro">{mode === "signup" ? "ابدأ رحلتك في اختبار التطبيقات والتعاون." : "أدخل بياناتك للمتابعة إلى حسابك."}</p>
-      {!isSupabaseConfigured && <div className="notice notice-warning">الواجهة جاهزة، لكن يلزم ضبط متغيرات Supabase في ملف <code>.env</code> لتفعيل المصادقة.</div>}
-      {message && <div className="notice notice-success" role="status">{message}</div>}
-      {error && <div className="notice notice-error" role="alert">{error}</div>}
-      <form onSubmit={submit} className="auth-form">
-        {mode === "signup" && <><label>الاسم الكامل<input autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} required minLength={2} placeholder="كيف نناديك؟" /></label><label>رقم الهاتف <small>اختياري، وغير موثّق حالياً</small><input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+213..." dir="ltr" /></label></>}
-        <label>البريد الإلكتروني<input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="name@example.com" dir="ltr" /></label>
-        <label>كلمة المرور<input type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="8 أحرف على الأقل" dir="ltr" /></label>
-        <button className="button button-primary button-large submit-button" type="submit" disabled={busy}>{busy ? "جارٍ المعالجة..." : mode === "signup" ? "إنشاء الحساب" : "دخول"}</button>
-      </form>
-      <p className="switch-auth">{mode === "signin" && <Link to="/forgot-password">نسيت كلمة المرور؟</Link>}　{mode === "signup" ? "لديك حساب بالفعل؟" : "ليس لديك حساب؟"} <button type="button" onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setMessage(""); }}>{mode === "signup" ? "سجّل الدخول" : "أنشئ حساباً"}</button></p>
-      <p className="legal-note"><Link to="/verify-email">لم تصلك رسالة التأكيد؟</Link><br/>بالمتابعة، أنت توافق على استخدام TestDZ وفق شروط المنصة وسياسة الخصوصية عند نشرهما.</p>
-    </div></section></main>;
+  async function socialLogin(provider: "google" | "github" | "azure") {
+    setError("");
+    if (!supabase) {
+      setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin + "/auth/callback" },
+      });
+      if (authError) throw authError;
+    } catch (err) {
+      setError(err instanceof Error ? translateAuthError(err.message) : "تعذر تسجيل الدخول بهذه الخدمة.");
+      setBusy(false);
+    }
+  }
+
+  return <main className="auth-reference">
+    <section className="auth-reference-hero">
+      <header className="auth-reference-header">
+        <Link to="/" className="auth-reference-brand" aria-label="TestDZ home"><span className="auth-flask">⚗</span><span><strong>TestDZ</strong><small>Test · Learn · Grow</small></span></Link>
+        <button className="auth-language" type="button" aria-label="Language"><span>◎</span> English⌄</button>
+      </header>
+      <div className="auth-reference-copy">
+        <span className="auth-kicker">TEST · LEARN · GROW</span>
+        <h1>{mode === "signup" ? <>Join the<br/><strong>TestDZ community</strong></> : <>Welcome to<br/><strong>TestDZ</strong></>}</h1>
+        <p>The ultimate platform for software testing, where developers create tests and testers earn rewards.</p>
+        <ul className="auth-benefits">
+          <li><span>ϟ</span>Take Tests &amp; Earn Points</li>
+          <li><span>✿</span>Unlock Rewards &amp; Benefits</li>
+          <li><span>▥</span>Grow Your Skills</li>
+        </ul>
+        <div className="auth-illustration"><div className="auth-code-bubble">&lt;/&gt;</div><div className="auth-orbit auth-orbit-one"></div><div className="auth-orbit auth-orbit-two"></div><img src="/images/hero-dashboard.png" alt="TestDZ testing dashboard preview" /><span className="auth-points"><b>★</b><strong>450</strong><small>Points</small></span></div>
+      </div>
+      <footer className="auth-reference-stats"><div className="auth-avatars"><span>👨🏻</span><span>👩🏻</span><span>👨🏽</span></div><div><strong>50K+</strong><small>Active Users</small></div><i></i><div className="auth-rating-star">★</div><div><strong>4.8/5</strong><small>User Rating</small></div></footer>
+    </section>
+    <section className="auth-reference-form-area">
+      <div className="auth-reference-form-wrap">
+        <div className="auth-mode-tabs" role="tablist" aria-label="Authentication mode">
+          <button type="button" role="tab" aria-selected={mode === "signin"} className={mode === "signin" ? "active" : ""} onClick={() => {setMode("signin");setError("");setMessage("");}}><span>♟</span> Login</button>
+          <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => {setMode("signup");setError("");setMessage("");}}><span>♧</span> Register</button>
+        </div>
+        <div className="auth-reference-heading"><h2>{mode === "signup" ? "Create Your Account" : "Welcome Back!"}</h2><p>{mode === "signup" ? "Join TestDZ and start earning rewards" : "Login to your TestDZ account"}</p></div>
+        {!isSupabaseConfigured && <div className="notice notice-warning">الواجهة جاهزة، لكن يلزم ضبط متغيرات Supabase في ملف <code>.env</code> لتفعيل المصادقة.</div>}
+        {message && <div className="notice notice-success" role="status">{message}</div>}
+        {error && <div className="notice notice-error" role="alert">{error}</div>}
+        <form onSubmit={submit} className="auth-reference-fields">
+          {mode === "signup" && <><label className="auth-input"><span>♙</span><input autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} required minLength={2} placeholder="Full Name" /></label><label className="auth-input"><span>☎</span><input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number (optional)" dir="ltr" /></label></>}
+          <label className="auth-input"><span>✉</span><input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Email Address" dir="ltr" /></label>
+          <label className="auth-input"><span>♙</span><input type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Password" dir="ltr" /><button type="button" className="auth-show-password" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "◉" : "◎"}</button></label>
+          {mode === "signin" && <div className="auth-form-options"><label className="auth-remember"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} /> <span>Remember me</span></label><Link to="/forgot-password">Forgot Password?</Link></div>}
+          <button className="auth-reference-submit" type="submit" disabled={busy}><span>⇥</span>{busy ? "Please wait..." : mode === "signup" ? "Create Account" : "Login"}</button>
+        </form>
+        {mode === "signin" && <><div className="auth-or-divider"><span>or continue with</span></div><div className="auth-socials"><button type="button" onClick={() => socialLogin("google")} disabled={busy}><b className="google-mark">G</b>Google</button><button type="button" onClick={() => socialLogin("github")} disabled={busy}><b className="github-mark">●</b>GitHub</button><button type="button" onClick={() => socialLogin("azure")} disabled={busy}><b className="microsoft-mark"><i></i><i></i><i></i><i></i></b>Microsoft</button></div></>}
+        <p className="auth-reference-switch">{mode === "signup" ? "Already have an account?" : "Don't have an account?"} <button type="button" onClick={() => {setMode(mode === "signup" ? "signin" : "signup");setError("");setMessage("");}}>{mode === "signup" ? "Login now" : "Create one now"}</button></p>
+      </div>
+      <div className="auth-security"><span>♙</span><div><strong>Your data is safe with us</strong><small>We use industry-standard security to protect your account.</small></div></div>
+    </section>
+  </main>;
 }
 
 function DashboardPage() {
