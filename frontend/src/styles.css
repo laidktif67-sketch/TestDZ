@@ -967,3 +967,68 @@ html:lang(fr),
   .auth-reference-heading,
   .auth-reference-fields{animation:none!important;transform:none!important}
 }
+
+
+/* Pro Max Ultra auth motion: GSAP owns these transforms to avoid CSS/JS animation conflicts. */
+.auth-reference-hero:before{will-change:transform}
+.auth-illustration img,
+.auth-code-bubble,
+.auth-orbit-one,
+.auth-orbit-two{animation:none!important}
+.auth-reference-form-wrap{will-change:transform,opacity}
+.auth-reference-heading{will-change:transform,opacity}
+.auth-reference-fields .auth-input,
+.auth-account-types,
+.auth-terms,
+.auth-password-guidance,
+.auth-form-options,
+.auth-socials button,
+.auth-reference-submit{will-change:transform,opacity}
+.auth-points{
+  grid-template-columns:1fr;
+  justify-items:start;
+  gap:3px;
+  min-width:128px;
+  max-width:180px;
+  padding:10px 13px;
+  border:1px solid rgba(255,255,255,.9);
+  background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(239,246,255,.96));
+  backdrop-filter:blur(12px);
+}
+.auth-points b{
+  grid-row:auto;
+  display:inline-grid;
+  place-items:center;
+  min-width:30px;
+  height:20px;
+  padding:0 6px;
+  border-radius:7px;
+  background:linear-gradient(135deg,#1688ff,#174de0);
+  color:#fff;
+  font-size:10px;
+  letter-spacing:.08em;
+}
+.auth-points strong{font-size:14px;line-height:1.2}
+.auth-points small{font-size:9px;line-height:1.3;color:#52698f}
+@media(max-width:560px){
+  .auth-points{right:1%;bottom:5%;min-width:108px;padding:8px 9px}
+  .auth-points strong{font-size:12px}
+  .auth-points small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+  .auth-reference-hero:before,
+  .auth-illustration img,
+  .auth-code-bubble,
+  .auth-orbit-one,
+  .auth-orbit-two,
+  .auth-points{animation:none!important}
+  .auth-reference-form-wrap,
+  .auth-reference-heading,
+  .auth-reference-fields .auth-input,
+  .auth-account-types,
+  .auth-terms,
+  .auth-password-guidance,
+  .auth-form-options,
+  .auth-socials button,
+  .auth-reference-submit{will-change:auto!important;transform:none!important;filter:none!important}
+}
