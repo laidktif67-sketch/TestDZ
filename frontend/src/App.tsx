@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
+import TesterDashboard from "./components/TesterDashboard";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
 function Brand() {
@@ -143,18 +144,22 @@ function AuthPage() {
 
 function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
-  const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const client = supabase;
     if (!client) { setLoading(false); return; }
-    client.auth.getSession().then(async ({ data }) => { setSession(data.session); if (data.session) { const { data: roleRows } = await client.from("user_roles").select("role").eq("user_id", data.session.user.id); setRoles((roleRows ?? []).map((row: { role: string }) => row.role)); } setLoading(false); });
-    const { data } = client.auth.onAuthStateChange(async (_event, nextSession) => { setSession(nextSession); if (nextSession) { const { data: roleRows } = await client.from("user_roles").select("role").eq("user_id", nextSession.user.id); setRoles((roleRows ?? []).map((row: { role: string }) => row.role)); } else setRoles([]); });
+    client.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+    const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
   if (loading) return <div className="loading-screen">جارٍ تحميل حسابك...</div>;
   if (!session) return <Navigate to="/auth" replace />;
-  return <main className="dashboard-shell"><header className="site-header container"><Brand /><button className="button button-quiet" onClick={async () => { await supabase?.auth.signOut(); }}>تسجيل الخروج</button></header><section className="dashboard-welcome container"><span className="eyebrow">مساحة العمل</span><h1>مرحباً بك في <span>TestDZ</span></h1><p>تم تسجيل الدخول بنجاح. نبني الآن لوحة مهام المختبر والمطور.</p><div className="dashboard-card"><strong>{session.user.email}</strong><span>الأدوار: {roles.length ? roles.join(" · ") : "غير محدد"}</span><span>حالة البريد: {session.user.email_confirmed_at ? "مؤكد" : "بانتظار التأكيد"}</span><Link to="/profile">إدارة الملف الشخصي ←</Link>{roles.includes("developer") && <><span>مساحة المطور — إدارة تطبيقاتك ودورات الاختبار.</span><Link to="/apps">إدارة تطبيقاتي ←</Link></>}{roles.includes("tester") && <span>مساحة المختبر — اكتشاف الاختبارات ستكون متاحة بعد اكتمال محرك الاختبارات.</span>}</div><p className="dashboard-note">هذه نسخة تأسيسية؛ لم نعرض بيانات وهمية أو مهام تجريبية.</p></section></main>;
+  return <TesterDashboard session={session} />;
 }
 
 
