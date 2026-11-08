@@ -630,7 +630,7 @@ html:lang(fr),
 .auth-flask svg{width:100%;height:100%}
 .auth-language{border:0;background:transparent;color:#10245a;font-size:13px;font-weight:650;padding:8px;white-space:nowrap;cursor:default}
 .auth-language span{font-size:20px;margin-right:8px}
-.auth-reference-copy{margin-top:clamp(28px,5vh,58px);max-width:650px;width:100%}
+.auth-reference-copy{margin-top:clamp(22px,3.2vh,42px);max-width:650px;width:100%}
 .auth-kicker{display:none}
 .auth-reference-copy h1{font-size:clamp(42px,4.2vw,64px);line-height:.99;letter-spacing:-2.2px;margin:0 0 16px;color:#102c6b;font-weight:650;text-wrap:balance}
 .auth-reference-copy h1 strong{font-weight:850}
@@ -639,9 +639,9 @@ html:lang(fr),
 .auth-benefits li{display:flex;align-items:center;gap:11px;font-size:clamp(12px,.95vw,14px);font-weight:650;color:#122c63;min-width:0}
 .auth-benefits li>span{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:linear-gradient(145deg,#52a9ff,#064be8);color:#fff;box-shadow:0 5px 12px #6aa7ed66}
 .auth-benefits li>span svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
-.auth-illustration{position:relative;isolation:isolate;flex:1 1 auto;height:clamp(230px,34vh,360px);min-height:210px;max-height:390px;width:100%;max-width:680px;margin:3px auto 0;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 20px 28px rgba(36,91,177,.08))}
+.auth-illustration{position:relative;isolation:isolate;flex:0 1 auto;height:clamp(190px,27vh,300px);min-height:180px;max-height:320px;width:100%;max-width:640px;margin:8px auto 0;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 16px 24px rgba(36,91,177,.08))}
 .auth-illustration:before{content:"";position:absolute;z-index:0;inset:12% 8% 4%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.82),rgba(255,255,255,0) 68%);pointer-events:none}
-.auth-illustration img{position:relative;z-index:2;display:block;width:100%;height:100%;max-height:390px;object-fit:contain;object-position:center;animation:auth-hero-float 7s ease-in-out infinite}
+.auth-illustration img{position:relative;z-index:2;display:block;width:100%;height:100%;max-height:320px;object-fit:contain;object-position:center;animation:auth-hero-float 7s ease-in-out infinite}
 .auth-code-bubble{position:absolute;z-index:3;top:12%;left:8%;padding:10px 14px;border-radius:15px;background:linear-gradient(140deg,#147dff,#063cc6);color:#fff;font-size:24px;font-weight:800;transform:rotate(-9deg);box-shadow:0 12px 25px #1352c744;animation:auth-float-left 6s ease-in-out infinite}
 .auth-orbit{position:absolute;z-index:1;border-radius:50%;background:linear-gradient(135deg,#fff,#8ebdff);opacity:.8}
 .auth-orbit-one{width:72px;height:72px;right:10%;top:12%;animation:auth-orbit-pulse 5s ease-in-out infinite}
@@ -715,9 +715,9 @@ html:lang(fr),
 @media(min-width:901px) and (max-width:1199px){
   .auth-reference{grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr)}
   .auth-reference-hero{padding:24px 28px}
-  .auth-reference-copy{margin-top:30px}
+  .auth-reference-copy{margin-top:22px}
   .auth-reference-copy h1{font-size:clamp(38px,4.1vw,48px)}
-  .auth-illustration{height:clamp(210px,29vh,300px)}
+  .auth-illustration{height:clamp(180px,24vh,260px);min-height:170px}
   .auth-reference-form-area{padding:22px}
   .auth-reference-form-wrap{padding:23px}
   .auth-reference-heading{margin:20px 0 18px}
@@ -730,8 +730,8 @@ html:lang(fr),
   .auth-reference{grid-template-columns:minmax(0,1fr);overflow:visible}
   .auth-reference-hero{min-height:0;padding:20px clamp(20px,5vw,42px) 14px}
   .auth-reference-header{width:100%;max-width:760px;margin-inline:auto}
-  .auth-reference-copy{width:100%;max-width:760px;margin:23px auto 0}
-  .auth-reference-copy h1{font-size:clamp(34px,5.4vw,48px);line-height:1.04}
+  .auth-reference-copy{width:100%;max-width:760px;margin:18px auto 0}
+  .auth-reference-copy h1{font-size:clamp(32px,5.2vw,46px);line-height:1.04;margin-bottom:12px}
   .auth-reference-copy>p{max-width:620px;font-size:14px}
   .auth-benefits{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}
   .auth-benefits li{font-size:11px;gap:7px}
