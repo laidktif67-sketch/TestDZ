@@ -971,3 +971,7 @@ html:lang(fr),
   .auth-reference-submit:before{display:none}
   .auth-input{transform:none!important}
 }
+
+.auth-benefits li>span svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.auth-benefits li>span{flex:0 0 34px}
+@media(max-width:560px){.auth-benefits li>span{flex-basis:27px}.auth-benefits li>span svg{width:16px;height:16px}}
