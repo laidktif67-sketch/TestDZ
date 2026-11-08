@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      // Avoid Workbox's Terser worker crash on Android/Termux ARM64.
+      // The app bundle remains minified by Vite; only the generated SW is unminified.
+      mode: "development",
       includeAssets: ["pwa-icon.svg"],
       manifest: {
         name: "TestDZ",
