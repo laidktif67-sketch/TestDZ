@@ -46,7 +46,7 @@ Use the dedicated TestDZ Supabase project only. Never point this repository at A
 
 Project ref: `naqjjykcglxiobkmdllj`
 
-The publishable key may be used by a client app. Secret/service-role credentials must remain server-side and must never be committed.
+The frontend/.env.example file is prefilled with this project's browser-safe Supabase URL and publishable key. Copy it to frontend/.env.local for local development. The local file is ignored by Git. The publishable key is intended for browser use; secret/service_role credentials must remain server-side and must never be committed.
 
 ## Week 2 progress
 
@@ -66,8 +66,7 @@ See [the execution tracker](docs/MASTER_BLUEPRINT.md#15-execution-tracker--opera
 
 ```bash
 cd frontend
-cp .env.example .env
-# Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env
+cp .env.example .env.local
 npm install
 npm run dev
 ```
