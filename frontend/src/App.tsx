@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import BlurText from "./components/react-bits/BlurText";
-import LightRays from "./components/react-bits/LightRays";
-import StarBorder from "./components/react-bits/StarBorder";
+import { lazy, Suspense, useEffect, useState } from "react";
+const BlurText = lazy(() => import("./components/react-bits/BlurText"));
+const LightRays = lazy(() => import("./components/react-bits/LightRays"));
+const StarBorder = lazy(() => import("./components/react-bits/StarBorder"));
 import type { FormEvent } from "react";
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import imageCompression from "browser-image-compression";
@@ -190,7 +190,7 @@ function LandingPage() {
       </header>
 
       <section className="lp-hero lp-hero-reference" id="home">
-        {!reducedMotion && <div className="lp-hero-rays" aria-hidden="true"><LightRays
+        {!reducedMotion && <div className="lp-hero-rays" aria-hidden="true"><Suspense fallback={null}><LightRays
           raysOrigin="top-center"
           raysColor="#075cf5"
           raysSpeed={0.12}
@@ -213,14 +213,14 @@ function LandingPage() {
           lightMode={true}
           opacity={0.28}
           maxDevicePixelRatio={1.25}
-        /></div>}
+        /></Suspense></div>}
         <div className="lp-hero-copy">
           <h1 className="lp-hero-semantic-title">TestDZ</h1>
-          {reducedMotion ? <span className="lp-hero-title" aria-hidden="true">TestDZ</span> : <BlurText text="TestDZ" className="lp-hero-title" ariaHidden effect="blur" animateBy="words" direction="bottom" trigger="load" delay={65} stepDuration={0.42} blur={8} distance={14} />}
+          {reducedMotion ? <span className="lp-hero-title" aria-hidden="true">TestDZ</span> : <Suspense fallback={<span className="lp-hero-title" aria-hidden="true">TestDZ</span>}><BlurText text="TestDZ" className="lp-hero-title" ariaHidden effect="blur" animateBy="words" direction="bottom" trigger="load" delay={65} stepDuration={0.42} blur={8} distance={14} /></Suspense>}
           <h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
           <p>{t.heroBody}</p>
           <div className="lp-hero-buttons">
-            <Link className="lp-cta lp-cta-star" to="/auth?mode=signup">{reducedMotion ? <span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span> : <StarBorder as="span" className="lp-star-border-inner" theme="light" backgroundColor="transparent" textColor="#ffffff" borderColor="rgba(255,255,255,.42)" color="#ffffff" trailColor="#d8e8ff" duration={5.2} thickness={1} radius={26} trailLength={0.22} stars={1} glow={0.38} sparkle={false} hover="brighten" clickPulse={false}>{t.getStarted} <LpIcon name="arrow" size={17}/></StarBorder>}</Link>
+            <Link className="lp-cta lp-cta-star" to="/auth?mode=signup">{reducedMotion ? <span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span> : <Suspense fallback={<span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span>}><StarBorder as="span" className="lp-star-border-inner" theme="light" backgroundColor="transparent" textColor="#ffffff" borderColor="rgba(255,255,255,.42)" color="#ffffff" trailColor="#d8e8ff" duration={5.2} thickness={1} radius={26} trailLength={0.22} stars={1} glow={0.38} sparkle={false} hover="brighten" clickPulse={false}>{t.getStarted} <LpIcon name="arrow" size={17}/></StarBorder></Suspense>}</Link>
             <a className="lp-secondary" href="#features">{t.exploreTests} <LpIcon name="play" size={15}/></a>
           </div>
           <div className="lp-proof" aria-label={t.visualLabel}>
