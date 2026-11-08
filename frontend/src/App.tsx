@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import BlurText from "./components/react-bits/BlurText";
+import LightRays from "./components/react-bits/LightRays";
+import StarBorder from "./components/react-bits/StarBorder";
 import type { FormEvent } from "react";
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import imageCompression from "browser-image-compression";
@@ -77,6 +80,15 @@ const landingCopy = {
 function LandingPage() {
   useLenis();
 
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
   const [language, setLanguage] = useState<LandingLanguage>(() => {
     const saved = window.localStorage.getItem("testdz-landing-language");
     return saved === "fr" || saved === "ar" ? saved : "en";
@@ -100,7 +112,7 @@ function LandingPage() {
 
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".landing-page");
-    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!root || reducedMotion) return;
 
     gsap.registerPlugin(ScrollTrigger);
     const context = gsap.context(() => {
@@ -136,6 +148,7 @@ function LandingPage() {
       };
 
       reveal(".lp-features article", ".lp-features", 0.13);
+      reveal(".lp-section-title", ".lp-how", 0.1);
       reveal(".lp-steps article", ".lp-steps", 0.16);
       reveal(".lp-promo > *", ".lp-promo", 0.1);
       reveal(".lp-community article", ".lp-community", 0.12);
@@ -146,14 +159,20 @@ function LandingPage() {
           { textContent: 0 },
           {
             textContent: target,
-            duration: 1.5,
-            delay: index * 0.12,
+            duration: 1.35,
+            delay: index * 0.08,
             ease: "power2.out",
             snap: { textContent: 1 },
+            scrollTrigger: {
+              trigger: element,
+              start: "top 90%",
+              once: true,
+            },
           },
         );
       });
       reveal(".lp-faq-illustration, .lp-faq-copy, .lp-faq-list details", ".lp-faq", 0.08);
+      reveal(".lp-footer > *", ".lp-footer", 0.08);
     }, root);
 
     return () => context.revert();
@@ -170,12 +189,37 @@ function LandingPage() {
       </header>
 
       <section className="lp-hero lp-hero-reference" id="home">
+        {!reducedMotion && <div className="lp-hero-rays" aria-hidden="true"><LightRays
+          raysOrigin="top-center"
+          raysColor="#075cf5"
+          raysSpeed={0.12}
+          lightSpread={0.68}
+          rayLength={1.7}
+          rayDensity={0.75}
+          tilt={-8}
+          raySharpness={0.25}
+          glow={0.28}
+          haze={0.08}
+          atmosphere={0.35}
+          intensity={0.42}
+          pulsating={false}
+          followMouse={false}
+          cursorShadow={false}
+          clickPulse={false}
+          noiseAmount={0}
+          distortion={0}
+          intro={true}
+          lightMode={true}
+          opacity={0.28}
+          maxDevicePixelRatio={1.25}
+        /></div>}
         <div className="lp-hero-copy">
-          <h1>TestDZ</h1>
+          <h1 className="lp-hero-semantic-title">TestDZ</h1>
+          <BlurText text="TestDZ" className="lp-hero-title" ariaHidden effect="blur" animateBy="words" direction="bottom" trigger="load" delay={65} stepDuration={0.42} blur={8} distance={14} />
           <h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
           <p>{t.heroBody}</p>
           <div className="lp-hero-buttons">
-            <Link className="lp-cta" to="/auth?mode=signup">{t.getStarted} <LpIcon name="arrow" size={17}/></Link>
+            <Link className="lp-cta lp-cta-star" to="/auth?mode=signup"><StarBorder as="span" className="lp-star-border-inner" theme="light" backgroundColor="transparent" textColor="#ffffff" borderColor="rgba(255,255,255,.42)" color="#ffffff" trailColor="#d8e8ff" duration={5.2} thickness={1} radius={26} trailLength={0.22} stars={1} glow={0.38} sparkle={false} hover="brighten" clickPulse={false}>{t.getStarted} <LpIcon name="arrow" size={17}/></StarBorder></Link>
             <a className="lp-secondary" href="#features">{t.exploreTests} <LpIcon name="play" size={15}/></a>
           </div>
           <div className="lp-proof" aria-label={t.visualLabel}>
