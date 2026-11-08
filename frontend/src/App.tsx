@@ -139,7 +139,20 @@ function LandingPage() {
       reveal(".lp-steps article", ".lp-steps", 0.16);
       reveal(".lp-promo > *", ".lp-promo", 0.1);
       reveal(".lp-community article", ".lp-community", 0.12);
-      gsap.fromTo(".lp-counter", { textContent: 0 }, { textContent: (index, element) => Number(element.getAttribute("data-count") || 0), duration: 1.5, ease: "power2.out", snap: { textContent: 1 }, stagger: 0.12 });
+      gsap.utils.toArray<HTMLElement>(".lp-counter").forEach((element, index) => {
+        const target = Number(element.dataset.count || 0);
+        gsap.fromTo(
+          element,
+          { textContent: 0 },
+          {
+            textContent: target,
+            duration: 1.5,
+            delay: index * 0.12,
+            ease: "power2.out",
+            snap: { textContent: 1 },
+          },
+        );
+      });
       reveal(".lp-faq-illustration, .lp-faq-copy, .lp-faq-list details", ".lp-faq", 0.08);
     }, root);
 
