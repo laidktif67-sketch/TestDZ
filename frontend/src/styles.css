@@ -867,3 +867,5 @@ html:lang(fr),
   .auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading{margin:15px 0 13px}
   .auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading h2{font-size:22px}
 }
+
+.auth-terms .auth-terms-link{color:#155ce7;font-weight:750}
