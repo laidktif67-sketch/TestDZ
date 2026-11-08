@@ -312,3 +312,39 @@ html:lang(fr),
   outline: 2px solid #075cf5;
   outline-offset: 3px;
 }
+
+/* Hero v2 — role-led identity visual, without fabricated product metrics. */
+.lp-hero-v2{position:relative;isolation:isolate;min-height:560px;max-width:1440px;margin:0 auto;padding:clamp(54px,7vw,94px) clamp(28px,7vw,100px) 58px;grid-template-columns:minmax(0,.92fr) minmax(440px,1.08fr);align-items:center;gap:clamp(30px,5vw,76px);overflow:hidden;background:radial-gradient(ellipse at 78% 48%,#e4f0ff 0%,#f5f9ff 42%,#fff 76%)}
+.lp-hero-v2:before{content:"";position:absolute;z-index:-1;width:520px;height:520px;border-radius:50%;right:-170px;top:-245px;border:1px solid #d8e8ff;box-shadow:0 0 0 42px #eaf3ff70,0 0 0 84px #edf5ff55}
+.lp-hero-v2 .lp-hero-copy{max-width:590px;position:relative;z-index:2}
+.lp-hero-eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid #dce9fc;border-radius:99px;background:#ffffffc9;color:#31517f;font-size:12px;font-weight:700}
+.lp-live-dot{width:8px;height:8px;border-radius:50%;background:#21b99a;box-shadow:0 0 0 4px #21b99a20}
+.lp-hero-v2 .lp-hero-copy h1{margin:23px 0 15px;font-size:clamp(48px,5.5vw,76px);line-height:1.03;letter-spacing:-3.8px;font-weight:850;color:#09245d}
+.lp-hero-v2 .lp-hero-copy h1 span{color:#075cf5}
+.lp-hero-v2 .lp-hero-copy>p{max-width:510px;margin:0;color:#536783;font-size:17px;line-height:1.75}
+.lp-role-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:29px}
+.lp-role-card{min-width:0;display:flex;align-items:center;gap:11px;padding:15px 14px;border:1px solid #e1eaf8;border-radius:17px;background:#fff;color:#102b5c;box-shadow:0 10px 28px #234a8010;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.lp-role-card:hover{transform:translateY(-4px);border-color:#a9caff;box-shadow:0 16px 34px #234a8019}
+.lp-role-card>svg{margin-inline-start:auto;flex:none;color:#6e86a8}
+.lp-role-icon{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:13px;background:#eaf2ff;color:#075cf5}
+.lp-role-tester .lp-role-icon{background:#e7faf5;color:#079c7b}
+.lp-role-copy{display:grid;gap:4px;min-width:0}.lp-role-copy strong{font-size:13px;white-space:nowrap}.lp-role-copy small{font-size:10px;color:#71819b;white-space:nowrap}
+.lp-hero-discover{display:inline-flex;align-items:center;gap:9px;margin-top:19px;color:#075cf5;font-size:13px;font-weight:750}
+.lp-hero-art-v2{height:440px;position:relative;display:grid;place-items:center;isolation:isolate}
+.lp-visual-orbit{position:absolute;border:1px solid #c9ddfb;border-radius:50%;transform:rotate(-18deg)}
+.lp-orbit-one{width:410px;height:260px}.lp-orbit-two{width:500px;height:340px;transform:rotate(26deg);border-color:#dce9fb}
+.lp-visual-core{width:190px;height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1px solid #dce9fb;border-radius:42px;background:linear-gradient(145deg,#fff,#f2f7ff);box-shadow:0 24px 65px #174b9520,inset 0 1px #fff;z-index:2}
+.lp-core-mark{width:76px;height:76px;display:grid;place-items:center;border-radius:24px;color:#075cf5;background:linear-gradient(145deg,#e6f1ff,#fff);box-shadow:0 8px 24px #075cf51b}
+.lp-visual-core strong{font-size:21px;letter-spacing:-.5px;color:#102b5c}.lp-visual-core small{font-size:9px;color:#71819b;text-align:center;max-width:145px}
+.lp-path-lines{position:absolute;inset:25px 0;width:100%;height:calc(100% - 50px);z-index:1;overflow:visible}
+.lp-path-node{position:absolute;z-index:3;display:flex;align-items:center;gap:11px;min-width:190px;padding:14px 16px;border:1px solid #e1eaf8;border-radius:17px;background:#fff;box-shadow:0 13px 32px #21487918}
+.lp-path-developer{top:47px;left:0}.lp-path-tester{right:0;bottom:47px}
+.lp-path-icon{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#eaf2ff;color:#075cf5}
+.lp-path-tester .lp-path-icon{background:#e7faf5;color:#079c7b}
+.lp-path-node span:last-child{display:grid;gap:4px}.lp-path-node strong{font-size:12px;color:#102b5c}.lp-path-node small{font-size:10px;color:#71819b}
+.lp-visual-spark{position:absolute;color:#75a9ff;font-size:25px}.lp-spark-a{top:55px;right:12%}.lp-spark-b{bottom:45px;left:10%;color:#31bda0}
+.landing-page[lang="ar"] .lp-hero-v2 .lp-hero-copy h1{letter-spacing:0;line-height:1.25}.landing-page[lang="ar"] .lp-hero-v2 .lp-hero-copy>p{line-height:1.9}
+.landing-page[lang="ar"] .lp-path-developer{left:auto;right:0}.landing-page[lang="ar"] .lp-path-tester{right:auto;left:0}.landing-page[lang="ar"] .lp-hero-v2:before{right:auto;left:-170px}
+@media(max-width:900px){.lp-hero-v2{grid-template-columns:1fr;gap:8px;padding:48px 30px 30px}.lp-hero-v2 .lp-hero-copy{max-width:680px;margin:auto;width:100%}.lp-hero-art-v2{width:min(100%,600px);margin:0 auto;height:390px}}
+@media(max-width:560px){.lp-hero-v2{padding:35px 19px 20px}.lp-hero-v2 .lp-hero-copy h1{font-size:clamp(42px,12vw,56px);letter-spacing:-2.4px}.lp-hero-v2 .lp-hero-copy>p{font-size:14px}.lp-role-cards{grid-template-columns:1fr;gap:9px;margin-top:22px}.lp-role-card{padding:12px}.lp-hero-art-v2{height:300px;margin-top:8px}.lp-visual-core{width:140px;height:140px;border-radius:32px}.lp-core-mark{width:58px;height:58px;border-radius:18px}.lp-core-mark svg{width:38px;height:38px}.lp-visual-core strong{font-size:18px}.lp-visual-core small{font-size:8px}.lp-orbit-one{width:280px;height:185px}.lp-orbit-two{width:340px;height:240px}.lp-path-node{min-width:0;gap:7px;padding:9px 10px;border-radius:13px}.lp-path-developer{top:17px;left:0}.lp-path-tester{right:0;bottom:17px}.lp-path-icon{width:33px;height:33px;border-radius:10px}.lp-path-icon svg{width:19px;height:19px}.lp-path-node strong{font-size:10px}.lp-path-node small{font-size:8px}.lp-path-lines{inset:18px 0;width:100%;height:calc(100% - 36px)}.lp-spark-a{top:12px;right:8%}.lp-spark-b{bottom:10px;left:7%}}
+@media(prefers-reduced-motion:reduce){.lp-role-card{transition:none}.lp-role-card:hover{transform:none}}
