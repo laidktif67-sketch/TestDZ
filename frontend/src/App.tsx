@@ -11,67 +11,66 @@ function Brand() {
 
 function LandingPage() {
   return (
-    <main>
-      <header className="site-header container">
-        <Brand />
-        <nav className="header-actions" aria-label="التنقل الرئيسي">
-          <a href="#how-it-works">كيف تعمل المنصة</a>
-          <a href="#principles">مبادئنا</a>
-          <Link className="button button-quiet" to="/auth">تسجيل الدخول</Link>
-          <Link className="button button-primary" to="/auth?mode=signup">ابدأ الآن <span aria-hidden="true">↗</span></Link>
+    <main className="landing-en" dir="ltr" lang="en">
+      <header className="lp-header">
+        <Link className="lp-brand" to="/" aria-label="TestDZ home"><span className="lp-flask">⚗</span><span>TestDZ</span></Link>
+        <nav className="lp-nav" aria-label="Main navigation">
+          <a className="active" href="#home">Home</a>
+          <a href="#features">Features</a>
+          <a href="#developers">For Developers⌄</a>
+          <a href="#testers">For Testers⌄</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
         </nav>
+        <div className="lp-header-actions"><Link className="lp-signin" to="/auth">Sign In</Link><Link className="lp-cta" to="/auth?mode=signup">Get Started</Link></div>
       </header>
 
-      <section className="hero container">
-        <div className="hero-copy">
-          <div className="eyebrow"><span className="status-dot" /> منصة اختبار Android للمطورين في الجزائر</div>
-          <h1>اختبر تطبيقك<br /><span>بثقة أكبر.</span></h1>
-          <p className="hero-lead">نظّم اختبارات تطبيقك، تعاون مع مختبرين حقيقيين، واجمع ملاحظات واضحة تساعدك على تحسين تجربتك قبل الإطلاق.</p>
-          <div className="hero-actions">
-            <Link className="button button-primary button-large" to="/auth?mode=signup">أنشئ حسابك مجاناً <span aria-hidden="true">←</span></Link>
-            <a className="button button-outline button-large" href="#how-it-works">اكتشف كيف تعمل</a>
-          </div>
-          <p className="hero-note">لا نبيعك وعوداً بعدد مختبرين مضمون. نبني عملية اختبار منظمة وشفافة.</p>
+      <section className="lp-hero" id="home">
+        <div className="lp-hero-copy">
+          <h1>TestDZ</h1>
+          <h2>Test. Learn. <span>Grow.</span></h2>
+          <p>A comprehensive platform for closed tests, where developers create tests and testers earn rewards by participating.</p>
+          <div className="lp-hero-buttons"><Link className="lp-cta" to="/auth?mode=signup">Get Started <span>→</span></Link><a className="lp-secondary" href="#how-it-works">Explore Tests <span>▶</span></a></div>
+          <div className="lp-proof"><div className="lp-avatars"><i>JD</i><i>AM</i><i>SK</i><i>RL</i></div><strong>50K+<small>Active Users</small></strong><b className="lp-proof-divider"/><strong>⭐ 4.8/5<small>User Rating</small></strong></div>
         </div>
-        <div className="hero-visual" aria-label="تصميم توضيحي لعملية الاختبار">
-          <div className="visual-glow" />
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="test-card">
-            <div className="card-topline"><span className="mini-label">TEST CYCLE</span><span className="live-pill"><i /> منظّم</span></div>
-            <div className="app-symbol">A</div>
-            <h3>تطبيقك القادم</h3>
-            <p>مجموعة اختبار مغلقة</p>
-            <div className="progress-label"><span>تقدّم الاختبار</span><strong>قيد الإعداد</strong></div>
-            <div className="progress-track"><span /></div>
-            <div className="tester-row"><div className="avatar-stack"><i>م</i><i>س</i><i>ي</i><i>+</i></div><span>مختبرون وملاحظات في مكان واحد</span></div>
-          </div>
-          <div className="floating-chip chip-top"><span>✓</span> تقارير مفيدة</div>
-          <div className="floating-chip chip-bottom"><span>14</span> يوماً من المتابعة اليومية*</div>
-          <p className="visual-disclaimer">*مدة برنامج TestDZ المقترحة؛ لا تمثل إثباتاً مستقلاً لمتطلبات Google Play.</p>
+        <div className="lp-hero-art" aria-label="Illustration of the TestDZ testing dashboard">
+          <div className="lp-art-glow"/>
+          <div className="lp-float lp-code">‹ / ›</div><div className="lp-float lp-cloud">☁</div><div className="lp-float lp-trophy">🏆</div><div className="lp-days">14<br/><small>Days</small></div>
+          <div className="lp-laptop"><div className="lp-screen"><div className="lp-screen-sidebar"><b>TestDZ</b><span>◈ Overview</span><span>▦ My Tests</span><span>♙ Testers</span><span>▤ Rewards</span></div><div className="lp-screen-main"><div className="lp-screen-top">Dashboard <i>● ● ●</i></div><div className="lp-stats"><b>Active Tests<strong>12</strong></b><b>Total Users<strong>2,450</strong></b><b>Rewards<strong>850</strong></b></div><div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/></div><div className="lp-test-rows"><i/><i/><i/></div></div></div><div className="lp-laptop-base"/></div>
+          <div className="lp-checklist"><b>✓</b><span>Test completed</span><b>✓</b><span>Feedback received</span><b>✓</b><span>Reward earned</span></div>
         </div>
       </section>
 
-      <section className="trust-strip">
-        <div className="container trust-inner"><span>مبني للمطورين الجزائريين</span><b /> <span>متابعة يومية</span><b /> <span>ملاحظات قابلة للتنفيذ</span><b /> <span>شفافية في التقدم</span></div>
+      <section className="lp-features" id="features">
+        <article><span className="lp-feature-icon green">✓</span><h3>Secure &amp; Fair</h3><p>Advanced anti-fraud system for a transparent tester experience.</p></article>
+        <article><span className="lp-feature-icon blue">ϟ</span><h3>14-Day Tests</h3><p>Limited-time tests to ensure real skills and knowledge.</p></article>
+        <article><span className="lp-feature-icon purple">♔</span><h3>Earn Rewards</h3><p>Get points and rewards for your efforts.</p></article>
+        <article><span className="lp-feature-icon cyan">♟</span><h3>For Everyone</h3><p>Testers, developers and admins in one platform.</p></article>
       </section>
 
-      <section className="section container" id="how-it-works">
-        <div className="section-heading"><span className="eyebrow">طريقة العمل</span><h2>من أول اختبار إلى<br /><span>قرار إطلاق أوضح.</span></h2><p>كل خطوة موثقة، وكل طرف يعرف ما المطلوب منه.</p></div>
-        <div className="steps-grid">
-          <article className="step-card"><span className="step-number">01</span><div className="step-icon">↗</div><h3>أضف تطبيقك</h3><p>أنشئ صفحة لتطبيق Android وحدد دورة الاختبار ومتطلباتها.</p></article>
-          <article className="step-card"><span className="step-number">02</span><div className="step-icon">◎</div><h3>نظّم مجموعة الاختبار</h3><p>تعاون ضمن Cohort مع مطورين ومختبرين وفق قواعد واضحة.</p></article>
-          <article className="step-card"><span className="step-number">03</span><div className="step-icon">✓</div><h3>تابع واجمع الملاحظات</h3><p>سجّل التقدم اليومي واستلم تقارير تساعدك على تحسين التطبيق.</p></article>
+      <section className="lp-how" id="how-it-works">
+        <div className="lp-section-title"><h2>How TestDZ Works?</h2><p>A simple and effective process in 3 easy steps</p></div>
+        <div className="lp-steps">
+          <article><b className="lp-step-number">1</b><span>♟</span><h3>Create Your Account</h3><p>Join TestDZ as a tester, developer or admin.</p></article><i>→</i>
+          <article><b className="lp-step-number">2</b><span>▤</span><h3>Take or Create Tests</h3><p>Participate in tests or design your own tests.</p></article><i>→</i>
+          <article><b className="lp-step-number">3</b><span>🏆</span><h3>Earn &amp; Grow</h3><p>Get rewards and track your progress.</p></article>
         </div>
       </section>
 
-      <section className="principles-section" id="principles"><div className="container principles-inner"><div><span className="eyebrow">الثقة قبل الأرقام</span><h2>اختبار حقيقي.<br /><span>بدون وعود مضللة.</span></h2></div><p>TestDZ تنظّم التعاون والمتابعة، لكنها لا تدّعي أنها تتحكم في قرارات Google Play أو تثبت وحدها استمرار الاشتراك في الاختبار المغلق. نعرض ما تم إنجازه بوضوح، ونفصل بين Check-ins داخل المنصة وإثباتات Google Play.</p></div></section>
+      <section className="lp-promo" id="testers"><div className="lp-hourglass">⌛</div><div><h2>Tests are open for<br/>only <span>14 days!</span></h2><p>Don’t miss your chance to participate.</p></div><a href="#features">Explore Active Tests <b>→</b></a></section>
 
-      <footer className="site-footer container"><Brand /><span>© 2026 TestDZ. منصة قيد التطوير.</span><Link to="/auth">الدخول إلى المنصة</Link></footer>
+      <section className="lp-testimonials"><div className="lp-section-title"><h2>What Our Community Says</h2></div><div className="lp-quotes">
+        <article><div className="lp-person">SB</div><div><p>“TestDZ is an amazing platform! I love the fair system and rewards.”</p><b>Sarah Benali</b><small>Tester</small><strong>★★★★★</strong></div></article>
+        <article><div className="lp-person">MS</div><div><p>“A great platform for developers to share their tests and get feedback.”</p><b>Mohamed Saci</b><small>Developer</small><strong>★★★★★</strong></div></article>
+        <article><div className="lp-person">AK</div><div><p>“Simple, secure and very useful. Highly recommended!”</p><b>Amina Khelifi</b><small>Tester</small><strong>★★★★★</strong></div></article>
+      </div><div className="lp-dots">● ● ●</div></section>
+
+      <section className="lp-faq" id="faq"><div className="lp-faq-illustration">🙋‍♂️<span>?</span></div><div className="lp-faq-copy"><h2>Frequently Asked Questions</h2><p>Find answers to common questions about TestDZ.</p><a href="#faq">View All FAQs →</a></div><div className="lp-faq-list"><details><summary>How does the 14-day test work?</summary><p>Testers participate in an organized test cycle and share feedback throughout the testing period.</p></details><details><summary>Can I earn real rewards?</summary><p>Eligible activities can earn points and rewards according to the platform rules.</p></details><details><summary>Is TestDZ free to use?</summary><p>You can create an account and explore the platform. Available features may depend on your role and plan.</p></details><details><summary>How can I become a developer?</summary><p>Create an account and choose the developer role during onboarding.</p></details></div></section>
+
+      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask">⚗</span><span>TestDZ</span></Link><nav><a href="#features">About</a><a href="#terms">Terms of Service</a><a href="#privacy">Privacy Policy</a><a href="#contact">Contact</a></nav><div className="lp-social">◉　𝕏　▶　in</div><small>© 2026 TestDZ. All rights reserved.</small></footer>
     </main>
   );
 }
-
 function translateAuthError(message: string) {
   const value = message.toLowerCase();
   if (value.includes("already registered") || value.includes("already been registered")) return "هذا البريد مسجل بالفعل. جرّب تسجيل الدخول.";
