@@ -801,3 +801,69 @@ html:lang(fr),
   .auth-reference-submit:before{display:none}
   .auth-reference *{scroll-behavior:auto!important;transition:none!important}
 }
+
+
+/* Registration-only layout: match the supplied sign-up reference without affecting login. */
+.auth-hero-subtitle{margin:10px 0 0;color:#102c6b;font-size:clamp(23px,2.3vw,34px);line-height:1.12;letter-spacing:-.7px;font-weight:750}
+.auth-script-tag{position:relative;z-index:1;align-self:flex-start;margin:-3px 0 0 10px;color:#0758e8;font-family:"Segoe Script","Bradley Hand",cursive;font-size:clamp(25px,2.8vw,43px);font-style:italic;font-weight:700;letter-spacing:-1.4px;transform:rotate(-5deg);text-shadow:0 1px 0 #fff}
+.auth-account-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0;border:0;padding:0;margin:2px 0 0}
+.auth-account-types legend{width:100%;display:flex;align-items:center;gap:10px;text-align:center;justify-content:center;padding:0 0 8px;font-size:13px;line-height:1.2;font-weight:800;color:#10245a}
+.auth-account-types legend:before,.auth-account-types legend:after{content:"";height:1px;flex:1;background:#e1e8f4}
+.auth-account-types label{position:relative;min-width:0;min-height:105px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 5px 8px;border:1px solid #dce5f4;border-radius:15px;background:linear-gradient(145deg,#fff,#f8faff);text-align:center;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s,transform .18s}
+.auth-account-types label:hover{border-color:#8fb4ff;transform:translateY(-1px)}
+.auth-account-types label.selected{border:1.5px solid #3479ff;background:linear-gradient(145deg,#e7f0ff,#f5f8ff);box-shadow:inset 0 0 0 1px #3479ff20,0 5px 14px #2f72e910}
+.auth-account-types label input{position:absolute;right:8px;top:8px;width:16px;height:16px;margin:0;accent-color:#1264ee;cursor:pointer}
+.account-type-icon{display:grid;place-items:center;width:29px;height:29px;color:#1264ee;font-size:24px;line-height:1;font-weight:800}
+.auth-account-types label:first-of-type .account-type-icon{border-radius:9px;background:linear-gradient(135deg,#1281ff,#0646d9);color:white;font-size:19px}
+.auth-account-types label:last-of-type .account-type-icon{color:#f5b72b;font-size:27px}
+.auth-account-types label strong{font-size:13px;color:#102d70;line-height:1.2}
+.auth-account-types label small{font-size:10px;line-height:1.25;color:#304a7c}
+.auth-terms{display:flex;align-items:flex-start;gap:9px;margin:1px 0 0;color:#24395f;font-size:11px;line-height:1.45}
+.auth-terms input{width:17px;height:17px;flex:0 0 17px;margin:0;accent-color:#1264ee}
+.auth-terms a{color:#155ce7;text-decoration:none;font-weight:750}
+.auth-terms a:hover{text-decoration:underline;text-underline-offset:2px}
+.auth-reference-fields.is-signup{gap:8px}
+.auth-reference-fields.is-signup .auth-input{min-height:47px;border-radius:12px}
+.auth-reference-fields.is-signup .auth-input input{height:45px}
+.auth-reference-fields.is-signup .auth-password-guidance{display:none}
+.auth-reference-fields.is-signup .auth-match-note{font-size:10px;margin:-3px 0 0}
+.auth-reference-form-wrap:has(.auth-account-types){padding:clamp(20px,2vw,30px)}
+.auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading{margin:16px 0 15px}
+.auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading h2{font-size:clamp(23px,2.1vw,30px)}
+.auth-reference-form-wrap:has(.auth-account-types) .auth-or-divider{margin:12px 0 9px}
+.auth-reference-form-wrap:has(.auth-account-types) .auth-socials{grid-template-columns:repeat(2,minmax(0,1fr))}
+.auth-reference-form-wrap:has(.auth-account-types) .auth-socials button{min-height:43px}
+.auth-reference-form-wrap:has(.auth-account-types) .auth-reference-switch{margin-top:12px}
+@media(min-width:1200px) and (min-height:760px){
+  .auth-reference:has(.auth-account-types){grid-template-columns:minmax(0,1fr) minmax(560px,.91fr)}
+  .auth-reference:has(.auth-account-types) .auth-reference-hero{padding:25px clamp(36px,4.5vw,70px) 23px}
+  .auth-reference:has(.auth-account-types) .auth-reference-copy{margin-top:clamp(25px,4.5vh,52px)}
+  .auth-reference:has(.auth-account-types) .auth-illustration{height:clamp(220px,30vh,330px);max-height:340px}
+  .auth-reference:has(.auth-account-types) .auth-reference-form-area{padding:22px clamp(26px,3.1vw,48px)}
+  .auth-reference:has(.auth-account-types) .auth-reference-form-wrap{width:min(100%,640px);padding:22px 28px}
+}
+@media(min-width:901px) and (max-width:1199px){
+  .auth-account-types label{min-height:92px}
+  .auth-account-types label small{font-size:9px}
+  .auth-reference-form-wrap:has(.auth-account-types){padding:20px}
+  .auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading{margin:14px 0 12px}
+  .auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading h2{font-size:23px}
+}
+@media(max-width:900px){
+  .auth-script-tag{display:none}
+  .auth-hero-subtitle{font-size:clamp(20px,4vw,28px);margin-top:7px}
+  .auth-reference-form-wrap:has(.auth-account-types){padding:clamp(18px,3vw,26px)}
+}
+@media(max-width:560px){
+  .auth-account-types{gap:6px}
+  .auth-account-types legend{font-size:11px;padding-bottom:7px;gap:7px}
+  .auth-account-types label{min-height:91px;padding:8px 3px;border-radius:12px}
+  .auth-account-types label input{width:14px;height:14px;right:6px;top:6px}
+  .account-type-icon{width:24px;height:24px;font-size:20px}
+  .auth-account-types label:first-of-type .account-type-icon{font-size:16px}
+  .auth-account-types label strong{font-size:11px}
+  .auth-account-types label small{font-size:9px}
+  .auth-terms{font-size:10px;gap:7px}
+  .auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading{margin:15px 0 13px}
+  .auth-reference-form-wrap:has(.auth-account-types) .auth-reference-heading h2{font-size:22px}
+}
