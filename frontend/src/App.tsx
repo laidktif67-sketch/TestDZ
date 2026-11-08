@@ -90,25 +90,21 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage("");
-    setError("");
-    if (!supabase) {
-      setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة.");
-      return;
-    }
+    event.preventDefault(); setMessage(""); setError("");
+    if (!supabase) { setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة."); return; }
     if (mode === "signup" && (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password))) { setError("كلمة المرور يجب أن تحتوي على حرف ورقم، وبحد أدنى 8 أحرف."); return; }
     setBusy(true);
     try {
       if (mode === "signup") {
         const { data, error: authError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
+          email: email.trim(), password,
           options: { data: { full_name: fullName.trim(), phone: phone.trim() || null }, emailRedirectTo: window.location.origin + "/auth/callback" },
         });
         if (authError) throw authError;
@@ -121,24 +117,69 @@ function AuthPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? translateAuthError(err.message) : "حدث خطأ غير متوقع. حاول مرة أخرى.");
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   }
 
-  return <main className="auth-layout"><div className="auth-side"><Brand /><div className="auth-side-copy"><span className="eyebrow">TESTDZ PLATFORM</span><h1>مساحة واحدة<br /><span>لاختبار أفضل.</span></h1><p>تابع مهامك، شارك ملاحظاتك، وساعد تطبيقات Android على التحسن.</p></div><span className="auth-side-foot">TestDZ · Algeria first</span></div><section className="auth-panel"><div className="auth-panel-top"><Link to="/">العودة للرئيسية</Link></div><div className="auth-form-wrap"><span className="eyebrow">{mode === "signup" ? "انضم إلى TestDZ" : "مرحباً بعودتك"}</span><h2>{mode === "signup" ? "أنشئ حسابك" : "تسجيل الدخول"}</h2><p className="form-intro">{mode === "signup" ? "ابدأ رحلتك في اختبار التطبيقات والتعاون." : "أدخل بياناتك للمتابعة إلى حسابك."}</p>
-      {!isSupabaseConfigured && <div className="notice notice-warning">الواجهة جاهزة، لكن يلزم ضبط متغيرات Supabase في ملف <code>.env</code> لتفعيل المصادقة.</div>}
-      {message && <div className="notice notice-success" role="status">{message}</div>}
-      {error && <div className="notice notice-error" role="alert">{error}</div>}
-      <form onSubmit={submit} className="auth-form">
-        {mode === "signup" && <><label>الاسم الكامل<input autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} required minLength={2} placeholder="كيف نناديك؟" /></label><label>رقم الهاتف <small>اختياري، وغير موثّق حالياً</small><input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+213..." dir="ltr" /></label></>}
-        <label>البريد الإلكتروني<input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="name@example.com" dir="ltr" /></label>
-        <label>كلمة المرور<input type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="8 أحرف على الأقل" dir="ltr" /></label>
-        <button className="button button-primary button-large submit-button" type="submit" disabled={busy}>{busy ? "جارٍ المعالجة..." : mode === "signup" ? "إنشاء الحساب" : "دخول"}</button>
-      </form>
-      <p className="switch-auth">{mode === "signin" && <Link to="/forgot-password">نسيت كلمة المرور؟</Link>}　{mode === "signup" ? "لديك حساب بالفعل؟" : "ليس لديك حساب؟"} <button type="button" onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); setMessage(""); }}>{mode === "signup" ? "سجّل الدخول" : "أنشئ حساباً"}</button></p>
-      <p className="legal-note"><Link to="/verify-email">لم تصلك رسالة التأكيد؟</Link><br/>بالمتابعة، أنت توافق على استخدام TestDZ وفق شروط المنصة وسياسة الخصوصية عند نشرهما.</p>
-    </div></section></main>;
+  async function socialLogin(provider: "google" | "github" | "azure") {
+    setError(""); setMessage("");
+    if (!supabase) { setError("الاتصال بقاعدة البيانات غير مضبوط بعد."); return; }
+    setBusy(true);
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin + "/auth/callback" },
+    });
+    if (authError) { setError(translateAuthError(authError.message)); setBusy(false); }
+  }
+
+  return <main className="auth-reference-page">
+    <aside className="auth-showcase">
+      <Link className="testdz-logo" to="/" aria-label="TestDZ الرئيسية"><span className="testdz-flask">⚗</span><span><strong>TestDZ</strong><small>Test · Learn · Grow</small></span></Link>
+      <div className="showcase-copy">
+        <span className="showcase-kicker">منصة الاختبار للمطورين</span>
+        <h1>اختبر بذكاء.<br/><span>وانمُ بثقة.</span></h1>
+        <p>منصة تجمع المطورين والمختبرين لتجربة تطبيقات Android وجمع ملاحظات مفيدة قبل الإطلاق.</p>
+        <ul className="showcase-benefits">
+          <li><span>ϟ</span><div><strong>اختبر واكسب النقاط</strong><small>شارك في دورات اختبار منظمة</small></div></li>
+          <li><span>✧</span><div><strong>اكتشف فرصاً جديدة</strong><small>تعاون مع مطورين ومختبرين</small></div></li>
+          <li><span>▥</span><div><strong>طوّر مهاراتك</strong><small>حوّل الملاحظات إلى تحسينات</small></div></li>
+        </ul>
+      </div>
+      <div className="auth-illustration" aria-hidden="true">
+        <div className="illustration-orbit orbit-a"></div><div className="illustration-orbit orbit-b"></div>
+        <div className="rocket-bubble">🚀</div><div className="code-bubble">&lt;/&gt;</div>
+        <div className="laptop-visual"><div className="laptop-screen"><div className="laptop-sidebar"><b>TestDZ</b><i>▦ Dashboard</i><i>✓ My Tests</i><i>◎ Discover</i><i>☆ Rewards</i></div><div className="laptop-content"><small>TEST OVERVIEW</small><strong>Testing progress</strong><div className="metric-row"><b>75%<small>Success rate</small></b><b>14<small>Days tracked</small></b></div><div className="chart-bars"><i/><i/><i/><i/><i/><i/><i/></div></div></div><div className="laptop-base"></div></div>
+        <div className="points-float"><span>★</span><strong>450</strong><small>Points</small></div>
+      </div>
+      <div className="showcase-stats"><div className="stat-avatars"><i>م</i><i>س</i><i>ي</i></div><div><strong>مجتمع المطورين</strong><small>اختبار تعاوني وشفاف</small></div><span className="stat-divider"></span><span className="stat-star">★</span><div><strong>الجودة أولاً</strong><small>ملاحظات قابلة للتنفيذ</small></div></div>
+      <span className="showcase-footnote">TestDZ · صُممت للمطورين الجزائريين</span>
+    </aside>
+    <section className="auth-reference-main">
+      <div className="auth-language"><span>◎</span><select aria-label="اللغة" defaultValue="ar"><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option></select></div>
+      <div className="auth-reference-card">
+        <div className="auth-tabs" role="tablist" aria-label="المصادقة">
+          <button type="button" role="tab" aria-selected={mode === "signin"} className={mode === "signin" ? "active" : ""} onClick={() => {setMode("signin");setError("");setMessage("");}}>♟ <span>تسجيل الدخول</span></button>
+          <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => {setMode("signup");setError("");setMessage("");}}>♧ <span>إنشاء حساب</span></button>
+        </div>
+        <div className="auth-reference-heading"><h2>{mode === "signup" ? "مرحباً بك في TestDZ!" : "مرحباً بعودتك!"}</h2><p>{mode === "signup" ? "أنشئ حسابك وابدأ رحلتك معنا" : "سجّل الدخول إلى حساب TestDZ الخاص بك"}</p></div>
+        {!isSupabaseConfigured && <div className="notice notice-warning">يلزم ضبط متغيرات Supabase في ملف <code>.env</code> لتفعيل المصادقة.</div>}
+        {message && <div className="notice notice-success" role="status">{message}</div>}
+        {error && <div className="notice notice-error" role="alert">{error}</div>}
+        <form onSubmit={submit} className="auth-reference-form">
+          {mode === "signup" && <><label className="auth-input-wrap"><span aria-hidden="true">♙</span><input autoComplete="name" value={fullName} onChange={e=>setFullName(e.target.value)} required minLength={2} placeholder="الاسم الكامل" /></label><label className="auth-input-wrap"><span aria-hidden="true">⌕</span><input type="tel" autoComplete="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="رقم الهاتف (اختياري)" dir="ltr" /></label></>}
+          <label className="auth-input-wrap"><span aria-hidden="true">✉</span><input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="البريد الإلكتروني" dir="ltr" /></label>
+          <label className="auth-input-wrap"><span aria-hidden="true">♙</span><input type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e=>setPassword(e.target.value)} required minLength={8} placeholder="كلمة المرور" dir="ltr" /><button className="password-toggle" type="button" aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} onClick={()=>setShowPassword(v=>!v)}>{showPassword ? "◉" : "◎"}</button></label>
+          {mode === "signin" && <div className="auth-form-options"><label className="remember-option"><input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)} /> تذكرني</label><Link to="/forgot-password">نسيت كلمة المرور؟</Link></div>}
+          <button className="auth-reference-submit" type="submit" disabled={busy}>{busy ? "جارٍ المعالجة..." : mode === "signup" ? "إنشاء الحساب　↗" : "↪　تسجيل الدخول"}</button>
+        </form>
+        <div className="auth-social-divider"><span>أو تابع باستخدام</span></div>
+        <div className="auth-social-buttons"><button type="button" onClick={()=>socialLogin("google")} disabled={busy}><b className="google-g">G</b> Google</button><button type="button" onClick={()=>socialLogin("github")} disabled={busy}><b>◉</b> GitHub</button><button type="button" onClick={()=>socialLogin("azure")} disabled={busy}><b className="microsoft-mark">▦</b> Microsoft</button></div>
+        <p className="auth-switch-line">{mode === "signup" ? "لديك حساب بالفعل؟" : "ليس لديك حساب؟"} <button type="button" onClick={()=>{setMode(mode === "signup" ? "signin" : "signup");setError("");setMessage("");}}>{mode === "signup" ? "سجّل الدخول" : "أنشئ حساباً الآن"}</button></p>
+        <p className="auth-confirm-link"><Link to="/verify-email">لم تصلك رسالة التأكيد؟</Link></p>
+      </div>
+      <div className="auth-security-note"><span>♙</span><div><strong>بياناتك بأمان معنا</strong><small>نستخدم مصادقة Supabase لحماية الوصول إلى حسابك.</small></div></div>
+      <p className="auth-legal-note">بالمتابعة، أنت توافق على شروط المنصة وسياسة الخصوصية عند نشرهما.</p>
+    </section>
+  </main>;
 }
 
 function DashboardPage() {
