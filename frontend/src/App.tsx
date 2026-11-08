@@ -35,7 +35,58 @@ function LpIcon({ name, size = 24 }: { name: string; size?: number }) {
   }
 }
 
+type LandingLanguage = "en" | "fr" | "ar";
+
+const landingCopy = {
+  en: {
+    home: "Home", features: "Features", developers: "For Developers", testers: "For Testers", how: "How it works", signIn: "Sign In", getStarted: "Get Started",
+    heroLead: "Test. Learn.", heroAccent: "Grow.", heroBody: "{t.heroBody}",
+    exploreTests: "Explore Tests", activeUsers: "Active Users", userRating: "User Rating", days: "Days", overview: "Overview", myTests: "My Tests", dashboard: "Dashboard", activeTests: "Active Tests", totalUsers: "Total Users", rewards: "Rewards", completed: "Test completed", feedback: "Feedback received", earned: "Reward earned",
+    secure: "Secure & Fair", secureBody: "Advanced anti-fraud system for a transparent tester experience.", fourteen: "14-Day Tests", fourteenBody: "Limited-time tests to ensure real skills and knowledge.", earn: "Earn Rewards", earnBody: "Get points and rewards for your efforts.", everyone: "For Everyone", everyoneBody: "Testers, developers and admins in one platform.",
+    howTitle: "How TestDZ Works?", howBody: "A simple and effective process in 3 easy steps", create: "Create Your Account", createBody: "Join TestDZ as a tester, developer or admin.", take: "Take or Create Tests", takeBody: "Participate in tests or design your own tests.", grow: "Earn & Grow", growBody: "Get rewards and track your progress.",
+    promoTitle: "Tests are open for", promoAccent: "only 14 days!", promoBody: "Don’t miss your chance to participate.", exploreActive: "Explore Active Tests",
+    community: "What Our Community Says", quote1: "{t.quote1}", quote2: "{t.quote2}", quote3: "{t.quote3}", tester: "Tester", developer: "Developer",
+    faqTitle: "Frequently Asked Questions", faqIntro: "Find answers to common questions about TestDZ.", viewFaq: "View All FAQs", faq1q: "How does the 14-day test work?", faq1a: "Testers participate in an organized test cycle and share feedback throughout the testing period.", faq2q: "Can I earn real rewards?", faq2a: "Eligible activities can earn points and rewards according to the platform rules.", faq3q: "Is TestDZ free to use?", faq3a: "You can create an account and explore the platform. Available features may depend on your role and plan.", faq4q: "How can I become a developer?", faq4a: "Create an account and choose the developer role during onboarding.",
+    about: "About", terms: "Terms of Service", privacy: "Privacy Policy", contact: "Contact", copyright: "{t.copyright}", languageLabel: "Choose language", illustration: "Illustration of the TestDZ testing dashboard"
+  },
+  fr: {
+    home: "Accueil", features: "Fonctionnalités", developers: "Développeurs", testers: "Testeurs", how: "Fonctionnement", signIn: "Connexion", getStarted: "Commencer",
+    heroLead: "Tester. Apprendre.", heroAccent: "Progresser.", heroBody: "Une plateforme complète de tests fermés : les développeurs créent des tests et les testeurs gagnent des récompenses en participant.",
+    exploreTests: "Découvrir les tests", activeUsers: "Utilisateurs actifs", userRating: "Note des utilisateurs", days: "Jours", overview: "Vue d’ensemble", myTests: "Mes tests", dashboard: "Tableau de bord", activeTests: "Tests actifs", totalUsers: "Utilisateurs", rewards: "Récompenses", completed: "Test terminé", feedback: "Avis reçu", earned: "Récompense obtenue",
+    secure: "Sûr et équitable", secureBody: "Un système anti-fraude avancé pour une expérience transparente.", fourteen: "Tests de 14 jours", fourteenBody: "Des tests limités dans le temps pour valoriser les compétences réelles.", earn: "Gagnez des récompenses", earnBody: "Recevez des points et des récompenses pour vos efforts.", everyone: "Pour tous", everyoneBody: "Testeurs, développeurs et administrateurs sur une seule plateforme.",
+    howTitle: "Comment fonctionne TestDZ ?", howBody: "Un processus simple et efficace en 3 étapes", create: "Créez votre compte", createBody: "Rejoignez TestDZ comme testeur, développeur ou administrateur.", take: "Participez ou créez des tests", takeBody: "Participez aux tests ou concevez les vôtres.", grow: "Gagnez et progressez", growBody: "Obtenez des récompenses et suivez vos progrès.",
+    promoTitle: "Les tests sont ouverts", promoAccent: "pendant 14 jours !", promoBody: "Ne manquez pas votre chance de participer.", exploreActive: "Voir les tests actifs",
+    community: "Les avis de notre communauté", quote1: "« TestDZ est une plateforme formidable ! J’apprécie son équité et ses récompenses. »", quote2: "« Une excellente plateforme pour partager ses tests et recevoir des avis. »", quote3: "« Simple, sécurisée et très utile. Je la recommande ! »", tester: "Testeur", developer: "Développeur",
+    faqTitle: "Questions fréquentes", faqIntro: "Retrouvez les réponses aux questions courantes sur TestDZ.", viewFaq: "Toutes les questions", faq1q: "Comment fonctionne le test de 14 jours ?", faq1a: "Les testeurs suivent un cycle organisé et partagent leurs retours pendant toute la période.", faq2q: "Puis-je gagner de vraies récompenses ?", faq2a: "Les activités éligibles permettent de gagner des points et des récompenses selon les règles de la plateforme.", faq3q: "TestDZ est-elle gratuite ?", faq3a: "Vous pouvez créer un compte et découvrir la plateforme. Les fonctionnalités dépendent de votre rôle et de votre offre.", faq4q: "Comment devenir développeur ?", faq4a: "Créez un compte et choisissez le rôle développeur lors de votre inscription.",
+    about: "À propos", terms: "Conditions d’utilisation", privacy: "Confidentialité", contact: "Contact", copyright: "© 2026 TestDZ. Tous droits réservés.", languageLabel: "Choisir la langue", illustration: "Illustration du tableau de bord TestDZ"
+  },
+  ar: {
+    home: "الرئيسية", features: "المميزات", developers: "للمطورين", testers: "للمختبرين", how: "كيف تعمل المنصة", signIn: "تسجيل الدخول", getStarted: "ابدأ الآن",
+    heroLead: "اختبر. تعلّم.", heroAccent: "وتطوّر.", heroBody: "منصة متكاملة للاختبارات المغلقة؛ ينشئ المطورون الاختبارات ويكسب المختبرون المكافآت مقابل المشاركة.",
+    exploreTests: "اكتشف الاختبارات", activeUsers: "مستخدم نشط", userRating: "تقييم المستخدمين", days: "يوماً", overview: "نظرة عامة", myTests: "اختباراتي", dashboard: "لوحة التحكم", activeTests: "اختبارات نشطة", totalUsers: "إجمالي المستخدمين", rewards: "المكافآت", completed: "اكتمل الاختبار", feedback: "تم استلام الملاحظات", earned: "تم كسب المكافأة",
+    secure: "آمنة وعادلة", secureBody: "نظام متقدم لمكافحة الاحتيال يضمن تجربة شفافة للمختبرين.", fourteen: "اختبارات لمدة 14 يوماً", fourteenBody: "اختبارات محددة المدة لقياس المهارات والمعرفة الحقيقية.", earn: "اكسب المكافآت", earnBody: "احصل على النقاط والمكافآت مقابل جهودك.", everyone: "منصة للجميع", everyoneBody: "المختبرون والمطورون والمسؤولون في منصة واحدة.",
+    howTitle: "كيف تعمل TestDZ؟", howBody: "عملية بسيطة وفعالة في ثلاث خطوات", create: "أنشئ حسابك", createBody: "انضم إلى TestDZ كمختبر أو مطور أو مسؤول.", take: "شارك أو أنشئ اختباراً", takeBody: "شارك في الاختبارات أو صمّم اختباراتك الخاصة.", grow: "اكسب وتطوّر", growBody: "احصل على المكافآت وتابع تقدمك.",
+    promoTitle: "الاختبارات متاحة", promoAccent: "لمدة 14 يوماً فقط!", promoBody: "لا تفوّت فرصتك في المشاركة.", exploreActive: "اكتشف الاختبارات النشطة",
+    community: "ماذا يقول مجتمعنا؟", quote1: "« TestDZ منصة رائعة! أحب نظامها العادل والمكافآت التي تقدمها. »", quote2: "« منصة ممتازة للمطورين لمشاركة اختباراتهم والحصول على الملاحظات. »", quote3: "« بسيطة وآمنة ومفيدة جداً. أنصح بها! »", tester: "مختبر", developer: "مطور",
+    faqTitle: "الأسئلة الشائعة", faqIntro: "اعثر على إجابات لأكثر الأسئلة شيوعاً حول TestDZ.", viewFaq: "عرض جميع الأسئلة", faq1q: "كيف يعمل اختبار الـ14 يوماً؟", faq1a: "يشارك المختبرون في دورة اختبار منظمة ويقدمون ملاحظاتهم طوال فترة الاختبار.", faq2q: "هل يمكنني كسب مكافآت حقيقية؟", faq2a: "تمنح الأنشطة المؤهلة نقاطاً ومكافآت وفقاً لقواعد المنصة.", faq3q: "هل استخدام TestDZ مجاني؟", faq3a: "يمكنك إنشاء حساب واستكشاف المنصة. وقد تختلف الميزات حسب دورك وباقتك.", faq4q: "كيف أصبح مطوراً؟", faq4a: "أنشئ حساباً واختر دور المطور أثناء التسجيل.",
+    about: "عن المنصة", terms: "شروط الاستخدام", privacy: "سياسة الخصوصية", contact: "اتصل بنا", copyright: "© 2026 TestDZ. جميع الحقوق محفوظة.", languageLabel: "اختر اللغة", illustration: "رسم توضيحي للوحة تحكم TestDZ"
+  }
+} as const;
+
 function LandingPage() {
+  const [language, setLanguage] = useState<LandingLanguage>(() => {
+    const saved = window.localStorage.getItem("testdz-landing-language");
+    return saved === "fr" || saved === "ar" ? saved : "en";
+  });
+  const t = landingCopy[language];
+
+  useEffect(() => {
+    const isArabic = language === "ar";
+    document.documentElement.lang = language;
+    document.documentElement.dir = isArabic ? "rtl" : "ltr";
+    window.localStorage.setItem("testdz-landing-language", language);
+  }, [language]);
+
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".landing-en");
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -110,61 +161,61 @@ function LandingPage() {
   }, []);
 
   return (
-    <main className="landing-en" dir="ltr" lang="en">
+    <main className="landing-en" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
       <header className="lp-header">
-        <Link className="lp-brand" to="/" aria-label="TestDZ home"><span className="lp-flask"><LpIcon name="flask" size={29} /></span><span>TestDZ</span></Link>
-        <nav className="lp-nav" aria-label="Main navigation">
-          <a className="active" href="#home">Home</a><a href="#features">Features</a><a href="#developers">For Developers⌄</a><a href="#testers">For Testers⌄</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
+        <Link className="lp-brand" to="/" aria-label="TestDZ"><span className="lp-flask"><LpIcon name="flask" size={29} /></span><span>TestDZ</span></Link>
+        <nav className="lp-nav" aria-label={t.home}>
+          <a className="active" href="#home">{t.home}</a><a href="#features">{t.features}</a><a href="#how-it-works">{t.developers}⌄</a><a href="#testers">{t.testers}⌄</a><a href="#how-it-works">{t.how}</a><a href="#faq">FAQ</a>
         </nav>
-        <div className="lp-header-actions"><span className="lp-theme-icon"><LpIcon name="moon" size={18}/></span><Link className="lp-signin" to="/auth">Sign In</Link><Link className="lp-cta" to="/auth?mode=signup">Get Started</Link></div>
+        <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => setLanguage(code)}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
       </header>
 
       <section className="lp-hero" id="home">
         <div className="lp-hero-copy">
-          <h1>TestDZ</h1><h2>Test. Learn. <span>Grow.</span></h2>
+          <h1>TestDZ</h1><h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
           <p>A comprehensive platform for closed tests, where developers create tests and testers earn rewards by participating.</p>
-          <div className="lp-hero-buttons"><Link className="lp-cta" to="/auth?mode=signup">Get Started <LpIcon name="arrow" size={16}/></Link><a className="lp-secondary" href="#how-it-works">Explore Tests <LpIcon name="play" size={14}/></a></div>
-          <div className="lp-proof"><div className="lp-avatars"><i>JD</i><i>AM</i><i>SK</i><i>RL</i></div><strong>50K+<small>Active Users</small></strong><b className="lp-proof-divider"/><strong><span className="lp-star">★</span> 4.8/5<small>User Rating</small></strong></div>
+          <div className="lp-hero-buttons"><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted} <LpIcon name="arrow" size={16}/></Link><a className="lp-secondary" href="#how-it-works">{t.exploreTests} <LpIcon name="play" size={14}/></a></div>
+          <div className="lp-proof"><div className="lp-avatars"><i>JD</i><i>AM</i><i>SK</i><i>RL</i></div><strong>50K+<small>{t.activeUsers}</small></strong><b className="lp-proof-divider"/><strong><span className="lp-star">★</span> 4.8/5<small>{t.userRating}</small></strong></div>
         </div>
-        <div className="lp-hero-art" aria-label="Illustration of the TestDZ testing dashboard">
+        <div className="lp-hero-art" aria-label={t.illustration}>
           <div className="lp-art-glow"/>
           <div className="lp-float lp-code"><LpIcon name="code" size={30}/></div><div className="lp-float lp-cloud"><LpIcon name="cloud" size={27}/></div><div className="lp-float lp-trophy"><LpIcon name="trophy" size={54}/></div><div className="lp-days"><LpIcon name="calendar" size={16}/>14<small>Days</small></div>
-          <div className="lp-laptop"><div className="lp-screen"><div className="lp-screen-sidebar"><b>TestDZ</b><span>◈ Overview</span><span>▦ My Tests</span><span>♙ Testers</span><span>▤ Rewards</span></div><div className="lp-screen-main"><div className="lp-screen-top">Dashboard <i>● ● ●</i></div><div className="lp-stats"><b>Active Tests<strong>12</strong></b><b>Total Users<strong>2,450</strong></b><b>Rewards<strong>850</strong></b></div><div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/></div><div className="lp-test-rows"><i/><i/><i/></div></div></div><div className="lp-laptop-base"/></div>
-          <div className="lp-checklist"><b><LpIcon name="check" size={13}/></b><span>Test completed</span><b><LpIcon name="check" size={13}/></b><span>Feedback received</span><b><LpIcon name="check" size={13}/></b><span>Reward earned</span></div>
+          <div className="lp-laptop"><div className="lp-screen"><div className="lp-screen-sidebar"><b>TestDZ</b><span>◈ {t.overview}</span><span>▦ {t.myTests}</span><span>♙ {t.testers}</span><span>▤ {t.rewards}</span></div><div className="lp-screen-main"><div className="lp-screen-top">{t.dashboard} <i>● ● ●</i></div><div className="lp-stats"><b>{t.activeTests}<strong>12</strong></b><b>{t.totalUsers}<strong>2,450</strong></b><b>{t.rewards}<strong>850</strong></b></div><div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/></div><div className="lp-test-rows"><i/><i/><i/></div></div></div><div className="lp-laptop-base"/></div>
+          <div className="lp-checklist"><b><LpIcon name="check" size={13}/></b><span>{t.completed}</span><b><LpIcon name="check" size={13}/></b><span>{t.feedback}</span><b><LpIcon name="check" size={13}/></b><span>{t.earned}</span></div>
         </div>
       </section>
 
       <section className="lp-features" id="features">
-        <article><span className="lp-feature-icon green"><LpIcon name="shield" size={30}/></span><h3>Secure &amp; Fair</h3><p>Advanced anti-fraud system for a transparent tester experience.</p></article>
-        <article><span className="lp-feature-icon blue"><LpIcon name="bolt" size={30}/></span><h3>14-Day Tests</h3><p>Limited-time tests to ensure real skills and knowledge.</p></article>
-        <article><span className="lp-feature-icon purple"><LpIcon name="gift" size={30}/></span><h3>Earn Rewards</h3><p>Get points and rewards for your efforts.</p></article>
-        <article><span className="lp-feature-icon cyan"><LpIcon name="users" size={30}/></span><h3>For Everyone</h3><p>Testers, developers and admins in one platform.</p></article>
+        <article><span className="lp-feature-icon green"><LpIcon name="shield" size={30}/></span><h3>{t.secure}</h3><p>{t.secureBody}</p></article>
+        <article><span className="lp-feature-icon blue"><LpIcon name="bolt" size={30}/></span><h3>{t.fourteen}</h3><p>{t.fourteenBody}</p></article>
+        <article><span className="lp-feature-icon purple"><LpIcon name="gift" size={30}/></span><h3>{t.earn}</h3><p>{t.earnBody}</p></article>
+        <article><span className="lp-feature-icon cyan"><LpIcon name="users" size={30}/></span><h3>{t.everyone}</h3><p>{t.everyoneBody}</p></article>
       </section>
 
       <section className="lp-how" id="how-it-works">
-        <div className="lp-section-title"><h2>How TestDZ Works?</h2><p>A simple and effective process in 3 easy steps</p></div>
+        <div className="lp-section-title"><h2>{t.howTitle}</h2><p>{t.howBody}</p></div>
         <div className="lp-steps">
-          <article><b className="lp-step-number">1</b><span><LpIcon name="user-plus" size={32}/></span><h3>Create Your Account</h3><p>Join TestDZ as a tester, developer or admin.</p></article><i>→</i>
-          <article><b className="lp-step-number">2</b><span><LpIcon name="clipboard" size={32}/></span><h3>Take or Create Tests</h3><p>Participate in tests or design your own tests.</p></article><i>→</i>
-          <article><b className="lp-step-number">3</b><span><LpIcon name="trophy" size={32}/></span><h3>Earn &amp; Grow</h3><p>Get rewards and track your progress.</p></article>
+          <article><b className="lp-step-number">1</b><span><LpIcon name="user-plus" size={32}/></span><h3>{t.create}</h3><p>{t.createBody}</p></article><i>→</i>
+          <article><b className="lp-step-number">2</b><span><LpIcon name="clipboard" size={32}/></span><h3>{t.take}</h3><p>{t.takeBody}</p></article><i>→</i>
+          <article><b className="lp-step-number">3</b><span><LpIcon name="trophy" size={32}/></span><h3>{t.grow}</h3><p>{t.growBody}</p></article>
         </div>
       </section>
 
-      <section className="lp-promo" id="testers"><div className="lp-hourglass"><LpIcon name="hourglass" size={58}/></div><div><h2>Tests are open for<br/>only <span>14 days!</span></h2><p>Don’t miss your chance to participate.</p></div><div className="lp-promo-calendar"><LpIcon name="calendar" size={70}/></div><a href="#features">Explore Active Tests <LpIcon name="arrow" size={16}/></a></section>
+      <section className="lp-promo" id="testers"><div className="lp-hourglass"><LpIcon name="hourglass" size={58}/></div><div><h2>{t.promoTitle}<br/><span>{t.promoAccent}</span></h2><p>{t.promoBody}</p></div><div className="lp-promo-calendar"><LpIcon name="calendar" size={70}/></div><a href="#features">{t.exploreActive} <LpIcon name="arrow" size={16}/></a></section>
 
-      <section className="lp-testimonials"><div className="lp-section-title"><h2>What Our Community Says</h2></div><div className="lp-quotes">
-        <article><div className="lp-person">SB</div><div><p>“TestDZ is an amazing platform! I love the fair system and rewards.”</p><b>Sarah Benali</b><small>Tester</small><strong>★★★★★</strong></div></article>
-        <article><div className="lp-person">MS</div><div><p>“A great platform for developers to share their tests and get feedback.”</p><b>Mohamed Saci</b><small>Developer</small><strong>★★★★★</strong></div></article>
+      <section className="lp-testimonials"><div className="lp-section-title"><h2>{t.community}</h2></div><div className="lp-quotes">
+        <article><div className="lp-person">SB</div><div><p>“TestDZ is an amazing platform! I love the fair system and rewards.”</p><b>Sarah Benali</b><small>{t.tester}</small><strong>★★★★★</strong></div></article>
+        <article><div className="lp-person">MS</div><div><p>“A great platform for developers to share their tests and get feedback.”</p><b>Mohamed Saci</b><small>{t.developer}</small><strong>★★★★★</strong></div></article>
         <article><div className="lp-person">AK</div><div><p>“Simple, secure and very useful. Highly recommended!”</p><b>Amina Khelifi</b><small>Tester</small><strong>★★★★★</strong></div></article>
       </div><div className="lp-dots">● ● ●</div></section>
 
       <section className="lp-faq" id="faq">
         <div className="lp-faq-illustration" aria-hidden="true"><svg viewBox="0 0 220 190" role="img"><path d="M12 184c20-48 45-54 72-34 18 14 35 10 51-5 23-22 52-8 73 39" fill="#c9e1ff"/><path d="M50 183c-5-37 5-69 34-83 31-15 68 2 76 35l-5 48Z" fill="#075cf5"/><path d="M78 95c-9-42 11-69 42-68 31 1 48 28 38 62-7 24-23 38-43 36-18-2-31-13-37-30Z" fill="#f1bd91"/><path d="M75 83c-10-45 10-66 43-66 33 0 51 23 44 56-12-6-18-19-21-28-14 18-35 27-66 29Z" fill="#142c65"/><path d="M99 96h3m31 0h3M112 112q10 7 19-1" stroke="#17305d" strokeWidth="3" strokeLinecap="round" fill="none"/><path d="M99 85q7-6 14 0m15 0q7-6 14 0" stroke="#17305d" strokeWidth="3" fill="none"/><path d="M109 126q-14 11-25 26m50-23q13 10 22 26" stroke="#f1bd91" strokeWidth="13" strokeLinecap="round" fill="none"/></svg><span>?</span></div>
-        <div className="lp-faq-copy"><h2>Frequently Asked Questions</h2><p>Find answers to common questions about TestDZ.</p><a href="#faq">View All FAQs <LpIcon name="arrow" size={15}/></a></div>
-        <div className="lp-faq-list"><details><summary>How does the 14-day test work?</summary><p>Testers participate in an organized test cycle and share feedback throughout the testing period.</p></details><details><summary>Can I earn real rewards?</summary><p>Eligible activities can earn points and rewards according to the platform rules.</p></details><details><summary>Is TestDZ free to use?</summary><p>You can create an account and explore the platform. Available features may depend on your role and plan.</p></details><details><summary>How can I become a developer?</summary><p>Create an account and choose the developer role during onboarding.</p></details></div>
+        <div className="lp-faq-copy"><h2>{t.faqTitle}</h2><p>{t.faqIntro}</p><a href="#faq">{t.viewFaq} <LpIcon name="arrow" size={15}/></a></div>
+        <div className="lp-faq-list"><details><summary>{t.faq1q}</summary><p>{t.faq1a}</p></details><details><summary>{t.faq2q}</summary><p>{t.faq2a}</p></details><details><summary>{t.faq3q}</summary><p>{t.faq3a}</p></details><details><summary>{t.faq4q}</summary><p>{t.faq4a}</p></details></div>
       </section>
 
-      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask"><LpIcon name="flask" size={29}/></span><span>TestDZ</span></Link><nav><a href="#features">About</a><a href="#terms">Terms of Service</a><a href="#privacy">Privacy Policy</a><a href="#contact">Contact</a></nav><div className="lp-social" aria-label="Social links">◉　𝕏　▶　in</div><small>© 2026 TestDZ. All rights reserved.</small></footer>
+      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask"><LpIcon name="flask" size={29}/></span><span>TestDZ</span></Link><nav><a href="#features">{t.about}</a><a href="#faq">{t.terms}</a><a href="#faq">{t.privacy}</a><a href="#faq">{t.contact}</a></nav><div className="lp-social" aria-label="Social links">◉　𝕏　▶　in</div><small>© 2026 TestDZ. All rights reserved.</small></footer>
     </main>
   );
 }
