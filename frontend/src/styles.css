@@ -255,3 +255,55 @@ html:lang(fr),
 [dir="rtl"] :is(h1,h2,h3,h4,p,label,button,a,small,span) {
   letter-spacing: normal;
 }
+
+
+/* Landing page language selector and script-aware typography */
+.lp-language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #dce7f8;
+  border-radius: 999px;
+  background: #f4f8ff;
+}
+.lp-language-switch button {
+  min-width: 34px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #526486;
+  font: 700 10px/1 Inter, sans-serif;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.lp-language-switch button:hover { color: #075cf5; }
+.lp-language-switch button.active {
+  color: #fff;
+  background: #075cf5;
+  box-shadow: 0 3px 9px #075cf533;
+}
+.landing-en[lang="ar"] {
+  font-family: "Noto Sans Arabic", "IBM Plex Sans Arabic", sans-serif;
+  line-height: 1.75;
+}
+.landing-en[lang="ar"] .lp-language-switch button,
+.landing-en[lang="fr"] .lp-language-switch button,
+.landing-en[lang="en"] .lp-language-switch button { font-family: Inter, "Noto Sans Arabic", sans-serif; }
+.landing-en[lang="ar"] .lp-hero-copy h1,
+.landing-en[lang="ar"] .lp-section-title h2,
+.landing-en[lang="ar"] .lp-faq-copy h2 { letter-spacing: 0; }
+.landing-en[lang="ar"] .lp-hero-copy > p,
+.landing-en[lang="ar"] .lp-features p,
+.landing-en[lang="ar"] .lp-steps p,
+.landing-en[lang="ar"] .lp-quotes p,
+.landing-en[lang="ar"] .lp-faq-list details { line-height: 1.85; }
+.landing-en[lang="fr"] { font-family: Inter, "Noto Sans Arabic", sans-serif; }
+@media (max-width: 560px) {
+  .lp-header-actions { gap: 7px; }
+  .lp-language-switch { gap: 1px; padding: 3px; }
+  .lp-language-switch button { min-width: 29px; min-height: 28px; padding-inline: 5px; font-size: 9px; }
+  .landing-en[lang="ar"] .lp-nav { direction: rtl; }
+}
