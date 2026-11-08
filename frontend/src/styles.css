@@ -813,9 +813,11 @@ html:lang(fr),
 .auth-account-types label:hover{border-color:#8fb4ff;transform:translateY(-1px)}
 .auth-account-types label.selected{border:1.5px solid #3479ff;background:linear-gradient(145deg,#e7f0ff,#f5f8ff);box-shadow:inset 0 0 0 1px #3479ff20,0 5px 14px #2f72e910}
 .auth-account-types label input{position:absolute;right:8px;top:8px;width:16px;height:16px;margin:0;accent-color:#1264ee;cursor:pointer}
-.account-type-icon{display:grid;place-items:center;width:29px;height:29px;color:#1264ee;font-size:24px;line-height:1;font-weight:800}
-.auth-account-types label:first-of-type .account-type-icon{border-radius:9px;background:linear-gradient(135deg,#1281ff,#0646d9);color:white;font-size:19px}
-.auth-account-types label:last-of-type .account-type-icon{color:#f5b72b;font-size:27px}
+.account-type-icon{display:grid;place-items:center;width:29px;height:29px;color:#1264ee;flex:none}
+.account-type-icon svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.auth-account-types label:first-of-type .account-type-icon{border-radius:9px;background:linear-gradient(135deg,#1281ff,#0646d9);color:white}
+.auth-account-types label:last-of-type .account-type-icon{color:#e7a400}
+.auth-account-types label:last-of-type .account-type-icon svg{fill:currentColor;stroke:none}
 .auth-account-types label strong{font-size:13px;color:#102d70;line-height:1.2}
 .auth-account-types label small{font-size:10px;line-height:1.25;color:#304a7c}
 .auth-terms{display:flex;align-items:flex-start;gap:9px;margin:1px 0 0;color:#24395f;font-size:11px;line-height:1.45}
