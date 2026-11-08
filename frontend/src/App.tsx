@@ -380,7 +380,7 @@ function AuthPage() {
         <span className="auth-kicker">TEST · LEARN · GROW</span>
         <h1>{mode === "signup" ? <>Join the<br/><strong>TestDZ community</strong></> : <>Welcome to<br/><strong>TestDZ</strong></>}</h1>
         <p>{mode === "signup" ? "Be part of a growing community of testers and developers, build your skills and achieve more together." : "The ultimate platform for software testing, where developers create tests and testers earn rewards."}</p>
-        {mode === "signup" && <h2 className="auth-hero-subtitle">Start Your Journey<br/>in Software Testing</h2>}
+        
         <ul className="auth-benefits">
           <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg></span>{mode === "signup" ? "Take Tests & Earn Points" : "Take Tests & Earn Points"}</li>
           <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.5 5.5l13 13m0-13-13 13" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M8 3.8 12 2l4 1.8M8 20.2 12 22l4-1.8M3.8 8 2 12l1.8 4M20.2 8 22 12l-1.8 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>{mode === "signup" ? "Unlock Rewards & Badges" : "Unlock Rewards & Benefits"}</li>
