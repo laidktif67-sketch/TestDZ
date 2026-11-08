@@ -101,10 +101,10 @@ jobs:
         run: |
           set -euo pipefail
           case "$MIGRATION" in
-            016a) FILE="supabase/tests/verify_preconditions_016a.sql" ;;
-            016b) FILE="supabase/tests/verify_preconditions_016b.sql" ;;
-            016c) FILE="supabase/tests/verify_preconditions_016c.sql" ;;
-            016d) FILE="supabase/tests/verify_preconditions_016d.sql" ;;
+            016a) FILE="supabase/verification/verify_preconditions_016a.sql" ;;
+            016b) FILE="supabase/verification/verify_preconditions_016b.sql" ;;
+            016c) FILE="supabase/verification/verify_preconditions_016c.sql" ;;
+            016d) FILE="supabase/verification/verify_preconditions_016d.sql" ;;
             *) echo "Unsupported migration selection"; exit 1 ;;
           esac
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
@@ -138,8 +138,8 @@ jobs:
         run: |
           set -euo pipefail
           case "$MIGRATION" in
-            016b) FILE="supabase/tests/verify_016b.sql" ;;
-            016d) FILE="supabase/tests/verify_016d.sql" ;;
+            016b) FILE="supabase/verification/verify_016b.sql" ;;
+            016d) FILE="supabase/verification/verify_016d.sql" ;;
             *) echo "Unsupported verify-only migration"; exit 1 ;;
           esac
           psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
@@ -355,10 +355,10 @@ jobs:
         run: |
           set -euo pipefail
           case "$MIGRATION" in
-            016a) FILE="supabase/tests/verify_016a.sql" ;;
-            016b) FILE="supabase/tests/verify_016b.sql" ;;
-            016c) FILE="supabase/tests/verify_016c.sql" ;;
-            016d) FILE="supabase/tests/verify_016d.sql" ;;
+            016a) FILE="supabase/verification/verify_016a.sql" ;;
+            016b) FILE="supabase/verification/verify_016b.sql" ;;
+            016c) FILE="supabase/verification/verify_016c.sql" ;;
+            016d) FILE="supabase/verification/verify_016d.sql" ;;
             *) echo "Unsupported migration selection"; exit 1 ;;
           esac
           if ! psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"; then
