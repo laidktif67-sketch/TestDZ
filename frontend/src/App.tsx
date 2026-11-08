@@ -216,11 +216,11 @@ function LandingPage() {
         /></div>}
         <div className="lp-hero-copy">
           <h1 className="lp-hero-semantic-title">TestDZ</h1>
-          <BlurText text="TestDZ" className="lp-hero-title" ariaHidden effect="blur" animateBy="words" direction="bottom" trigger="load" delay={65} stepDuration={0.42} blur={8} distance={14} />
+          {reducedMotion ? <span className="lp-hero-title" aria-hidden="true">TestDZ</span> : <BlurText text="TestDZ" className="lp-hero-title" ariaHidden effect="blur" animateBy="words" direction="bottom" trigger="load" delay={65} stepDuration={0.42} blur={8} distance={14} />}
           <h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
           <p>{t.heroBody}</p>
           <div className="lp-hero-buttons">
-            <Link className="lp-cta lp-cta-star" to="/auth?mode=signup"><StarBorder as="span" className="lp-star-border-inner" theme="light" backgroundColor="transparent" textColor="#ffffff" borderColor="rgba(255,255,255,.42)" color="#ffffff" trailColor="#d8e8ff" duration={5.2} thickness={1} radius={26} trailLength={0.22} stars={1} glow={0.38} sparkle={false} hover="brighten" clickPulse={false}>{t.getStarted} <LpIcon name="arrow" size={17}/></StarBorder></Link>
+            <Link className="lp-cta lp-cta-star" to="/auth?mode=signup">{reducedMotion ? <span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span> : <StarBorder as="span" className="lp-star-border-inner" theme="light" backgroundColor="transparent" textColor="#ffffff" borderColor="rgba(255,255,255,.42)" color="#ffffff" trailColor="#d8e8ff" duration={5.2} thickness={1} radius={26} trailLength={0.22} stars={1} glow={0.38} sparkle={false} hover="brighten" clickPulse={false}>{t.getStarted} <LpIcon name="arrow" size={17}/></StarBorder>}</Link>
             <a className="lp-secondary" href="#features">{t.exploreTests} <LpIcon name="play" size={15}/></a>
           </div>
           <div className="lp-proof" aria-label={t.visualLabel}>
