@@ -931,3 +931,39 @@ html:lang(fr),
  .auth-reference-form-wrap:has(.auth-account-types) .auth-socials button,
  .auth-reference-form-wrap .auth-socials-signup button{min-height:42px!important;height:42px!important;padding:5px 3px!important;font-size:11px!important;gap:4px!important}
 }
+
+/* GSAP owns auth entrance/field transitions; keep the layout stable while it animates. */
+.auth-reference-form-wrap,
+.auth-reference-heading,
+.auth-reference-fields{animation:none!important}
+.auth-reference-form-area{min-width:0;overflow-x:clip}
+.auth-reference-form-wrap{min-width:0;max-width:100%}
+.auth-reference-fields>*,
+.auth-account-types,
+.auth-socials,
+.auth-socials button{min-width:0}
+.auth-socials button{white-space:nowrap}
+.auth-reference-submit:focus-visible,
+.auth-show-password:focus-visible,
+.auth-language:focus-visible{outline:3px solid #78a9ff;outline-offset:3px}
+@media(max-width:900px){
+  .auth-reference-form-area{align-items:stretch}
+  .auth-reference-form-wrap,
+  .auth-security{margin-inline:auto}
+}
+@media(max-width:560px){
+  .auth-reference-form-area{overflow-x:clip;padding-inline:12px}
+  .auth-reference-form-wrap{width:100%;padding-inline:14px}
+  .auth-socials button{gap:4px!important}
+  .auth-socials .social-logo{flex-basis:16px;width:16px;height:16px}
+}
+@media(max-width:380px){
+  .auth-reference-form-area{padding-inline:8px}
+  .auth-reference-form-wrap{padding-inline:10px}
+  .auth-reference-form-wrap .auth-socials button{font-size:10px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .auth-reference-form-wrap,
+  .auth-reference-heading,
+  .auth-reference-fields{animation:none!important;transform:none!important}
+}
