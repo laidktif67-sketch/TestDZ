@@ -664,18 +664,19 @@ function AppsPage() {
     setBusy(true);setError("");setNotice("");
     const {data:appId,error:createError}=await supabase.rpc("create_app",{p_name:name,p_package_name:packageName,p_description:description,p_category:category});
     if(createError){setError(appError(createError.message));setBusy(false);return;}
+    let postCreateWarning = "";
     if(icon){
       const ext=icon.type==="image/png"?"png":"jpg";
       const path=userId+"/"+appId+"/icon."+ext;
       const {error:uploadError}=await supabase.storage.from("app-icons").upload(path,icon,{upsert:true,contentType:icon.type,cacheControl:"3600"});
-      if(uploadError){setError("أُنشئ التطبيق، لكن تعذر رفع الأيقونة. يمكنك إضافتها لاحقاً.");}
+      if(uploadError){postCreateWarning="أُنشئ التطبيق، لكن تعذر رفع الأيقونة. يمكنك إضافتها لاحقاً.";}
       else{
         const {data}=supabase.storage.from("app-icons").getPublicUrl(path);
         const {error:updateError}=await supabase.rpc("update_app",{p_app_id:appId,p_name:name,p_description:description,p_category:category,p_icon_url:data.publicUrl});
-        if(updateError)setError("أُنشئ التطبيق ورُفعت الأيقونة، لكن تعذر ربطها بالتطبيق.");
+        if(updateError)postCreateWarning="أُنشئ التطبيق ورُفعت الأيقونة، لكن تعذر ربطها بالتطبيق.";
       }
     }
-    resetForm();setNotice("تم إنشاء التطبيق كمسودة.");await load();setBusy(false);
+    resetForm();setNotice("تم إنشاء التطبيق كمسودة.");await load();if(postCreateWarning)setError(postCreateWarning);setBusy(false);
   }
   const visible=apps.filter(a=>(filter==="all"?a.status!=="archived":filter==="active"?a.status!=="archived":a.status==="archived")&&a.name.toLowerCase().includes(search.toLowerCase()));
   return <main className="dashboard-shell"><header className="site-header container"><Brand/><nav className="header-actions"><Link to="/dashboard">لوحة التحكم</Link><Link to="/profile">الملف الشخصي</Link></nav></header><section className="dashboard-welcome container">
