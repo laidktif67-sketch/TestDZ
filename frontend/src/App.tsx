@@ -375,9 +375,9 @@ function AuthPage() {
         <h1>{mode === "signup" ? <>Join the<br/><strong>TestDZ community</strong></> : <>Welcome to<br/><strong>TestDZ</strong></>}</h1>
         <p>The ultimate platform for software testing, where developers create tests and testers earn rewards.</p>
         <ul className="auth-benefits">
-          <li><span>ϟ</span>Take Tests &amp; Earn Points</li>
-          <li><span>✿</span>Unlock Rewards &amp; Benefits</li>
-          <li><span>▥</span>Grow Your Skills</li>
+          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg></span>Take Tests &amp; Earn Points</li>
+          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.5 5.5l13 13m0-13-13 13" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M8 3.8 12 2l4 1.8M8 20.2 12 22l4-1.8M3.8 8 2 12l1.8 4M20.2 8 22 12l-1.8 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>Unlock Rewards &amp; Benefits</li>
+          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V12h4v8M10 20V5h4v15M16 20V9h4v11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 21h18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg></span>Grow Your Skills</li>
         </ul>
         <div className="auth-illustration"><div className="auth-code-bubble">&lt;/&gt;</div><div className="auth-orbit auth-orbit-one"></div><div className="auth-orbit auth-orbit-two"></div><img src="/images/hero-dashboard.png" alt="TestDZ testing dashboard preview" /><span className="auth-points"><b>★</b><strong>450</strong><small>Points</small></span></div>
       </div>
