@@ -1032,3 +1032,34 @@ html:lang(fr),
   .auth-socials button,
   .auth-reference-submit{will-change:auto!important;transform:none!important;filter:none!important}
 }
+
+
+/* Auth validation polish: make mismatched confirmation visible without relying on text alone. */
+.auth-input:has(input[aria-invalid="true"]) {
+  border-color: #e15b66;
+  box-shadow: 0 0 0 3px rgba(225, 91, 102, .09);
+}
+.auth-input:has(input[aria-invalid="true"]):focus-within {
+  border-color: #d94350;
+  box-shadow: 0 0 0 3px rgba(225, 91, 102, .14);
+}
+.auth-match-note.unmatched {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid #f5c7cb;
+  border-radius: 9px;
+  background: #fff5f6;
+  line-height: 1.45;
+}
+.auth-match-note.matched {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid #bfe8d5;
+  border-radius: 9px;
+  background: #f2fbf6;
+  line-height: 1.45;
+}
