@@ -283,6 +283,17 @@ function translateAuthError(message: string) {
   return "تعذر إكمال العملية. تحقق من البيانات وحاول مرة أخرى.";
 }
 
+async function getPostAuthRoute(userId: string): Promise<"/dashboard" | "/onboarding"> {
+  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("onboarding_completed_at")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return profile?.onboarding_completed_at ? "/dashboard" : "/onboarding";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const authRoot = useRef<HTMLElement | null>(null);
@@ -416,12 +427,12 @@ function AuthPage() {
           options: { data: { full_name: fullName.trim(), phone: phone.trim() || null, account_type: accountType }, emailRedirectTo: window.location.origin + "/auth/callback" },
         });
         if (authError) throw authError;
-        if (data.session) navigate("/dashboard");
+        if (data.session) navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
         else setMessage("تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيده قبل تسجيل الدخول.");
       } else {
-        const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (authError) throw authError;
-        navigate("/dashboard");
+        if (data.session) navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? translateAuthError(err.message) : "حدث خطأ غير متوقع. حاول مرة أخرى.");
@@ -570,10 +581,20 @@ function AuthCallbackPage() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const errorDescription = hash.get("error_description");
     if (errorDescription) { setMessage("تعذر تأكيد الرابط: " + errorDescription); return; }
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (error) setMessage("تعذر إكمال المصادقة. اطلب رابطاً جديداً.");
-      else if (data.session) navigate("/onboarding", { replace: true });
-      else setMessage("الرابط غير صالح أو انتهت صلاحيته. ارجع لصفحة الدخول واطلب رابطاً جديداً.");
+    supabase.auth.getSession().then(async ({ data, error }) => {
+      if (error) {
+        setMessage("تعذر إكمال المصادقة. اطلب رابطاً جديداً.");
+        return;
+      }
+      if (!data.session) {
+        setMessage("الرابط غير صالح أو انتهت صلاحيته. ارجع لصفحة الدخول واطلب رابطاً جديداً.");
+        return;
+      }
+      try {
+        navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
+      } catch {
+        setMessage("تم تسجيل الدخول، لكن تعذر التحقق من إعداد الحساب. حدّث الصفحة أو حاول مجدداً.");
+      }
     });
   }, [navigate]);
   return <main className="auth-layout"><section className="auth-panel"><div className="auth-form-wrap"><Brand /><h2>تأكيد الحساب</h2><p>{message}</p><Link className="button button-primary" to="/auth">العودة للدخول</Link></div></section></main>;
