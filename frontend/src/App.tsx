@@ -289,6 +289,8 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">(params.get("mode") === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -303,6 +305,10 @@ function AuthPage() {
     setError("");
     if (!supabase) {
       setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة.");
+      return;
+    }
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("كلمتا المرور غير متطابقتين. تحقق من كلمة المرور وتأكيدها.");
       return;
     }
     if (mode === "signup" && (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password))) {
@@ -381,9 +387,10 @@ function AuthPage() {
         {message && <div className="notice notice-success" role="status">{message}</div>}
         {error && <div className="notice notice-error" role="alert">{error}</div>}
         <form onSubmit={submit} className="auth-reference-fields">
-          {mode === "signup" && <><label className="auth-input"><span>♙</span><input autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} required minLength={2} placeholder="Full Name" /></label><label className="auth-input"><span>☎</span><input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number (optional)" dir="ltr" /></label></>}
-          <label className="auth-input"><span>✉</span><input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Email Address" dir="ltr" /></label>
-          <label className="auth-input"><span>♙</span><input type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Password" dir="ltr" /><button type="button" className="auth-show-password" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "◉" : "◎"}</button></label>
+          {mode === "signup" && <><label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg></span><input autoComplete="name" value={fullName} onChange={e => setFullName(e.target.value)} required minLength={2} placeholder="Full Name" /></label><label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 6h6M10 18h4" /></svg></span><input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number (optional)" dir="ltr" /></label></>}
+          <label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6" /></svg></span><input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Email Address" dir="ltr" /></label>
+          <label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" /></svg></span><input type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Password" dir="ltr" /><button type="button" className="auth-show-password" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 8.5 4.5 9 7-.2 1.1-1.1 2.5-2.6 3.7M6.2 6.3C4 7.7 2.5 10 2 12c.5 2.5 4 7 10 7 1.1 0 2.1-.2 3-.5"/></svg> : <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>}</button></label>
+          {mode === "signup" && <label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M9 15l2 2 4-4" /></svg></span><input type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} placeholder="Confirm Password" dir="ltr" /><button type="button" className="auth-show-password" onClick={() => setShowConfirmPassword(v => !v)} aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"}>{showConfirmPassword ? <svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 8.5 4.5 9 7-.2 1.1-1.1 2.5-2.6 3.7M6.2 6.3C4 7.7 2.5 10 2 12c.5 2.5 4 7 10 7 1.1 0 2.1-.2 3-.5"/></svg> : <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>}</button></label>}
           {mode === "signin" && <div className="auth-form-options"><label className="auth-remember"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} /> <span>Remember me</span></label><Link to="/forgot-password">Forgot Password?</Link></div>}
           <button className="auth-reference-submit" type="submit" disabled={busy}><span>⇥</span>{busy ? "Please wait..." : mode === "signup" ? "Create Account" : "Login"}</button>
         </form>
