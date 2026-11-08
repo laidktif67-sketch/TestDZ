@@ -460,10 +460,10 @@ html:lang(fr),
 .lp-hero-emoji-trophy{right:7%;top:8%;font-size:clamp(39px,4.5vw,54px);animation-delay:-.9s}
 @keyframes lp-emoji-float{0%,100%{transform:translate3d(0,0,0) rotate(-5deg)}50%{transform:translate3d(0,-13px,0) rotate(5deg)}}
 .lp-faq-illustration{align-items:flex-end}
-.lp-faq-image{width:115%;max-width:390px;max-height:340px;transform:translateY(-20px);transform-origin:bottom center}
+.lp-faq-image{width:130%;max-width:520px;max-height:430px;transform:translateY(-34px);transform-origin:bottom center}
 @media(max-width:900px){
  .lp-hero-emoji-code{left:5%;top:7%}.lp-hero-emoji-cloud{left:25%;top:-2%}.lp-hero-emoji-trophy{right:5%;top:6%}
- .lp-faq-image{max-width:330px;max-height:300px;transform:translateY(-15px)}
+ .lp-faq-image{width:115%;max-width:360px;max-height:310px;transform:translateY(-18px)}
 }
 @media(max-width:560px){
  .lp-hero-emoji-code{left:1%;top:10%;font-size:34px}
