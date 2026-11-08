@@ -309,41 +309,82 @@ function AuthPage() {
   ];
   const passwordStrength = passwordRules.slice(0, 3).filter(rule => rule.valid).length;
 
-  // Entrance choreography is scoped to this auth page and disabled for reduced-motion users.
+  // Cinematic entrance is scoped to this page and fully reverted on cleanup.
   useEffect(() => {
     const root = authRoot.current;
     if (!root) return;
-    const media = gsap.matchMedia();
-    media.add("(prefers-reduced-motion: no-preference)", () => {
-      const timeline = gsap.timeline({ defaults: { ease: "power3.out" } });
-      timeline
-        .fromTo(root.querySelectorAll(".auth-reference-hero"), { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.62 })
-        .fromTo(root.querySelectorAll(".auth-reference-form-wrap"), { autoAlpha: 0, y: 18, scale: 0.99 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.58 }, "-=0.42")
-        .fromTo(root.querySelectorAll(".auth-benefits li"), { autoAlpha: 0, x: -10 }, { autoAlpha: 1, x: 0, duration: 0.32, stagger: 0.07 }, "-=0.28")
-        .fromTo(root.querySelectorAll(".auth-security"), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.3 }, "-=0.2");
-      return () => timeline.kill();
-    });
-    return () => media.revert();
+
+    const context = gsap.context(() => {
+      const media = gsap.matchMedia();
+      media.add("(prefers-reduced-motion: no-preference)", () => {
+        const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+        intro
+          .fromTo(".auth-reference-brand", { autoAlpha: 0, y: -12 }, { autoAlpha: 1, y: 0, duration: 0.52 })
+          .fromTo(".auth-reference-copy", { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7 }, "-=0.24")
+          .fromTo(".auth-illustration img", { autoAlpha: 0, y: 26, scale: 0.965 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.92, ease: "power2.out" }, "-=0.38")
+          .fromTo(".auth-code-bubble", { autoAlpha: 0, scale: 0.72, rotation: -18 }, { autoAlpha: 1, scale: 1, rotation: -9, duration: 0.52, ease: "back.out(1.6)" }, "-=0.55")
+          .fromTo(".auth-orbit", { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 0.82, scale: 1, duration: 0.58, stagger: 0.1 }, "-=0.5")
+          .fromTo(".auth-reference-form-wrap", { autoAlpha: 0, x: 26, y: 12, scale: 0.985 }, { autoAlpha: 1, x: 0, y: 0, scale: 1, duration: 0.78 }, "-=0.72")
+          .fromTo(".auth-benefits li", { autoAlpha: 0, x: -10 }, { autoAlpha: 1, x: 0, duration: 0.34, stagger: 0.085 }, "-=0.38")
+          .fromTo(".auth-security", { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.3 }, "-=0.18");
+
+        const orbitMotion = gsap.to(".auth-orbit-one", {
+          rotation: 360,
+          duration: 30,
+          repeat: -1,
+          ease: "none",
+          transformOrigin: "50% 50%",
+        });
+        const bubbleMotion = gsap.to(".auth-code-bubble", {
+          y: -6,
+          duration: 2.5,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+
+        return () => {
+          intro.kill();
+          orbitMotion.kill();
+          bubbleMotion.kill();
+        };
+      });
+
+      return () => media.revert();
+    }, root);
+
+    return () => context.revert();
   }, []);
 
-  // Re-introduce the active form fields when switching between Login and Register.
+  // Animate only when the user switches between Login and Register, not on first paint.
+  const previousAuthMode = useRef(mode);
   useEffect(() => {
+    if (previousAuthMode.current === mode) return;
+    previousAuthMode.current = mode;
+
     const root = authRoot.current;
     if (!root) return;
-    const media = gsap.matchMedia();
-    media.add("(prefers-reduced-motion: no-preference)", () => {
-      const timeline = gsap.timeline({ defaults: { ease: "power2.out" } });
-      timeline
-        .fromTo(root.querySelectorAll(".auth-reference-heading"), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.3 })
-        .fromTo(
-          root.querySelectorAll(".auth-reference-fields .auth-input, .auth-account-types, .auth-terms, .auth-password-guidance, .auth-form-options"),
-          { autoAlpha: 0, y: 7 },
-          { autoAlpha: 1, y: 0, duration: 0.24, stagger: 0.035 },
-          "-=0.12",
-        );
-      return () => timeline.kill();
-    });
-    return () => media.revert();
+
+    const context = gsap.context(() => {
+      const media = gsap.matchMedia();
+      media.add("(prefers-reduced-motion: no-preference)", () => {
+        const transition = gsap.timeline({ defaults: { ease: "power2.out" } });
+        transition
+          .fromTo(".auth-reference-heading", { autoAlpha: 0, y: 12, filter: "blur(4px)" }, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.38 })
+          .fromTo(
+            ".auth-reference-fields .auth-input, .auth-account-types, .auth-terms, .auth-password-guidance, .auth-form-options",
+            { autoAlpha: 0, y: 9 },
+            { autoAlpha: 1, y: 0, duration: 0.25, stagger: 0.035 },
+            "-=0.12",
+          )
+          .fromTo(".auth-socials button", { autoAlpha: 0, y: 7 }, { autoAlpha: 1, y: 0, duration: 0.22, stagger: 0.045 }, "-=0.12")
+          .fromTo(".auth-reference-submit", { y: 5, scale: 0.99 }, { y: 0, scale: 1, duration: 0.24 }, "-=0.12");
+        return () => transition.kill();
+      });
+      return () => media.revert();
+    }, root);
+
+    return () => context.revert();
   }, [mode]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -424,9 +465,9 @@ function AuthPage() {
           <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.5 5.5l13 13m0-13-13 13" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M8 3.8 12 2l4 1.8M8 20.2 12 22l4-1.8M3.8 8 2 12l1.8 4M20.2 8 22 12l-1.8 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>{mode === "signup" ? "Unlock Rewards & Badges" : "Unlock Rewards & Benefits"}</li>
           <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V12h4v8M10 20V5h4v15M16 20V9h4v11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 21h18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg></span>{mode === "signup" ? "Connect with Community" : "Grow Your Skills"}</li>
         </ul>
-        <div className="auth-illustration"><div className="auth-code-bubble">&lt;/&gt;</div><div className="auth-orbit auth-orbit-one"></div><div className="auth-orbit auth-orbit-two"></div><img src="/images/hero-dashboard.png" alt="TestDZ testing dashboard preview" /><span className="auth-points"><b>★</b><strong>450</strong><small>Points</small></span></div>
+        <div className="auth-illustration"><div className="auth-code-bubble">&lt;/&gt;</div><div className="auth-orbit auth-orbit-one"></div><div className="auth-orbit auth-orbit-two"></div><img src="/images/hero-dashboard.png" alt="TestDZ testing dashboard preview" /><span className="auth-points"><b aria-hidden="true">QA</b><strong>Test Lab</strong><small>Build · Test · Improve</small></span></div>
       </div>
-      <footer className="auth-reference-stats"><div className="auth-avatars" aria-label="TestDZ community"><span>TD</span><span>QA</span><span>DEV</span></div><div><strong>50K+</strong><small>Active Users</small></div><i></i><div className="auth-rating-star">★</div><div><strong>4.8/5</strong><small>User Rating</small></div></footer>
+      
     </section>
     <section className="auth-reference-form-area">
       <div className="auth-reference-form-wrap">
