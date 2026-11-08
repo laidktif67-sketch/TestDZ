@@ -293,6 +293,8 @@ function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [accountType, setAccountType] = useState<"tester" | "developer" | "both">("tester");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -314,6 +316,10 @@ function AuthPage() {
       setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة.");
       return;
     }
+    if (mode === "signup" && !acceptedTerms) {
+      setError("Please accept the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
     if (mode === "signup" && password !== confirmPassword) {
       setError("كلمتا المرور غير متطابقتين. تحقق من كلمة المرور وتأكيدها.");
       return;
@@ -328,7 +334,7 @@ function AuthPage() {
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { full_name: fullName.trim(), phone: phone.trim() || null }, emailRedirectTo: window.location.origin + "/auth/callback" },
+          options: { data: { full_name: fullName.trim(), phone: phone.trim() || null, account_type: accountType }, emailRedirectTo: window.location.origin + "/auth/callback" },
         });
         if (authError) throw authError;
         if (data.session) navigate("/dashboard");
@@ -373,13 +379,15 @@ function AuthPage() {
       <div className="auth-reference-copy">
         <span className="auth-kicker">TEST · LEARN · GROW</span>
         <h1>{mode === "signup" ? <>Join the<br/><strong>TestDZ community</strong></> : <>Welcome to<br/><strong>TestDZ</strong></>}</h1>
-        <p>The ultimate platform for software testing, where developers create tests and testers earn rewards.</p>
+        <p>{mode === "signup" ? "Be part of a growing community of testers and developers, build your skills and achieve more together." : "The ultimate platform for software testing, where developers create tests and testers earn rewards."}</p>
+        {mode === "signup" && <h2 className="auth-hero-subtitle">Start Your Journey<br/>in Software Testing</h2>}
         <ul className="auth-benefits">
-          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg></span>Take Tests &amp; Earn Points</li>
-          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.5 5.5l13 13m0-13-13 13" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M8 3.8 12 2l4 1.8M8 20.2 12 22l4-1.8M3.8 8 2 12l1.8 4M20.2 8 22 12l-1.8 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>Unlock Rewards &amp; Benefits</li>
-          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V12h4v8M10 20V5h4v15M16 20V9h4v11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 21h18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg></span>Grow Your Skills</li>
+          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg></span>{mode === "signup" ? "Take Tests & Earn Points" : "Take Tests & Earn Points"}</li>
+          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.5 5.5l13 13m0-13-13 13" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M8 3.8 12 2l4 1.8M8 20.2 12 22l4-1.8M3.8 8 2 12l1.8 4M20.2 8 22 12l-1.8 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></span>{mode === "signup" ? "Unlock Rewards & Badges" : "Unlock Rewards & Benefits"}</li>
+          <li><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V12h4v8M10 20V5h4v15M16 20V9h4v11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 21h18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg></span>{mode === "signup" ? "Connect with Community" : "Grow Your Skills"}</li>
         </ul>
         <div className="auth-illustration"><div className="auth-code-bubble">&lt;/&gt;</div><div className="auth-orbit auth-orbit-one"></div><div className="auth-orbit auth-orbit-two"></div><img src="/images/hero-dashboard.png" alt="TestDZ testing dashboard preview" /><span className="auth-points"><b>★</b><strong>450</strong><small>Points</small></span></div>
+        {mode === "signup" && <div className="auth-script-tag">Test. Learn. Grow.</div>}
       </div>
       <footer className="auth-reference-stats"><div className="auth-avatars" aria-label="TestDZ community"><span>TD</span><span>QA</span><span>DEV</span></div><div><strong>50K+</strong><small>Active Users</small></div><i></i><div className="auth-rating-star">★</div><div><strong>4.8/5</strong><small>User Rating</small></div></footer>
     </section>
@@ -398,6 +406,8 @@ function AuthPage() {
           <label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6" /></svg></span><input type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Email Address" dir="ltr" /></label>
           <label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" /></svg></span><input type={showPassword ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Password" dir="ltr" /><button type="button" className="auth-show-password" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 8.5 4.5 9 7-.2 1.1-1.1 2.5-2.6 3.7M6.2 6.3C4 7.7 2.5 10 2 12c.5 2.5 4 7 10 7 1.1 0 2.1-.2 3-.5"/></svg> : <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>}</button></label>
           {mode === "signup" && <label className="auth-input"><span className="auth-field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M9 15l2 2 4-4" /></svg></span><input type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} placeholder="Confirm Password" dir="ltr" /><button type="button" className="auth-show-password" onClick={() => setShowConfirmPassword(v => !v)} aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"}>{showConfirmPassword ? <svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5 0 8.5 4.5 9 7-.2 1.1-1.1 2.5-2.6 3.7M6.2 6.3C4 7.7 2.5 10 2 12c.5 2.5 4 7 10 7 1.1 0 2.1-.2 3-.5"/></svg> : <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>}</button></label>}
+          {mode === "signup" && <fieldset className="auth-account-types"><legend>Choose Your Account Type</legend><label className={accountType === "tester" ? "selected" : ""}><input type="radio" name="accountType" value="tester" checked={accountType === "tester"} onChange={() => setAccountType("tester")} /><span className="account-type-icon">✓</span><strong>Tester</strong><small>Take tests &amp;<br/> earn rewards</small></label><label className={accountType === "developer" ? "selected" : ""}><input type="radio" name="accountType" value="developer" checked={accountType === "developer"} onChange={() => setAccountType("developer")} /><span className="account-type-icon">&lt;/&gt;</span><strong>Developer</strong><small>Build &amp; share<br/> your solutions</small></label><label className={accountType === "both" ? "selected" : ""}><input type="radio" name="accountType" value="both" checked={accountType === "both"} onChange={() => setAccountType("both")} /><span className="account-type-icon">★</span><strong>Both</strong><small>Test and develop</small></label></fieldset>}
+          {mode === "signup" && <label className="auth-terms"><input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} required /><span>I agree to the <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link></span></label>}
           {mode === "signup" && password.length > 0 && <div className="auth-password-guidance" aria-live="polite"><div className="auth-strength-top"><span>Password strength</span><strong data-strength={passwordStrength}>{["Needs work", "Fair", "Good", "Strong"][passwordStrength]}</strong></div><div className="auth-strength-meter" aria-label={"Password strength " + passwordStrength + " of 3"}>{[1,2,3].map(level => <i key={level} className={passwordStrength >= level ? "filled strength-" + passwordStrength : ""} />)}</div><ul>{passwordRules.map(rule => <li key={rule.label} className={rule.valid ? "valid" : ""}><span>{rule.valid ? "✓" : "○"}</span>{rule.label}</li>)}</ul></div>}
           {mode === "signup" && confirmPassword.length > 0 && <p className={"auth-match-note " + (password === confirmPassword ? "matched" : "unmatched")} role="status">{password === confirmPassword ? "✓ Passwords match" : "Passwords do not match yet"}</p>}
           {mode === "signin" && <div className="auth-form-options"><label className="auth-remember"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} /> <span>Remember me</span></label><Link to="/forgot-password">Forgot Password?</Link></div>}
