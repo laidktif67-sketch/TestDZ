@@ -224,3 +224,34 @@
   .lp-footer nav { order:3;width:100%;justify-content:center;flex-wrap:wrap;gap:12px;font-size:11px; }
   .lp-footer small { width:100%;font-size:10px; }
 }
+
+
+/* Multilingual typography: Inter for Latin scripts, Noto Sans Arabic for Arabic. */
+:root {
+  font-family: "Inter", "Noto Sans Arabic", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+html:lang(ar),
+html[dir="rtl"],
+body:lang(ar),
+[lang="ar"] {
+  font-family: "Noto Sans Arabic", "Inter", sans-serif;
+  line-height: 1.7;
+}
+html:lang(en),
+html:lang(fr),
+[lang="en"],
+[lang="fr"] {
+  font-family: "Inter", "Noto Sans Arabic", sans-serif;
+}
+.landing-en { font-family: "Inter", "Noto Sans Arabic", sans-serif; }
+.auth-layout,
+.dashboard-shell,
+.auth-layout :is(input,button,textarea,select),
+.dashboard-shell :is(input,button,textarea,select) {
+  font-family: inherit;
+}
+[dir="rtl"] :is(h1,h2,h3,h4,p,label,button,a,small,span) {
+  letter-spacing: normal;
+}
