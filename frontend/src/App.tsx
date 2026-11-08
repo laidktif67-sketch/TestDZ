@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 const BlurText = lazy(() => import("./components/react-bits/BlurText"));
 const LightRays = lazy(() => import("./components/react-bits/LightRays"));
 const StarBorder = lazy(() => import("./components/react-bits/StarBorder"));
@@ -285,6 +285,7 @@ function translateAuthError(message: string) {
 
 function AuthPage() {
   const navigate = useNavigate();
+  const authRoot = useRef<HTMLElement | null>(null);
   const params = new URLSearchParams(window.location.search);
   const [mode, setMode] = useState<"signin" | "signup">(params.get("mode") === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState("");
@@ -307,6 +308,43 @@ function AuthPage() {
     { label: "Passwords match", valid: password.length > 0 && password === confirmPassword },
   ];
   const passwordStrength = passwordRules.slice(0, 3).filter(rule => rule.valid).length;
+
+  // Entrance choreography is scoped to this auth page and disabled for reduced-motion users.
+  useEffect(() => {
+    const root = authRoot.current;
+    if (!root) return;
+    const media = gsap.matchMedia();
+    media.add("(prefers-reduced-motion: no-preference)", () => {
+      const timeline = gsap.timeline({ defaults: { ease: "power3.out" } });
+      timeline
+        .fromTo(root.querySelectorAll(".auth-reference-hero"), { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.62 })
+        .fromTo(root.querySelectorAll(".auth-reference-form-wrap"), { autoAlpha: 0, y: 18, scale: 0.99 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.58 }, "-=0.42")
+        .fromTo(root.querySelectorAll(".auth-benefits li"), { autoAlpha: 0, x: -10 }, { autoAlpha: 1, x: 0, duration: 0.32, stagger: 0.07 }, "-=0.28")
+        .fromTo(root.querySelectorAll(".auth-security"), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.3 }, "-=0.2");
+      return () => timeline.kill();
+    });
+    return () => media.revert();
+  }, []);
+
+  // Re-introduce the active form fields when switching between Login and Register.
+  useEffect(() => {
+    const root = authRoot.current;
+    if (!root) return;
+    const media = gsap.matchMedia();
+    media.add("(prefers-reduced-motion: no-preference)", () => {
+      const timeline = gsap.timeline({ defaults: { ease: "power2.out" } });
+      timeline
+        .fromTo(root.querySelectorAll(".auth-reference-heading"), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.3 })
+        .fromTo(
+          root.querySelectorAll(".auth-reference-fields .auth-input, .auth-account-types, .auth-terms, .auth-password-guidance, .auth-form-options"),
+          { autoAlpha: 0, y: 7 },
+          { autoAlpha: 1, y: 0, duration: 0.24, stagger: 0.035 },
+          "-=0.12",
+        );
+      return () => timeline.kill();
+    });
+    return () => media.revert();
+  }, [mode]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -370,7 +408,7 @@ function AuthPage() {
     }
   }
 
-  return <main className="auth-reference">
+  return <main ref={authRoot} className="auth-reference">
     <section className="auth-reference-hero">
       <header className="auth-reference-header">
         <Link to="/" className="auth-reference-brand" aria-label="TestDZ home"><span className="auth-flask" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><path d="M18 5h12M21 5v12L9 37a4 4 0 0 0 3.5 6h23a4 4 0 0 0 3.5-6L27 17V5" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M15 32h18l5 7a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2z" fill="#55b7ff" stroke="none"/><circle cx="21" cy="35" r="1.5" fill="#fff"/><circle cx="28" cy="38" r="1.5" fill="#fff"/></svg></span><span><strong>TestDZ</strong><small>Test · Learn · Grow</small></span></Link>
