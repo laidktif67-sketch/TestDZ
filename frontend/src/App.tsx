@@ -4,6 +4,8 @@ import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-rou
 import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 function Brand() {
   return <Link className="brand" to="/" aria-label="TestDZ الصفحة الرئيسية"><span className="brand-mark">T</span><span>Test<span className="brand-accent">DZ</span></span></Link>;
@@ -34,6 +36,79 @@ function LpIcon({ name, size = 24 }: { name: string; size?: number }) {
 }
 
 function LandingPage() {
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>(".landing-en");
+    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+    const context = gsap.context(() => {
+      const intro = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.75 } });
+      intro
+        .from(".lp-hero-copy h1", { y: 28, opacity: 0 })
+        .from(".lp-hero-copy h2", { y: 22, opacity: 0 }, "-=0.48")
+        .from(".lp-hero-copy > p", { y: 18, opacity: 0 }, "-=0.42")
+        .from(".lp-hero-buttons", { y: 16, opacity: 0 }, "-=0.38")
+        .from(".lp-proof", { y: 12, opacity: 0 }, "-=0.35");
+
+      gsap.from(".lp-hero-art", {
+        y: 28,
+        opacity: 0,
+        scale: 0.97,
+        duration: 1,
+        ease: "power2.out",
+        delay: 0.12,
+      });
+
+      gsap.to(".lp-code", {
+        y: -11,
+        rotate: -4,
+        duration: 2.8,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
+      gsap.to(".lp-cloud", {
+        y: 9,
+        x: 5,
+        duration: 3.4,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
+      gsap.to(".lp-trophy", {
+        y: -8,
+        rotate: 5,
+        duration: 3.1,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
+
+      const reveal = (selector: string, trigger: string, stagger = 0.12) => {
+        gsap.from(selector, {
+          y: 30,
+          opacity: 0,
+          duration: 0.72,
+          stagger,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger,
+            start: "top 84%",
+            once: true,
+          },
+        });
+      };
+
+      reveal(".lp-features article", ".lp-features", 0.13);
+      reveal(".lp-steps article", ".lp-steps", 0.16);
+      reveal(".lp-promo > *", ".lp-promo", 0.1);
+      reveal(".lp-quotes article", ".lp-quotes", 0.14);
+      reveal(".lp-faq-illustration, .lp-faq-copy, .lp-faq-list details", ".lp-faq", 0.08);
+    }, root);
+
+    return () => context.revert();
+  }, []);
+
   return (
     <main className="landing-en" dir="ltr" lang="en">
       <header className="lp-header">
