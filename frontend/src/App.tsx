@@ -164,7 +164,7 @@ function LandingPage() {
       <header className="lp-header">
         <Link className="lp-brand" to="/" aria-label="TestDZ"><span className="lp-flask"><LpIcon name="flask" size={29} /></span><span>TestDZ</span></Link>
         <nav className="lp-nav" aria-label={t.home}>
-          <a className="active" href="#home">{t.home}</a><a href="#features">{t.features}</a><a href="#how-it-works">{t.developers}⌄</a><a href="#testers">{t.testers}⌄</a><a href="#how-it-works">{t.how}</a><a href="#faq">FAQ</a>
+          <a className="active" href="#home">{t.home}</a><a href="#features">{t.features}</a><a href="#developers">{t.developers}⌄</a><a href="#testers">{t.testers}⌄</a><a href="#how-it-works">{t.how}</a><a href="#faq">FAQ</a>
         </nav>
         <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); window.requestAnimationFrame(() => ScrollTrigger.refresh()); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
       </header>
@@ -186,9 +186,6 @@ function LandingPage() {
           </div>
         </div>
         <div className="lp-hero-art lp-hero-image-wrap">
-          <span className="lp-hero-emoji lp-hero-emoji-code" aria-hidden="true">💻</span>
-          <span className="lp-hero-emoji lp-hero-emoji-cloud" aria-hidden="true">☁️</span>
-          <span className="lp-hero-emoji lp-hero-emoji-trophy" aria-hidden="true">🏆</span>
           <img className="lp-hero-image" src="/images/hero-dashboard.png" alt={t.illustration} fetchPriority="high" />
         </div>
       </section>
@@ -214,20 +211,19 @@ function LandingPage() {
       <section className="lp-testimonials lp-community">
         <div className="lp-section-title"><h2>{t.communityTitle}</h2></div>
         <div className="lp-quotes">
-          <article><span className="lp-person">✓</span><div><p>{t.communityOneBody}</p><b>{t.communityOneTitle}</b><small>{t.tester}</small></div></article>
-          <article><span className="lp-person">⌘</span><div><p>{t.communityTwoBody}</p><b>{t.communityTwoTitle}</b><small>{t.developer}</small><strong aria-hidden="true">✦ ✦ ✦</strong></div></article>
-          <article><span className="lp-person">◎</span><div><p>{t.communityThreeBody}</p><b>{t.communityThreeTitle}</b><small>TestDZ</small><strong aria-hidden="true">✦ ✦ ✦</strong></div></article>
+          <article id="testers"><span className="lp-person"><LpIcon name="users" size={22}/></span><div><p>{t.communityOneBody}</p><b>{t.communityOneTitle}</b><small>{t.tester}</small></div></article>
+          <article id="developers"><span className="lp-person"><LpIcon name="code" size={22}/></span><div><p>{t.communityTwoBody}</p><b>{t.communityTwoTitle}</b><small>{t.developer}</small></div></article>
+          <article><span className="lp-person"><LpIcon name="users" size={22}/></span><div><p>{t.communityThreeBody}</p><b>{t.communityThreeTitle}</b><small>TestDZ</small></div></article>
         </div>
-        <div className="lp-dots" aria-hidden="true">● ● ●</div>
       </section>
 
       <section className="lp-faq" id="faq">
         <div className="lp-faq-illustration"><img className="lp-faq-image" src="/images/faq-assistant.png" alt={t.illustration} loading="lazy" /></div>
-        <div className="lp-faq-copy"><h2>{t.faqTitle}</h2><p>{t.faqIntro}</p><a href="#faq">{t.viewFaq} <LpIcon name="arrow" size={15}/></a></div>
-        <div className="lp-faq-list"><details><summary>{t.faq1q}</summary><p>{t.faq1a}</p></details><details><summary>{t.faq2q}</summary><p>{t.faq2a}</p></details><details><summary>{t.faq3q}</summary><p>{t.faq3a}</p></details><details><summary>{t.faq4q}</summary><p>{t.faq4a}</p></details></div>
+        <div className="lp-faq-copy"><h2>{t.faqTitle}</h2><p>{t.faqIntro}</p><a href="#faq-questions">{t.viewFaq} <LpIcon name="arrow" size={15}/></a></div>
+        <div className="lp-faq-list" id="faq-questions"><details><summary>{t.faq1q}</summary><p>{t.faq1a}</p></details><details><summary>{t.faq2q}</summary><p>{t.faq2a}</p></details><details><summary>{t.faq3q}</summary><p>{t.faq3a}</p></details><details><summary>{t.faq4q}</summary><p>{t.faq4a}</p></details></div>
       </section>
 
-      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask"><LpIcon name="flask" size={29}/></span><span>TestDZ</span></Link><nav><a href="#features">{t.about}</a><a href="#faq">{t.terms}</a><a href="#faq">{t.privacy}</a><a href="#faq">{t.contact}</a></nav><div className="lp-social" aria-label="Social links">◉　𝕏　▶　in</div><small>{t.copyright}</small></footer>
+      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask"><LpIcon name="flask" size={29}/></span><span>TestDZ</span></Link><nav aria-label={t.home}><a href="#home">{t.home}</a><a href="#features">{t.features}</a><a href="#how-it-works">{t.how}</a><a href="#faq">{t.faqTitle}</a></nav><small>{t.copyright}</small></footer>
     </main>
   );
 }
