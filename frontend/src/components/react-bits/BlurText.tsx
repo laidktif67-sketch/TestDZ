@@ -35,6 +35,7 @@ type BlurTextProps = {
   color?: string;
   fromColor?: string;
   focusOnHover?: boolean;
+  ariaHidden?: boolean;
 };
 
 interface EffectConfig {
@@ -250,7 +251,8 @@ const BlurText = ({
   loopDelay = 2,
   color,
   fromColor,
-  focusOnHover = false
+  focusOnHover = false,
+  ariaHidden = false
 }: BlurTextProps) => {
   const ref = useRef<HTMLParagraphElement>(null);
   const [phase, setPhase] = useState<Phase>(() => startPhase(trigger));
@@ -430,6 +432,7 @@ const BlurText = ({
     <MotionConfig reducedMotion="user">
       <p
         ref={ref}
+        aria-hidden={ariaHidden}
         className={className}
         style={{ display: 'flex', flexWrap: 'wrap', color, cursor: trigger === 'click' ? 'pointer' : undefined }}
         onPointerEnter={trigger === 'hover' ? handleEnter : undefined}
