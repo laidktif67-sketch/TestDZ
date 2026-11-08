@@ -211,7 +211,7 @@ function LandingPage() {
       <section className="lp-testimonials lp-community">
         <div className="lp-section-title"><h2>{t.communityTitle}</h2></div>
         <div className="lp-quotes">
-          <article id="testers"><span className="lp-person"><LpIcon name="users" size={22}/></span><div><p>{t.communityOneBody}</p><b>{t.communityOneTitle}</b><small>{t.tester}</small></div></article>
+          <article><span className="lp-person"><LpIcon name="users" size={22}/></span><div><p>{t.communityOneBody}</p><b>{t.communityOneTitle}</b><small>{t.tester}</small></div></article>
           <article id="developers"><span className="lp-person"><LpIcon name="code" size={22}/></span><div><p>{t.communityTwoBody}</p><b>{t.communityTwoTitle}</b><small>{t.developer}</small></div></article>
           <article><span className="lp-person"><LpIcon name="users" size={22}/></span><div><p>{t.communityThreeBody}</p><b>{t.communityThreeTitle}</b><small>TestDZ</small></div></article>
         </div>
