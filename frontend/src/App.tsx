@@ -186,6 +186,9 @@ function LandingPage() {
           </div>
         </div>
         <div className="lp-hero-art lp-hero-image-wrap">
+          <span className="lp-hero-emoji lp-hero-emoji-code" aria-hidden="true">💻</span>
+          <span className="lp-hero-emoji lp-hero-emoji-cloud" aria-hidden="true">☁️</span>
+          <span className="lp-hero-emoji lp-hero-emoji-trophy" aria-hidden="true">🏆</span>
           <img className="lp-hero-image" src="/images/hero-dashboard.png" alt={t.illustration} fetchPriority="high" />
         </div>
       </section>
