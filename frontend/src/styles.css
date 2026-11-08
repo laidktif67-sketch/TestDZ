@@ -465,7 +465,7 @@ html:lang(fr),
 .lp-hero-rays .light-rays__canvas{opacity:.85}
 .lp-hero-reference>.lp-hero-copy,.lp-hero-reference>.lp-hero-image-wrap{position:relative;z-index:1}
 .lp-hero-semantic-title{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-.lp-hero-reference .lp-hero-title{display:flex;flex-wrap:wrap;margin:0 0 4px;color:#09245d;font-size:clamp(54px,6.4vw,78px);font-weight:850;line-height:1;letter-spacing:-3.5px}
+.lp-hero-reference .lp-hero-copy>.lp-hero-title{display:flex;flex-wrap:wrap;margin:0 0 4px;color:#09245d;font-size:clamp(54px,6.4vw,78px);font-weight:850;line-height:1;letter-spacing:-3.5px}
 .lp-hero-reference .lp-cta-star{padding:0;overflow:hidden;border-radius:28px}
 .lp-hero-reference .lp-star-border-inner{min-height:46px;padding:12px 22px;background:transparent!important;color:#fff!important;font-weight:750}
 .lp-hero-reference .lp-star-border-inner .star-border__light{opacity:.95}
