@@ -285,7 +285,7 @@ html:lang(fr),
   box-shadow: 0 3px 9px #075cf533;
 }
 .landing-page[lang="ar"] {
-  font-family: "Noto Sans Arabic", "Noto Sans Arabic", sans-serif;
+  font-family: "Noto Sans Arabic", "Plus Jakarta Sans", sans-serif;
   line-height: 1.75;
 }
 .landing-page[lang="ar"] .lp-language-switch button,
