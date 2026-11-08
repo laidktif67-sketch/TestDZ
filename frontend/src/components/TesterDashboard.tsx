@@ -21,7 +21,7 @@ type TestItem = {
 type Profile = { display_name: string | null; avatar_url: string | null };
 type Notice = { id: string; title: string; body: string; created_at: string; read_at: string | null };
 
-const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const dayNames = Array.from({ length: 7 }, (_, index) => { const day = new Date(); day.setDate(day.getDate() - (6 - index)); return day.toLocaleDateString("en-US", { weekday: "short" }); });
 const dateKey = (date: Date) => date.toISOString().slice(0, 10);
 const greetingName = (name: string | null, email: string) =>
   name?.trim() || email.split("@")[0] || "Tester";
@@ -65,12 +65,12 @@ export default function TesterDashboard({ session }: { session: Session }) {
       setPoints(Number(walletRes.data?.earned_points ?? 0));
       setNotices((noticeRes.data ?? []) as Notice[]);
       const counts = Array(7).fill(0) as number[];
-      const today = new Date();
-      const mondayOffset = (today.getDay() + 6) % 7;
+      const firstDay = new Date();
+      firstDay.setDate(firstDay.getDate() - 6);
+      firstDay.setHours(12, 0, 0, 0);
       (checkinRes.data ?? []).forEach((row: { checkin_date: string }) => {
-        const d = new Date(row.checkin_date + "T12:00:00");
-        const offset = (d.getDay() + 6) % 7;
-        const index = 6 - ((mondayOffset - offset + 7) % 7);
+        const day = new Date(row.checkin_date + "T12:00:00");
+        const index = Math.round((day.getTime() - firstDay.getTime()) / 86400000);
         if (index >= 0 && index < 7) counts[index] += 1;
       });
       setWeekly(counts);
