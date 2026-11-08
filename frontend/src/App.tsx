@@ -40,14 +40,14 @@ type LandingLanguage = "en" | "fr" | "ar";
 const landingCopy = {
   en: {
     home: "Home", features: "Features", developers: "For Developers", testers: "For Testers", how: "How it works", signIn: "Sign In", getStarted: "Get Started",
-    heroLead: "Test. Learn.", heroAccent: "Grow.", heroBody: "{t.heroBody}",
+    heroLead: "Test. Learn.", heroAccent: "Grow.", heroBody: "A comprehensive platform for closed tests, where developers create tests and testers earn rewards by participating.",
     exploreTests: "Explore Tests", activeUsers: "Active Users", userRating: "User Rating", days: "Days", overview: "Overview", myTests: "My Tests", dashboard: "Dashboard", activeTests: "Active Tests", totalUsers: "Total Users", rewards: "Rewards", completed: "Test completed", feedback: "Feedback received", earned: "Reward earned",
     secure: "Secure & Fair", secureBody: "Advanced anti-fraud system for a transparent tester experience.", fourteen: "14-Day Tests", fourteenBody: "Limited-time tests to ensure real skills and knowledge.", earn: "Earn Rewards", earnBody: "Get points and rewards for your efforts.", everyone: "For Everyone", everyoneBody: "Testers, developers and admins in one platform.",
     howTitle: "How TestDZ Works?", howBody: "A simple and effective process in 3 easy steps", create: "Create Your Account", createBody: "Join TestDZ as a tester, developer or admin.", take: "Take or Create Tests", takeBody: "Participate in tests or design your own tests.", grow: "Earn & Grow", growBody: "Get rewards and track your progress.",
     promoTitle: "Tests are open for", promoAccent: "only 14 days!", promoBody: "Don’t miss your chance to participate.", exploreActive: "Explore Active Tests",
-    community: "What Our Community Says", quote1: "{t.quote1}", quote2: "{t.quote2}", quote3: "{t.quote3}", tester: "Tester", developer: "Developer",
+    community: "What Our Community Says", quote1: "“TestDZ is an amazing platform! I love the fair system and rewards.”", quote2: "“A great platform for developers to share their tests and get feedback.”", quote3: "“Simple, secure and very useful. Highly recommended!”", tester: "Tester", developer: "Developer",
     faqTitle: "Frequently Asked Questions", faqIntro: "Find answers to common questions about TestDZ.", viewFaq: "View All FAQs", faq1q: "How does the 14-day test work?", faq1a: "Testers participate in an organized test cycle and share feedback throughout the testing period.", faq2q: "Can I earn real rewards?", faq2a: "Eligible activities can earn points and rewards according to the platform rules.", faq3q: "Is TestDZ free to use?", faq3a: "You can create an account and explore the platform. Available features may depend on your role and plan.", faq4q: "How can I become a developer?", faq4a: "Create an account and choose the developer role during onboarding.",
-    about: "About", terms: "Terms of Service", privacy: "Privacy Policy", contact: "Contact", copyright: "{t.copyright}", languageLabel: "Choose language", illustration: "Illustration of the TestDZ testing dashboard"
+    about: "About", terms: "Terms of Service", privacy: "Privacy Policy", contact: "Contact", copyright: "© 2026 TestDZ. All rights reserved.", languageLabel: "Choose language", illustration: "Illustration of the TestDZ testing dashboard"
   },
   fr: {
     home: "Accueil", features: "Fonctionnalités", developers: "Développeurs", testers: "Testeurs", how: "Fonctionnement", signIn: "Connexion", getStarted: "Commencer",
@@ -173,7 +173,7 @@ function LandingPage() {
       <section className="lp-hero" id="home">
         <div className="lp-hero-copy">
           <h1>TestDZ</h1><h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
-          <p>A comprehensive platform for closed tests, where developers create tests and testers earn rewards by participating.</p>
+          <p>{t.heroBody}</p>
           <div className="lp-hero-buttons"><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted} <LpIcon name="arrow" size={16}/></Link><a className="lp-secondary" href="#how-it-works">{t.exploreTests} <LpIcon name="play" size={14}/></a></div>
           <div className="lp-proof"><div className="lp-avatars"><i>JD</i><i>AM</i><i>SK</i><i>RL</i></div><strong>50K+<small>{t.activeUsers}</small></strong><b className="lp-proof-divider"/><strong><span className="lp-star">★</span> 4.8/5<small>{t.userRating}</small></strong></div>
         </div>
@@ -204,9 +204,9 @@ function LandingPage() {
       <section className="lp-promo" id="testers"><div className="lp-hourglass"><LpIcon name="hourglass" size={58}/></div><div><h2>{t.promoTitle}<br/><span>{t.promoAccent}</span></h2><p>{t.promoBody}</p></div><div className="lp-promo-calendar"><LpIcon name="calendar" size={70}/></div><a href="#features">{t.exploreActive} <LpIcon name="arrow" size={16}/></a></section>
 
       <section className="lp-testimonials"><div className="lp-section-title"><h2>{t.community}</h2></div><div className="lp-quotes">
-        <article><div className="lp-person">SB</div><div><p>“TestDZ is an amazing platform! I love the fair system and rewards.”</p><b>Sarah Benali</b><small>{t.tester}</small><strong>★★★★★</strong></div></article>
-        <article><div className="lp-person">MS</div><div><p>“A great platform for developers to share their tests and get feedback.”</p><b>Mohamed Saci</b><small>{t.developer}</small><strong>★★★★★</strong></div></article>
-        <article><div className="lp-person">AK</div><div><p>“Simple, secure and very useful. Highly recommended!”</p><b>Amina Khelifi</b><small>Tester</small><strong>★★★★★</strong></div></article>
+        <article><div className="lp-person">SB</div><div><p>{t.quote1}</p><b>Sarah Benali</b><small>{t.tester}</small><strong>★★★★★</strong></div></article>
+        <article><div className="lp-person">MS</div><div><p>{t.quote2}</p><b>Mohamed Saci</b><small>{t.developer}</small><strong>★★★★★</strong></div></article>
+        <article><div className="lp-person">AK</div><div><p>{t.quote3}</p><b>Amina Khelifi</b><small>{t.tester}</small><strong>★★★★★</strong></div></article>
       </div><div className="lp-dots">● ● ●</div></section>
 
       <section className="lp-faq" id="faq">
@@ -215,7 +215,7 @@ function LandingPage() {
         <div className="lp-faq-list"><details><summary>{t.faq1q}</summary><p>{t.faq1a}</p></details><details><summary>{t.faq2q}</summary><p>{t.faq2a}</p></details><details><summary>{t.faq3q}</summary><p>{t.faq3a}</p></details><details><summary>{t.faq4q}</summary><p>{t.faq4a}</p></details></div>
       </section>
 
-      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask"><LpIcon name="flask" size={29}/></span><span>TestDZ</span></Link><nav><a href="#features">{t.about}</a><a href="#faq">{t.terms}</a><a href="#faq">{t.privacy}</a><a href="#faq">{t.contact}</a></nav><div className="lp-social" aria-label="Social links">◉　𝕏　▶　in</div><small>© 2026 TestDZ. All rights reserved.</small></footer>
+      <footer className="lp-footer"><Link className="lp-brand" to="/"><span className="lp-flask"><LpIcon name="flask" size={29}/></span><span>TestDZ</span></Link><nav><a href="#features">{t.about}</a><a href="#faq">{t.terms}</a><a href="#faq">{t.privacy}</a><a href="#faq">{t.contact}</a></nav><div className="lp-social" aria-label="Social links">◉　𝕏　▶　in</div><small>{t.copyright}</small></footer>
     </main>
   );
 }
