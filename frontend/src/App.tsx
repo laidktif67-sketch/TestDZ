@@ -81,10 +81,18 @@ function LandingPage() {
   const t = landingCopy[language];
 
   useEffect(() => {
+    const html = document.documentElement;
+    const previousLang = html.lang;
+    const previousDir = html.dir;
     const isArabic = language === "ar";
-    document.documentElement.lang = language;
-    document.documentElement.dir = isArabic ? "rtl" : "ltr";
+    html.lang = language;
+    html.dir = isArabic ? "rtl" : "ltr";
     window.localStorage.setItem("testdz-landing-language", language);
+
+    return () => {
+      html.lang = previousLang;
+      html.dir = previousDir;
+    };
   }, [language]);
 
   useEffect(() => {
