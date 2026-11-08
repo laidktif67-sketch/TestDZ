@@ -179,7 +179,7 @@ function LandingPage() {
         </div>
         <div className="lp-hero-art" aria-label={t.illustration}>
           <div className="lp-art-glow"/>
-          <div className="lp-float lp-code"><LpIcon name="code" size={30}/></div><div className="lp-float lp-cloud"><LpIcon name="cloud" size={27}/></div><div className="lp-float lp-trophy"><LpIcon name="trophy" size={54}/></div><div className="lp-days"><LpIcon name="calendar" size={16}/>14<small>Days</small></div>
+          <div className="lp-float lp-code"><LpIcon name="code" size={30}/></div><div className="lp-float lp-cloud"><LpIcon name="cloud" size={27}/></div><div className="lp-float lp-trophy"><LpIcon name="trophy" size={54}/></div><div className="lp-days"><LpIcon name="calendar" size={16}/>14<small>{t.days}</small></div>
           <div className="lp-laptop"><div className="lp-screen"><div className="lp-screen-sidebar"><b>TestDZ</b><span>◈ {t.overview}</span><span>▦ {t.myTests}</span><span>♙ {t.testers}</span><span>▤ {t.rewards}</span></div><div className="lp-screen-main"><div className="lp-screen-top">{t.dashboard} <i>● ● ●</i></div><div className="lp-stats"><b>{t.activeTests}<strong>12</strong></b><b>{t.totalUsers}<strong>2,450</strong></b><b>{t.rewards}<strong>850</strong></b></div><div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/></div><div className="lp-test-rows"><i/><i/><i/></div></div></div><div className="lp-laptop-base"/></div>
           <div className="lp-checklist"><b><LpIcon name="check" size={13}/></b><span>{t.completed}</span><b><LpIcon name="check" size={13}/></b><span>{t.feedback}</span><b><LpIcon name="check" size={13}/></b><span>{t.earned}</span></div>
         </div>
