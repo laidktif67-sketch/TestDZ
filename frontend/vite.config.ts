@@ -17,8 +17,8 @@ export default defineConfig({
         description: "منصة منظمة لاختبار تطبيقات Android في الجزائر",
         lang: "ar",
         dir: "rtl",
-        theme_color: "#071b18",
-        background_color: "#071b18",
+        theme_color: "#075cf5",
+        background_color: "#f5f8ff",
         display: "standalone",
         start_url: "/",
         icons: [
