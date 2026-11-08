@@ -185,25 +185,8 @@ function LandingPage() {
             <div className="lp-proof-day"><strong><span className="lp-counter" data-count="14">0</span></strong><small>{t.days} · {language === "ar" ? "دورة الاختبار" : language === "fr" ? "cycle de test" : "test cycle"}</small></div>
           </div>
         </div>
-        <div className="lp-hero-art" role="img" aria-label={t.illustration}>
-          <div className="lp-art-glow"/>
-          <div className="lp-float lp-code"><LpIcon name="code" size={30}/></div>
-          <div className="lp-float lp-cloud"><LpIcon name="cloud" size={28}/></div>
-          <div className="lp-float lp-trophy">🏆</div>
-          <div className="lp-laptop">
-            <div className="lp-screen">
-              <aside className="lp-screen-sidebar"><b>TestDZ</b><span>⌂ Overview</span><span>▦ {t.activeTests}</span><span>◉ {t.myTests}</span><span>♧ {t.rewards}</span></aside>
-              <div className="lp-screen-main">
-                <div className="lp-screen-top"><span>{t.overview}</span><i>{t.preview}</i></div>
-                <div className="lp-stats"><b>{t.activeTests}<strong>—</strong></b><b>{t.totalUsers}<strong>—</strong></b><b>{t.rewards}<strong>—</strong></b></div>
-                <div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/><span/></div>
-                <div className="lp-test-rows"><i/><i/><i/></div>
-              </div>
-            </div>
-            <div className="lp-laptop-base"/>
-          </div>
-          <div className="lp-float lp-checklist"><b>✓</b><span>{t.completed}</span><b>✓</b><span>{t.feedback}</span><b>✓</b><span>{t.earned}</span></div>
-          <div className="lp-days">14 <small>{t.days}</small></div>
+        <div className="lp-hero-art lp-hero-image-wrap">
+          <img className="lp-hero-image" src="/images/hero-dashboard.png" alt={t.illustration} fetchPriority="high" />
         </div>
       </section>
 
@@ -236,7 +219,7 @@ function LandingPage() {
       </section>
 
       <section className="lp-faq" id="faq">
-        <div className="lp-faq-illustration" aria-hidden="true"><svg viewBox="0 0 220 190" role="img"><path d="M12 184c20-48 45-54 72-34 18 14 35 10 51-5 23-22 52-8 73 39" fill="#c9e1ff"/><path d="M50 183c-5-37 5-69 34-83 31-15 68 2 76 35l-5 48Z" fill="#075cf5"/><path d="M78 95c-9-42 11-69 42-68 31 1 48 28 38 62-7 24-23 38-43 36-18-2-31-13-37-30Z" fill="#f1bd91"/><path d="M75 83c-10-45 10-66 43-66 33 0 51 23 44 56-12-6-18-19-21-28-14 18-35 27-66 29Z" fill="#142c65"/><path d="M99 96h3m31 0h3M112 112q10 7 19-1" stroke="#17305d" strokeWidth="3" strokeLinecap="round" fill="none"/><path d="M99 85q7-6 14 0m15 0q7-6 14 0" stroke="#17305d" strokeWidth="3" fill="none"/><path d="M109 126q-14 11-25 26m50-23q13 10 22 26" stroke="#f1bd91" strokeWidth="13" strokeLinecap="round" fill="none"/></svg><span>?</span></div>
+        <div className="lp-faq-illustration"><img className="lp-faq-image" src="/images/faq-assistant.png" alt={t.illustration} loading="lazy" /></div>
         <div className="lp-faq-copy"><h2>{t.faqTitle}</h2><p>{t.faqIntro}</p><a href="#faq">{t.viewFaq} <LpIcon name="arrow" size={15}/></a></div>
         <div className="lp-faq-list"><details><summary>{t.faq1q}</summary><p>{t.faq1a}</p></details><details><summary>{t.faq2q}</summary><p>{t.faq2a}</p></details><details><summary>{t.faq3q}</summary><p>{t.faq3a}</p></details><details><summary>{t.faq4q}</summary><p>{t.faq4a}</p></details></div>
       </section>
