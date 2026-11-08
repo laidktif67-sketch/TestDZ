@@ -231,7 +231,7 @@ function LandingPage() {
           </div>
         </div>
         <div className="lp-hero-art lp-hero-image-wrap">
-          <img className="lp-hero-image" src="/images/auth-hero.jpg" alt={t.illustration} fetchPriority="high" />
+          <img className="lp-hero-image" src="/images/hero-dashboard.png" alt={t.illustration} fetchPriority="high" />
         </div>
       </section>
 
@@ -366,7 +366,7 @@ function AuthPage() {
           <li><span>✿</span>Unlock Rewards &amp; Benefits</li>
           <li><span>▥</span>Grow Your Skills</li>
         </ul>
-        <div className="auth-illustration"><div className="auth-code-bubble">&lt;/&gt;</div><div className="auth-orbit auth-orbit-one"></div><div className="auth-orbit auth-orbit-two"></div><img src="https://raw.githubusercontent.com/laidktif67-sketch/TestDZ/feat/landing-page-reference-en/frontend/public/images/hero-dashboard.png" alt="TestDZ testing dashboard preview" /><span className="auth-points"><b>★</b><strong>450</strong><small>Points</small></span></div>
+        <div className="auth-illustration"><div className="auth-code-bubble">&lt;/&gt;</div><div className="auth-orbit auth-orbit-one"></div><div className="auth-orbit auth-orbit-two"></div><img src="/images/hero-dashboard.png" alt="TestDZ testing dashboard preview" /><span className="auth-points"><b>★</b><strong>450</strong><small>Points</small></span></div>
       </div>
       <footer className="auth-reference-stats"><div className="auth-avatars"><span>👨🏻</span><span>👩🏻</span><span>👨🏽</span></div><div><strong>50K+</strong><small>Active Users</small></div><i></i><div className="auth-rating-star">★</div><div><strong>4.8/5</strong><small>User Rating</small></div></footer>
     </section>
