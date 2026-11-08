@@ -176,7 +176,7 @@ function LandingPage() {
     }, root);
 
     return () => context.revert();
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <main className="landing-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
