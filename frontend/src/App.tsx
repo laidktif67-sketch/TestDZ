@@ -46,7 +46,7 @@ const landingCopy = {
     secure: "Secure & Fair", secureBody: "Advanced anti-fraud system for a transparent tester experience.", fourteen: "14-Day Tests", fourteenBody: "Limited-time tests to ensure real skills and knowledge.", earn: "Earn Rewards", earnBody: "Get points and rewards for your efforts.", everyone: "For Everyone", everyoneBody: "Testers, developers and admins in one platform.",
     howTitle: "How TestDZ Works?", howBody: "A simple and effective process in 3 easy steps", create: "Create Your Account", createBody: "Join TestDZ as a tester, developer or admin.", take: "Take or Create Tests", takeBody: "Participate in tests or design your own tests.", grow: "Earn & Grow", growBody: "Get rewards and track your progress.",
     promoTitle: "Tests are open for", promoAccent: "only 14 days!", promoBody: "Don’t miss your chance to participate.", exploreActive: "Explore Active Tests",
-    tester: "Tester", developer: "Developer",
+    tester: "Tester", developer: "Developer", communityTitle: "Built for the testing community", communityOneTitle: "For testers", communityOneBody: "Discover real products, share useful feedback and build practical experience.", communityTwoTitle: "For developers", communityTwoBody: "Validate your ideas with structured tests and actionable feedback.", communityThreeTitle: "One shared space", communityThreeBody: "Bring product creators and testers together in one transparent workflow.",
     faqTitle: "Frequently Asked Questions", faqIntro: "Find answers to common questions about TestDZ.", viewFaq: "View All FAQs", faq1q: "How does the 14-day test work?", faq1a: "Testers participate in an organized test cycle and share feedback throughout the testing period.", faq2q: "Can I earn real rewards?", faq2a: "Eligible activities can earn points and rewards according to the platform rules.", faq3q: "Is TestDZ free to use?", faq3a: "You can create an account and explore the platform. Available features may depend on your role and plan.", faq4q: "How can I become a developer?", faq4a: "Create an account and choose the developer role during onboarding.",
     about: "About", terms: "Terms of Service", privacy: "Privacy Policy", contact: "Contact", copyright: "© 2026 TestDZ. All rights reserved.", languageLabel: "Choose language", illustration: "Illustration of the TestDZ testing dashboard"
   },
@@ -57,7 +57,7 @@ const landingCopy = {
     secure: "Sûr et équitable", secureBody: "Un système anti-fraude avancé pour une expérience transparente.", fourteen: "Tests de 14 jours", fourteenBody: "Des tests limités dans le temps pour valoriser les compétences réelles.", earn: "Gagnez des récompenses", earnBody: "Recevez des points et des récompenses pour vos efforts.", everyone: "Pour tous", everyoneBody: "Testeurs, développeurs et administrateurs sur une seule plateforme.",
     howTitle: "Comment fonctionne TestDZ ?", howBody: "Un processus simple et efficace en 3 étapes", create: "Créez votre compte", createBody: "Rejoignez TestDZ comme testeur, développeur ou administrateur.", take: "Participez ou créez des tests", takeBody: "Participez aux tests ou concevez les vôtres.", grow: "Gagnez et progressez", growBody: "Obtenez des récompenses et suivez vos progrès.",
     promoTitle: "Les tests sont ouverts", promoAccent: "pendant 14 jours !", promoBody: "Ne manquez pas votre chance de participer.", exploreActive: "Voir les tests actifs",
-    tester: "Testeur", developer: "Développeur",
+    tester: "Testeur", developer: "Développeur", communityTitle: "Pensé pour la communauté du test", communityOneTitle: "Pour les testeurs", communityOneBody: "Découvrez de vrais produits, partagez des retours utiles et gagnez en expérience.", communityTwoTitle: "Pour les développeurs", communityTwoBody: "Validez vos idées grâce à des tests structurés et des retours exploitables.", communityThreeTitle: "Un espace commun", communityThreeBody: "Réunissez créateurs de produits et testeurs dans un parcours transparent.",
     faqTitle: "Questions fréquentes", faqIntro: "Retrouvez les réponses aux questions courantes sur TestDZ.", viewFaq: "Toutes les questions", faq1q: "Comment fonctionne le test de 14 jours ?", faq1a: "Les testeurs suivent un cycle organisé et partagent leurs retours pendant toute la période.", faq2q: "Puis-je gagner de vraies récompenses ?", faq2a: "Les activités éligibles permettent de gagner des points et des récompenses selon les règles de la plateforme.", faq3q: "TestDZ est-elle gratuite ?", faq3a: "Vous pouvez créer un compte et découvrir la plateforme. Les fonctionnalités dépendent de votre rôle et de votre offre.", faq4q: "Comment devenir développeur ?", faq4a: "Créez un compte et choisissez le rôle développeur lors de votre inscription.",
     about: "À propos", terms: "Conditions d’utilisation", privacy: "Confidentialité", contact: "Contact", copyright: "© 2026 TestDZ. Tous droits réservés.", languageLabel: "Choisir la langue", illustration: "Illustration du tableau de bord TestDZ"
   },
@@ -68,7 +68,7 @@ const landingCopy = {
     secure: "آمنة وعادلة", secureBody: "نظام متقدم لمكافحة الاحتيال يضمن تجربة شفافة للمختبرين.", fourteen: "اختبارات لمدة 14 يوماً", fourteenBody: "اختبارات محددة المدة لقياس المهارات والمعرفة الحقيقية.", earn: "اكسب المكافآت", earnBody: "احصل على النقاط والمكافآت مقابل جهودك.", everyone: "منصة للجميع", everyoneBody: "المختبرون والمطورون والمسؤولون في منصة واحدة.",
     howTitle: "كيف تعمل TestDZ؟", howBody: "عملية بسيطة وفعالة في ثلاث خطوات", create: "أنشئ حسابك", createBody: "انضم إلى TestDZ كمختبر أو مطور أو مسؤول.", take: "شارك أو أنشئ اختباراً", takeBody: "شارك في الاختبارات أو صمّم اختباراتك الخاصة.", grow: "اكسب وتطوّر", growBody: "احصل على المكافآت وتابع تقدمك.",
     promoTitle: "الاختبارات متاحة", promoAccent: "لمدة 14 يوماً فقط!", promoBody: "لا تفوّت فرصتك في المشاركة.", exploreActive: "اكتشف الاختبارات النشطة",
-    tester: "مختبر", developer: "مطور",
+    tester: "مختبر", developer: "مطور", communityTitle: "منصة تجمع مجتمع الاختبار", communityOneTitle: "للمختبرين", communityOneBody: "اكتشف منتجات حقيقية وشارك ملاحظات مفيدة واكتسب خبرة عملية.", communityTwoTitle: "للمطورين", communityTwoBody: "تحقق من أفكارك عبر اختبارات منظمة وملاحظات قابلة للتطبيق.", communityThreeTitle: "مساحة واحدة للجميع", communityThreeBody: "اجمع صناع المنتجات والمختبرين ضمن تجربة واضحة وشفافة.",
     faqTitle: "الأسئلة الشائعة", faqIntro: "اعثر على إجابات لأكثر الأسئلة شيوعاً حول TestDZ.", viewFaq: "عرض جميع الأسئلة", faq1q: "كيف يعمل اختبار الـ14 يوماً؟", faq1a: "يشارك المختبرون في دورة اختبار منظمة ويقدمون ملاحظاتهم طوال فترة الاختبار.", faq2q: "هل يمكنني كسب مكافآت حقيقية؟", faq2a: "تمنح الأنشطة المؤهلة نقاطاً ومكافآت وفقاً لقواعد المنصة.", faq3q: "هل استخدام TestDZ مجاني؟", faq3a: "يمكنك إنشاء حساب واستكشاف المنصة. وقد تختلف الميزات حسب دورك وباقتك.", faq4q: "كيف أصبح مطوراً؟", faq4a: "أنشئ حساباً واختر دور المطور أثناء التسجيل.",
     about: "عن المنصة", terms: "شروط الاستخدام", privacy: "سياسة الخصوصية", contact: "اتصل بنا", copyright: "© 2026 TestDZ. جميع الحقوق محفوظة.", languageLabel: "اختر اللغة", illustration: "رسم توضيحي للوحة تحكم TestDZ"
   }
@@ -138,6 +138,8 @@ function LandingPage() {
       reveal(".lp-features article", ".lp-features", 0.13);
       reveal(".lp-steps article", ".lp-steps", 0.16);
       reveal(".lp-promo > *", ".lp-promo", 0.1);
+      reveal(".lp-community article", ".lp-community", 0.12);
+      gsap.fromTo(".lp-counter", { textContent: 0 }, { textContent: (index, element) => Number(element.getAttribute("data-count") || 0), duration: 1.5, ease: "power2.out", snap: { textContent: 1 }, stagger: 0.12 });
       reveal(".lp-faq-illustration, .lp-faq-copy, .lp-faq-list details", ".lp-faq", 0.08);
     }, root);
 
@@ -154,24 +156,41 @@ function LandingPage() {
         <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); window.requestAnimationFrame(() => ScrollTrigger.refresh()); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
       </header>
 
-      <section className="lp-hero lp-hero-v2" id="home">
+      <section className="lp-hero lp-hero-reference" id="home">
         <div className="lp-hero-copy">
-          <span className="lp-hero-eyebrow"><span className="lp-live-dot" /> TestDZ · {t.visualLabel}</span>
-          <h1>Test. Learn. <span>Grow.</span></h1>
+          <h1>TestDZ</h1>
+          <h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
           <p>{t.heroBody}</p>
-          <div className="lp-role-cards">
-            <Link className="lp-role-card lp-role-developer" to="/auth?mode=signup"><span className="lp-role-icon"><LpIcon name="code" size={23}/></span><span className="lp-role-copy"><strong>{t.developerCta}</strong><small>{t.developerPath}</small></span><LpIcon name="arrow" size={19}/></Link>
-            <Link className="lp-role-card lp-role-tester" to="/auth?mode=signup"><span className="lp-role-icon"><LpIcon name="shield" size={23}/></span><span className="lp-role-copy"><strong>{t.testerCta}</strong><small>{t.testerPath}</small></span><LpIcon name="arrow" size={19}/></Link>
+          <div className="lp-hero-buttons">
+            <Link className="lp-cta" to="/auth?mode=signup">{t.getStarted} <LpIcon name="arrow" size={17}/></Link>
+            <a className="lp-secondary" href="#features">{t.exploreTests} <LpIcon name="play" size={15}/></a>
           </div>
-          <a className="lp-hero-discover" href="#how-it-works">{t.exploreTests} <LpIcon name="arrow" size={15}/></a>
+          <div className="lp-proof" aria-label={t.visualLabel}>
+            <div className="lp-proof-symbols" aria-hidden="true"><span>✦</span><span>⌘</span><span>✓</span><span>♙</span></div>
+            <div><strong><span className="lp-counter" data-count="2">0</span></strong><small>{language === "ar" ? "مساران للمشاركة" : language === "fr" ? "parcours disponibles" : "Ways to participate"}</small></div>
+            <i className="lp-proof-divider"/>
+            <div className="lp-proof-day"><strong><span className="lp-counter" data-count="14">0</span></strong><small>{t.days} · {language === "ar" ? "دورة الاختبار" : language === "fr" ? "cycle de test" : "test cycle"}</small></div>
+          </div>
         </div>
-        <div className="lp-hero-art lp-hero-art-v2" role="img" aria-label={t.visualLabel}>
-          <div className="lp-visual-orbit lp-orbit-one"/><div className="lp-visual-orbit lp-orbit-two"/>
-          <div className="lp-visual-core"><span className="lp-core-mark"><LpIcon name="flask" size={48}/></span><strong>TestDZ</strong><small>{t.visualLabel}</small></div>
-          <div className="lp-path-node lp-path-developer"><span className="lp-path-icon"><LpIcon name="code" size={25}/></span><span><strong>{t.developerCta}</strong><small>{t.developerPath}</small></span></div>
-          <div className="lp-path-node lp-path-tester"><span className="lp-path-icon"><LpIcon name="shield" size={25}/></span><span><strong>{t.testerCta}</strong><small>{t.testerPath}</small></span></div>
-          <svg className="lp-path-lines" viewBox="0 0 560 390" fill="none" aria-hidden="true"><path d="M280 192 C205 190 195 105 105 105" stroke="#6CA5FF" strokeWidth="2.5" strokeDasharray="6 8"/><path d="M280 205 C355 208 370 292 455 292" stroke="#42C9B0" strokeWidth="2.5" strokeDasharray="6 8"/><circle cx="105" cy="105" r="6" fill="#6CA5FF"/><circle cx="455" cy="292" r="6" fill="#42C9B0"/></svg>
-          <span className="lp-visual-spark lp-spark-a">✳</span><span className="lp-visual-spark lp-spark-b">✦</span>
+        <div className="lp-hero-art" role="img" aria-label={t.illustration}>
+          <div className="lp-art-glow"/>
+          <div className="lp-float lp-code"><LpIcon name="code" size={30}/></div>
+          <div className="lp-float lp-cloud"><LpIcon name="cloud" size={28}/></div>
+          <div className="lp-float lp-trophy">🏆</div>
+          <div className="lp-laptop">
+            <div className="lp-screen">
+              <aside className="lp-screen-sidebar"><b>TestDZ</b><span>⌂ Overview</span><span>▦ {t.activeTests}</span><span>◉ {t.myTests}</span><span>♧ {t.rewards}</span></aside>
+              <div className="lp-screen-main">
+                <div className="lp-screen-top"><span>{t.overview}</span><i>● LIVE</i></div>
+                <div className="lp-stats"><b>{t.activeTests}<strong>08</strong></b><b>{t.totalUsers}<strong>•••</strong></b><b>{t.rewards}<strong>★</strong></b></div>
+                <div className="lp-chart"><span/><span/><span/><span/><span/><span/><span/><span/></div>
+                <div className="lp-test-rows"><i/><i/><i/></div>
+              </div>
+            </div>
+            <div className="lp-laptop-base"/>
+          </div>
+          <div className="lp-float lp-checklist"><b>✓</b><span>{t.completed}</span><b>✓</b><span>{t.feedback}</span><b>✓</b><span>{t.earned}</span></div>
+          <div className="lp-days">14 <small>{t.days}</small></div>
         </div>
       </section>
 
@@ -192,6 +211,16 @@ function LandingPage() {
       </section>
 
       <section className="lp-promo" id="testers"><div className="lp-hourglass"><LpIcon name="hourglass" size={58}/></div><div><h2>{t.promoTitle}<br/><span>{t.promoAccent}</span></h2><p>{t.promoBody}</p></div><div className="lp-promo-calendar"><LpIcon name="calendar" size={70}/></div><a href="#features">{t.exploreActive} <LpIcon name="arrow" size={16}/></a></section>
+
+      <section className="lp-testimonials lp-community">
+        <div className="lp-section-title"><h2>{t.communityTitle}</h2></div>
+        <div className="lp-quotes">
+          <article><span className="lp-person">✓</span><div><p>{t.communityOneBody}</p><b>{t.communityOneTitle}</b><small>{t.tester}</small><strong aria-hidden="true">✦ ✦ ✦</strong></div></article>
+          <article><span className="lp-person">⌘</span><div><p>{t.communityTwoBody}</p><b>{t.communityTwoTitle}</b><small>{t.developer}</small><strong aria-hidden="true">✦ ✦ ✦</strong></div></article>
+          <article><span className="lp-person">◎</span><div><p>{t.communityThreeBody}</p><b>{t.communityThreeTitle}</b><small>TestDZ</small><strong aria-hidden="true">✦ ✦ ✦</strong></div></article>
+        </div>
+        <div className="lp-dots" aria-hidden="true">● ● ●</div>
+      </section>
 
       <section className="lp-faq" id="faq">
         <div className="lp-faq-illustration" aria-hidden="true"><svg viewBox="0 0 220 190" role="img"><path d="M12 184c20-48 45-54 72-34 18 14 35 10 51-5 23-22 52-8 73 39" fill="#c9e1ff"/><path d="M50 183c-5-37 5-69 34-83 31-15 68 2 76 35l-5 48Z" fill="#075cf5"/><path d="M78 95c-9-42 11-69 42-68 31 1 48 28 38 62-7 24-23 38-43 36-18-2-31-13-37-30Z" fill="#f1bd91"/><path d="M75 83c-10-45 10-66 43-66 33 0 51 23 44 56-12-6-18-19-21-28-14 18-35 27-66 29Z" fill="#142c65"/><path d="M99 96h3m31 0h3M112 112q10 7 19-1" stroke="#17305d" strokeWidth="3" strokeLinecap="round" fill="none"/><path d="M99 85q7-6 14 0m15 0q7-6 14 0" stroke="#17305d" strokeWidth="3" fill="none"/><path d="M109 126q-14 11-25 26m50-23q13 10 22 26" stroke="#f1bd91" strokeWidth="13" strokeLinecap="round" fill="none"/></svg><span>?</span></div>
