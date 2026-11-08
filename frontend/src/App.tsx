@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useLenis } from "./hooks/useLenis";
 
 function Brand() {
   return <Link className="brand" to="/" aria-label="TestDZ الصفحة الرئيسية"><span className="brand-mark">T</span><span>Test<span className="brand-accent">DZ</span></span></Link>;
@@ -74,6 +75,8 @@ const landingCopy = {
 } as const;
 
 function LandingPage() {
+  useLenis();
+
   const [language, setLanguage] = useState<LandingLanguage>(() => {
     const saved = window.localStorage.getItem("testdz-landing-language");
     return saved === "fr" || saved === "ar" ? saved : "en";
