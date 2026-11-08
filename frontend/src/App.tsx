@@ -118,10 +118,10 @@ function LandingPage() {
     const context = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.75 } });
       intro
-        .from(".lp-hero-copy h1", { y: 28, opacity: 0 })
-        .from(".lp-hero-copy > p", { y: 18, opacity: 0 }, "-=0.42")
-        .from(".lp-hero-buttons", { y: 16, opacity: 0 }, "-=0.38")
-        .from(".lp-role-cards", { y: 12, opacity: 0, stagger: 0.1 }, "-=0.35");
+        .from(".lp-hero-copy h2", { y: 18, opacity: 0 })
+        .from(".lp-hero-copy > p:not(.lp-hero-title)", { y: 14, opacity: 0 }, "-=0.38")
+        .from(".lp-hero-buttons", { y: 12, opacity: 0 }, "-=0.32")
+        .from(".lp-proof", { y: 10, opacity: 0 }, "-=0.28");
 
       gsap.from(".lp-hero-art", {
         y: 28,
