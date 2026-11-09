@@ -603,7 +603,7 @@ function AuthCallbackPage() {
 function VerifyEmailPage() {
   useLenis();
   const navigate = useNavigate();
-  const [email, setEmail] = useState(() => new URLSearchParams(window.location.search).get("email") || "");
+  const [email] = useState(() => new URLSearchParams(window.location.search).get("email") || "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
