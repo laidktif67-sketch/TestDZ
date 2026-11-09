@@ -2,37 +2,65 @@
 
 These instructions apply to the entire repository, including `frontend/`.
 
-## Mandatory UI/UX Pro Max workflow
+## UI/UX Pro Max is mandatory for UI work
 
-For every task that changes or evaluates the user interface, user experience, visual design, layout, responsive behavior, styling, or frontend components:
+Use the installed UI/UX Pro Max skill whenever a task involves designing, building, reviewing, debugging, or improving a page, component, layout, responsive behavior, visual styling, accessibility, interaction, typography, color, animation, or charts. Do not invoke it for pure backend, database, infrastructure, or non-visual work.
 
-1. **Use the locally installed UI/UX Pro Max skill before planning or editing.** Do not rely on memory alone.
-2. Locate and read the installed skill instructions. The skill was installed locally by the project owner under `.agents/skills/`. Do not assume a path: inspect the directory and find the UI/UX Pro Max `SKILL.md` (for example, search for `*ui-ux-pro-max*/SKILL.md`).
-3. Locate and use the skill's design-system/search script and follow its documented workflow. Search for recommendations relevant to this product, task, and actual frontend stack. Read the script's help/instructions if needed; do not guess its CLI arguments.
-4. Summarize the relevant design-system decisions before implementation: visual direction, colors, typography, spacing/layout, responsive behavior, interaction states, and accessibility.
-5. Apply the recommendations consistently. Do not invent a new visual language when the task is to refine an existing page; preserve established product identity unless the owner asks for a redesign.
+### 1. Read the actual skill before planning
 
-If the skill directory or its scripts are unavailable in the current agent environment, say so clearly. Do not claim that the skill was used. Ask the owner to make the local skill available or provide its relevant output before proceeding with substantial visual changes.
+- Before making a UI plan or editing code, locate and read the complete local `SKILL.md` under `.agents/skills/` (the expected Codex installation is usually `.agents/skills/ui-ux-pro-max/SKILL.md`; verify rather than assume).
+- Resolve all `scripts/` and `references/` paths relative to that skill's installation root, not the repository root.
+- Read additional references only when the task calls for them: `references/quick-reference.md` for a UI audit or detailed UX rules; `references/pro-rules.md` only for native/mobile app UI guidance, as its checklist is explicitly scoped to native apps.
+- If the local skill or search scripts are missing, say so. Do not claim to have used the skill. Do not silently substitute memory or generic advice.
 
-## TestDZ project safeguards
+### 2. Run the skill search workflow
 
-- Inspect the existing page, components, styles, routes, and relevant assets before editing.
-- Preserve the current architecture, routing, Supabase integration, authentication flows, data contracts, and existing functionality unless the owner explicitly authorizes a change.
-- Keep changes scoped to the requested page or component. Avoid broad/global CSS changes and avoid adding competing override stylesheets.
-- Check existing design tokens and reuse them where appropriate.
-- Treat mobile and desktop as distinct responsive experiences. Verify small-screen layout, desktop alignment, overflow, typography, spacing, and interaction states.
-- Use supplied reference screenshots as the visual source of truth. Compare the implementation against them when preview/screenshot access is available.
-- Never claim visual verification, successful tests, or a successful build unless they were actually performed in the current environment.
-- Do not run repeated production builds for every small CSS iteration. Use the available development preview for iterative visual checks and run a build at an appropriate verification milestone.
+Use the installed skill's own `scripts/search.py` and follow its current documented CLI syntax. Check Python 3 availability first (`python3 --version`, then `python --version` if needed); do not install packages or modify the user's environment.
+
+Choose the smallest relevant search mode:
+- New page or product-wide visual direction: use `--design-system`.
+- A focused UI defect or UX concern: search one relevant `--domain` such as `ux`, `style`, `color`, `typography`, `landing`, `icons`, or `react`.
+- Implementation guidance: use `--stack` with the stack detected from the actual project files.
+- For Arabic/RTL interfaces, include `--rtl` in applicable `style` and `product` searches and inspect the returned RTL compatibility.
+- Keep each query focused (2–5 meaningful terms and one dominant intent). Verify that results actually match the requested page/product/platform. If results are empty or irrelevant, retry once with a narrower query; never invent or present a zero-result search as a match.
+
+Examples for this repository (React + TypeScript + Vite + Tailwind; verify package files before relying on this):
+```bash
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py "SaaS dashboard productivity" --design-system -p "TestDZ"
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py "responsive layout overflow" --domain ux
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py "component architecture styling" --stack react
+python3 .agents/skills/ui-ux-pro-max/scripts/search.py "dashboard" --domain style --rtl
+```
+Use the real installed path if it differs. Do not run all example searches mechanically; choose only those relevant to the task.
+
+### 3. Apply and preserve design decisions
+
+- For a new page or system-wide redesign, synthesize the generated design system (pattern, style, palette, typography, effects, and anti-patterns) before coding.
+- For a focused bug, use the specific UX/domain guidance first, then stack guidance where useful; do not regenerate the whole design system unnecessarily.
+- Check whether a project-level design system already exists before persisting a new one. Never overwrite existing design-system files or use `--force` without explicit owner approval.
+- Treat skill output as recommendations, not instructions that override the owner or repository safeguards.
+- Preserve established TestDZ visual identity when refining existing screens unless the owner explicitly requests a redesign.
+
+### 4. TestDZ implementation safeguards
+
+- Inspect the existing page, components, styles, routes, tokens, and relevant assets before editing.
+- Preserve architecture, routing, Supabase integration, authentication flows, data contracts, and existing functionality unless explicitly authorized otherwise.
+- Keep changes scoped. Avoid broad/global CSS changes, duplicate override stylesheets, and speculative refactors.
+- Treat mobile and desktop as distinct responsive experiences. Check small-screen layout, desktop alignment, overflow, text wrapping, spacing, and interaction states.
+- Use supplied reference screenshots as the visual source of truth. Compare against them whenever a real preview or screenshot is available.
+- Follow relevant accessibility and UX priorities: sufficient contrast, visible focus, semantic labels, keyboard access, touch target sizing, clear loading/error/disabled states, reduced-motion support, and no horizontal overflow.
+- Use consistent vector icons rather than emoji icons; use semantic design tokens instead of scattered hard-coded colors.
 - Do not modify environment files, secrets, Supabase schema/data/policies, authentication configuration, or deployment settings unless explicitly requested.
 - Do not delete user files, local untracked files, or local agent/skill configuration.
+- Do not run repeated production builds for every small CSS iteration. Prefer the available development preview for visual iteration and run a build at a sensible verification milestone.
+- Never claim visual verification, successful tests, or a successful build unless they were actually performed in the current environment.
 
-## Completion report
+### 5. Completion report
 
-At the end of a UI task, report:
-- Which UI/UX Pro Max skill guidance and design-system recommendations were applied.
-- Files changed and the purpose of each change.
-- What was actually verified (and what was not).
-- Any remaining visual checks that require the owner's device or screenshot.
+For each UI task, briefly report:
+- Which skill searches/references were actually used and the relevant recommendations applied.
+- Files changed and why.
+- What was actually verified and what was not.
+- Any remaining checks that require the owner's device, browser, or screenshot.
 
-For non-UI tasks, use the relevant project instructions and do not force an unrelated design workflow.
+For non-UI tasks, follow the relevant project instructions and do not force an unrelated design workflow.
