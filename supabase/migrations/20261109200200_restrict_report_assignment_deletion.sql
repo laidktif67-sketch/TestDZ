@@ -235,8 +235,16 @@ BEGIN
        'public.remove_cohort_test(uuid,uuid)', 'EXECUTE')
      OR has_function_privilege('anon',
        'public.remove_cohort_test(uuid,uuid)', 'EXECUTE')
-     OR has_function_privilege('PUBLIC',
-       'public.remove_cohort_test(uuid,uuid)', 'EXECUTE') THEN
+     OR EXISTS (
+       SELECT 1
+       FROM pg_proc AS p
+       CROSS JOIN LATERAL aclexplode(
+         coalesce(p.proacl, acldefault('f', p.proowner))
+       ) AS acl
+       WHERE p.oid = 'public.remove_cohort_test(uuid,uuid)'::regprocedure
+         AND acl.grantee = 0
+         AND acl.privilege_type = 'EXECUTE'
+     ) THEN
     RAISE EXCEPTION 'remove_cohort_test execution grants are incorrect';
   END IF;
 END
