@@ -19,7 +19,7 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 - UI styling with shadcn/ui + Tailwind
 - Logo design and AI generation
 - Corporate identity program (CIP) deliverables
-- Presentations and pitch decks
+- Presentations and pitch decks (delegate to the dedicated `slides` skill)
 - Banner design requests (delegate to the dedicated `banner-design` skill)
 - Social photos for Instagram, Facebook, LinkedIn, Twitter, Pinterest, TikTok
 
@@ -32,7 +32,7 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 | shadcn/ui, Tailwind, code | `ui-styling` | External skill |
 | Logo creation, AI generation | Logo (built-in) | `references/logo-design.md` |
 | CIP mockups, deliverables | CIP (built-in) | `references/cip-design.md` |
-| Presentations, pitch decks | Slides (built-in) | `references/slides.md` |
+| Presentations, pitch decks | `slides` (specialist skill) | Delegate the complete presentation workflow; do not create slides here |
 | Banners, covers, headers | `banner-design` (specialist skill) | Delegate banner workflow; do not recreate it here |
 | Social media images/photos | Social Photos (built-in) | `references/social-photos-design.md` |
 | SVG icons, icon sets | Icon (built-in) | `references/icon-design.md` |
@@ -113,21 +113,11 @@ python3 ~/.claude/skills/design/scripts/cip/render-html.py --brand "TopGroup" --
 
 **Tip:** If no logo exists, use Logo Design section above first.
 
-## Slides (Built-in)
+## Slides (Delegated)
 
-Strategic HTML presentations with Chart.js, design tokens, copywriting formulas.
+Presentation planning, slide narratives, copy, layouts, HTML implementation, navigation, and delivery belong to the dedicated `slides` skill. Activate it when available. Do not maintain a second slide workflow or duplicate slide references in `design`.
 
-Load `references/slides-create.md` for the creation workflow.
-
-### Slides: Knowledge Base
-
-| Topic | File |
-|-------|------|
-| Creation Guide | `references/slides-create.md` |
-| Layout Patterns | `references/slides-layout-patterns.md` |
-| HTML Template | `references/slides-html-template.md` |
-| Copywriting | `references/slides-copywriting-formulas.md` |
-| Strategies | `references/slides-strategies.md` |
+If `slides` is unavailable, explain the limitation and provide a concise presentation brief rather than pretending this skill contains the slide workflow.
 
 ## Banner Requests (Delegated)
 
