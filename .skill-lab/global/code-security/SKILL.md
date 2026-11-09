@@ -1,82 +1,109 @@
 ---
 name: code-security
-description: "Security guidelines for writing secure code. Use when writing code, reviewing code for vulnerabilities, or asking about secure coding practices like 'check for SQL injection' or 'review security'. IMPORTANT: Always consult this skill when writing or reviewing any code that handles user input, authentication, file operations, database queries, network requests, cryptography, or infrastructure configuration (Terraform, Kubernetes, Docker, GitHub Actions) — even if the user doesn't explicitly mention security. Also use when users ask to 'review my code', 'check this for bugs', or 'is this safe'."
+description: "Secure coding guidance for implementation and review. Consult when code handles untrusted input, authentication, authorization, files, databases, network requests, cryptography, secrets, or infrastructure such as Terraform, Kubernetes, Docker, and GitHub Actions. Also use for security questions and code reviews where security risks are in scope."
 ---
 
 # Code Security Guidelines
 
-Comprehensive security rules for writing secure code across 15+ languages. Covers OWASP Top 10, infrastructure security, and coding best practices with 28 rule categories.
+Use these guidelines proactively when implementing or reviewing code with security-sensitive behavior. Apply only the rules relevant to the language, framework, data flow, and trust boundaries in the current task.
 
-## How to Use This Skill
+This skill is a rule index, not a substitute for understanding the repository or verifying framework-specific behavior. Do not claim that a vulnerability exists unless the inspected code supports that finding.
 
-**Proactive mode** — When writing or reviewing code, automatically check for relevant vulnerabilities based on the language and patterns present. You don't need to wait for the user to ask about security.
+## Operating workflow
 
-**Reactive mode** — When the user asks about security, use the categories below to find the relevant rule file, then read it for detailed vulnerable/secure code examples.
+1. Identify the language, framework, entry points, sensitive assets, trust boundaries, and attacker-controlled inputs.
+2. Trace relevant data from sources to sinks (for example, request input to SQL, shell, HTML, file paths, URLs, or deserialization).
+3. Select the smallest relevant set of rule files from the index below.
+4. Read those files from this skill's `rules/` directory before applying detailed guidance. Resolve paths relative to this `SKILL.md` file; do not assume the agent's working directory is the skill directory.
+5. Prioritize exploitable Critical and High risks, then assess Medium and Low risks in context.
+6. For reviews, report evidence, impact, exploitability, and the affected location. Separate confirmed findings from hypotheses and recommendations.
+7. For implementation, use the framework's safe APIs and add focused tests where practical.
 
-### Workflow
-1. Identify the language and what the code does (handles input? queries a DB? reads files?)
-2. Check the relevant rules below — focus on Critical and High impact first
-3. Read the specific rule file from `rules/` for detailed code examples in that language
-4. Apply the secure patterns, or flag the vulnerable patterns if reviewing
+## Rule selection by language and technology
 
-## Language-Specific Priority Rules
+| Language / technology | Start with these rules when relevant |
+|---|---|
+| Python | SQL injection, command injection, path traversal, code injection, SSRF, insecure cryptography, insecure deserialization |
+| JavaScript / TypeScript | XSS, prototype pollution, code injection, insecure transport, CSRF, SSRF, secrets |
+| Java | SQL injection, XXE, insecure deserialization, insecure cryptography, SSRF |
+| Go | SQL injection, command injection, path traversal, insecure transport, SSRF |
+| C / C++ | Memory safety, unsafe functions, command injection, path traversal |
+| Ruby | SQL injection, command injection, code injection, insecure deserialization |
+| PHP | SQL injection, XSS, command injection, code injection, path traversal |
+| Terraform / HCL | Terraform AWS, Terraform Azure, Terraform GCP, secrets |
+| YAML / infrastructure | Kubernetes, Docker, GitHub Actions, secrets |
 
-When writing code in these languages, check these rules first:
+This table is a starting point, not an exhaustive language support claim. Use the actual rule files and repository context to determine coverage. For languages or frameworks not listed, apply relevant general principles only when supported by the code and available rule content.
 
-| Language | Priority Rules to Check |
-|----------|------------------------|
-| **Python** | SQL injection, command injection, path traversal, code injection, SSRF, insecure crypto |
-| **JavaScript/TypeScript** | XSS, prototype pollution, code injection, insecure transport, CSRF |
-| **Java** | SQL injection, XXE, insecure deserialization, insecure crypto, SSRF |
-| **Go** | SQL injection, command injection, path traversal, insecure transport |
-| **C/C++** | Memory safety, unsafe functions, command injection, path traversal |
-| **Ruby** | SQL injection, command injection, code injection, insecure deserialization |
-| **PHP** | SQL injection, XSS, command injection, code injection, path traversal |
-| **HCL/YAML** | Terraform (AWS/Azure/GCP), Kubernetes, Docker, GitHub Actions |
+## Rule index
 
-## Categories
+Rule files are stored under `rules/`. Read the specific file before relying on its detailed examples.
 
-### Critical Impact
-- **SQL Injection** (`rules/sql-injection.md`) - Use parameterized queries, never concatenate user input
-- **Command Injection** (`rules/command-injection.md`) - Avoid shell commands with user input, use safe APIs
-- **XSS** (`rules/xss.md`) - Escape output, use framework protections
-- **XXE** (`rules/xxe.md`) - Disable external entities in XML parsers
-- **Path Traversal** (`rules/path-traversal.md`) - Validate and sanitize file paths
-- **Insecure Deserialization** (`rules/insecure-deserialization.md`) - Never deserialize untrusted data
-- **Code Injection** (`rules/code-injection.md`) - Never eval() user input
-- **Hardcoded Secrets** (`rules/secrets.md`) - Use environment variables or secret managers
-- **Memory Safety** (`rules/memory-safety.md`) - Prevent buffer overflows, use-after-free (C/C++)
+### Critical impact
 
-### High Impact
-- **Insecure Crypto** (`rules/insecure-crypto.md`) - Use SHA-256+, AES-256, avoid MD5/SHA1/DES
-- **Insecure Transport** (`rules/insecure-transport.md`) - Use HTTPS, verify certificates
-- **SSRF** (`rules/ssrf.md`) - Validate URLs, use allowlists
-- **JWT Issues** (`rules/authentication-jwt.md`) - Always verify signatures
-- **CSRF** (`rules/csrf.md`) - Use CSRF tokens on state-changing requests
-- **Prototype Pollution** (`rules/prototype-pollution.md`) - Validate object keys in JavaScript
+- **SQL injection** — `rules/sql-injection.md`
+- **Command injection** — `rules/command-injection.md`
+- **Cross-site scripting (XSS)** — `rules/xss.md`
+- **XML external entities (XXE)** — `rules/xxe.md`
+- **Path traversal** — `rules/path-traversal.md`
+- **Insecure deserialization** — `rules/insecure-deserialization.md`
+- **Code injection** — `rules/code-injection.md`
+- **Hardcoded secrets** — `rules/secrets.md`
+- **Memory safety** — `rules/memory-safety.md`
 
-### Infrastructure
-- **Terraform AWS/Azure/GCP** (`rules/terraform-aws.md`, `rules/terraform-azure.md`, `rules/terraform-gcp.md`) - Encryption, least privilege, no public access
-- **Kubernetes** (`rules/kubernetes.md`) - No privileged containers, run as non-root
-- **Docker** (`rules/docker.md`) - Don't run as root, pin image versions
-- **GitHub Actions** (`rules/github-actions.md`) - Avoid script injection, pin action versions
+### High impact
 
-### Medium/Low Impact
-- **Regex DoS** (`rules/regex-dos.md`) - Avoid catastrophic backtracking
-- **Race Conditions** (`rules/race-condition.md`) - Use proper synchronization
-- **Correctness** (`rules/correctness.md`) - Avoid common logic bugs
-- **Best Practices** (`rules/best-practice.md`) - General secure coding patterns
+- **Insecure cryptography** — `rules/insecure-crypto.md`
+- **Insecure transport** — `rules/insecure-transport.md`
+- **Server-side request forgery (SSRF)** — `rules/ssrf.md`
+- **JWT authentication** — `rules/authentication-jwt.md`
+- **Cross-site request forgery (CSRF)** — `rules/csrf.md`
+- **Prototype pollution** — `rules/prototype-pollution.md`
+- **Unsafe functions** — `rules/unsafe-functions.md`
+- **Terraform AWS** — `rules/terraform-aws.md`
+- **Terraform Azure** — `rules/terraform-azure.md`
+- **Terraform GCP** — `rules/terraform-gcp.md`
+- **Kubernetes** — `rules/kubernetes.md`
+- **Docker** — `rules/docker.md`
+- **GitHub Actions** — `rules/github-actions.md`
 
-See `rules/_sections.md` for the full index with CWE/OWASP references.
+### Medium impact
 
-## Quick Reference
+- **Regular-expression denial of service (ReDoS)** — `rules/regex-dos.md`
+- **Race conditions** — `rules/race-condition.md`
+- **Code correctness** — `rules/correctness.md`
 
-| Vulnerability | Key Prevention |
-|--------------|----------------|
-| SQL Injection | Parameterized queries |
-| XSS | Output encoding |
-| Command Injection | Avoid shell, use APIs |
-| Path Traversal | Validate paths |
-| SSRF | URL allowlists |
-| Secrets | Environment variables |
-| Crypto | SHA-256, AES-256 |
+### Low impact
+
+- **Best practices** — `rules/best-practice.md`
+- **Performance** — `rules/performance.md`
+- **Maintainability** — `rules/maintainability.md`
+
+The canonical category descriptions and ordering are maintained in `rules/_sections.md`. If this index and that file ever differ, flag the mismatch rather than silently inventing or renaming a rule.
+
+## Review and reporting guidance
+
+When reviewing code:
+
+- Cite the exact file and line or the smallest useful code location.
+- Explain the attacker-controlled input, vulnerable operation, and missing control.
+- State realistic impact and required preconditions.
+- Prefer actionable remediation that fits the existing architecture.
+- Do not report a pattern as exploitable without tracing its data flow and relevant protections.
+- Do not expose secrets in findings; redact values and identify the secret type/location.
+- Avoid duplicating the same root cause across multiple findings.
+- If evidence is insufficient, label the item as a question or verification task, not a confirmed vulnerability.
+
+## Quick reference
+
+| Risk | Core defensive approach |
+|---|---|
+| SQL injection | Parameterized queries and safe query APIs |
+| XSS | Context-aware output encoding and safe DOM/framework APIs |
+| Command injection | Avoid shell invocation; otherwise pass arguments safely and validate allowlisted inputs |
+| Path traversal | Constrain resolved paths to an intended base directory |
+| SSRF | Validate destinations, restrict schemes/hosts, and block internal or metadata ranges |
+| Secrets | Keep credentials out of source and logs; use approved secret storage |
+| Cryptography | Use vetted libraries and modern, fit-for-purpose algorithms |
+| Authentication | Verify identity, signatures, expiry, issuer, audience, and authorization separately |
+| Infrastructure | Apply least privilege, private-by-default networking, and secure workload settings |
