@@ -1226,3 +1226,64 @@ html:lang(fr),
   .verify-signature{font-size:clamp(27px,2.5vw,36px);margin-top:28px}
   .verify-footer{display:flex}
 }
+
+
+/* Reference-accurate desktop composition: card LEFT, explanatory hero RIGHT. */
+@media(min-width:901px){
+  .verify-page{min-height:100vh;height:auto;overflow-x:hidden;overflow-y:auto}
+  .verify-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-rows:minmax(650px,1fr)!important;
+    grid-template-areas:"verify-card-area verify-story-area"!important;
+    align-items:center!important;
+    justify-items:stretch!important;
+    column-gap:clamp(48px,7vw,110px)!important;
+    row-gap:0!important;
+    width:min(1320px,100%)!important;
+    min-height:calc(100vh - 82px)!important;
+    height:auto!important;
+    margin:0 auto!important;
+    padding:38px clamp(42px,6vw,90px) 54px!important;
+    box-sizing:border-box!important;
+  }
+  .verify-layout>.verify-card{
+    grid-area:verify-card-area!important;
+    display:block!important;
+    position:relative!important;
+    inset:auto!important;
+    float:none!important;
+    transform:none!important;
+    width:100%!important;
+    max-width:540px!important;
+    min-width:0!important;
+    justify-self:center!important;
+    align-self:center!important;
+    margin:0!important;
+    z-index:2!important;
+  }
+  .verify-layout>.verify-story{
+    grid-area:verify-story-area!important;
+    display:flex!important;
+    position:relative!important;
+    inset:auto!important;
+    float:none!important;
+    transform:none!important;
+    width:100%!important;
+    max-width:570px!important;
+    min-width:0!important;
+    min-height:600px!important;
+    height:auto!important;
+    justify-self:center!important;
+    align-self:center!important;
+    margin:0!important;
+    padding:20px 0!important;
+    z-index:1!important;
+    box-sizing:border-box!important;
+  }
+  .verify-layout>.verify-story h1{font-size:clamp(48px,4.7vw,68px)!important;line-height:1.02!important;letter-spacing:-2px!important;margin:18px 0 24px!important}
+  .verify-layout>.verify-story .verify-story-lead{font-size:clamp(18px,1.65vw,23px)!important;line-height:1.4!important}
+  .verify-layout>.verify-story .verify-story-note{font-size:15px!important;line-height:1.65!important}
+  .verify-layout>.verify-story .verify-art{right:0!important;left:auto!important;width:min(360px,78%)!important;height:310px!important;top:60%!important;transform:translateY(-35%)!important}
+  .verify-layout>.verify-story .verify-signature{font-size:clamp(27px,2.5vw,36px)!important;margin-top:28px!important}
+}
