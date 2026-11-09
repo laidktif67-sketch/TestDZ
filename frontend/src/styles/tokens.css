@@ -1,0 +1,76 @@
+/* TestDZ design tokens
+ * Shared foundations for the landing, authentication and application surfaces.
+ * Keep component-specific styling in the feature stylesheets.
+ */
+:root {
+  color-scheme: light;
+
+  /* Color */
+  --color-canvas: #f5f8ff;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-subtle: #edf4ff;
+  --color-text: #071b50;
+  --color-text-muted: #526486;
+  --color-text-soft: #7183a2;
+  --color-primary: #075cf5;
+  --color-primary-hover: #064bd0;
+  --color-primary-soft: #e8f0ff;
+  --color-accent: #08a879;
+  --color-accent-soft: #e3fbf3;
+  --color-danger: #dc4545;
+  --color-border: rgba(7, 27, 80, 0.1);
+  --color-border-strong: rgba(7, 27, 80, 0.18);
+  --color-focus: rgba(7, 92, 245, 0.24);
+
+  /* Typography */
+  --font-sans: "Plus Jakarta Sans", "Noto Sans Arabic", sans-serif;
+  --font-arabic: "Noto Sans Arabic", "Plus Jakarta Sans", sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Shape and elevation */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 4px 12px rgba(23, 54, 105, 0.06);
+  --shadow-md: 0 12px 32px rgba(23, 54, 105, 0.1);
+  --shadow-lg: 0 24px 64px rgba(23, 54, 105, 0.14);
+
+  /* Legacy aliases retained while existing page styles are migrated. */
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-subtle);
+  --line: var(--color-border);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --green: var(--color-primary);
+  --green-bright: var(--color-primary);
+  --red: var(--color-danger);
+}
+
+:where(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--color-primary);
+}
