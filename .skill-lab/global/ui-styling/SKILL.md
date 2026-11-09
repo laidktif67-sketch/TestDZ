@@ -30,6 +30,43 @@ Use when:
 - Rapid prototyping with immediate visual feedback
 - Adding complex UI patterns (data tables, charts, command palettes)
 
+## Tailwind CSS Version Selection
+
+Before changing Tailwind configuration, inspect the project's installed
+`tailwindcss` version in `package.json` and its existing CSS entry points.
+Preserve the project's current major version and configuration style; never
+upgrade, downgrade, or migrate Tailwind as an incidental part of a UI task.
+
+### Tailwind CSS v4 (CSS-first — preferred for v4 projects)
+
+For v4 projects, use CSS-first configuration in the existing stylesheet:
+
+- `@theme` for design tokens that should create Tailwind utilities or variants.
+- `:root` for ordinary CSS variables that should not create utility APIs.
+- `@utility` for custom utilities, including functional utilities.
+- `@custom-variant` for custom variants.
+- `@source` / `@source inline()` for source discovery and explicit utility
+  detection when needed.
+- `@plugin` only when intentionally loading a compatible legacy JavaScript
+  plugin; prefer CSS-native solutions where available.
+
+Do not create a new `tailwind.config.js` or `tailwind.config.ts` for a v4
+project by default. Tailwind v4 does not auto-detect JavaScript config files.
+If an existing legacy config must be retained, load it explicitly with
+`@config` in CSS and verify its options are supported by v4. The v4
+compatibility directives do not make every v3 option supported.
+
+### Tailwind CSS v3 (JavaScript-config based)
+
+Use `tailwind.config.js` / `.ts`, `theme.extend`, and the v3 plugin
+configuration style only when the project is actually on Tailwind v3. Label
+examples and instructions as v3-specific; do not copy them into v4 projects.
+
+### Version-neutral workflow
+
+If the version is unclear, inspect the package manifest and existing CSS before
+editing. If still uncertain, ask rather than generating a competing config.
+
 ## Core Stack
 
 ### Component Layer: shadcn/ui
@@ -55,7 +92,13 @@ Use when:
 
 ## Script Paths
 
-Script paths in this skill and its `references/` are relative to the directory that contains this SKILL.md, not to the project: `scripts/<file>` is this skill's own `scripts/` folder, and `../<skill>/scripts/<file>` is a sibling sub-skill installed alongside it. Build the full path from that directory (Claude Code reports it as the skill's base directory when the skill loads) and keep the working directory at the project root — the scripts read and write project files such as `docs/brand-guidelines.md`, `assets/design-tokens.json` or `src/` relative to it.
+Script paths in this skill and its `references/` are relative to the directory
+that contains this SKILL.md: `scripts/<file>` is this skill's own scripts folder.
+Resolve the skill directory from the skill file location supplied by the agent
+runtime; do not assume a Claude-specific environment variable or hard-coded
+installation path. Keep the working directory at the project root because
+scripts read and write project files such as `docs/brand-guidelines.md`,
+`assets/design-tokens.json`, or `src/` relative to it.
 
 ## Quick Start
 
@@ -223,18 +266,27 @@ python scripts/shadcn_add.py button card dialog
 ```
 
 ### tailwind_config_gen.py
-Generate tailwind.config.js with custom theme:
+
+This is a **legacy JavaScript/TypeScript config generator for Tailwind v3**.
+Do not run it by default in Tailwind v4 projects. It detects v4 through
+`package.json` or a CSS-first `@import "tailwindcss"` entry and blocks
+generation with an explanatory message.
+
+For an actual Tailwind v3 project:
 ```bash
 python scripts/tailwind_config_gen.py --colors brand:blue --fonts display:Inter
 ```
 
-The generator refuses to create or replace a config when any sibling
-`tailwind.config.js`, `.cjs`, `.mjs`, or `.ts` file already exists. Review the
-reported config first, then pass `--force` only when the competing output is
-intentional:
+If a v4 project genuinely needs a legacy config for a documented compatibility
+reason, require an explicit opt-in:
 ```bash
-python scripts/tailwind_config_gen.py --colors brand:blue --force
+python scripts/tailwind_config_gen.py --allow-v4-legacy-config
 ```
+
+The v4 opt-in does not replace `--force`. The generator still refuses to
+create or replace a config when any sibling `tailwind.config.js`, `.cjs`,
+`.mjs`, or `.ts` file already exists. Review the existing config first and
+pass `--force` only when replacing it is intentional.
 
 ## Best Practices
 
