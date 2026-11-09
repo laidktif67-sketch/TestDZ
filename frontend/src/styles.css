@@ -1183,3 +1183,61 @@ html:lang(fr),
 @media(prefers-reduced-motion:reduce){
   .verify-primary,.verify-secondary{transition:none}
 }
+
+
+/* Email verification desktop alignment: isolate this English layout from the app's RTL pages. */
+.verify-page,
+.verify-page .verify-layout {
+  direction: ltr !important;
+}
+@media (min-width: 701px) {
+  .verify-layout {
+    grid-template-columns: minmax(390px, 0.92fr) minmax(0, 1.08fr) !important;
+    grid-template-areas: "card story" !important;
+  }
+  .verify-card {
+    grid-area: card !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: center !important;
+    margin-inline: 0 !important;
+  }
+  .verify-story {
+    grid-area: story !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    justify-self: stretch !important;
+    margin-inline: 0 !important;
+  }
+  .verify-story h1,
+  .verify-story-lead,
+  .verify-story-note {
+    width: 100%;
+    text-align: left !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .verify-art {
+    align-self: center;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .verify-signature {
+    align-self: center;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+@media (max-width: 700px) {
+  .verify-layout {
+    direction: ltr !important;
+  }
+  .verify-story {
+    text-align: center !important;
+    align-items: center !important;
+  }
+}
