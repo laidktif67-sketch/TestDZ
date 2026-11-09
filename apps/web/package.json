@@ -11,14 +11,14 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.80.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.30.1",
+    "@testdz/types": "0.1.0",
     "browser-image-compression": "^2.0.2",
-    "motion": "^12.23.24",
     "gsap": "^3.13.0",
     "lenis": "^1.3.27",
-    "@testdz/types": "0.1.0"
+    "motion": "^12.23.24",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "7.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
