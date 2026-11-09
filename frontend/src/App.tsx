@@ -618,7 +618,7 @@ function VerifyEmailPage() {
 
   async function resend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!supabase || !email.trim()) { setError("أدخل بريدك الإلكتروني الصحيح أولاً."); return; }
+    if (!supabase || !email.trim()) { setError("Enter a valid email address first."); return; }
     setBusy(true); setMessage(""); setError("");
     try {
       const { error: resendError } = await supabase.auth.resend({
@@ -627,10 +627,10 @@ function VerifyEmailPage() {
         options: { emailRedirectTo: window.location.origin + "/auth/callback" },
       });
       if (resendError) throw resendError;
-      setMessage("تم طلب إعادة إرسال رابط التفعيل. تحقق من صندوق الوارد والرسائل غير المرغوب فيها.");
+      setMessage("A new verification link has been requested. Check your inbox and spam folder.");
       setSeconds(120);
     } catch (err) {
-      setError(err instanceof Error ? translateAuthError(err.message) : "تعذر إرسال الرسالة الآن. حاول لاحقاً.");
+      setError(err instanceof Error ? translateAuthError(err.message) : "We couldn't send the email right now. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -642,41 +642,82 @@ function VerifyEmailPage() {
 
   return <main className="verify-page">
     <header className="verify-header">
+      <span className="verify-language"><span aria-hidden="true">⌄</span> English <span className="verify-globe" aria-hidden="true">◎</span></span>
       <Brand />
-      <span className="verify-language"><span aria-hidden="true">◎</span> English⌄</span>
     </header>
+
     <div className="verify-layout">
-      <section className="verify-story">
-        <span className="verify-kicker">TEST · LEARN · GROW</span>
-        <h1>Email<br/><strong>Verification</strong></h1>
-        <p className="verify-story-lead">We’ve sent a verification link<br className="verify-desktop-break"/> to your email address.</p>
-        <p className="verify-story-note">Please check your inbox and click<br className="verify-desktop-break"/> the link to verify your account.</p>
-        <div className="verify-art" aria-hidden="true">
-          <div className="verify-orbit"></div>
-          <div className="verify-envelope"><div className="verify-letter"><span>✓</span></div><div className="verify-flap"></div></div>
-          <div className="verify-mail-bubble">✉</div>
+      <section className="verify-card" aria-labelledby="verify-card-title">
+        <div className="verify-icon" aria-hidden="true">
+          <svg viewBox="0 0 72 72" fill="none">
+            <circle cx="34" cy="34" r="32" fill="#EAF1FF"/>
+            <rect x="11" y="19" width="45" height="34" rx="8" fill="#1767E9"/>
+            <path d="m14 23 19.5 16L53 23" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="52" cy="52" r="13" fill="white" stroke="#1767E9" strokeWidth="2.5"/>
+            <path d="m46 52 4 4 8-9" stroke="#1767E9" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
-        <div className="verify-signature">Test. Learn. Grow.</div>
-      </section>
-      <section className="verify-card">
-        <div className="verify-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="7" y="12" width="50" height="38" rx="8"/><path d="m10 17 22 18 22-18"/><circle cx="50" cy="49" r="12"/><path d="m44 49 4 4 8-9"/></svg></div>
-        <h2>Check Your Email</h2>
-        <p className="verify-card-intro">We’ve sent a verification link to:</p>
-        <div className="verify-email"><span aria-hidden="true">✉</span><strong dir="ltr">{email || "Your email address"}</strong></div>
-        <p className="verify-instruction">Please click the link in your email to verify<br className="verify-desktop-break"/> your account.</p>
+        <p className="verify-eyebrow">ONE LAST STEP</p>
+        <h2 id="verify-card-title">Check Your Email</h2>
+        <p className="verify-card-intro">We’ve sent a verification link to</p>
+        <div className="verify-email">
+          <strong dir="ltr">{email || "Your email address"}</strong>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+        </div>
+        <p className="verify-instruction">Open the message and click the verification link to activate your TestDZ account.</p>
+
         {message && <div className="verify-feedback success" role="status">{message}</div>}
         {error && <div className="verify-feedback error" role="alert">{error}</div>}
-        <div className="verify-countdown"><span aria-hidden="true">◷</span><div><small>{seconds > 0 ? "You can resend the email in:" : "You can resend the email now"}</small><strong>{seconds > 0 ? countdown : "Ready"}</strong></div></div>
+
+        <div className="verify-countdown" aria-live="polite">
+          <span className="verify-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div><small>{seconds > 0 ? "You can request another email in" : "You can request another email now"}</small><strong>{seconds > 0 ? countdown : "Ready"}</strong></div>
+        </div>
+
         <form onSubmit={resend} className="verify-actions">
-          <button className="verify-primary" type="submit" disabled={busy || seconds > 0 || !email.trim()}><span aria-hidden="true">⟳</span>{busy ? "Sending..." : "Resend Email"}</button>
+          <button className="verify-primary" type="submit" disabled={busy || seconds > 0 || !email.trim()}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 1-2-5"/></svg>
+            {busy ? "Sending…" : "Resend verification email"}
+          </button>
         </form>
-        <button className="verify-secondary" type="button" onClick={changeEmail}><span aria-hidden="true">✎</span>Change Email</button>
-        <div className="verify-or"><span>or</span></div>
-        <button className="verify-secondary verify-back" type="button" onClick={() => navigate("/auth")}><span aria-hidden="true">←</span>Back to Login</button>
-        <p className="verify-help">Didn't receive it? Check your spam folder.</p>
+        <button className="verify-secondary" type="button" onClick={changeEmail}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5"/><path d="M4 20h4l11-11a2.1 2.1 0 0 0-4-4L4 16z"/></svg>
+          Change email address
+        </button>
+        <div className="verify-or"><span>OR</span></div>
+        <button className="verify-secondary verify-back" type="button" onClick={() => navigate("/auth")}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 18-6-6 6-6"/><path d="M8 12h12"/></svg>
+          Back to sign in
+        </button>
+        <p className="verify-help">No email yet? Check your spam or junk folder.</p>
+      </section>
+
+      <section className="verify-story" aria-label="Email verification information">
+        <span className="verify-kicker"><span className="verify-kicker-dot"/> TEST · LEARN · GROW</span>
+        <h1>Verify your<br/><strong>email address</strong></h1>
+        <p className="verify-story-lead">You’re almost ready to join the TestDZ community.</p>
+        <p className="verify-story-note">Confirm your email to unlock your tester profile, discover new apps, and start earning rewards.</p>
+        <div className="verify-art" aria-hidden="true">
+          <div className="verify-art-glow"/>
+          <div className="verify-orbit verify-orbit-one"/>
+          <div className="verify-orbit verify-orbit-two"/>
+          <div className="verify-envelope">
+            <div className="verify-letter"><span>✓</span></div>
+            <div className="verify-flap"/>
+          </div>
+          <div className="verify-mail-bubble"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></div>
+          <span className="verify-spark verify-spark-one">✦</span><span className="verify-spark verify-spark-two">✧</span>
+        </div>
+        <div className="verify-signature">Test. Learn. Grow.</div>
+        <div className="verify-story-foot"><span/> A better way to test, learn and grow <span/></div>
       </section>
     </div>
-    <footer className="verify-footer"><Brand/><span>Build. Test. Reward.</span><nav><a href="/">About</a><a href="/">Terms of Service</a><a href="/">Privacy Policy</a><a href="/">Contact</a></nav><small>© 2026 TestDZ. All rights reserved.</small></footer>
+
+    <footer className="verify-footer">
+      <Brand/><span>Build. Test. Reward.</span>
+      <nav><a href="/">About</a><a href="/">Terms of Service</a><a href="/">Privacy Policy</a><a href="/">Contact</a></nav>
+      <small>© 2026 TestDZ. All rights reserved.</small>
+    </footer>
   </main>;
 }
 
