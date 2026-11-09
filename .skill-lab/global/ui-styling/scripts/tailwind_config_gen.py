@@ -66,7 +66,7 @@ def _detect_tailwind_v4(project_root: Path) -> bool:
                     source = css_file.read_text(encoding="utf-8")
                 except (OSError, UnicodeError):
                     continue
-                if re.search(r"""@import\\s+["']tailwindcss["']""", source):
+                if re.search(r"""@import\s+["']tailwindcss["']""", source):
                     return True
     except OSError:
         pass
