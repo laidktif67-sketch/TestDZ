@@ -41,7 +41,13 @@ def validate_svg(svg_code):
                 if target and not target.startswith("#"):
                     raise ValueError("External CSS URLs are not allowed in SVG")
 
-        if element.text and ("javascript:" in element.text.lower() or "@import" in element.text.lower()):
-            raise ValueError("Active CSS or script text is not allowed in SVG")
+        if element.text:
+            text_content = element.text.lower()
+            if "javascript:" in text_content or "@import" in text_content:
+                raise ValueError("Active CSS or script text is not allowed in SVG")
+            for url_value in re.findall(r"url\((.*?)\)", text_content):
+                target = url_value.strip().strip("\\"'")
+                if target and not target.startswith("#"):
+                    raise ValueError("External CSS URLs are not allowed in SVG")
 
     return svg_code
