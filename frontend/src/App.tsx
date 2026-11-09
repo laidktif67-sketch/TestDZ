@@ -299,7 +299,7 @@ function AuthPage() {
   const authRoot = useRef<HTMLElement | null>(null);
   const params = new URLSearchParams(window.location.search);
   const [mode, setMode] = useState<"signin" | "signup">(params.get("mode") === "signup" ? "signup" : "signin");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => params.get("email") || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -428,7 +428,7 @@ function AuthPage() {
         });
         if (authError) throw authError;
         if (data.session) navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
-        else setMessage("تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيده قبل تسجيل الدخول.");
+        else navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, { replace: true });
       } else {
         const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (authError) throw authError;
@@ -601,19 +601,83 @@ function AuthCallbackPage() {
 }
 
 function VerifyEmailPage() {
-  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+  const [email, setEmail] = useState(() => new URLSearchParams(window.location.search).get("email") || "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [seconds, setSeconds] = useState(120);
+
+  useEffect(() => {
+    if (seconds <= 0) return;
+    const timer = window.setInterval(() => setSeconds(value => Math.max(0, value - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [seconds > 0]);
+
+  const countdown = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+
   async function resend(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setMessage(""); setError("");
-    if (!supabase) { setError("إعداد Supabase غير مكتمل."); setBusy(false); return; }
-    const { error: resendError } = await supabase.auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: window.location.origin + "/auth/callback" } });
-    if (resendError) setError("تعذر إرسال الرسالة الآن. انتظر قليلاً ثم حاول مجدداً.");
-    else setMessage("إذا كان الحساب يحتاج إلى تأكيد، فسيتم إرسال رسالة إلى بريدك.");
-    setBusy(false);
+    event.preventDefault();
+    if (!supabase || !email.trim()) { setError("أدخل بريدك الإلكتروني الصحيح أولاً."); return; }
+    setBusy(true); setMessage(""); setError("");
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: { emailRedirectTo: window.location.origin + "/auth/callback" },
+      });
+      if (resendError) throw resendError;
+      setMessage("تم طلب إعادة إرسال رابط التفعيل. تحقق من صندوق الوارد والرسائل غير المرغوب فيها.");
+      setSeconds(120);
+    } catch (err) {
+      setError(err instanceof Error ? translateAuthError(err.message) : "تعذر إرسال الرسالة الآن. حاول لاحقاً.");
+    } finally {
+      setBusy(false);
+    }
   }
-  return <main className="auth-layout"><section className="auth-panel"><div className="auth-form-wrap"><Brand /><span className="eyebrow">تأكيد البريد الإلكتروني</span><h2>تحقق من بريدك</h2><p className="form-intro">افتح رسالة TestDZ واضغط رابط التأكيد. يمكنك طلب رسالة جديدة أدناه.</p>{message && <div className="notice notice-success">{message}</div>}{error && <div className="notice notice-error">{error}</div>}<form className="auth-form" onSubmit={resend}><label>البريد الإلكتروني<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} dir="ltr" /></label><button className="button button-primary button-large" disabled={busy}>{busy ? "جارٍ الإرسال..." : "إعادة إرسال رابط التأكيد"}</button></form><Link to="/auth">العودة للدخول</Link></div></section></main>;
+
+  function changeEmail() {
+    navigate(`/auth?mode=signup&email=${encodeURIComponent(email.trim())}`);
+  }
+
+  return <main className="verify-page">
+    <header className="verify-header">
+      <Brand />
+      <span className="verify-language"><span aria-hidden="true">◎</span> English⌄</span>
+    </header>
+    <div className="verify-layout">
+      <section className="verify-story">
+        <span className="verify-kicker">TEST · LEARN · GROW</span>
+        <h1>Email<br/><strong>Verification</strong></h1>
+        <p className="verify-story-lead">We’ve sent a verification link<br className="verify-desktop-break"/> to your email address.</p>
+        <p className="verify-story-note">Please check your inbox and click<br className="verify-desktop-break"/> the link to verify your account.</p>
+        <div className="verify-art" aria-hidden="true">
+          <div className="verify-orbit"></div>
+          <div className="verify-envelope"><div className="verify-letter"><span>✓</span></div><div className="verify-flap"></div></div>
+          <div className="verify-mail-bubble">✉</div>
+        </div>
+        <div className="verify-signature">Test. Learn. Grow.</div>
+      </section>
+      <section className="verify-card">
+        <div className="verify-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="7" y="12" width="50" height="38" rx="8"/><path d="m10 17 22 18 22-18"/><circle cx="50" cy="49" r="12"/><path d="m44 49 4 4 8-9"/></svg></div>
+        <h2>Check Your Email</h2>
+        <p className="verify-card-intro">We’ve sent a verification link to:</p>
+        <div className="verify-email"><span aria-hidden="true">✉</span><strong dir="ltr">{email || "Your email address"}</strong></div>
+        <p className="verify-instruction">Please click the link in your email to verify<br className="verify-desktop-break"/> your account.</p>
+        {message && <div className="verify-feedback success" role="status">{message}</div>}
+        {error && <div className="verify-feedback error" role="alert">{error}</div>}
+        <div className="verify-countdown"><span aria-hidden="true">◷</span><div><small>{seconds > 0 ? "You can resend the email in:" : "You can resend the email now"}</small><strong>{seconds > 0 ? countdown : "Ready"}</strong></div></div>
+        <form onSubmit={resend} className="verify-actions">
+          <button className="verify-primary" type="submit" disabled={busy || seconds > 0 || !email.trim()}><span aria-hidden="true">⟳</span>{busy ? "Sending..." : "Resend Email"}</button>
+        </form>
+        <button className="verify-secondary" type="button" onClick={changeEmail}><span aria-hidden="true">✎</span>Change Email</button>
+        <div className="verify-or"><span>or</span></div>
+        <button className="verify-secondary verify-back" type="button" onClick={() => navigate("/auth")}><span aria-hidden="true">←</span>Back to Login</button>
+        <p className="verify-help">Didn't receive it? Check your spam folder.</p>
+      </section>
+    </div>
+    <footer className="verify-footer"><Brand/><span>Build. Test. Reward.</span><nav><a href="/">About</a><a href="/">Terms of Service</a><a href="/">Privacy Policy</a><a href="/">Contact</a></nav><small>© 2026 TestDZ. All rights reserved.</small></footer>
+  </main>;
 }
 
 function ForgotPasswordPage() {
