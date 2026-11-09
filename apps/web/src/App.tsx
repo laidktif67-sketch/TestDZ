@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
 import type { AppLimit, AppRecord } from "@testdz/types";
-import { isSupabaseConfigured, supabase } from "./lib/supabase";
+import { supabase } from "./lib/supabase";
+import { getPostAuthRoute, translateAuthError } from "./lib/auth-routing";
 import { Brand } from "./components/Brand";
 import { useLenis } from "./hooks/useLenis";
 import AuthPage from "./pages/AuthPage";
