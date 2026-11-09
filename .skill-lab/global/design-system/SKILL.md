@@ -1,6 +1,6 @@
 ---
 name: design-system
-description: Token architecture, component specifications, and slide generation. Three-layer tokens (primitive→semantic→component), CSS variables, spacing/typography scales, component specs, strategic slide creation. Use for design tokens, systematic design, brand-compliant presentations.
+description: Design-token architecture, component specifications, CSS variables, spacing and typography scales, and token validation. Use for systematic design foundations and brand-compliant UI implementation.
 argument-hint: "[component or token]"
 license: MIT
 metadata:
@@ -10,7 +10,7 @@ metadata:
 
 # Design System
 
-Token architecture, component specifications, systematic design, slide generation.
+Token architecture, component specifications, and systematic design foundations.
 
 ## When to Use
 
@@ -20,7 +20,7 @@ Token architecture, component specifications, systematic design, slide generatio
 - Spacing/typography scales
 - Design-to-code handoff
 - Tailwind theme configuration
-- **Slide/presentation generation**
+- Preparing design tokens and validation support for presentation projects (delegate slide creation to the `slides` skill).
 
 ## Token Architecture
 
@@ -50,7 +50,7 @@ Component (component-specific)
 
 ## Script Paths
 
-Script paths in this skill and its `references/` are relative to the directory that contains this SKILL.md, not to the project: `scripts/<file>` is this skill's own `scripts/` folder, and `../<skill>/scripts/<file>` is a sibling sub-skill installed alongside it. Build the full path from that directory (Claude Code reports it as the skill's base directory when the skill loads) and keep the working directory at the project root — the scripts read and write project files such as `docs/brand-guidelines.md`, `assets/design-tokens.json` or `src/` relative to it.
+Script paths are relative to this skill's directory: `scripts/<file>` refers to this skill's own scripts, and `references/<file>` to its references. In OpenCode, resolve these paths from the installed skill directory supplied by the skill runtime; do not assume Claude-specific environment variables or installation paths. Keep the working directory at the target project root because project assets such as `docs/brand-guidelines.md`, `assets/design-tokens.json`, and `src/` are resolved relative to it.
 
 ## Quick Start
 
@@ -111,7 +111,7 @@ node scripts/validate-tokens.cjs --dir src/
 
 ## Slide System
 
-Brand-compliant presentations using design tokens + Chart.js + contextual decision system.
+Supporting reference data and utilities for presentation projects. This skill owns design tokens and token validation; the `slides` skill owns presentation planning, slide content, layout, generation, and delivery. Use the CSV data and token utilities here only when the `slides` workflow needs them.
 
 ### Source of Truth
 
@@ -122,7 +122,11 @@ Brand-compliant presentations using design tokens + Chart.js + contextual decisi
 | `assets/design-tokens.css` | CSS variables (import in slides) |
 | `assets/css/slide-animations.css` | CSS animation library |
 
-### Slide Search (BM25)
+### Supporting Slide Reference Data
+
+The slide datasets in `data/` and helper scripts are supporting resources, not a second slide-creation workflow. Do not independently plan or generate a deck from this skill; route presentation requests to the `slides` skill. When that workflow needs token embedding or validation, use the relevant scripts below.
+
+### Slide Search Utility (BM25)
 
 ```bash
 # Basic search (auto-detect domain)
@@ -150,66 +154,12 @@ python scripts/search-slides.py "cta" --context --position 9 --prev-emotion frus
 | `data/slide-copy.csv` | 25 copywriting formulas (PAS, AIDA, FAB) |
 | `data/slide-charts.csv` | 25 chart types with Chart.js config |
 
-### Contextual Decision Flow
+### Presentation Integration Contract
 
-```
-1. Parse goal/context
-        ↓
-2. Search slide-strategies.csv → Get strategy + emotion beats
-        ↓
-3. For each slide:
-   a. Query slide-layout-logic.csv → layout + break_pattern
-   b. Query slide-typography.csv → type scale
-   c. Query slide-color-logic.csv → color treatment
-   d. Query slide-backgrounds.csv → image if needed
-   e. Apply animation class from slide-animations.css
-        ↓
-4. Generate HTML with design tokens
-        ↓
-5. Validate with slide-token-validator.py
-```
-
-### Pattern Breaking (Duarte Sparkline)
-
-Premium decks alternate between emotions for engagement:
-```
-"What Is" (frustration) ↔ "What Could Be" (hope)
-```
-
-System calculates pattern breaks at 1/3 and 2/3 positions.
-
-### Slide Requirements
-
-**ALL slides MUST:**
-1. Import `assets/design-tokens.css` - single source of truth
-2. Use CSS variables: `var(--color-primary)`, `var(--slide-bg)`, etc.
-3. Use Chart.js for charts (NOT CSS-only bars)
-4. Include navigation (keyboard arrows, click, progress bar)
-5. Center align content
-6. Focus on persuasion/conversion
-
-### Chart.js Integration
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-<canvas id="revenueChart"></canvas>
-<script>
-new Chart(document.getElementById('revenueChart'), {
-    type: 'line',
-    data: {
-        labels: ['Sep', 'Oct', 'Nov', 'Dec'],
-        datasets: [{
-            data: [5, 12, 28, 45],
-            borderColor: '#FF6B6B',  // Use brand coral
-            backgroundColor: 'rgba(255, 107, 107, 0.1)',
-            fill: true,
-            tension: 0.4
-        }]
-    }
-});
-</script>
-```
+- `slides` is the single owner of presentation creation and delivery.
+- `design-system` supplies design tokens, brand-aligned component rules, supporting slide datasets, and token validation utilities.
+- Do not duplicate slide-generation instructions, presentation commands, or deck workflows in this skill.
+- Presentation HTML must still comply with the project's design tokens; use `slide-token-validator.py` or `html-token-validator.py` where appropriate.
 
 ### Token Compliance
 
@@ -230,12 +180,6 @@ font-family: 'Space Grotesk';
 Working example with all features:
 ```
 assets/designs/slides/claudekit-pitch-251223.html
-```
-
-### Command
-
-```bash
-/slides:create "10-slide investor pitch for ClaudeKit Marketing"
 ```
 
 ## Best Practices
