@@ -1,0 +1,261 @@
+---
+name: design
+description: "Design skill for logo creation, corporate identity programs, presentations, icon design, and social photos. Routes brand strategy, design tokens, UI styling, and banner requests to their specialist skills when available. Actions: design logo, create CIP, generate mockups, build slides, generate icon, create social photos."
+argument-hint: "[design-type] [context]"
+license: MIT
+metadata:
+  author: Smart SkillLab
+  version: "2.1.0"
+---
+
+# Design
+
+Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social photos, icons.
+
+## When to Use
+
+- Brand identity, voice, assets
+- Design system tokens and specs
+- UI styling with shadcn/ui + Tailwind
+- Logo design and AI generation
+- Corporate identity program (CIP) deliverables
+- Presentations and pitch decks (delegate to the dedicated `slides` skill)
+- Banner design requests (delegate to the dedicated `banner-design` skill)
+- Social photos for Instagram, Facebook, LinkedIn, Twitter, Pinterest, TikTok
+
+## Sub-skill Routing
+
+| Task | Sub-skill | Details |
+|------|-----------|---------|
+| Brand identity, voice, assets | `brand` | External skill |
+| Tokens, specs, CSS vars | `design-system` | External skill |
+| shadcn/ui, Tailwind, code | `ui-styling` | External skill |
+| Logo creation, AI generation | Logo (built-in) | `references/logo-design.md` |
+| CIP mockups, deliverables | CIP (built-in) | `references/cip-design.md` |
+| Presentations, pitch decks | `slides` (specialist skill) | Delegate the complete presentation workflow; do not create slides here |
+| Banners, covers, headers | `banner-design` (specialist skill) | Delegate banner workflow; do not recreate it here |
+| Social media images/photos | Social Photos (built-in) | `references/social-photos-design.md` |
+| SVG icons, icon sets | Icon (built-in) | `references/icon-design.md` |
+
+## Logo Design (Built-in)
+
+55+ styles, 30 color palettes, 25 industry guides. Gemini Nano Banana models.
+
+### Logo: Generate Design Brief
+
+```bash
+python3 .skill-lab/project/design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+```
+
+### Logo: Search Styles/Colors/Industries
+
+```bash
+python3 .skill-lab/project/design/scripts/logo/search.py "minimalist clean" --domain style
+python3 .skill-lab/project/design/scripts/logo/search.py "tech professional" --domain color
+python3 .skill-lab/project/design/scripts/logo/search.py "healthcare medical" --domain industry
+```
+
+### Logo: Generate with AI
+
+**ALWAYS** generate output logo images with white background.
+
+```bash
+python3 .skill-lab/project/design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python3 .skill-lab/project/design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+```
+
+**IMPORTANT:** When scripts fail, try to fix them directly.
+
+After generation, offer an HTML preview in the conversation and wait for the user's choice. If requested, create a gallery using available project tools or consult the `ui-ux-pro-max` reference when available. Do not assume a named tool or slash command exists.
+
+## CIP Design (Built-in)
+
+50+ deliverables, 20 styles, 20 industries. Gemini Nano Banana (Flash/Pro).
+
+### CIP: Generate Brief
+
+```bash
+python3 .skill-lab/project/design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
+```
+
+### CIP: Search Domains
+
+```bash
+python3 .skill-lab/project/design/scripts/cip/search.py "business card letterhead" --domain deliverable
+python3 .skill-lab/project/design/scripts/cip/search.py "luxury premium elegant" --domain style
+python3 .skill-lab/project/design/scripts/cip/search.py "hospitality hotel" --domain industry
+python3 .skill-lab/project/design/scripts/cip/search.py "office reception" --domain mockup
+```
+
+### CIP: Generate Mockups
+
+```bash
+# With logo (RECOMMENDED)
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
+
+# Full CIP set
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
+
+# Pro model (4K text)
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
+
+# Without logo
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
+```
+
+Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-preview`)
+
+### CIP: Render HTML Presentation
+
+```bash
+python3 .skill-lab/project/design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
+```
+
+**Tip:** If no logo exists, use Logo Design section above first.
+
+## Slides (Delegated)
+
+Presentation planning, slide narratives, copy, layouts, HTML implementation, navigation, and delivery belong to the dedicated `slides` skill. Activate it when available. Do not maintain a second slide workflow or duplicate slide references in `design`.
+
+If `slides` is unavailable, explain the limitation and provide a concise presentation brief rather than pretending this skill contains the slide workflow.
+
+## Banner Requests (Delegated)
+
+For banners, covers, headers, advertising creatives, website hero visuals, and print banners, activate the dedicated `banner-design` skill when available. That skill owns banner requirements, size references, art direction, creation, export, and review.
+
+Do not run a second banner workflow from this skill or maintain a duplicate banner size/style reference here. If `banner-design` is unavailable, explain the limitation and provide a concise design brief or route the user to the appropriate available design capability.
+
+## Icon Design (Built-in)
+
+15 styles, 12 categories. Gemini 3.1 Pro Preview generates SVG text output.
+
+### Icon: Generate Single Icon
+
+```bash
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "settings gear" --style outlined
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
+python3 .skill-lab/project/design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
+```
+
+### Icon: Generate Batch Variations
+
+```bash
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
+```
+
+### Icon: Multi-size Export
+
+```bash
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
+```
+
+### Icon: Top Styles
+
+| Style | Best For |
+|-------|----------|
+| outlined | UI interfaces, web apps |
+| filled | Mobile apps, nav bars |
+| duotone | Marketing, landing pages |
+| rounded | Friendly apps, health |
+| sharp | Tech, fintech, enterprise |
+| flat | Material design, Google-style |
+| gradient | Modern brands, SaaS |
+
+**Model:** `gemini-3.1-pro-preview` — text-only output (SVG is XML text). No image generation API needed.
+
+## Social Photos (Built-in)
+
+Multi-platform social image design: HTML/CSS → screenshot export. Reuse brand, token, and visual-design guidance from relevant project references when available; browser automation is optional and must not be assumed.
+
+Load `references/social-photos-design.md` for sizes, templates, best practices.
+
+### Social Photos: Workflow
+
+1. **Analyze** — Parse the request: subject, platforms, dimensions, style, brand context, and content.
+2. **Prepare context** — Read existing brand guidance and design tokens when present. Consult the `brand` and `design-system` skills only if available in the active OpenCode setup; otherwise use their project references without assuming command aliases.
+3. **Ideate** — Draft 2–3 concepts and present them in the conversation. Wait for the user's selection before producing final assets.
+4. **Design** — Apply the selected concept and relevant `ui-ux-pro-max` guidance when available. Do not choose a design skill randomly.
+5. **Export** — Prefer an installed browser automation tool or Playwright. Use Chrome/Chromium headless only when installed; otherwise explain the missing renderer and provide the HTML source.
+6. **Verify** — Check dimensions, overflow, safe areas, readability, contrast, and asset loading. Re-export after fixes.
+7. **Report** — Summarize generated files and design decisions in the requested output location.
+8. **Organize** — Keep outputs in the requested project directory; do not invoke an assumed file-organizing skill.
+
+### Social Photos: Key Sizes
+
+| Platform | Size (px) | Platform | Size (px) |
+|----------|-----------|----------|-----------|
+| IG Post | 1080×1080 | FB Post | 1200×630 |
+| IG Story | 1080×1920 | X Post | 1200×675 |
+| IG Carousel | 1080×1350 | LinkedIn | 1200×627 |
+| YT Thumb | 1280×720 | Pinterest | 1000×1500 |
+
+## Workflows
+
+### Complete Brand Package
+
+1. **Logo** → `scripts/logo/generate.py` → Generate logo variants
+2. **CIP** → `scripts/cip/generate.py --logo ...` → Create deliverable mockups
+3. **Presentation** → Delegate to the dedicated `slides` skill
+
+### New Design System
+
+1. **Brand** (brand skill) → Define colors, typography, voice
+2. **Tokens** (design-system skill) → Create semantic token layers
+3. **Implement** (ui-styling skill) → Configure Tailwind, shadcn/ui
+
+## References
+
+| Topic | File |
+|-------|------|
+| Design Routing | `references/design-routing.md` |
+| Logo Design Guide | `references/logo-design.md` |
+| Logo Styles | `references/logo-style-guide.md` |
+| Logo Colors | `references/logo-color-psychology.md` |
+| Logo Prompts | `references/logo-prompt-engineering.md` |
+| CIP Design Guide | `references/cip-design.md` |
+| CIP Deliverables | `references/cip-deliverable-guide.md` |
+| CIP Styles | `references/cip-style-guide.md` |
+| CIP Prompts | `references/cip-prompt-engineering.md` |
+
+
+
+
+
+| Social Photos Guide | `references/social-photos-design.md` |
+| Icon Design Guide | `references/icon-design.md` |
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/logo/search.py` | Search logo styles, colors, industries |
+| `scripts/logo/generate.py` | Generate logos with Gemini AI |
+| `scripts/logo/core.py` | BM25 search engine for logo data |
+| `scripts/cip/search.py` | Search CIP deliverables, styles, industries |
+| `scripts/cip/generate.py` | Generate CIP mockups with Gemini |
+| `scripts/cip/render-html.py` | Render HTML presentation from CIP mockups |
+| `scripts/cip/core.py` | BM25 search engine for CIP data |
+| `scripts/icon/generate.py` | Generate SVG icons with Gemini 3.1 Pro |
+
+## Prerequisites
+
+**Python:** This skill uses Python scripts. On Windows, use `python` instead of `python3` (e.g., `python scripts/logo/search.py` instead of `python3 scripts/logo/search.py`).
+
+Check if Python is installed:
+```bash
+python3 --version || python --version
+```
+
+## Setup
+
+```bash
+export GEMINI_API_KEY="your-key"  # https://aistudio.google.com/apikey
+pip install google-genai pillow
+```
+
+> **Note for Windows:** Use `python` instead of `pip` where needed (e.g., `python -m pip install ...`).
+
+## Integration
+
+**External sub-skills:** brand, design-system, ui-styling
+**Related Skills:** banner-design, brand, design-system, ui-styling, ui-ux-pro-max
