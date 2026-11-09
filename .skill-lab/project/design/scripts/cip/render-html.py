@@ -12,6 +12,7 @@ import json
 import os
 import sys
 import base64
+from html import escape as html_escape
 from pathlib import Path
 from datetime import datetime
 
@@ -146,7 +147,7 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{brand_name} - Corporate Identity Program</title>
+    <title>{html_escape(str(brand_name), quote=True)} - Corporate Identity Program</title>
     <style>
         * {{
             margin: 0;
@@ -309,20 +310,20 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
 </head>
 <body>
     <section class="hero">
-        <h1>{brand_name}</h1>
+        <h1>{html_escape(str(brand_name), quote=True)}</h1>
         <p class="subtitle">Corporate Identity Program</p>
         <div class="meta">
             <div class="meta-item">
                 <div class="meta-label">Industry</div>
-                <div class="meta-value">{industry_info.get("Industry", industry.title())}</div>
+                <div class="meta-value">{html_escape(str(industry_info.get("Industry", industry.title())), quote=True)}</div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">Style</div>
-                <div class="meta-value">{style_info.get("Style Name", "Corporate")}</div>
+                <div class="meta-value">{html_escape(str(style_info.get("Style Name", "Corporate")), quote=True)}</div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">Mood</div>
-                <div class="meta-value">{style_info.get("Mood", "Professional")}</div>
+                <div class="meta-value">{html_escape(str(style_info.get("Mood", "Professional")), quote=True)}</div>
             </div>
             <div class="meta-item">
                 <div class="meta-label">Deliverables</div>
@@ -352,13 +353,13 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
         html_parts.append(f'''
         <div class="deliverable">
             <div class="deliverable-image">
-                <img src="{img_src}" alt="{info['title']}" loading="lazy">
+                <img src="{html_escape(str(img_src), quote=True)}" alt="{html_escape(str(info['title']), quote=True)}" loading="lazy">
             </div>
             <div class="deliverable-content">
-                <h3 class="deliverable-title">{info['title']}</h3>
-                <p class="deliverable-concept">{info['concept']}</p>
-                <p class="deliverable-purpose">{info['purpose']}</p>
-                <span class="deliverable-specs">{info['specs']}</span>
+                <h3 class="deliverable-title">{html_escape(str(info['title']), quote=True)}</h3>
+                <p class="deliverable-concept">{html_escape(str(info['concept']), quote=True)}</p>
+                <p class="deliverable-purpose">{html_escape(str(info['purpose']), quote=True)}</p>
+                <span class="deliverable-specs">{html_escape(str(info['specs']), quote=True)}</span>
             </div>
         </div>
 ''')
@@ -368,7 +369,7 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
     </section>
 
     <footer class="footer">
-        <p><strong>{brand_name}</strong> Corporate Identity Program</p>
+        <p><strong>{html_escape(str(brand_name), quote=True)}</strong> Corporate Identity Program</p>
         <p>Generated on {datetime.now().strftime("%B %d, %Y")}</p>
         <p style="margin-top: 1rem; font-size: 0.8rem;">Powered by CIP Design Skill</p>
     </footer>
@@ -379,8 +380,10 @@ def generate_html(brand_name, industry, images_dir, output_path=None, style=None
     html_content = "".join(html_parts)
 
     # Save HTML
-    output_path = output_path or images_dir / f"{brand_name.lower().replace(' ', '-')}-cip-presentation.html"
+    safe_brand_slug = ''.join(char.lower() if char.isalnum() or char in '-_' else '-' for char in brand_name).strip('-') or 'brand'
+    output_path = output_path or images_dir / f"{safe_brand_slug}-cip-presentation.html"
     output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
