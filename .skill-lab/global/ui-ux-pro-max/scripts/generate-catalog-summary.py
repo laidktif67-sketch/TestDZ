@@ -109,11 +109,19 @@ def check_readme_counts(summary):
             f"**{counts['upstreamPhosphorIcons']:,}-icon Phosphor upstream manifest**",
         ),
     }
+    checked = 0
     for name, tokens in expected.items():
-        text = (ROOT / name).read_text(encoding="utf-8")
+        readme = ROOT / name
+        # README files belong to the full upstream repository, not the
+        # standalone skill package. Validate them only when they ship.
+        if not readme.is_file():
+            continue
+        checked += 1
+        text = readme.read_text(encoding="utf-8")
         missing = [token for token in tokens if token not in text]
         if missing:
             raise ValueError(f"{name} catalog counts are stale: {', '.join(missing)}")
+    return checked
 
 
 def main():
