@@ -154,6 +154,32 @@ WITH CHECK (
   )
 );
 
+-- The reports SELECT policy intentionally hides reports from the reported
+-- user. Use a narrowly scoped SECURITY DEFINER predicate so that the reported
+-- participant can open a dispute without granting broad report visibility.
+CREATE OR REPLACE FUNCTION private.is_report_participant(p_report_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.reports r
+    WHERE r.id = p_report_id
+      AND (
+        r.reporter_id = (SELECT auth.uid())
+        OR r.reported_user_id = (SELECT auth.uid())
+      )
+  );
+$function$;
+
+REVOKE ALL ON FUNCTION private.is_report_participant(uuid)
+FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION private.is_report_participant(uuid)
+TO authenticated;
+
 -- A dispute must refer to at least one owned/participated-in record.
 -- If both references are supplied, both ownership checks must pass.
 DROP POLICY IF EXISTS disputes_insert_opener ON public.disputes;
@@ -179,15 +205,7 @@ WITH CHECK (
   )
   AND (
     report_id IS NULL
-    OR EXISTS (
-      SELECT 1
-      FROM public.reports r
-      WHERE r.id = disputes.report_id
-        AND (
-          r.reporter_id = (SELECT auth.uid())
-          OR r.reported_user_id = (SELECT auth.uid())
-        )
-    )
+    OR private.is_report_participant(report_id)
   )
 );
 
