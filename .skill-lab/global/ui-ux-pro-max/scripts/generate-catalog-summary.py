@@ -118,6 +118,11 @@ def check_readme_counts(summary):
             continue
         checked += 1
         text = readme.read_text(encoding="utf-8")
+        # The standalone OpenCode package ships its own README, not the
+        # upstream catalog README. Its documentation intentionally avoids
+        # hard-coded catalog counts, so only validate upstream-style READMEs.
+        if "This copy is maintained as a standalone skill for **OpenCode**." in text:
+            continue
         missing = [token for token in tokens if token not in text]
         if missing:
             raise ValueError(f"{name} catalog counts are stale: {', '.join(missing)}")
