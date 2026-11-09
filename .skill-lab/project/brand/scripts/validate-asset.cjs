@@ -3,12 +3,11 @@
  * validate-asset.cjs
  *
  * Validates marketing assets against brand guidelines.
- * Checks: file naming, dimensions, file size, metadata.
+ * Checks: file naming, supported extension, file size, and optional manifest registration.
  *
  * Usage:
  *   node validate-asset.cjs <asset-path>
  *   node validate-asset.cjs <asset-path> --json
- *   node validate-asset.cjs <asset-path> --fix
  *
  * For color validation of images, use with extract-colors.cjs
  */
@@ -127,6 +126,9 @@ function validateFileSize(filepath, extension) {
   const size = stats.size;
 
   let limits;
+  if (RULES.formats.document.includes(extension)) {
+    return { valid: true, issues, warnings: ["File-size policy is not defined for document/design source formats"], size };
+  }
   if (RULES.formats.video.includes(extension)) {
     limits = RULES.fileSize.video;
   } else if (extension === "svg") {
