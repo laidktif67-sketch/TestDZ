@@ -13,7 +13,7 @@ from core import CSV_CONFIG, MAX_RESULTS, search, search_all
 
 
 def format_output(result):
-    """Format results for Claude consumption (token-optimized)"""
+    """Format concise, token-efficient search results"""
     if "error" in result:
         return f"Error: {result['error']}"
 
