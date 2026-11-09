@@ -48,8 +48,8 @@ class CatalogSummaryLineEndingsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "README.md").write_text(
-                "# UI/UX Pro Max\\n\\n"
-                "This copy is maintained as a standalone skill for **OpenCode**.\\n",
+                "# UI/UX Pro Max\n\n"
+                "This copy is maintained as a standalone skill for **OpenCode**.\n",
                 encoding="utf-8",
             )
             summary = {
@@ -67,7 +67,7 @@ class CatalogSummaryLineEndingsTest(unittest.TestCase):
         module = _load_generator()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            (root / "README.md").write_text("Upstream documentation without counts.\\n", encoding="utf-8")
+            (root / "README.md").write_text("Upstream documentation without counts.\n", encoding="utf-8")
             summary = {
                 "counts": {
                     "googleFonts": 1934,
