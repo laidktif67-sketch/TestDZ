@@ -601,6 +601,7 @@ function AuthCallbackPage() {
 }
 
 function VerifyEmailPage() {
+  useLenis();
   const navigate = useNavigate();
   const [email, setEmail] = useState(() => new URLSearchParams(window.location.search).get("email") || "");
   const [message, setMessage] = useState("");
@@ -625,6 +626,54 @@ function VerifyEmailPage() {
     const timer = window.setInterval(() => setSeconds(value => Math.max(0, value - 1)), 1000);
     return () => window.clearInterval(timer);
   }, [seconds > 0]);
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>(".verify-page");
+    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const context = gsap.context(() => {
+      const responsive = gsap.matchMedia();
+
+      responsive.add("(min-width: 701px)", () => {
+        const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+        intro
+          .from(".verify-header", { y: -16, opacity: 0, duration: 0.55 })
+          .from(".verify-story .verify-kicker", { y: 14, opacity: 0, duration: 0.48 }, "-=0.2")
+          .from(".verify-story h1", { y: 26, opacity: 0, duration: 0.72 }, "-=0.2")
+          .from(".verify-story-lead, .verify-story-note", { y: 14, opacity: 0, duration: 0.5, stagger: 0.1 }, "-=0.35")
+          .from(".verify-art", { y: 22, scale: 0.96, opacity: 0, duration: 0.75 }, "-=0.3")
+          .from(".verify-signature, .verify-story-foot", { y: 10, opacity: 0, duration: 0.42, stagger: 0.08 }, "-=0.35")
+          .from(".verify-card", { x: 34, y: 12, opacity: 0, duration: 0.82 }, 0.12)
+          .from(".verify-icon", { scale: 0.78, opacity: 0, duration: 0.55, ease: "back.out(1.6)" }, "-=0.45")
+          .from(".verify-card > :not(.verify-icon)", { y: 12, opacity: 0, duration: 0.42, stagger: 0.055 }, "-=0.28")
+          .from(".verify-footer", { y: 10, opacity: 0, duration: 0.42 }, "-=0.2");
+
+        gsap.to(".verify-envelope", { y: -8, rotation: -3, duration: 3.2, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.8 });
+        gsap.to(".verify-orbit-one", { rotation: 8, duration: 16, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        gsap.to(".verify-orbit-two", { rotation: 58, duration: 19, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        return () => intro.kill();
+      });
+
+      responsive.add("(max-width: 700px)", () => {
+        const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+        intro
+          .from(".verify-header", { y: -10, opacity: 0, duration: 0.42 })
+          .from(".verify-card", { y: 22, opacity: 0, duration: 0.62 }, "-=0.12")
+          .from(".verify-icon", { scale: 0.82, opacity: 0, duration: 0.48, ease: "back.out(1.5)" }, "-=0.35")
+          .from(".verify-card > :not(.verify-icon)", { y: 9, opacity: 0, duration: 0.36, stagger: 0.045 }, "-=0.24")
+          .from(".verify-story .verify-kicker, .verify-story h1, .verify-story-lead, .verify-story-note", { y: 14, opacity: 0, duration: 0.42, stagger: 0.08 }, "-=0.18")
+          .from(".verify-art", { y: 16, scale: 0.97, opacity: 0, duration: 0.58 }, "-=0.2")
+          .from(".verify-signature, .verify-story-foot", { y: 8, opacity: 0, duration: 0.35, stagger: 0.07 }, "-=0.2");
+
+        gsap.to(".verify-envelope", { y: -6, rotation: -3, duration: 3.4, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.7 });
+        return () => intro.kill();
+      });
+
+      return () => responsive.revert();
+    }, root);
+
+    return () => context.revert();
+  }, []);
+
 
   const countdown = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
