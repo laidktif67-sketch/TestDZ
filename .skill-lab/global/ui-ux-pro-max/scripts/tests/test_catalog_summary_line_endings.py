@@ -19,8 +19,8 @@ REPO = next((
     if (parent / "scripts" / "generate-catalog-summary.py").is_file()
 ), None)
 if REPO is None:
-    raise unittest.SkipTest(
-        "Catalog snapshot line-ending tests require the full upstream repository"
+    raise RuntimeError(
+        "Required catalog summary generator is missing from the standalone skill package"
     )
 DATA = REPO / "src/ui-ux-pro-max/data"
 if not DATA.is_dir():
