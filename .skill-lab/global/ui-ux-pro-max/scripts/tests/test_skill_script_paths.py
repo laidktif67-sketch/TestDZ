@@ -22,7 +22,7 @@ if SKILL_DIR is None:
     raise RuntimeError("Could not locate the standalone ui-ux-pro-max skill directory")
 
 INVOCATION = re.compile(
-    r'(?<![\\w/.-])(?:python3?|node|bash)\\s+"?([^\\s"`\\']+\\.(?:py|cjs|js|mjs|sh))'
+    r"""(?<![\w/.-])(?:python3?|node|bash)\s+"?([^\s\x60']+\.(?:py|cjs|js|mjs|sh))"""
 )
 
 
@@ -41,13 +41,21 @@ class SkillScriptPathsTest(unittest.TestCase):
                         )
                         continue
                     target = (SKILL_DIR / path).resolve()
-                    if not target.is_relative_to(SKILL_DIR.resolve()) or not target.is_file():
+                    try:
+                        target.relative_to(SKILL_DIR.resolve())
+                    except ValueError:
                         problems.append(
                             f"{markdown.relative_to(SKILL_DIR)}:{lineno}: "
-                            f"{path} -- target is missing or escapes the skill directory"
+                            f"{path} -- target escapes the skill directory"
+                        )
+                        continue
+                    if not target.is_file():
+                        problems.append(
+                            f"{markdown.relative_to(SKILL_DIR)}:{lineno}: "
+                            f"{path} -- target does not exist"
                         )
         self.assertGreater(seen, 0, "No documented script invocations were discovered")
-        self.assertEqual(problems, [], "\\n" + "\\n".join(problems))
+        self.assertEqual(problems, [], "\n" + "\n".join(problems))
 
 
 if __name__ == "__main__":
