@@ -72,15 +72,9 @@ What Is → What Could Be → What Is → What Could Be → New Bliss
 
 Pattern breaks at 1/3 and 2/3 positions create engagement peaks.
 
-## Search Commands
+## Optional Search Helper
 
-```bash
-# Find strategy by goal
-python .claude/skills/design-system/scripts/search-slides.py "investor pitch" -d strategy
-
-# Get emotion arc
-python .claude/skills/design-system/scripts/search-slides.py "series a funding" -d strategy --json
-```
+The design-system skill contains a slide-search helper. If it is installed and its path is known, use the strategy domain to search deck structures. Resolve the actual installed skill directory first; do not assume a Claude-specific path. The strategy guidance in this reference remains usable without the helper.
 
 ## Matching Strategy to Context
 
