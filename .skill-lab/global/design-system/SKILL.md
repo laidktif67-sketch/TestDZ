@@ -113,15 +113,6 @@ node scripts/validate-tokens.cjs --dir src/
 
 Supporting reference data and utilities for presentation projects. This skill owns design tokens and token validation; the `slides` skill owns presentation planning, slide content, layout, generation, and delivery. Use the CSV data and token utilities here only when the `slides` workflow needs them.
 
-### Source of Truth
-
-| File | Purpose |
-|------|---------|
-| `docs/brand-guidelines.md` | Brand identity, voice, colors |
-| `assets/design-tokens.json` | Token definitions (primitive→semantic→component) |
-| `assets/design-tokens.css` | CSS variables (import in slides) |
-| `assets/css/slide-animations.css` | CSS animation library |
-
 ### Supporting Slide Reference Data
 
 The slide datasets in `data/` and helper scripts are supporting resources, not a second slide-creation workflow. Do not independently plan or generate a deck from this skill; route presentation requests to the `slides` skill. When that workflow needs token embedding or validation, use the relevant scripts below.
@@ -175,13 +166,6 @@ color: #FF6B6B;
 font-family: 'Space Grotesk';
 ```
 
-### Reference Implementation
-
-Working example with all features:
-```
-assets/designs/slides/claudekit-pitch-251223.html
-```
-
 ## Best Practices
 
 1. Never use raw hex in components - always reference tokens
@@ -189,4 +173,3 @@ assets/designs/slides/claudekit-pitch-251223.html
 3. Component tokens enable per-component customization
 4. Use HSL format for opacity control
 5. Document every token's purpose
-6. **Slides must import design-tokens.css and use var() exclusively**
