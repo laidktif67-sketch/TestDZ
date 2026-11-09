@@ -75,7 +75,7 @@ def _detect_tailwind_v4(project_root: Path) -> bool:
 
 
 class TailwindConfigGenerator:
-    """Generate Tailwind CSS configuration files."""
+    """Generate legacy Tailwind CSS v3 JavaScript/TypeScript config files."""
 
     def __init__(
         self,
@@ -392,7 +392,7 @@ module.exports = {{
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Generate Tailwind CSS configuration",
+        description="Generate a legacy Tailwind CSS v3 JavaScript/TypeScript config",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
