@@ -1142,3 +1142,43 @@ html:lang(fr),
   .verify-email strong{font-size:8px}
   .verify-story h1{font-size:22px}
 }
+
+
+/* Responsive correction: desktop stays two-column; phones become a readable single column. */
+@media(max-width:700px){
+  .verify-page{height:auto;min-height:100svh;overflow:visible}
+  .verify-header{height:58px;min-height:58px;padding:0 18px}
+  .verify-layout{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;width:100%;height:auto;min-height:0;padding:18px 18px 28px}
+  .verify-card{order:1;width:100%;max-width:460px;align-self:center;padding:25px 22px 20px;border-radius:22px}
+  .verify-icon{width:64px;height:64px;margin:0 auto 12px}
+  .verify-icon svg{width:52px;height:52px}
+  .verify-card h2{font-size:clamp(22px,6vw,28px);white-space:normal;letter-spacing:-.5px;margin:0 0 12px}
+  .verify-card-intro{font-size:14px;line-height:1.5;margin:0 0 12px}
+  .verify-email{min-height:52px;gap:9px;padding:10px 14px}
+  .verify-email strong{font-size:clamp(12px,3.6vw,16px)}
+  .verify-instruction{font-size:13px;line-height:1.55;margin:13px 0 15px}
+  .verify-countdown{min-height:64px;gap:10px;border-radius:15px;margin-bottom:10px}
+  .verify-countdown>span{font-size:21px}
+  .verify-countdown small{font-size:12px}
+  .verify-countdown strong{font-size:23px}
+  .verify-primary,.verify-secondary{min-height:48px;border-radius:25px;font-size:14px;padding:9px 12px}
+  .verify-primary span,.verify-secondary span{font-size:16px;margin-right:6px}
+  .verify-secondary{margin-top:9px}
+  .verify-or{gap:12px;margin-top:8px;font-size:12px}
+  .verify-back{margin-top:9px}
+  .verify-help{font-size:10px;line-height:1.4;margin:12px 0 0}
+  .verify-feedback{font-size:11px;line-height:1.4;padding:9px 11px;margin-bottom:9px}
+  .verify-story{order:2;display:flex;flex-direction:column;align-items:center;justify-content:center;grid-column:auto;grid-row:auto;width:100%;height:auto;min-height:0;padding:12px 8px 22px;text-align:center;overflow:visible}
+  .verify-kicker{font-size:10px;letter-spacing:1.5px}
+  .verify-story h1{font-size:clamp(30px,9vw,42px);letter-spacing:-1.2px;line-height:1.08;margin:10px 0}
+  .verify-story-lead{font-size:14px;line-height:1.5;margin:0 0 8px}
+  .verify-story-note{font-size:12px;line-height:1.5;margin:0}
+  .verify-desktop-break{display:none}
+  .verify-art{position:relative;top:auto;right:auto;left:auto;bottom:auto;transform:none;width:190px;max-width:70vw;height:150px;margin:16px auto 0}
+  .verify-orbit{width:90%;height:90%}
+  .verify-envelope{width:118px;height:82px;border-radius:12px 12px 16px 16px}
+  .verify-letter{width:78px;height:62px;top:-20px;border-radius:7px;font-size:40px}
+  .verify-mail-bubble{width:36px;height:36px;font-size:16px;border-width:4px;right:3%;bottom:1%}
+  .verify-signature{font-size:20px;margin-top:9px;align-self:center;white-space:normal}
+  .verify-footer{display:none}
+}
