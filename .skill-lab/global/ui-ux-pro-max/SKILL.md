@@ -42,7 +42,7 @@ The search script lives inside this skill's own directory. In OpenCode, paths in
 python scripts/search.py "<query>" --domain <domain>
 ```
 
-If `python` is not found, try `python3`, then `py -3`. Requires Python 3.x, no external dependencies (see README for install instructions if Python is missing).
+If `python` is not found, try `python3`, then `py -3`. Requires Python 3.x and uses only the Python standard library; no package installation is needed.
 
 ## Workflow
 
