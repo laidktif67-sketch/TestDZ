@@ -1,6 +1,6 @@
 # Social Photos Design Guide
 
-Design social media images via HTML/CSS rendering + screenshot export. Orchestrates `ui-ux-pro-max`, `brand`, `design-system`, and `chrome-devtools` skills.
+Design social media images via HTML/CSS rendering + screenshot export. Reuse brand and token guidance when those project skills are available; browser automation is optional.
 
 ## Platform Sizes
 
@@ -22,16 +22,9 @@ Design social media images via HTML/CSS rendering + screenshot export. Orchestra
 
 ## Workflow
 
-### Step 1: Activate Project Management
+### Step 1: Plan the Work
 
-Invoke `project-management` skill to create persistent TODO tasks via Claude's native task orchestration. Break down into:
-- Requirement analysis task
-- Idea generation task(s)
-- HTML design task(s) — can parallelize per size/variant
-- Screenshot export task(s) — can parallelize per file
-- Report generation task
-
-Spawn parallel subagents for independent tasks (e.g., multiple HTML files for different sizes).
+For a small request, keep the workflow in the current conversation. For a large batch, create a persistent checklist only when the user asks for task tracking. Work sequentially by default; parallel execution is optional and only appropriate when the active OpenCode setup explicitly provides safe subagents.
 
 ### Step 2: Analyze Requirements
 
@@ -51,15 +44,15 @@ Create 3-5 concept ideas that:
 - Vary in composition, color, typography approach
 - Align with brand guidelines if available
 
-Present ideas to user via `AskUserQuestion` for approval before designing.
+Present the concepts in the conversation and wait for the user's selection before designing.
 
 ### Step 4: Design HTML Files
 
-Activate these skills in sequence:
+Use the relevant project guidance in sequence when available:
 
-1. **`/ckm:brand`** — Extract brand colors, fonts, voice from user's project
-2. **`/ckm:design-system`** — Get design tokens (spacing, typography scale, color palette)
-3. **Randomly invoke ONE of:** `/ck:ui-ux-pro-max` OR `/ck:frontend-design` — for layout, hierarchy, visual balance. Pick one at random each run for design variety.
+1. Read the project's brand guidelines or consult the `brand` skill if it is installed in the active OpenCode environment.
+2. Read existing design tokens or consult the `design-system` skill if available.
+3. Apply the `ui-ux-pro-max` visual guidance when available. Choose based on the brief; do not select skills randomly or assume slash-command aliases exist..
 
 For each approved idea + each target size, create an HTML file:
 
@@ -119,7 +112,7 @@ output/social-photos/
 
 ### Step 5: Screenshot Export
 
-Use Chrome headless, `chrome-devtools` skill, or Playwright/Puppeteer to capture exact-size screenshots.
+Use an installed browser automation tool or Playwright/Puppeteer to capture exact-size screenshots. Chrome headless is an optional fallback when Chrome or Chromium is installed.
 
 **IMPORTANT:** Always add a delay (3-5s) after page load for fonts/images to fully render before capture.
 
@@ -145,9 +138,9 @@ Key flags:
 - `--hide-scrollbars` — prevents scrollbar artifacts in screenshots
 - `--window-size=WxH` — sets exact pixel dimensions
 
-#### Option B: chrome-devtools skill
+#### Option B: Available browser automation
 
-Invoke `/chrome-devtools` with instructions to:
+If the active OpenCode setup exposes a browser-control tool, use it to:
 1. Open each HTML file in browser
 2. Set viewport to exact target dimensions
 3. Wait 3-5s for fonts/images to fully load
@@ -210,7 +203,7 @@ async function captureScreenshots(htmlFiles) {
 
 ### Step 6: Verify & Fix Designs
 
-Use Chrome MCP or `chrome-devtools` skill to visually inspect each exported PNG:
+Use an available image viewer or browser-control tool to visually inspect each exported PNG:
 
 1. Open exported screenshots and check for layout/styling issues
 2. Verify: fonts rendered correctly, colors match brand, text readable at thumbnail size
