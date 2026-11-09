@@ -20,9 +20,8 @@ REPO = next(
     None,
 )
 if REPO is None:
-    raise unittest.SkipTest(
-        "Catalog refresh tests require the upstream refresh scripts, "
-        "which are not included in this standalone skill package"
+    raise RuntimeError(
+        "Required catalog refresh scripts are missing from the standalone skill package"
     )
 FIXTURES = Path(__file__).parent / "fixtures" / "catalogs"
 FONT_SCRIPT = REPO / "scripts" / "refresh-google-fonts.py"
