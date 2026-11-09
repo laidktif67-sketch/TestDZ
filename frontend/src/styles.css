@@ -1276,3 +1276,66 @@ html:lang(fr),
 }
 .verify-copy:hover { background: #edf5ff; }
 .verify-copy:disabled { opacity: .45; cursor: not-allowed; }
+
+
+/* Premium verification motion polish — transforms are controlled by GSAP. */
+.verify-card {
+  will-change: transform, opacity;
+  transition: box-shadow .28s ease, border-color .28s ease;
+}
+.verify-card:hover {
+  border-color: rgba(193, 215, 250, .95);
+  box-shadow: 0 30px 82px rgba(39, 83, 151, .17), 0 4px 16px rgba(39, 83, 151, .06);
+}
+.verify-story h1,
+.verify-story-lead,
+.verify-story-note,
+.verify-art,
+.verify-signature,
+.verify-story-foot,
+.verify-icon {
+  will-change: transform, opacity;
+}
+.verify-envelope,
+.verify-orbit-one,
+.verify-orbit-two {
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.verify-copy {
+  transition: color .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.verify-copy:hover {
+  border-color: #9bbcf0;
+  box-shadow: 0 5px 14px rgba(23, 103, 237, .1);
+}
+.verify-copy:focus-visible {
+  outline: 3px solid rgba(23, 103, 237, .24);
+  outline-offset: 3px;
+}
+@media (hover: none) {
+  .verify-card:hover {
+    border-color: rgba(255,255,255,.95);
+    box-shadow: 0 24px 70px rgba(39,83,151,.13),0 3px 12px rgba(39,83,151,.04);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .verify-card,
+  .verify-copy {
+    transition: none !important;
+    will-change: auto !important;
+  }
+  .verify-story h1,
+  .verify-story-lead,
+  .verify-story-note,
+  .verify-art,
+  .verify-signature,
+  .verify-story-foot,
+  .verify-icon,
+  .verify-envelope,
+  .verify-orbit-one,
+  .verify-orbit-two {
+    will-change: auto !important;
+    transform: none !important;
+  }
+}
