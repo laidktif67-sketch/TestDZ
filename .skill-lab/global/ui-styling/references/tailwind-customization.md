@@ -251,19 +251,22 @@ Organize CSS into layers:
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Tailwind v4: register custom classes as utilities so variants work. */
+@utility text-balance {
+  text-wrap: balance;
+}
 
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
     display: none;
   }
 }
+
+/* @layer utilities remains a CSS cascade layer; it does not register
+   these selectors as Tailwind utility APIs in v4. */
 ```
 
 ## @apply Directive
@@ -475,9 +478,24 @@ export default {
 </div>
 ```
 
-## Content Configuration
+## Source Detection
 
-Specify files to scan for classes:
+### Tailwind CSS v4
+
+Tailwind v4 automatically detects many project sources. Add explicit source
+paths in CSS only when automatic detection is insufficient:
+
+```css
+@import "tailwindcss";
+
+/* Register a source path relative to this stylesheet. */
+@source "../components";
+@source inline("underline");
+```
+
+### Tailwind CSS v3 only — Content Configuration
+
+Specify files to scan for classes in the JavaScript config:
 
 ```javascript
 // tailwind.config.js
@@ -492,9 +510,10 @@ export default {
 }
 ```
 
-### Safelist
+### Tailwind CSS v3 only — Safelist
 
-Preserve dynamic classes:
+In v3, preserve dynamic classes through the config safelist. In v4, use
+`@source inline()` as shown above instead of the legacy `safelist` option.
 
 ```javascript
 export default {
