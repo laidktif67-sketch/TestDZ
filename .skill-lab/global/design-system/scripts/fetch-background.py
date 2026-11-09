@@ -12,8 +12,8 @@ import sys
 import os
 from pathlib import Path
 
-# The skill can be installed outside the project it operates on (user-level
-# a user-level skill directory, so the project root cannot be derived from
+# The skill can be installed outside the project it operates on (for example,
+# as a user-level skill or plugin), so the project root cannot be derived from
 # this file's location. Resolve it from the working directory instead -- the same
 # convention generate-tokens.cjs and validate-tokens.cjs already use via
 # process.cwd(). DESIGN_SYSTEM_PROJECT_ROOT overrides it explicitly.
