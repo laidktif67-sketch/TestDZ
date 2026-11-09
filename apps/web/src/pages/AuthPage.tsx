@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { getPostAuthRoute, translateAuthError } from "../lib/auth-routing";
 
 function AuthPage() {
   const navigate = useNavigate();
