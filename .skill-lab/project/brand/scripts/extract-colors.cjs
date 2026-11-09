@@ -5,7 +5,7 @@
  * Extract dominant colors from an image and compare against brand palette.
  * Uses pure Node.js without external image processing dependencies.
  *
- * For full color extraction from images, integrate with ai-multimodal skill
+ * For full color extraction from images, use an available image-analysis tool
  * or use ImageMagick via shell commands.
  *
  * Usage:
@@ -25,7 +25,7 @@ const path = require("path");
 const DEFAULT_GUIDELINES_PATH = "docs/brand-guidelines.md";
 
 /**
- * Extract hex colors from markdown content
+ * Parse documented hex colors from markdown content (does not inspect image pixels).
  */
 function extractHexColors(text) {
   const hexPattern = /#[0-9A-Fa-f]{6}\b/g;
