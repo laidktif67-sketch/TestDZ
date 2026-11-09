@@ -23,6 +23,8 @@ if REPO is None:
         "Catalog snapshot line-ending tests require the full upstream repository"
     )
 DATA = REPO / "src/ui-ux-pro-max/data"
+if not DATA.is_dir():
+    DATA = REPO / "data"
 SNAPSHOT_FILES = (
     "google-fonts.csv",
     "google-font-licenses.json",
