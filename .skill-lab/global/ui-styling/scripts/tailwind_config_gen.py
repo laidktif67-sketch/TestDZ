@@ -25,6 +25,46 @@ _TAILWIND_CONFIG_NAMES = (
 )
 
 
+def _detect_tailwind_v4(project_root: Path) -> bool:
+    """Detect Tailwind CSS v4 from package metadata or its CSS-first import."""
+    package_json = project_root / "package.json"
+    if package_json.is_file():
+        try:
+            package = json.loads(package_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            package = {}
+
+        for section in (
+            "dependencies",
+            "devDependencies",
+            "optionalDependencies",
+            "peerDependencies",
+        ):
+            version = (package.get(section) or {}).get("tailwindcss")
+            if isinstance(version, str) and re.match(
+                r"^[\\s~^>=v]*(?:4)(?:\\.|$)", version
+            ):
+                return True
+
+    ignored = {"node_modules", ".git", ".next", "dist", "build", "coverage"}
+    try:
+        css_files = (
+            path for path in project_root.rglob("*.css")
+            if not any(part in ignored for part in path.parts)
+        )
+        for css_file in css_files:
+            try:
+                source = css_file.read_text(encoding="utf-8")
+            except (OSError, UnicodeError):
+                continue
+            if re.search(r"@import\\s+[\"']tailwindcss[\"']", source):
+                return True
+    except OSError:
+        pass
+
+    return False
+
+
 class TailwindConfigGenerator:
     """Generate Tailwind CSS configuration files."""
 
@@ -34,6 +74,7 @@ class TailwindConfigGenerator:
         framework: str = "react",
         output_path: Optional[Path] = None,
         force: bool = False,
+        allow_v4_legacy_config: bool = False,
     ):
         """
         Initialize generator.
@@ -48,6 +89,7 @@ class TailwindConfigGenerator:
         self.framework = framework
         self.output_path = output_path or self._default_output_path()
         self.force = force
+        self.allow_v4_legacy_config = allow_v4_legacy_config
         self.config: Dict[str, Any] = self._base_config()
 
     def _default_output_path(self) -> Path:
@@ -281,6 +323,16 @@ module.exports = {{
             Tuple of (success, message)
         """
         try:
+            if _detect_tailwind_v4(Path.cwd()) and not self.allow_v4_legacy_config:
+                return (
+                    False,
+                    "Tailwind CSS v4 detected. This generator creates a legacy "
+                    "JavaScript/TypeScript config and is blocked by default. "
+                    "Prefer CSS-first @theme, @utility, and @custom-variant. "
+                    "If a legacy config is genuinely required, pass "
+                    "--allow-v4-legacy-config explicitly.",
+                )
+
             existing_paths = []
             if self.output_path.name in _TAILWIND_CONFIG_NAMES:
                 existing_paths = [
@@ -416,6 +468,12 @@ Examples:
         help="Overwrite an existing output file",
     )
 
+    parser.add_argument(
+        "--allow-v4-legacy-config",
+        action="store_true",
+        help="Explicitly allow legacy config generation when Tailwind CSS v4 is detected",
+    )
+
     args = parser.parse_args()
 
     # Initialize generator
@@ -424,6 +482,7 @@ Examples:
         framework=args.framework,
         output_path=args.output,
         force=args.force,
+        allow_v4_legacy_config=args.allow_v4_legacy_config,
     )
 
     # Add custom colors
