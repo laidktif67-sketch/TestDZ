@@ -62,15 +62,9 @@
 - "Join [notable company] and [notable company]"
 - "As seen in [publication]"
 
-## Search Commands
+## Optional Search Helper
 
-```bash
-# Find formula for slide type
-python .claude/skills/design-system/scripts/search-slides.py "problem agitation" -d copy
-
-# Get emotion-appropriate formula
-python .claude/skills/design-system/scripts/search-slides.py "urgency cta" -d copy
-```
+The design-system skill contains a slide-search helper. If it is installed and its path is known, run search-slides.py with the copy domain. Resolve the actual installed skill directory first; do not assume a Claude-specific path. The formulas in this reference remain usable without the helper.
 
 ## Quick Reference
 
