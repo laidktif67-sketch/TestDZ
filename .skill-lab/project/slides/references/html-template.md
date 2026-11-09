@@ -1,6 +1,6 @@
 # HTML Slide Template
 
-Complete HTML structure with navigation, tokens, and Chart.js integration.
+Starter structure for a full-screen, navigable HTML presentation. Chart.js is optional and must be installed or loaded intentionally; it is not a built-in dependency.
 
 ## Base Structure
 
@@ -13,18 +13,18 @@ Complete HTML structure with navigation, tokens, and Chart.js integration.
     <title>Presentation Title</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        /* Paste embed-tokens.cjs output here */
+        /* Illustrative fallback only; replace with verified project tokens when available. */
         :root {
-            --color-primary: #FF6B6B;
-            --color-background: #0D0D0D;
-            /* ... more tokens */
+            --color-primary: #64748b;
+            --color-background: #0f172a;
+            --color-foreground: #f8fafc;
         }
 
         /* Base slide styles */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: var(--color-background);
-            color: #fff;
+            color: var(--color-foreground, #f8fafc);
             font-family: var(--typography-font-body, 'Inter', sans-serif);
             overflow: hidden;
         }
@@ -138,6 +138,7 @@ Complete HTML structure with navigation, tokens, and Chart.js integration.
             font-size: 18px;
         }
         .nav-btn:hover { background: rgba(255,255,255,0.2); }
+        .nav-btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
         .slide-counter { color: rgba(255,255,255,0.6); font-size: 14px; }
     </style>
 </head>
@@ -162,21 +163,23 @@ Complete HTML structure with navigation, tokens, and Chart.js integration.
 
     <!-- Navigation -->
     <div class="nav-controls">
-        <button class="nav-btn" onclick="prevSlide()">←</button>
+        <button class="nav-btn" type="button" aria-label="Previous slide" onclick="prevSlide()">←</button>
         <span class="slide-counter"><span id="current">1</span> / <span id="total">9</span></span>
-        <button class="nav-btn" onclick="nextSlide()">→</button>
+        <button class="nav-btn" type="button" aria-label="Next slide" onclick="nextSlide()">→</button>
     </div>
 
     <script>
         let current = 1;
-        const total = document.querySelectorAll('.slide').length;
+        const slides = document.querySelectorAll('.slide');
+        const total = slides.length;
         document.getElementById('total').textContent = total;
 
         function showSlide(n) {
+            if (total === 0) return;
             if (n < 1) n = 1;
             if (n > total) n = total;
             current = n;
-            document.querySelectorAll('.slide').forEach((s, i) => {
+            slides.forEach((s, i) => {
                 s.classList.toggle('active', i === n - 1);
             });
             document.getElementById('current').textContent = n;
@@ -189,10 +192,6 @@ Complete HTML structure with navigation, tokens, and Chart.js integration.
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
             if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.nav-controls')) nextSlide();
         });
 
         showSlide(1);
@@ -293,3 +292,11 @@ new Chart(document.getElementById('revenueChart'), {
 | `--primitive-gradient-primary` | Title gradients |
 | `--typography-font-heading` | Headlines |
 | `--typography-font-body` | Body text |
+
+
+## Implementation Notes
+
+- The navigation example advances only through its explicit controls and keyboard shortcuts. It intentionally does not advance on every document click, so links, chart controls, and text selection remain usable.
+- Replace illustrative fallback colors with the project's real tokens when a token system exists. Do not claim token compliance until the referenced variables are verified.
+- The Chart.js CDN example requires network access. Prefer an existing local dependency when possible and provide an accessible textual summary of chart data.
+- The template is a starting point; test it in the target browser and viewport sizes before delivery.
