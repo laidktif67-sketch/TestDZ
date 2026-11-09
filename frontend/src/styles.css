@@ -226,11 +226,6 @@
 
 
 /* Multilingual typography: "Plus Jakarta Sans" for Latin scripts, Noto Sans Arabic for Arabic. */
-:root {
-  font-family: "Plus Jakarta Sans", "Noto Sans Arabic", sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-}
 html:lang(ar),
 html[dir="rtl"],
 body:lang(ar),
@@ -605,7 +600,6 @@ html:lang(fr),
   min-height:100vh;min-height:100svh;background:#f2f6ff;color:#10245a;
   font-family:"Plus Jakarta Sans","Noto Sans",sans-serif;isolation:isolate;
 }
-.auth-reference *{box-sizing:border-box}
 .auth-reference-hero{
   position:relative;isolation:isolate;display:flex;flex-direction:column;min-width:0;min-height:100vh;min-height:100svh;
   padding:clamp(22px,2.8vh,38px) clamp(28px,4.2vw,68px) 26px;overflow:hidden;
