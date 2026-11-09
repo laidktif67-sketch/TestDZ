@@ -4,7 +4,7 @@ description: "Design skill for logo creation, corporate identity programs, prese
 argument-hint: "[design-type] [context]"
 license: MIT
 metadata:
-  author: claudekit
+  author: Smart SkillLab
   version: "2.1.0"
 ---
 
@@ -44,15 +44,15 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 ### Logo: Generate Design Brief
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python3 .skill-lab/project/design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Logo: Search Styles/Colors/Industries
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/search.py "minimalist clean" --domain style
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech professional" --domain color
-python3 ~/.claude/skills/design/scripts/logo/search.py "healthcare medical" --domain industry
+python3 .skill-lab/project/design/scripts/logo/search.py "minimalist clean" --domain style
+python3 .skill-lab/project/design/scripts/logo/search.py "tech professional" --domain color
+python3 .skill-lab/project/design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Logo: Generate with AI
@@ -60,13 +60,13 @@ python3 ~/.claude/skills/design/scripts/logo/search.py "healthcare medical" --do
 **ALWAYS** generate output logo images with white background.
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python3 ~/.claude/skills/design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python3 .skill-lab/project/design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python3 .skill-lab/project/design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
 **IMPORTANT:** When scripts fail, try to fix them directly.
 
-After generation, **ALWAYS** ask user about HTML preview via `AskUserQuestion`. If yes, invoke `/ui-ux-pro-max` for gallery.
+After generation, offer an HTML preview in the conversation and wait for the user's choice. If requested, create a gallery using available project tools or consult the `ui-ux-pro-max` reference when available. Do not assume a named tool or slash command exists.
 
 ## CIP Design (Built-in)
 
@@ -75,32 +75,32 @@ After generation, **ALWAYS** ask user about HTML preview via `AskUserQuestion`. 
 ### CIP: Generate Brief
 
 ```bash
-python3 ~/.claude/skills/design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
+python3 .skill-lab/project/design/scripts/cip/search.py "tech startup" --cip-brief -b "BrandName"
 ```
 
 ### CIP: Search Domains
 
 ```bash
-python3 ~/.claude/skills/design/scripts/cip/search.py "business card letterhead" --domain deliverable
-python3 ~/.claude/skills/design/scripts/cip/search.py "luxury premium elegant" --domain style
-python3 ~/.claude/skills/design/scripts/cip/search.py "hospitality hotel" --domain industry
-python3 ~/.claude/skills/design/scripts/cip/search.py "office reception" --domain mockup
+python3 .skill-lab/project/design/scripts/cip/search.py "business card letterhead" --domain deliverable
+python3 .skill-lab/project/design/scripts/cip/search.py "luxury premium elegant" --domain style
+python3 .skill-lab/project/design/scripts/cip/search.py "hospitality hotel" --domain industry
+python3 .skill-lab/project/design/scripts/cip/search.py "office reception" --domain mockup
 ```
 
 ### CIP: Generate Mockups
 
 ```bash
 # With logo (RECOMMENDED)
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --deliverable "business card" --industry "consulting"
 
 # Full CIP set
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TopGroup" --logo /path/to/logo.png --industry "consulting" --set
 
 # Pro model (4K text)
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TopGroup" --logo logo.png --deliverable "business card" --model pro
 
 # Without logo
-python3 ~/.claude/skills/design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
+python3 .skill-lab/project/design/scripts/cip/generate.py --brand "TechFlow" --deliverable "business card" --no-logo-prompt
 ```
 
 Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-preview`)
@@ -108,7 +108,7 @@ Models: `flash` (default, `gemini-2.5-flash-image`), `pro` (`gemini-3-pro-image-
 ### CIP: Render HTML Presentation
 
 ```bash
-python3 ~/.claude/skills/design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
+python3 .skill-lab/project/design/scripts/cip/render-html.py --brand "TopGroup" --industry "consulting" --images /path/to/cip-output
 ```
 
 **Tip:** If no logo exists, use Logo Design section above first.
@@ -132,21 +132,21 @@ Do not run a second banner workflow from this skill or maintain a duplicate bann
 ### Icon: Generate Single Icon
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "settings gear" --style outlined
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
-python3 ~/.claude/skills/design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "settings gear" --style outlined
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "shopping cart" --style filled --color "#6366F1"
+python3 .skill-lab/project/design/scripts/icon/generate.py --name "dashboard" --category navigation --style duotone
 ```
 
 ### Icon: Generate Batch Variations
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "cloud upload" --batch 4 --output-dir ./icons
 ```
 
 ### Icon: Multi-size Export
 
 ```bash
-python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
+python3 .skill-lab/project/design/scripts/icon/generate.py --prompt "user profile" --sizes "16,24,32,48" --output-dir ./icons
 ```
 
 ### Icon: Top Styles
@@ -165,20 +165,20 @@ python3 ~/.claude/skills/design/scripts/icon/generate.py --prompt "user profile"
 
 ## Social Photos (Built-in)
 
-Multi-platform social image design: HTML/CSS → screenshot export. Uses `ui-ux-pro-max`, `brand`, `design-system`, `chrome-devtools` skills.
+Multi-platform social image design: HTML/CSS → screenshot export. Reuse brand, token, and visual-design guidance from relevant project references when available; browser automation is optional and must not be assumed.
 
 Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 ### Social Photos: Workflow
 
-1. **Orchestrate** — `project-management` skill for TODO tasks; parallel subagents for independent work
-2. **Analyze** — Parse prompt: subject, platforms, style, brand context, content elements
-3. **Ideate** — 3-5 concepts, present via `AskUserQuestion`
-4. **Design** — `/ckm:brand` → `/ckm:design-system` → randomly invoke `/ck:ui-ux-pro-max` OR `/ck:frontend-design`; HTML per idea × size
-5. **Export** — `chrome-devtools` or Playwright screenshot at exact px (2x deviceScaleFactor)
-6. **Verify** — Use Chrome MCP or `chrome-devtools` skill to visually inspect exported designs; fix layout/styling issues and re-export
-7. **Report** — Summary to `plans/reports/` with design decisions
-8. **Organize** — Invoke `assets-organizing` skill to sort output files and reports
+1. **Analyze** — Parse the request: subject, platforms, dimensions, style, brand context, and content.
+2. **Prepare context** — Read existing brand guidance and design tokens when present. Consult the `brand` and `design-system` skills only if available in the active OpenCode setup; otherwise use their project references without assuming command aliases.
+3. **Ideate** — Draft 2–3 concepts and present them in the conversation. Wait for the user's selection before producing final assets.
+4. **Design** — Apply the selected concept and relevant `ui-ux-pro-max` guidance when available. Do not choose a design skill randomly.
+5. **Export** — Prefer an installed browser automation tool or Playwright. Use Chrome/Chromium headless only when installed; otherwise explain the missing renderer and provide the HTML source.
+6. **Verify** — Check dimensions, overflow, safe areas, readability, contrast, and asset loading. Re-export after fixes.
+7. **Report** — Summarize generated files and design decisions in the requested output location.
+8. **Organize** — Keep outputs in the requested project directory; do not invoke an assumed file-organizing skill.
 
 ### Social Photos: Key Sizes
 
