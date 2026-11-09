@@ -607,6 +607,18 @@ function VerifyEmailPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [seconds, setSeconds] = useState(120);
+  const [copied, setCopied] = useState(false);
+
+  async function copyEmail() {
+    if (!email.trim()) return;
+    try {
+      await navigator.clipboard.writeText(email.trim());
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setError("Copy is unavailable in this browser. Select the email address and copy it manually.");
+    }
+  }
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -662,7 +674,9 @@ function VerifyEmailPage() {
         <p className="verify-card-intro">We’ve sent a verification link to</p>
         <div className="verify-email">
           <strong dir="ltr">{email || "Your email address"}</strong>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+          <button className="verify-copy" type="button" onClick={copyEmail} disabled={!email.trim()} aria-label="Copy email address" title="Copy email address">
+            {copied ? "Copied" : "Copy"}
+          </button>
         </div>
         <p className="verify-instruction">Open the message and click the verification link to activate your TestDZ account.</p>
 
