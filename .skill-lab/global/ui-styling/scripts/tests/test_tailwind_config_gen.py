@@ -392,6 +392,102 @@ class TestTailwindConfigGenerator:
         assert result.returncode == 0, result.stderr
         assert "brand" in output_path.read_text()
 
+    def test_v4_package_detection_blocks_legacy_config(self, tmp_path, monkeypatch):
+        """Tailwind v4 projects must not receive a legacy config by default."""
+        (tmp_path / "package.json").write_text(
+            '{"devDependencies": {"tailwindcss": "^4.0.0"}}',
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_path)
+        output_path = tmp_path / "tailwind.config.ts"
+        generator = TailwindConfigGenerator(output_path=output_path)
+
+        success, message = generator.write_config()
+
+        assert success is False
+        assert "Tailwind CSS v4 detected" in message
+        assert "--allow-v4-legacy-config" in message
+        assert not output_path.exists()
+
+    def test_v4_css_import_detection_blocks_legacy_config(self, tmp_path, monkeypatch):
+        """CSS-first v4 projects are detected even without package metadata."""
+        (tmp_path / "src").mkdir()
+        (tmp_path / "src" / "index.css").write_text(
+            '@import "tailwindcss";\\n', encoding="utf-8"
+        )
+        monkeypatch.chdir(tmp_path)
+        output_path = tmp_path / "tailwind.config.ts"
+        generator = TailwindConfigGenerator(output_path=output_path)
+
+        success, message = generator.write_config()
+
+        assert success is False
+        assert "Tailwind CSS v4 detected" in message
+        assert not output_path.exists()
+
+    def test_v4_legacy_config_requires_explicit_opt_in(self, tmp_path, monkeypatch):
+        """An explicit compatibility opt-in allows intentional legacy output."""
+        (tmp_path / "package.json").write_text(
+            '{"dependencies": {"tailwindcss": "~4.1.0"}}',
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_path)
+        output_path = tmp_path / "tailwind.config.ts"
+        generator = TailwindConfigGenerator(
+            output_path=output_path,
+            allow_v4_legacy_config=True,
+        )
+
+        success, message = generator.write_config()
+
+        assert success is True
+        assert "written to" in message
+        assert output_path.exists()
+
+    def test_cli_blocks_v4_legacy_config_without_opt_in(self, tmp_path):
+        """The CLI must explain and block legacy config generation on v4."""
+        (tmp_path / "package.json").write_text(
+            '{"devDependencies": {"tailwindcss": "^4.0.0"}}',
+            encoding="utf-8",
+        )
+        script = Path(__file__).parent.parent / "tailwind_config_gen.py"
+
+        result = subprocess.run(
+            [sys.executable, str(script), "--colors", "brand:#3b82f6"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 1
+        assert "Tailwind CSS v4 detected" in result.stderr
+        assert "--allow-v4-legacy-config" in result.stderr
+        assert not (tmp_path / "tailwind.config.ts").exists()
+
+    def test_cli_v4_legacy_config_requires_named_opt_in(self, tmp_path):
+        """The dedicated v4 opt-in is separate from the overwrite --force flag."""
+        (tmp_path / "package.json").write_text(
+            '{"devDependencies": {"tailwindcss": "^4.0.0"}}',
+            encoding="utf-8",
+        )
+        script = Path(__file__).parent.parent / "tailwind_config_gen.py"
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--colors",
+                "brand:#3b82f6",
+                "--allow-v4-legacy-config",
+            ],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert (tmp_path / "tailwind.config.ts").exists()
+
     def test_write_config_invalid_path(self):
         """Test writing config to invalid path."""
         generator = TailwindConfigGenerator(output_path=Path("/invalid/path/config.ts"))
