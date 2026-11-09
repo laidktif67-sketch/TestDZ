@@ -413,7 +413,7 @@ class TestTailwindConfigGenerator:
         """CSS-first v4 projects are detected even without package metadata."""
         (tmp_path / "src").mkdir()
         (tmp_path / "src" / "index.css").write_text(
-            '@import "tailwindcss";\\n', encoding="utf-8"
+            '@import "tailwindcss";\n', encoding="utf-8"
         )
         monkeypatch.chdir(tmp_path)
         output_path = tmp_path / "tailwind.config.ts"
