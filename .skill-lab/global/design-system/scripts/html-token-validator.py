@@ -9,7 +9,6 @@ Usage:
   python html-token-validator.py --type slides      # Validate only slides
   python html-token-validator.py --type infographics # Validate only infographics
   python html-token-validator.py path/to/file.html  # Validate specific file
-  python html-token-validator.py --fix              # Auto-fix issues (WIP)
 """
 
 import re
@@ -20,7 +19,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 # The skill can be installed outside the project it operates on (user-level
-# ~/.claude/skills/, or as a plugin), so the project root cannot be derived from
+# a user-level skill directory, so the project root cannot be derived from
 # this file's location. Resolve it from the working directory instead -- the same
 # convention generate-tokens.cjs and validate-tokens.cjs already use via
 # process.cwd(). DESIGN_SYSTEM_PROJECT_ROOT overrides it explicitly.
@@ -310,7 +309,6 @@ Examples:
                         default='all', help='Asset type to validate')
     parser.add_argument('-v', '--verbose', action='store_true', help='Show warnings')
     parser.add_argument('--colors', action='store_true', help='Print CSS variables from tokens')
-    parser.add_argument('--fix', action='store_true', help='Auto-fix issues (experimental)')
 
     args = parser.parse_args()
 
