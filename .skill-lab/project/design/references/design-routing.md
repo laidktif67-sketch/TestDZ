@@ -162,16 +162,18 @@ Application Code
 
 ## Quick Commands
 
+Run these from the repository root. If the skill is installed elsewhere, replace the prefix with its actual location; do not assume a Claude-specific home directory.
+
 **Brand:**
 ```bash
-node .claude/skills/brand/scripts/inject-brand-context.cjs
-node .claude/skills/brand/scripts/validate-asset.cjs <path>
+node .skill-lab/project/brand/scripts/inject-brand-context.cjs
+node .skill-lab/project/brand/scripts/validate-asset.cjs <path>
 ```
 
 **Tokens:**
 ```bash
-node .claude/skills/design-system/scripts/generate-tokens.cjs -c tokens.json
-node .claude/skills/design-system/scripts/validate-tokens.cjs -d src/
+node .skill-lab/project/design-system/scripts/generate-tokens.cjs -c tokens.json
+node .skill-lab/project/design-system/scripts/validate-tokens.cjs -d src/
 ```
 
 **Components:**
