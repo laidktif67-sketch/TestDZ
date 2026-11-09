@@ -5,7 +5,7 @@ import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "./lib/supabase";
-import { getPostAuthRoute, translateAuthError } from "./lib/auth-routing";
+import { getPostAuthRoute } from "./lib/auth-routing";
 import { Brand } from "./components/Brand";
 import AuthPage from "./pages/AuthPage";
 import LandingPage from "./pages/LandingPage";
