@@ -4,6 +4,19 @@
 
 TestDZ is an Algeria-first platform for organizing Android closed-testing cohorts. It coordinates developers, apps, testing cycles, tester assignments, daily check-ins, feedback, subscriptions, credits, and administrative review.
 
+## Approved target application architecture
+
+- Repository: npm-workspaces monorepo. The existing web application lives in `apps/web/`; the Supabase project configuration and migrations remain in the top-level `supabase/` directory.
+- Web client: the existing React + TypeScript + Vite application, with React Router and PWA support. This is the current implemented client.
+- Mobile client: a separate React Native + Expo application planned under `apps/mobile/`. It has not been created yet; do not treat mobile screens or native capabilities as implemented.
+- Backend: one shared Supabase project (Auth, PostgreSQL, Storage, and narrowly scoped RPC/Edge Functions) used by both clients. No database migration is implied by this architecture change.
+- Shared packages are planned under `packages/` for domain rules, TypeScript types, validation, API contracts, and platform-neutral API clients. Extract them only when real duplication or stable boundaries are identified; do not share React DOM UI components with React Native.
+- Architecture style: modular monolith with explicit domains: identity, profiles, apps, testing, cohorts, assignments, feedback, economy, subscriptions, trust/safety, and notifications. Domain logic and contracts may be shared; web and native UI remain platform-specific.
+- Vercel builds the web workspace from the monorepo. npm workspace scripts are defined at the repository root.
+- Zustand and TanStack Query are not currently installed; evaluate them as a separate implementation decision rather than documenting them as existing dependencies.
+
+Current repository state: `apps/web/` exists; `apps/mobile/` and shared packages do not exist yet.
+
 ### V1 scope
 
 - Authentication and profiles

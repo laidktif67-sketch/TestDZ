@@ -49,17 +49,22 @@ The current product rule is 14 consecutive calendar days and one valid TestDZ ch
 
 ## 3. Architecture and stack
 
-- Frontend: React + TypeScript + Vite
-- UI: Tailwind CSS + shadcn/ui, RTL-first
-- State/data: Zustand + TanStack Query
-- Routing: React Router
-- PWA: vite-plugin-pwa
-- Backend: Supabase Auth, PostgreSQL 17, Storage, Edge Functions
-- Payments: Chargily (disabled until verified webhook integration is implemented)
-- Email: Supabase Auth SMTP initially; Resend can be configured before launch
-- Hosting: Vercel
-- CI: GitHub Actions
-- Monitoring: Sentry + Supabase logs
+- Repository: npm-workspaces monorepo.
+- Web client (implemented): React + TypeScript + Vite in `apps/web/`, React Router, Tailwind CSS, RTL-first styling, and `vite-plugin-pwa`.
+- Mobile client (planned): React Native + Expo in `apps/mobile/`; not yet created.
+- Backend (shared by both clients): Supabase Auth, PostgreSQL 17, Storage, RPC, and Edge Functions.
+- Architecture style: modular monolith with explicit identity, profiles, apps, testing, cohorts, assignments, feedback, economy, subscriptions, trust/safety, and notifications domains.
+- Shared packages (planned): domain logic, types, validation, API contracts, and platform-neutral API client under `packages/`. Extract incrementally after stable boundaries are established. Do not share React DOM components with React Native.
+- UI remains platform-specific; business rules and data contracts may be shared.
+- PWA: existing web delivery through `vite-plugin-pwa`.
+- Payments: Chargily (disabled until verified webhook integration is implemented).
+- Email: Supabase Auth SMTP initially; Resend can be configured after sender-domain setup.
+- Hosting: Vercel for the web workspace.
+- CI: GitHub Actions.
+- Monitoring: Sentry + Supabase logs (planned; verify integration before claiming active monitoring).
+- Zustand and TanStack Query are not current dependencies; adoption requires a separate reviewed change.
+
+The root `package.json` owns the npm workspace scripts. Vercel builds the web workspace from `apps/web/` while installing from the monorepo workspace root. Supabase configuration and migrations remain under the repository-root `supabase/` directory.
 
 Supabase region: `eu-west-3` (Paris). Domain candidate: `testdz.app`; connect only after domain ownership and DNS are confirmed.
 
@@ -233,7 +238,7 @@ Completed in dedicated TestDZ Supabase project:
 - Append-only protection for points ledger and audit logs
 - Restricted client update grants for app/test records
 - Auth user bootstrap trigger for profile, tester role and wallet
-- React/Vite frontend scaffold, RTL landing page, sign-in/sign-up flow, session-aware dashboard shell and PWA manifest
+- Existing React/Vite web application moved to `apps/web/`; root npm workspace scripts added; RTL landing page, sign-in/sign-up flow, session-aware dashboard shell and PWA manifest retained
 - GitHub Actions CI workflow for frontend typecheck and production build
 - Caller-scoped `get_active_subscription()`
 - Coupon redemption payment index
@@ -248,10 +253,12 @@ All 28 public tables currently have RLS enabled. Several operational tables inte
 4. Complete admin authorization, suspension, audit and appeals.
 5. Implement plans, limits and subscription lifecycle.
 6. Implement Chargily checkout/webhook only after provider signature details are verified.
-7. Build React/Vite frontend and auth flows.
+7. Complete React/Vite web client and auth flows.
 8. Build developer and tester journeys.
 9. Build admin and trust/safety screens.
-10. Add notifications, PWA, CI/CD, deployment and private beta.
+10. Add notifications, PWA, CI/CD and deployment verification.
+11. Build the separate Expo mobile client using the shared Supabase backend and extracted platform-neutral packages.
+12. Run cross-platform authorization and end-to-end tests before any private beta.
 
 ## 16. Explicitly deferred
 
