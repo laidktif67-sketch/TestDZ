@@ -68,11 +68,8 @@ def load_logo_image(logo_path):
 # Load environment variables
 def load_env():
     """Load environment variables from .env files"""
-    env_paths = [
-        Path(__file__).parent.parent.parent / ".env",
-        Path.home() / ".claude" / "skills" / ".env",
-        Path.home() / ".claude" / ".env"
-    ]
+    # Load the skill-local .env; shell/OpenCode environment variables take precedence.
+    env_paths = [Path(__file__).resolve().parents[2] / ".env"]
     for env_path in env_paths:
         if env_path.exists():
             with open(env_path) as f:
@@ -427,7 +424,7 @@ Image Editing Mode:
         action = check_logo_required(args.brand, skip_prompt=args.no_logo_prompt)
         if action == 'generate':
             print("\n💡 To generate a logo, use the logo-design skill:")
-            print(f"   python ~/.claude/skills/design/scripts/logo/generate.py --brand \"{args.brand}\" --industry \"{args.industry}\"")
+            print(f"   python .skill-lab/project/design/scripts/logo/generate.py --brand \"{args.brand}\" --industry \"{args.industry}\"")
             print("\n   Then re-run this command with --logo <generated_logo.png>")
             sys.exit(0)
         elif action == 'exit':
