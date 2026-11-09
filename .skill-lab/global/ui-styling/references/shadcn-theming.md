@@ -150,7 +150,39 @@ background: hsl(var(--primary));
 background: hsl(var(--primary) / 0.5);  /* 50% opacity */
 ```
 
-## Tailwind Configuration
+## Tailwind CSS v4 — CSS-first theme mapping
+
+For v4 projects, map shadcn semantic CSS variables into Tailwind's theme
+namespace in the global stylesheet. Keep the actual semantic values in
+`:root` / `.dark` and expose utility names with `@theme inline`:
+
+```css
+@import "tailwindcss";
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0 0);
+  --primary: oklch(0.22 0 0);
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: oklch(0.15 0 0);
+  --foreground: oklch(0.98 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --radius-lg: var(--radius);
+}
+```
+
+### Tailwind CSS v3 only — JavaScript configuration
+
+The following config-file example is for projects that are actually using
+Tailwind v3. Do not add it to a v4 project as a default configuration.
 
 Map CSS variables to Tailwind utilities:
 
