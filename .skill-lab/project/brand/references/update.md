@@ -1,118 +1,63 @@
-Update brand colors, typography, and style - automatically syncs to all design system files.
+# Update Brand Guidelines
 
-<args>$ARGUMENTS</args>
+Use this workflow when the user asks to change brand colors, typography, voice, or visual direction.
 
-## Overview
+## Safety Rules
 
-This command systematically updates:
-1. `docs/brand-guidelines.md` - Human-readable brand doc
-2. `assets/design-tokens.json` - Token source of truth
-3. `assets/design-tokens.css` - Generated CSS variables
+- Work from the project root and inspect the current guide and token files first.
+- Do not overwrite an existing brand guide or token file without explicit user approval.
+- Do not automatically synchronize files just because the guide changed.
+- Preview generated token changes before writing.
+- Back up every existing output before a multi-file write.
+- Stop and report an error if token generation fails; do not report success for a partial sync.
 
 ## Workflow
 
-### Step 1: Gather Brand Input
+### 1. Confirm the intended changes
 
-Use `AskUserQuestion` to collect:
+Collect only the missing decisions through normal conversation:
+- Theme or brand direction.
+- Primary, secondary, and accent color names and valid six-digit hex values.
+- Typography changes, if any.
+- Voice, mood, or messaging changes, if any.
 
-**Theme Selection:**
-- Theme name (e.g., "Ocean Professional", "Electric Creative", "Forest Calm")
+Do not assume a preset is approved merely because it appears in this reference.
 
-**Primary Color:**
-- Color name (e.g., "Ocean Blue", "Coral", "Forest Green")
-- Hex code (e.g., #3B82F6)
+### 2. Update the human-readable guide
 
-**Secondary Color:**
-- Color name (e.g., "Golden Amber", "Electric Purple")
-- Hex code
+Update `docs/brand-guidelines.md` only after the user approves the content. Preserve unrelated sections and existing brand decisions.
 
-**Accent Color:**
-- Color name (e.g., "Emerald", "Neon Mint")
-- Hex code
+### 3. Preview token changes
 
-**Brand Mood (for AI image generation):**
-- Mood keywords (e.g., "professional, trustworthy, premium" or "bold, creative, energetic")
-
-### Step 2: Update Brand Guidelines
-
-Edit `docs/brand-guidelines.md`:
-
-1. **Quick Reference table** - Update color names and hex codes
-2. **Brand Concept section** - Update theme name and description
-3. **Color Palette section** - Update Primary, Secondary, Accent colors with shades
-4. **AI Image Generation section** - Update base prompt, keywords, mood descriptors
-
-### Step 3: Sync to Design Tokens
-
-Run the sync script:
-```bash
-node .claude/skills/brand/scripts/sync-brand-to-tokens.cjs
-```
-
-This will:
-- Update `assets/design-tokens.json` with new color names and values
-- Regenerate `assets/design-tokens.css` with correct CSS variables
-
-### Step 4: Verify Sync
-
-Confirm all files are updated:
-```bash
-# Check brand context extraction
-node .claude/skills/brand/scripts/inject-brand-context.cjs --json | head -30
-
-# Check CSS variables
-grep "primary" assets/design-tokens.css | head -5
-```
-
-### Step 5: Report
-
-Output summary:
-- Theme: [name]
-- Primary: [name] ([hex])
-- Secondary: [name] ([hex])
-- Accent: [name] ([hex])
-- Files updated: brand-guidelines.md, design-tokens.json, design-tokens.css
-
-## Files Modified
-
-| File | Purpose |
-|------|---------|
-| `docs/brand-guidelines.md` | Human-readable brand documentation |
-| `assets/design-tokens.json` | Token definitions (primitive→semantic→component) |
-| `assets/design-tokens.css` | CSS variables for UI components |
-
-## Skills Used
-
-- `brand` - Brand context extraction and sync
-- `design-system` - Token generation
-
-## Examples
+The brand utility reads the guide and existing token JSON:
 
 ```bash
-# Interactive mode
-/brand:update
-
-# With theme hint
-/brand:update "Ocean Professional"
-
-# Quick preset
-/brand:update "midnight purple"
+node <skill-directory>/scripts/sync-brand-to-tokens.cjs --dry-run
 ```
 
-## Color Presets
+Review the proposed palette names, base colors, generated shades, and semantic references. If required primary, secondary, or accent colors cannot be parsed, stop and correct the guide rather than guessing.
 
-If user specifies a preset name, use these defaults:
+### 4. Synchronize only when explicitly requested
 
-| Preset | Primary | Secondary | Accent |
-|--------|---------|-----------|--------|
-| ocean-professional | #3B82F6 Ocean Blue | #F59E0B Golden Amber | #10B981 Emerald |
-| electric-creative | #FF6B6B Coral | #9B5DE5 Electric Purple | #00F5D4 Neon Mint |
-| forest-calm | #059669 Forest Green | #92400E Warm Brown | #FBBF24 Sunlight |
-| midnight-purple | #7C3AED Violet | #EC4899 Pink | #06B6D4 Cyan |
-| sunset-warm | #F97316 Orange | #DC2626 Red | #FACC15 Yellow |
+```bash
+node <skill-directory>/scripts/sync-brand-to-tokens.cjs
+```
 
-## Important
+The script should create timestamped backups of existing token JSON and CSS before writing. It should use the design-system generator located relative to this skill where available, not a Claude-specific path. If generation fails, restore the previous JSON and CSS and return a non-zero exit status.
 
-- **Always sync all three files** - Never update just brand-guidelines.md alone
-- **Verify extraction** - Run inject-brand-context.cjs after update to confirm
-- **Test image generation** - Optionally generate a test image to verify brand application
+Existing semantic status colors (success, warning, error, info) must remain unchanged unless the brand guide explicitly defines those semantic values. A primary, secondary, or accent brand color is not automatically a valid status color.
+
+### 5. Verify
+
+- Re-read the token JSON and ensure all references resolve.
+- Run the design-system token validator/generator checks recommended by that skill.
+- Compare the generated CSS with the intended token changes.
+- Report backups, changed files, and test results.
+
+## Ownership
+
+- Brand owns the identity guide and brand decisions.
+- Design-system owns token structure, validation, and token-to-CSS generation.
+- UI styling owns application-specific styling implementation.
+
+Do not use Claude-specific slash commands, `AskUserQuestion`, or `.claude/skills/` paths. In OpenCode, use normal conversation and the installed skill directory supplied by the runtime.
