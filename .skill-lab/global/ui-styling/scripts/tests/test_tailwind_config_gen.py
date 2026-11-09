@@ -464,6 +464,25 @@ class TestTailwindConfigGenerator:
         assert "--allow-v4-legacy-config" in result.stderr
         assert not (tmp_path / "tailwind.config.ts").exists()
 
+    def test_cli_validate_only_also_blocks_v4_legacy_output(self, tmp_path):
+        """Validation output must not silently emit a v3 config for v4 projects."""
+        (tmp_path / "package.json").write_text(
+            '{"devDependencies": {"tailwindcss": "^4.0.0"}}',
+            encoding="utf-8",
+        )
+        script = Path(__file__).parent.parent / "tailwind_config_gen.py"
+
+        result = subprocess.run(
+            [sys.executable, str(script), "--validate-only"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 1
+        assert "Tailwind CSS v4 detected" in result.stderr
+        assert "Generated config:" not in result.stdout
+
     def test_cli_v4_legacy_config_requires_named_opt_in(self, tmp_path):
         """The dedicated v4 opt-in is separate from the overwrite --force flag."""
         (tmp_path / "package.json").write_text(
