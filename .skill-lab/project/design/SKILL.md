@@ -1,6 +1,6 @@
 ---
 name: design
-description: "Comprehensive design skill: brand identity, design tokens, UI styling, logo generation (55 styles, Gemini AI), corporate identity program (50 deliverables, CIP mockups), HTML presentations (Chart.js), banner design (22 styles, social/ads/web/print), icon design (15 styles, SVG, Gemini 3.1 Pro), social photos (HTML→screenshot, multi-platform). Actions: design logo, create CIP, generate mockups, build slides, design banner, generate icon, create social photos, social media images, brand identity, design system. Platforms: Facebook, Twitter, LinkedIn, YouTube, Instagram, Pinterest, TikTok, Threads, Google Ads."
+description: "Design skill for logo creation, corporate identity programs, presentations, icon design, and social photos. Routes brand strategy, design tokens, UI styling, and banner requests to their specialist skills when available. Actions: design logo, create CIP, generate mockups, build slides, generate icon, create social photos."
 argument-hint: "[design-type] [context]"
 license: MIT
 metadata:
@@ -20,7 +20,7 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 - Logo design and AI generation
 - Corporate identity program (CIP) deliverables
 - Presentations and pitch decks
-- Banner design for social media, ads, web, print
+- Banner design requests (delegate to the dedicated `banner-design` skill)
 - Social photos for Instagram, Facebook, LinkedIn, Twitter, Pinterest, TikTok
 
 ## Sub-skill Routing
@@ -33,7 +33,7 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 | Logo creation, AI generation | Logo (built-in) | `references/logo-design.md` |
 | CIP mockups, deliverables | CIP (built-in) | `references/cip-design.md` |
 | Presentations, pitch decks | Slides (built-in) | `references/slides.md` |
-| Banners, covers, headers | Banner (built-in) | `references/banner-sizes-and-styles.md` |
+| Banners, covers, headers | `banner-design` (specialist skill) | Delegate banner workflow; do not recreate it here |
 | Social media images/photos | Social Photos (built-in) | `references/social-photos-design.md` |
 | SVG icons, icon sets | Icon (built-in) | `references/icon-design.md` |
 
@@ -129,52 +129,11 @@ Load `references/slides-create.md` for the creation workflow.
 | Copywriting | `references/slides-copywriting-formulas.md` |
 | Strategies | `references/slides-strategies.md` |
 
-## Banner Design (Built-in)
+## Banner Requests (Delegated)
 
-22 art direction styles across social, ads, web, print. Uses `frontend-design`, `ai-artist`, `ai-multimodal`, `chrome-devtools` skills.
+For banners, covers, headers, advertising creatives, website hero visuals, and print banners, activate the dedicated `banner-design` skill when available. That skill owns banner requirements, size references, art direction, creation, export, and review.
 
-Load `references/banner-sizes-and-styles.md` for complete sizes and styles reference.
-
-### Banner: Workflow
-
-1. **Gather requirements** via `AskUserQuestion` — purpose, platform, content, brand, style, quantity
-2. **Research** — Activate `ui-ux-pro-max`, browse Pinterest for references
-3. **Design** — Create HTML/CSS banner with `frontend-design`, generate visuals with `ai-artist`/`ai-multimodal`
-4. **Export** — Screenshot to PNG at exact dimensions via `chrome-devtools`
-5. **Present** — Show all options side-by-side, iterate on feedback
-
-### Banner: Quick Size Reference
-
-| Platform | Type | Size (px) |
-|----------|------|-----------|
-| Facebook | Cover | 820 x 312 |
-| Twitter/X | Header | 1500 x 500 |
-| LinkedIn | Personal | 1584 x 396 |
-| YouTube | Channel art | 2560 x 1440 |
-| Instagram | Story | 1080 x 1920 |
-| Instagram | Post | 1080 x 1080 |
-| Google Ads | Med Rectangle | 300 x 250 |
-| Website | Hero | 1920 x 600-1080 |
-
-### Banner: Top Art Styles
-
-| Style | Best For |
-|-------|----------|
-| Minimalist | SaaS, tech |
-| Bold Typography | Announcements |
-| Gradient | Modern brands |
-| Photo-Based | Lifestyle, e-com |
-| Geometric | Tech, fintech |
-| Glassmorphism | SaaS, apps |
-| Neon/Cyberpunk | Gaming, events |
-
-### Banner: Design Rules
-
-- Safe zones: critical content in central 70-80%
-- One CTA per banner, bottom-right, min 44px height
-- Max 2 fonts, min 16px body, ≥32px headline
-- Text under 20% for ads (Meta penalizes)
-- Print: 300 DPI, CMYK, 3-5mm bleed
+Do not run a second banner workflow from this skill or maintain a duplicate banner size/style reference here. If `banner-design` is unavailable, explain the limitation and provide a concise design brief or route the user to the appropriate available design capability.
 
 ## Icon Design (Built-in)
 
@@ -272,7 +231,6 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 | Slides Template | `references/slides-html-template.md` |
 | Slides Copy | `references/slides-copywriting-formulas.md` |
 | Slides Strategy | `references/slides-strategies.md` |
-| Banner Sizes & Styles | `references/banner-sizes-and-styles.md` |
 | Social Photos Guide | `references/social-photos-design.md` |
 | Icon Design Guide | `references/icon-design.md` |
 
@@ -310,4 +268,4 @@ pip install google-genai pillow
 ## Integration
 
 **External sub-skills:** brand, design-system, ui-styling
-**Related Skills:** frontend-design, ui-ux-pro-max, ai-multimodal, chrome-devtools
+**Related Skills:** banner-design, brand, design-system, ui-styling, ui-ux-pro-max
