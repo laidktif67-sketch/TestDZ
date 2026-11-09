@@ -22,15 +22,17 @@ import re
 import unittest
 from pathlib import Path
 
+SKILL_TREES = ("cli/assets/skills", ".claude/skills")
 REPO = next((
     parent for parent in Path(__file__).resolve().parents
     if (parent / "scripts" / "generate-catalog-summary.py").is_file()
+    and all((parent / tree).is_dir() for tree in SKILL_TREES)
 ), None)
 if REPO is None:
     raise unittest.SkipTest(
-        "Repository-wide skill path audit requires the full upstream repository layout"
+        "Repository-wide skill path audit requires both upstream skill trees "
+        "(cli/assets/skills and .claude/skills)"
     )
-SKILL_TREES = ("cli/assets/skills", ".claude/skills")
 # The only file that may use the plugin-root form: hand-authored for the plugin install
 # and not shipped by the CLI (sync-assets.mjs mirrors data/ and scripts/, never SKILL.md).
 # (Built from segments: the path contract in check-asset-sync.yml scans this file too.)
