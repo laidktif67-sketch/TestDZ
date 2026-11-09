@@ -36,8 +36,8 @@ python3 .skill-lab/project/design/scripts/logo/search.py "healthcare medical" --
 **ALWAYS** use white background for output logos.
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
-python3 ~/.claude/skills/design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
+python3 .skill-lab/project/design/scripts/logo/generate.py --brand "TechFlow" --style minimalist --industry tech
+python3 .skill-lab/project/design/scripts/logo/generate.py --prompt "coffee shop vintage badge" --style vintage
 ```
 
 Options: `--style`, `--industry`, `--prompt`
