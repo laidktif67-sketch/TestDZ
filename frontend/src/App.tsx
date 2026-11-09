@@ -630,8 +630,8 @@ function VerifyEmailPage() {
     const root = document.querySelector<HTMLElement>(".verify-page");
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    const responsive = gsap.matchMedia();
     const context = gsap.context(() => {
-      const responsive = gsap.matchMedia();
 
       responsive.add("(min-width: 701px)", () => {
         const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
@@ -668,10 +668,12 @@ function VerifyEmailPage() {
         return () => intro.kill();
       });
 
-      return () => responsive.revert();
     }, root);
 
-    return () => context.revert();
+    return () => {
+      responsive.revert();
+      context.revert();
+    };
   }, []);
 
 
