@@ -15,20 +15,20 @@ AI-powered logo design with 55+ styles, 30 color palettes, 25 industry guides. U
 ### Design Brief (Start Here)
 
 ```bash
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
+python3 .skill-lab/project/design/scripts/logo/search.py "tech startup modern" --design-brief -p "BrandName"
 ```
 
 ### Search Domains
 
 ```bash
 # Styles
-python3 ~/.claude/skills/design/scripts/logo/search.py "minimalist clean" --domain style
+python3 .skill-lab/project/design/scripts/logo/search.py "minimalist clean" --domain style
 
 # Color palettes
-python3 ~/.claude/skills/design/scripts/logo/search.py "tech professional" --domain color
+python3 .skill-lab/project/design/scripts/logo/search.py "tech professional" --domain color
 
 # Industry guidelines
-python3 ~/.claude/skills/design/scripts/logo/search.py "healthcare medical" --domain industry
+python3 .skill-lab/project/design/scripts/logo/search.py "healthcare medical" --domain industry
 ```
 
 ### Generate Logo
@@ -75,8 +75,8 @@ Options: `--style`, `--industry`, `--prompt`
 
 1. Generate design brief → `scripts/logo/search.py --design-brief`
 2. Generate logo variations → `scripts/logo/generate.py --brand --style --industry`
-3. Ask user about HTML preview → `AskUserQuestion` tool
-4. If yes, invoke `/ui-ux-pro-max` for HTML gallery
+3. Offer an HTML preview in the conversation and wait for the user's choice.
+4. If requested, build a gallery with available project tools or consult the `ui-ux-pro-max` reference when available. Do not assume a slash command exists.
 
 ## Detailed References
 
