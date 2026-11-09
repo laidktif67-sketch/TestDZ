@@ -30,8 +30,8 @@ def test_help_does_not_advertise_unsupported_fix_option():
 def test_unsupported_fix_option_is_rejected_without_modifying_file(tmp_path):
     sample = tmp_path / "sample.html"
     original = (
-        '<link rel="stylesheet" href="assets/design-tokens.css">\\n'
-        '<style>.x { color: #FF0000; }</style>\\n'
+        '<link rel="stylesheet" href="assets/design-tokens.css">\n'
+        '<style>.x { color: #FF0000; }</style>\n'
     )
     sample.write_text(original, encoding="utf-8")
 
@@ -45,11 +45,11 @@ def test_unsupported_fix_option_is_rejected_without_modifying_file(tmp_path):
 def test_validator_still_accepts_token_based_html(tmp_path):
     sample = tmp_path / "sample.html"
     sample.write_text(
-        '<link rel="stylesheet" href="assets/design-tokens.css">\\n'
+        '<link rel="stylesheet" href="assets/design-tokens.css">\n'
         '<style>.x { color: var(--color-primary); background: '
         'var(--color-surface); border-color: var(--color-border); '
         'font-family: var(--typography-font-body); box-shadow: '
-        'var(--card-shadow); }</style>\\n',
+        'var(--card-shadow); }</style>\n',
         encoding="utf-8",
     )
 
