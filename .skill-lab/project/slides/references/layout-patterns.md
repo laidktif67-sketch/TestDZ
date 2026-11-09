@@ -109,16 +109,9 @@
 | `contrast-pair` | Before/after |
 | `logo-grayscale` | Client logos |
 
-## Search Commands
+## Optional Search Helper
 
-```bash
-# Find layout for specific use
-python .claude/skills/design-system/scripts/search-slides.py "metrics dashboard" -d layout
-
-# Contextual recommendation
-python .claude/skills/design-system/scripts/search-slides.py "traction slide" \
-  --context --position 4 --total 10
-```
+The design-system skill contains a slide-search helper. If it is installed and its path is known, use the layout domain or --context for contextual recommendations. Resolve the actual installed skill directory first; do not assume a Claude-specific path. The layout guidance in this reference remains usable without the helper.
 
 ## Layout Decision Flow
 
