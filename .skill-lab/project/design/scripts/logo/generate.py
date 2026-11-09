@@ -28,11 +28,8 @@ from datetime import datetime
 # Load environment variables
 def load_env():
     """Load .env files in priority order"""
-    env_paths = [
-        Path(__file__).parent.parent.parent / ".env",
-        Path.home() / ".claude" / "skills" / ".env",
-        Path.home() / ".claude" / ".env"
-    ]
+    # Load the skill-local .env; shell/OpenCode environment variables take precedence.
+    env_paths = [Path(__file__).resolve().parents[2] / ".env"]
 
     for env_path in env_paths:
         if env_path.exists():
