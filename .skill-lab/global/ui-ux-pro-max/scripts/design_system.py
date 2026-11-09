@@ -1009,9 +1009,33 @@ def _write_persisted_file(path: Path, content: str, force: bool) -> None:
             os.replace(temp_name, path)
             temp_name = None
         else:
-            # A same-filesystem hard link atomically publishes only if the
-            # destination is absent. Losing writers get FileExistsError.
-            os.link(temp_name, path)
+            # Prefer a same-filesystem hard link: it atomically publishes the
+            # completed temp file only when the destination is absent.
+            link = getattr(os, "link", None)
+            if link is not None:
+                link(temp_name, path)
+            else:
+                # Some Android/Termux Python builds do not expose os.link.
+                # O_EXCL still guarantees a single winner without overwriting
+                # an existing design system. The fallback writes into the
+                # exclusively-created destination because no portable,
+                # no-replace atomic rename is available in this environment.
+                flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+                fd = os.open(path, flags, 0o666)
+                try:
+                    with os.fdopen(fd, "w", encoding="utf-8") as target:
+                        fd = None
+                        target.write(content)
+                        target.flush()
+                        os.fsync(target.fileno())
+                except Exception:
+                    if fd is not None:
+                        os.close(fd)
+                    try:
+                        os.unlink(path)
+                    except FileNotFoundError:
+                        pass
+                    raise
     finally:
         if temp_name and os.path.exists(temp_name):
             os.unlink(temp_name)
