@@ -1,169 +1,97 @@
 # Asset Approval Checklist
 
-Comprehensive checklist for reviewing marketing assets before approval.
+Use this checklist for human review before publishing or approving a brand asset. Automated checks are advisory and do not replace visual, accessibility, licensing, or legal review.
 
 ## Quick Review
-
-Before detailed review, verify:
-- [ ] Asset serves stated purpose
-- [ ] Target audience appropriate
-- [ ] No obvious errors or issues
-- [ ] Aligns with campaign goals
+- [ ] Asset serves the stated purpose and audience.
+- [ ] No obvious content, layout, or rendering defects.
+- [ ] Aligns with the campaign goal and approved brief.
 
 ## Visual Elements
 
-### Logo Usage
-- [ ] Correct logo variant for context
-- [ ] Proper clear space maintained
-- [ ] Minimum size requirements met
-- [ ] Approved colors only
-- [ ] No unauthorized modifications
-- [ ] Appropriate for background
+### Logo
+- [ ] Correct approved logo variant.
+- [ ] Clear space and minimum size respected.
+- [ ] Colors and proportions are unmodified.
+- [ ] Logo remains legible against its background.
 
-### Color Compliance
-- [ ] Uses brand palette colors only
-- [ ] Primary/secondary ratio appropriate (60/30/10)
-- [ ] Semantic colors used correctly
-- [ ] No off-brand colors introduced
-- [ ] Consistent across all elements
+### Color
+- [ ] Brand palette is applied consistently.
+- [ ] Semantic colors retain their intended meaning.
+- [ ] Contrast is sufficient.
+- [ ] Any intentional off-palette colors have a documented reason.
 
 ### Typography
-- [ ] Brand fonts used throughout
-- [ ] Correct font weights applied
-- [ ] Proper type hierarchy
-- [ ] Appropriate sizes for medium
-- [ ] Line heights adequate
-- [ ] No orphans/widows in body text
+- [ ] Approved typefaces and weights are used.
+- [ ] Hierarchy, sizes, and line heights suit the medium.
+- [ ] Text remains readable at the final display size.
 
 ### Imagery
-- [ ] Matches brand photography style
-- [ ] Appropriate subjects/content
-- [ ] Quality meets requirements
-- [ ] Properly licensed/credited
-- [ ] Optimized for intended use
+- [ ] Photography/illustration matches the brand direction.
+- [ ] Image quality and crop suit the placement.
+- [ ] Licensing, attribution, and usage rights are confirmed.
 
 ## Accessibility
+- [ ] Normal text contrast is at least 4.5:1 (WCAG AA).
+- [ ] Large text contrast is at least 3:1.
+- [ ] Color is not the only carrier of meaning.
+- [ ] Focus states and meaningful alternative text are present where applicable.
+- [ ] Reading order and headings are logical.
 
-### Visual Accessibility
-- [ ] Text contrast ratio >= 4.5:1 (AA)
-- [ ] Large text contrast >= 3:1
-- [ ] Interactive elements have visible focus
-- [ ] Color not sole indicator of meaning
-- [ ] Alt text for all images
+## Content
+- [ ] Voice and tone match the brand guide.
+- [ ] Claims are accurate and substantiated.
+- [ ] CTA and value proposition are clear.
+- [ ] Copy is proofread and appropriate for the audience.
 
-### Content Accessibility
-- [ ] Clear and scannable layout
-- [ ] Readable font sizes
-- [ ] Logical reading order
-- [ ] Meaningful headings structure
-- [ ] Links describe destination
+## Technical Review
+- [ ] File format is suitable for the destination.
+- [ ] Resolution/dimensions were checked with an image or media inspection tool.
+- [ ] File size is suitable for the destination.
+- [ ] Filename follows the agreed convention.
+- [ ] Metadata and manifest entry are correct where required.
 
-## Content Quality
-
-### Copy Review
-- [ ] Matches brand voice
-- [ ] Appropriate tone for context
-- [ ] No prohibited terms used
-- [ ] Value proposition clear
-- [ ] CTA compelling and clear
-- [ ] Proofread for errors
-
-### Messaging
-- [ ] Aligns with key messages
-- [ ] Differentiators highlighted
-- [ ] Benefits over features
-- [ ] Target audience addressed
-- [ ] No conflicting claims
-
-## Technical Requirements
-
-### File Specifications
-- [ ] Correct file format
-- [ ] Appropriate resolution
-- [ ] File size optimized
-- [ ] Proper naming convention
-- [ ] Metadata included
-
-### Platform Requirements
+## Platform Review
 | Platform | Verified |
-|----------|----------|
-| Instagram | [ ] Correct dimensions |
-| Twitter/X | [ ] Meets requirements |
-| LinkedIn | [ ] Professional standards |
-| Facebook | [ ] Guidelines compliant |
-| Email | [ ] Size under 1MB |
-| Web | [ ] Optimized for web |
+|---|---|
+| Instagram | [ ] Placement dimensions and safe areas |
+| X | [ ] Placement requirements |
+| LinkedIn | [ ] Placement requirements |
+| Facebook | [ ] Placement requirements |
+| Email | [ ] Size and rendering |
+| Web | [ ] Responsive rendering and optimization |
 
-## Legal & Compliance
+## Legal and Compliance
+- [ ] Stock media is licensed for the intended use.
+- [ ] Trademarks and user-provided content are authorized.
+- [ ] Required disclosures are present.
+- [ ] Pricing, terms, and privacy statements are accurate.
 
-### Intellectual Property
-- [ ] Stock images licensed
-- [ ] Music/audio cleared
-- [ ] No trademark violations
-- [ ] User content authorized
-- [ ] Credits included where needed
-
-### Regulatory
-- [ ] Required disclosures present
-- [ ] No misleading claims
-- [ ] Pricing accurate
-- [ ] Terms linked where needed
-- [ ] Privacy compliant
-
-## Review Status
-
-### Reviewer Sign-off
-
+## Sign-off
 | Review Area | Reviewer | Date | Status |
-|-------------|----------|------|--------|
-| Visual Design | | | [ ] Pass / [ ] Revisions |
-| Copy/Content | | | [ ] Pass / [ ] Revisions |
-| Brand Compliance | | | [ ] Pass / [ ] Revisions |
+|---|---|---|---|
+| Visual design | | | [ ] Pass / [ ] Revisions |
+| Copy/content | | | [ ] Pass / [ ] Revisions |
+| Brand consistency | | | [ ] Pass / [ ] Revisions |
 | Technical | | | [ ] Pass / [ ] Revisions |
 | Legal | | | [ ] Pass / [ ] Revisions |
 
-### Final Approval
+**Approved by:** __________________
 
-- [ ] All review areas passed
-- [ ] Revisions completed (if any)
-- [ ] Final version uploaded
-- [ ] Metadata updated
-- [ ] Ready for publish/use
+**Date:** __________________
 
-**Approved By:** _______________
-
-**Date:** _______________
-
-**Version:** _______________
-
-## Common Issues & Fixes
-
-| Issue | Fix |
-|-------|-----|
-| Logo too small | Increase to minimum size |
-| Wrong font | Replace with brand font |
-| Low contrast | Adjust colors for accessibility |
-| Off-brand color | Replace with palette color |
-| Blurry image | Use higher resolution source |
-| Missing alt text | Add descriptive alt text |
-| Weak CTA | Strengthen action-oriented copy |
+**Version:** __________________
 
 ## Automation Support
 
-The `validate-asset.cjs` script can auto-check:
-- Color palette compliance
-- Minimum dimensions
-- File format/size
-- Naming convention
-- Basic metadata
+`validate-asset.cjs` currently checks filename convention, supported extension, file size, and optional manifest registration. It does **not** inspect image dimensions, image pixels, color-palette compliance, licensing, or general metadata. Use appropriate media/visual inspection tools for those checks.
 
-Run: `node .claude/skills/brand/scripts/validate-asset.cjs <asset-path>`
+Run from the project root:
+
+```bash
+node <skill-directory>/scripts/validate-asset.cjs <asset-path> --json
+```
 
 ## Archival
 
-After approval:
-1. Update asset status in manifest.json
-2. Add approver and timestamp
-3. Move previous versions to archive
-4. Update campaign tracking
-5. Notify relevant teams
+After approval, follow the project's asset-management process to update the manifest, record reviewer and timestamp, and archive superseded versions. Do not move or delete prior assets without explicit approval.
