@@ -29,6 +29,11 @@ class SvgSafetyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Active or imported"):
             validate_svg('<svg><path fill="url(javascript:alert(1))"/></svg>')
 
+    def test_rejects_external_css_url(self):
+        svg = '<svg><style>.icon { fill: url(https://example.com/paint.svg#x); }</style></svg>'
+        with self.assertRaisesRegex(ValueError, "External CSS URLs"):
+            validate_svg(svg)
+
     def test_rejects_non_svg_root(self):
         with self.assertRaisesRegex(ValueError, "root element"):
             validate_svg("<html></html>")
