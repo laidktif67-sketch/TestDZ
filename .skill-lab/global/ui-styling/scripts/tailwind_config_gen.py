@@ -42,7 +42,7 @@ def _detect_tailwind_v4(project_root: Path) -> bool:
         ):
             version = (package.get(section) or {}).get("tailwindcss")
             if isinstance(version, str) and re.match(
-                r"^[\\s~^>=v]*(?:4)(?:\\.|$)", version
+                r"^[\s~^>=v]*(?:4)(?:\.|$)", version
             ):
                 return True
 
@@ -57,7 +57,7 @@ def _detect_tailwind_v4(project_root: Path) -> bool:
                 source = css_file.read_text(encoding="utf-8")
             except (OSError, UnicodeError):
                 continue
-            if re.search(r"@import\\s+[\"']tailwindcss[\"']", source):
+            if re.search(r"""@import\s+["']tailwindcss["']""", source):
                 return True
     except OSError:
         pass
@@ -84,6 +84,7 @@ class TailwindConfigGenerator:
             framework: Framework name (react, vue, svelte, nextjs)
             output_path: Output file path (default: auto-detect)
             force: If True, allow replacing an existing output file
+            allow_v4_legacy_config: Explicit opt-in for legacy config generation on v4
         """
         self.typescript = typescript
         self.framework = framework
