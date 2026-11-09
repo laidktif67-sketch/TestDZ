@@ -12,6 +12,7 @@ import json
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 REPO = next((
@@ -42,6 +43,43 @@ def _load_generator():
 
 
 class CatalogSummaryLineEndingsTest(unittest.TestCase):
+    def test_standalone_opencode_readme_does_not_require_upstream_catalog_counts(self):
+        module = _load_generator()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text(
+                "# UI/UX Pro Max\\n\\n"
+                "This copy is maintained as a standalone skill for **OpenCode**.\\n",
+                encoding="utf-8",
+            )
+            summary = {
+                "counts": {
+                    "googleFonts": 1934,
+                    "curatedIcons": 105,
+                    "upstreamPhosphorIcons": 1512,
+                },
+                "pendingCandidates": [{} for _ in range(8)],
+            }
+            with patch.object(module, "ROOT", root):
+                self.assertEqual(0, module.check_readme_counts(summary))
+
+    def test_upstream_readme_still_requires_current_catalog_counts(self):
+        module = _load_generator()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("Upstream documentation without counts.\\n", encoding="utf-8")
+            summary = {
+                "counts": {
+                    "googleFonts": 1934,
+                    "curatedIcons": 105,
+                    "upstreamPhosphorIcons": 1512,
+                },
+                "pendingCandidates": [{} for _ in range(8)],
+            }
+            with patch.object(module, "ROOT", root):
+                with self.assertRaisesRegex(ValueError, "README.md catalog counts are stale"):
+                    module.check_readme_counts(summary)
+
     def test_digest_is_identical_for_lf_and_crlf(self):
         digest = _load_generator().digest
         with tempfile.TemporaryDirectory() as tmp:
