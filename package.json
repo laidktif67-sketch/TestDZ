@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "apps/web"
+    "apps/web",
+    "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspace testdz-frontend",

@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
+import type { AppLimit, AppRecord } from "@testdz/types";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -838,14 +839,6 @@ const APP_CATEGORIES = [
   { value: "health", label: "صحة" },
   { value: "other", label: "أخرى" },
 ] as const;
-
-type AppRecord = {
-  id: string; developer_id: string; name: string; package_name: string;
-  description: string | null; category: string; icon_url: string | null;
-  status: "draft" | "published" | "paused" | "archived"; created_at: string;
-};
-
-type AppLimit = { plan_code: string; max_active_apps: number; current_active_apps: number; can_create: boolean };
 
 function appError(message: string) {
   if (message.includes("PLAN_LIMIT_REACHED")) return "وصلت إلى الحد الأقصى لتطبيقات خطتك. يمكنك أرشفة تطبيق أو ترقية خطتك.";
