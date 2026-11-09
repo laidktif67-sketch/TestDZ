@@ -11,11 +11,19 @@ import unittest
 from pathlib import Path
 
 REPO = next(
-    parent for parent in Path(__file__).resolve().parents
-    if all((parent / "scripts" / script).is_file() for script in (
-        "refresh-google-fonts.py", "refresh-icon-catalog.py",
-    ))
+    (
+        parent for parent in Path(__file__).resolve().parents
+        if all((parent / "scripts" / script).is_file() for script in (
+            "refresh-google-fonts.py", "refresh-icon-catalog.py",
+        ))
+    ),
+    None,
 )
+if REPO is None:
+    raise unittest.SkipTest(
+        "Catalog refresh tests require the upstream refresh scripts, "
+        "which are not included in this standalone skill package"
+    )
 FIXTURES = Path(__file__).parent / "fixtures" / "catalogs"
 FONT_SCRIPT = REPO / "scripts" / "refresh-google-fonts.py"
 ICON_SCRIPT = REPO / "scripts" / "refresh-icon-catalog.py"
