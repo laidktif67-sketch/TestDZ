@@ -1,6 +1,6 @@
-import { supabase } from "../lib/supabase";
+import { supabase } from "./supabase";
 
-function translateAuthError(message: string) {
+export function translateAuthError(message: string) {
   const value = message.toLowerCase();
   if (value.includes("already registered") || value.includes("already been registered")) return "هذا البريد مسجل بالفعل. جرّب تسجيل الدخول.";
   if (value.includes("invalid login credentials")) return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
@@ -10,7 +10,7 @@ function translateAuthError(message: string) {
   return "تعذر إكمال العملية. تحقق من البيانات وحاول مرة أخرى.";
 }
 
-async function getPostAuthRoute(userId: string): Promise<"/dashboard" | "/onboarding"> {
+export async function getPostAuthRoute(userId: string): Promise<"/dashboard" | "/onboarding"> {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
   const { data: profile, error } = await supabase
     .from("profiles")
