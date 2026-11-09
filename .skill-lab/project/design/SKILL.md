@@ -195,7 +195,7 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 
 1. **Logo** → `scripts/logo/generate.py` → Generate logo variants
 2. **CIP** → `scripts/cip/generate.py --logo ...` → Create deliverable mockups
-3. **Presentation** → Load `references/slides-create.md` → Build pitch deck
+3. **Presentation** → Delegate to the dedicated `slides` skill
 
 ### New Design System
 
@@ -216,11 +216,11 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 | CIP Deliverables | `references/cip-deliverable-guide.md` |
 | CIP Styles | `references/cip-style-guide.md` |
 | CIP Prompts | `references/cip-prompt-engineering.md` |
-| Slides Create | `references/slides-create.md` |
-| Slides Layouts | `references/slides-layout-patterns.md` |
-| Slides Template | `references/slides-html-template.md` |
-| Slides Copy | `references/slides-copywriting-formulas.md` |
-| Slides Strategy | `references/slides-strategies.md` |
+
+
+
+
+
 | Social Photos Guide | `references/social-photos-design.md` |
 | Icon Design Guide | `references/icon-design.md` |
 
