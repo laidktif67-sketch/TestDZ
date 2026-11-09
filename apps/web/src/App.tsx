@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import { Brand } from "./components/Brand";
+import { useLenis } from "./hooks/useLenis";
 import AuthPage from "./pages/AuthPage";
 import LandingPage from "./pages/LandingPage";
 
