@@ -1241,3 +1241,38 @@ html:lang(fr),
     align-items: center !important;
   }
 }
+
+
+/* Final desktop composition: story left, verification card right. */
+@media (min-width: 701px) {
+  .verify-layout {
+    grid-template-columns: minmax(0, 1.08fr) minmax(390px, .92fr) !important;
+    grid-template-areas: "story card" !important;
+  }
+  .verify-story {
+    grid-area: story !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  .verify-card {
+    grid-area: card !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+}
+.verify-email { gap: 10px; }
+.verify-email strong { min-width: 0; overflow-wrap: anywhere; }
+.verify-copy {
+  flex: 0 0 auto;
+  border: 1px solid #cbdcf5;
+  border-radius: 9px;
+  padding: 7px 11px;
+  color: #1767e9;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.verify-copy:hover { background: #edf5ff; }
+.verify-copy:disabled { opacity: .45; cursor: not-allowed; }
