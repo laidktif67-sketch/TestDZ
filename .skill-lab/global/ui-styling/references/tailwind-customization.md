@@ -2,7 +2,25 @@
 
 Config file structure, custom utilities, plugins, and theme extensions.
 
-## @theme Directive
+## Choose the configuration model first
+
+Check the installed Tailwind major version before applying any example below.
+
+- **Tailwind v4:** use the CSS-first sections in this reference. Keep tokens
+  in `@theme`, add custom utilities with `@utility`, and add custom variants
+  with `@custom-variant`.
+- **Tailwind v3:** use the JavaScript configuration examples explicitly marked
+  v3 below (`tailwind.config.js`, `theme.extend`, and JS plugin arrays).
+- Do not create a v3 config just because an example exists in this document.
+  Tailwind v4 does not automatically detect legacy JavaScript config files.
+
+Tailwind v4 can load a legacy config with `@config "path/to/tailwind.config.js";`
+and a legacy plugin with `@plugin "package-name";` when compatibility is
+required. These directives are compatibility bridges, not a reason to start
+new v4 projects with JavaScript configuration. Check v4 support for each
+legacy option before retaining it.
+
+## @theme Directive (Tailwind CSS v4)
 
 Modern approach to customize Tailwind using CSS:
 
@@ -275,6 +293,24 @@ Extract repeated utility patterns:
 
 ## Plugins
 
+### Tailwind CSS v4
+
+When a legacy JavaScript plugin is genuinely required, load it from CSS using
+the v4 compatibility directive:
+
+```css
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+```
+
+Prefer CSS-first theme variables and custom utilities when they can replace a
+plugin. Do not put `require(...)` calls in a v4 stylesheet.
+
+### Tailwind CSS v3 only — JavaScript plugin configuration
+
+The following `tailwind.config.js` examples use the v3 configuration model.
+Do not copy them into a v4 project as its default setup.
+
 ### Official Plugins
 
 ```bash
@@ -343,7 +379,7 @@ export default {
 
 ## Configuration Examples
 
-### Complete Tailwind Config
+### Tailwind CSS v3 only — Complete JavaScript/TypeScript Config
 
 ```javascript
 // tailwind.config.ts
@@ -413,6 +449,8 @@ export default config
 ```
 
 ## Dark Mode Configuration
+
+### Tailwind CSS v3 only — JavaScript config
 
 ```javascript
 // tailwind.config.js
