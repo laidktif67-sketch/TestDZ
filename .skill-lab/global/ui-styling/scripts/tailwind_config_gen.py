@@ -8,6 +8,7 @@ opts into legacy config compatibility with --allow-v4-legacy-config.
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -33,6 +34,8 @@ def _detect_tailwind_v4(project_root: Path) -> bool:
             package = json.loads(package_json.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             package = {}
+        if not isinstance(package, dict):
+            package = {}
 
         for section in (
             "dependencies",
@@ -40,7 +43,12 @@ def _detect_tailwind_v4(project_root: Path) -> bool:
             "optionalDependencies",
             "peerDependencies",
         ):
-            version = (package.get(section) or {}).get("tailwindcss")
+            dependencies = package.get(section)
+            version = (
+                dependencies.get("tailwindcss")
+                if isinstance(dependencies, dict)
+                else None
+            )
             if isinstance(version, str) and re.match(
                 r"^[\s~^>=v]*(?:4)(?:\.|$)", version
             ):
@@ -48,17 +56,18 @@ def _detect_tailwind_v4(project_root: Path) -> bool:
 
     ignored = {"node_modules", ".git", ".next", "dist", "build", "coverage"}
     try:
-        css_files = (
-            path for path in project_root.rglob("*.css")
-            if not any(part in ignored for part in path.parts)
-        )
-        for css_file in css_files:
-            try:
-                source = css_file.read_text(encoding="utf-8")
-            except (OSError, UnicodeError):
-                continue
-            if re.search(r"""@import\s+["']tailwindcss["']""", source):
-                return True
+        for root, directories, filenames in os.walk(project_root):
+            directories[:] = [name for name in directories if name not in ignored]
+            for filename in filenames:
+                if not filename.endswith(".css"):
+                    continue
+                css_file = Path(root) / filename
+                try:
+                    source = css_file.read_text(encoding="utf-8")
+                except (OSError, UnicodeError):
+                    continue
+                if re.search(r"""@import\\s+["']tailwindcss["']""", source):
+                    return True
     except OSError:
         pass
 
