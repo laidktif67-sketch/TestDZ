@@ -6,7 +6,7 @@ import { useLenis } from "../hooks/useLenis";
 import { translateAuthError } from "../lib/auth-routing";
 import { supabase } from "../lib/supabase";
 
-function VerifyEmailPage() {
+export default function VerifyEmailPage() {
   useLenis();
   const navigate = useNavigate();
   const [email] = useState(() => new URLSearchParams(window.location.search).get("email") || "");
