@@ -159,6 +159,9 @@ namespace in the global stylesheet. Keep the actual semantic values in
 ```css
 @import "tailwindcss";
 
+/* Match shadcn's class-based theme provider in Tailwind v4. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.15 0 0);
