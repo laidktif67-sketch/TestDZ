@@ -1,87 +1,53 @@
-"""Every script invocation in the shipped skill markdown resolves from the skill directory.
+"""Verify that documented commands resolve inside this standalone skill package.
 
-Regression test for #474. The sub-skills ship in two copies (.claude/skills/<skill>/
-for the plugin, cli/assets/skills/<skill>/ for CLI installs) and land in layouts where
-neither the project root nor ~/.claude/skills/ is a valid anchor: the plugin cache, a
-project's .claude/skills/, ~/.claude/skills/ (--global), or a manual copy. The one anchor
-that exists in all of them is the skill's own directory, so documented commands use
-`scripts/<file>` for the skill's own scripts and `../<skill>/scripts/<file>` for a
-sibling sub-skill (the sub-skills are always installed side by side).
-
-This test extracts every `python|python3|node|bash <path>` invocation from every
-markdown file under both trees and asserts that the path is skill-relative and names a
-file that ships. The core skill's `${CLAUDE_PLUGIN_ROOT}/.claude/skills/...` form is
-resolved against the repository root, which is what that variable denotes under a
-plugin install - and accepted only in that file, because the sub-skills also ship
-through the CLI, where the variable does not exist. The grep-based path contract in check-asset-sync.yml is the negative
-side (no home-, project- or variable-rooted paths anywhere, code included); this is
-the positive side (every documented invocation points at a real file).
+OpenCode supplies the skill's base directory when loading a directory-based
+SKILL.md. Commands in this skill therefore use scripts/<file> paths, independent
+of the repository root or the directory from which the agent started.
 """
 
 import re
 import unittest
 from pathlib import Path
 
-SKILL_TREES = ("cli/assets/skills", ".claude/skills")
-REPO = next((
-    parent for parent in Path(__file__).resolve().parents
-    if (parent / "scripts" / "generate-catalog-summary.py").is_file()
-    and all((parent / tree).is_dir() for tree in SKILL_TREES)
-), None)
-if REPO is None:
-    raise unittest.SkipTest(
-        "Repository-wide skill path audit requires both upstream skill trees "
-        "(cli/assets/skills and .claude/skills)"
-    )
-# The only file that may use the plugin-root form: hand-authored for the plugin install
-# and not shipped by the CLI (sync-assets.mjs mirrors data/ and scripts/, never SKILL.md).
-# (Built from segments: the path contract in check-asset-sync.yml scans this file too.)
-PLUGIN_ONLY_FILE = Path(".claude") / "skills" / "ui-ux-pro-max" / "SKILL.md"
-INVOCATION = re.compile(r'(?<![\w/.-])(?:python3?|node|bash)\s+"?([^\s"`\']+\.(?:py|cjs|js|mjs|sh))')
-PLUGIN_ROOT = "${CLAUDE_PLUGIN_ROOT}/"
+SKILL_DIR = next(
+    (
+        parent for parent in Path(__file__).resolve().parents
+        if (parent / "SKILL.md").is_file()
+        and (parent / "scripts").is_dir()
+        and (parent / "data").is_dir()
+    ),
+    None,
+)
+if SKILL_DIR is None:
+    raise RuntimeError("Could not locate the standalone ui-ux-pro-max skill directory")
 
-
-def shipped_invocations():
-    for tree in SKILL_TREES:
-        for skill_dir in sorted((REPO / tree).iterdir()):
-            if not skill_dir.is_dir():
-                continue
-            for md in sorted(skill_dir.rglob("*.md")):
-                for lineno, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1):
-                    for match in INVOCATION.finditer(line):
-                        yield skill_dir, md, lineno, match.group(1)
-
-
-def resolve(skill_dir, md, path):
-    """Return (target, None) for a skill-relative path, or (None, reason)."""
-    if path.startswith(PLUGIN_ROOT):
-        if md.relative_to(REPO) != PLUGIN_ONLY_FILE:
-            return None, "the ${CLAUDE_PLUGIN_ROOT} form is only valid in the plugin-only core SKILL.md"
-        return REPO / path[len(PLUGIN_ROOT):], None
-    if path.startswith("scripts/"):
-        return skill_dir / path, None
-    if path.startswith("../"):
-        parts = path.split("/")
-        if len(parts) > 3 and parts[2] == "scripts" and (skill_dir.parent / parts[1]).is_dir():
-            return skill_dir.parent / parts[1] / "/".join(parts[2:]), None
-        return None, "a sibling invocation must be ../<skill>/scripts/<file> and the sibling must ship"
-    return None, "not skill-relative (expected scripts/<file> or ../<skill>/scripts/<file>)"
+INVOCATION = re.compile(
+    r'(?<![\\w/.-])(?:python3?|node|bash)\\s+"?([^\\s"`\\']+\\.(?:py|cjs|js|mjs|sh))'
+)
 
 
 class SkillScriptPathsTest(unittest.TestCase):
-    def test_every_shipped_markdown_invocation_resolves_from_the_skill_directory(self):
+    def test_every_documented_script_invocation_resolves_from_skill_directory(self):
         problems, seen = [], 0
-        for skill_dir, md, lineno, path in shipped_invocations():
-            seen += 1
-            target, reason = resolve(skill_dir, md, path)
-            if reason is None and not target.is_file():
-                reason = f"no such file: {target}"
-            if reason:
-                problems.append(f"{md.relative_to(REPO)}:{lineno}: {path} -- {reason}")
-        # Guard against a silently broken extractor: the two trees carry well over
-        # a hundred documented invocations between them.
-        self.assertGreater(seen, 100, f"extractor found only {seen} invocations")
-        self.assertEqual(problems, [], "\n" + "\n".join(problems))
+        for markdown in sorted(SKILL_DIR.rglob("*.md")):
+            for lineno, line in enumerate(markdown.read_text(encoding="utf-8").splitlines(), 1):
+                for match in INVOCATION.finditer(line):
+                    seen += 1
+                    path = match.group(1)
+                    if not path.startswith("scripts/"):
+                        problems.append(
+                            f"{markdown.relative_to(SKILL_DIR)}:{lineno}: "
+                            f"{path} -- expected a skill-relative scripts/<file> path"
+                        )
+                        continue
+                    target = (SKILL_DIR / path).resolve()
+                    if not target.is_relative_to(SKILL_DIR.resolve()) or not target.is_file():
+                        problems.append(
+                            f"{markdown.relative_to(SKILL_DIR)}:{lineno}: "
+                            f"{path} -- target is missing or escapes the skill directory"
+                        )
+        self.assertGreater(seen, 0, "No documented script invocations were discovered")
+        self.assertEqual(problems, [], "\\n" + "\\n".join(problems))
 
 
 if __name__ == "__main__":
