@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Tailwind CSS Configuration Generator
+Legacy Tailwind CSS v3 JavaScript/TypeScript configuration generator.
 
-Generate tailwind.config.js/ts with custom theme configuration.
-Supports colors, fonts, spacing, breakpoints, and plugin recommendations.
+Tailwind CSS v4 projects are detected and blocked unless the caller explicitly
+opts into legacy config compatibility with --allow-v4-legacy-config.
 """
 
 import argparse
@@ -541,6 +541,16 @@ Examples:
         print(f"Added recommended plugins: {', '.join(recommended)}")
         print("\nInstall with:")
         print(f"  npm install -D {' '.join(recommended)}")
+
+    # Block legacy config output for v4 projects unless compatibility is explicit.
+    if _detect_tailwind_v4(Path.cwd()) and not args.allow_v4_legacy_config:
+        print(
+            "Tailwind CSS v4 detected. Prefer CSS-first @theme, @utility, and "
+            "@custom-variant. Pass --allow-v4-legacy-config only when a legacy "
+            "config is intentionally required.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     # Validate
     valid, message = generator.validate_config()
