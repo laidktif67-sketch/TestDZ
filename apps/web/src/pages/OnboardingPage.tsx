@@ -14,7 +14,6 @@ const onboardingCopy = {
     intro: "Select the role that best describes you. You can always change this later in your account settings.",
     tester: "Tester", testerBody: "Participate in tests, earn points and help improve products.",
     developer: "Developer", developerBody: "Publish your applications, create testing campaigns and get useful feedback.",
-    both: "Both", bothBody: "Use the platform as both a tester and a developer.",
     interests: "What are you interested in?", optional: "Optional",
     interestNames: ["Tools & Productivity", "Education", "Gaming", "E-commerce", "Health & Fitness", "Social Media", "Other"],
     continue: "Continue", saving: "Saving...", skip: "Skip for now", errorConfig: "Supabase is not configured.",
@@ -25,7 +24,6 @@ const onboardingCopy = {
     intro: "Sélectionnez le rôle qui vous décrit le mieux. Vous pourrez le modifier plus tard dans les paramètres.",
     tester: "Testeur", testerBody: "Participez aux tests, gagnez des points et contribuez à améliorer les produits.",
     developer: "Développeur", developerBody: "Publiez vos applications, créez des campagnes de test et recevez des avis utiles.",
-    both: "Les deux", bothBody: "Utilisez la plateforme comme testeur et développeur.",
     interests: "Quels sont vos centres d’intérêt ?", optional: "Facultatif",
     interestNames: ["Outils et productivité", "Éducation", "Jeux", "E-commerce", "Santé et fitness", "Réseaux sociaux", "Autre"],
     continue: "Continuer", saving: "Enregistrement...", skip: "Passer pour le moment", errorConfig: "Supabase n’est pas configuré.",
@@ -36,7 +34,6 @@ const onboardingCopy = {
     intro: "اختر الدور الذي يصفك بشكل أفضل. يمكنك تغيير ذلك لاحقاً من إعدادات حسابك.",
     tester: "مختبِر", testerBody: "شارك في اختبار التطبيقات، واكسب النقاط وساعد على تحسين المنتجات.",
     developer: "مطوّر", developerBody: "انشر تطبيقاتك وأنشئ حملات اختبار واحصل على آراء مفيدة.",
-    both: "كلاهما", bothBody: "استخدم المنصة كمختبِر ومطوّر في الوقت نفسه.",
     interests: "ما المجالات التي تهمك؟", optional: "اختياري",
     interestNames: ["أدوات وإنتاجية", "تعليم", "ألعاب", "تجارة إلكترونية", "صحة ولياقة", "شبكات اجتماعية", "أخرى"],
     continue: "متابعة", saving: "جارٍ الحفظ...", skip: "تخطي الآن", errorConfig: "إعداد Supabase غير مكتمل.",
@@ -47,7 +44,6 @@ const onboardingCopy = {
 const roles = [
   { value: "tester", icon: "tester" },
   { value: "developer", icon: "developer" },
-  { value: "both", icon: "both" },
 ] as const;
 
 function RoleIllustration({ type }: { type: "tester" | "developer" | "both" }) {
