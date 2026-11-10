@@ -1966,3 +1966,10 @@ html:lang(fr),
 @media(prefers-reduced-motion:reduce) {
   .signup-success-actions button {transition:none}
 }
+
+.signup-success-resend {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;margin:13px auto 0;padding:7px 10px;
+  border:0;background:transparent;color:#1767ed;font:inherit;font-size:12px;font-weight:750;cursor:pointer;
+}
+.signup-success-resend:hover {text-decoration:underline}
+.signup-success-resend:focus-visible {outline:3px solid rgba(23,103,237,.24);outline-offset:3px;border-radius:8px}
