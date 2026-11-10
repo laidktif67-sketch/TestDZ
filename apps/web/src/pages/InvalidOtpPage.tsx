@@ -22,7 +22,7 @@ function InvalidOtpArtwork() {
     </svg>
     <div className="otp-stars"><span>✱</span><span>✱</span><span>✱</span><span>✱</span></div>
     <div className="otp-art-copy"><h2>Invalid or Expired OTP</h2><p>The code you entered is invalid or has expired.<br/>Please request a new code.</p></div>
-    <p className="otp-script">Test. Learn. Grow.<i/></p>
+    <p className="otp-script"><span className="otp-script-text">Test. Learn. Grow.</span><span className="otp-script-sparkle" aria-hidden="true">✦</span><i/></p>
   </div>;
 }
 
@@ -37,7 +37,7 @@ export default function InvalidOtpPage() {
       <section className="otp-story"><InvalidOtpArtwork/></section>
       <section className="otp-card" aria-labelledby="otp-title">
         <div className="otp-alert-icon" aria-hidden="true"><svg viewBox="0 0 96 96" fill="none"><path d="M48 8 78 20v24c0 19-12 32-30 43C30 76 18 63 18 44V20L48 8Z" fill="#fff" stroke="#F04452" strokeWidth="5"/><path d="m36 36 24 24m0-24L36 60" stroke="#F04452" strokeWidth="7" strokeLinecap="round"/><circle cx="75" cy="23" r="14" fill="#F04452" stroke="#fff" strokeWidth="4"/><path d="M75 16v8" stroke="#fff" strokeWidth="3.5" strokeLinecap="round"/><circle cx="75" cy="28" r="1.8" fill="#fff"/></svg><i/><b/><em/></div>
-        <div className="otp-status"><span className="otp-status-dot"/> Verification needed <span aria-hidden="true">🛡️</span></div>
+        <div className="otp-status"><span className="otp-status-dot"/> Verification needed <span className="otp-status-emoji" aria-hidden="true">🛡️</span></div>
         <h1 id="otp-title">Invalid or Expired OTP <span className="otp-heading-emoji" aria-hidden="true">🔐</span></h1>
         <p className="otp-description">The verification code is either incorrect<br className="otp-desktop"/> or has expired. Please try again.</p>
         <button className="otp-primary" type="button" onClick={() => navigate("/auth")}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 11.7-2L20 12M4 12l2.7 5a7 7 0 0 0 11.7-2"/></svg>Try Signing In Again</button>
