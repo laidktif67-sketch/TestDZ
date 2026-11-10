@@ -48,7 +48,12 @@ export const profilesApi = {
   },
 
   updateSettings(userId: string, input: ProfileSettingsUpdate) {
-    return getClient().from("profiles").update(input).eq("id", userId);
+    return getClient()
+      .from("profiles")
+      .update(input)
+      .eq("id", userId)
+      .select("id")
+      .maybeSingle();
   },
 
   updateCompletion(userId: string, input: ProfileCompletionUpdate) {
@@ -88,12 +93,14 @@ export const profilesApi = {
 
     const { data } = bucket.getPublicUrl(path);
     const url = `${data.publicUrl}?v=${Date.now()}`;
-    const { error: profileError } = await client
+    const { data: updatedProfile, error: profileError } = await client
       .from("profiles")
       .update({ avatar_url: url })
-      .eq("id", userId);
+      .eq("id", userId)
+      .select("id")
+      .maybeSingle();
 
-    if (profileError) {
+    if (profileError || !updatedProfile) {
       // Keep the previously saved avatar intact; remove only this newly uploaded object.
       const { error: rollbackError } = await bucket.remove([path]);
       return {
