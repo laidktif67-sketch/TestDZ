@@ -220,7 +220,7 @@ export default function OnboardingPage() {
           <span className="role-check" aria-hidden="true">✓</span>
           <span className="role-art"><RoleIllustration type={role.icon} /></span>
           <strong>{t[role.value]}</strong>
-          <span className="role-description">{t[`${role.value}Body` as "testerBody" | "developerBody" | "bothBody"]}</span>
+          <span className="role-description">{role.value === "tester" ? t.testerBody : t.developerBody}</span>
         </button>)}
       </div>
       <p className="onboarding-trust-note"><span aria-hidden="true">✓</span>{t.trustNote}</p>
