@@ -7,7 +7,7 @@ type OnboardingLanguage = "en" | "fr" | "ar";
 
 const onboardingCopy = {
   en: {
-    language: "Language", step: "Step 3 · Set up your account", title: "Choose Your Account Type",
+    language: "Choose language", roleLabel: "Choose your account role", trustNote: "Your choice can be changed later in account settings.", step: "Step 3 · Set up your account", title: "Choose Your Account Type",
     intro: "Select the role that best describes you. You can always change this later in your account settings.",
     tester: "Tester", testerBody: "Participate in tests, earn points and help improve products.",
     developer: "Developer", developerBody: "Publish your applications, create testing campaigns and get useful feedback.",
@@ -18,7 +18,7 @@ const onboardingCopy = {
     errorSave: "Could not save your account setup. Please try again.", progress: "Step 3 of 4"
   },
   fr: {
-    language: "Langue", step: "Étape 3 · Configurez votre compte", title: "Choisissez votre type de compte",
+    language: "Choisir la langue", roleLabel: "Choisissez votre type de compte", trustNote: "Vous pourrez modifier votre choix dans les paramètres.", step: "Étape 3 · Configurez votre compte", title: "Choisissez votre type de compte",
     intro: "Sélectionnez le rôle qui vous décrit le mieux. Vous pourrez le modifier plus tard dans les paramètres.",
     tester: "Testeur", testerBody: "Participez aux tests, gagnez des points et contribuez à améliorer les produits.",
     developer: "Développeur", developerBody: "Publiez vos applications, créez des campagnes de test et recevez des avis utiles.",
@@ -29,7 +29,7 @@ const onboardingCopy = {
     errorSave: "Impossible d’enregistrer votre compte. Veuillez réessayer.", progress: "Étape 3 sur 4"
   },
   ar: {
-    language: "اختر اللغة", step: "الخطوة الثالثة · إعداد حسابك", title: "اختر نوع حسابك",
+    language: "اختر اللغة", roleLabel: "اختر نوع الحساب", trustNote: "يمكنك تغيير اختيارك لاحقاً من إعدادات الحساب.", step: "الخطوة الثالثة · إعداد حسابك", title: "اختر نوع حسابك",
     intro: "اختر الدور الذي يصفك بشكل أفضل. يمكنك تغيير ذلك لاحقاً من إعدادات حسابك.",
     tester: "مختبِر", testerBody: "شارك في اختبار التطبيقات، واكسب النقاط وساعد على تحسين المنتجات.",
     developer: "مطوّر", developerBody: "انشر تطبيقاتك وأنشئ حملات اختبار واحصل على آراء مفيدة.",
@@ -190,7 +190,7 @@ export default function OnboardingPage() {
     <div className="onboarding-bg-shape onboarding-bg-top"/><div className="onboarding-bg-shape onboarding-bg-bottom"/>
     <header className="onboarding-header">
       <TestDZLogo />
-      <label className="onboarding-language"><span aria-hidden="true">◎</span><select aria-label={t.language} value={language} onChange={event => setLanguage(event.target.value as OnboardingLanguage)}><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select><span className="language-chevron" aria-hidden="true">⌄</span></label>
+      <div className="onboarding-language-switch" role="group" aria-label={t.language}>{(["en", "fr", "ar"] as const).map(code => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => setLanguage(code)}>{code.toUpperCase()}</button>)}</div>
     </header>
     <SideArtwork />
     <section className="onboarding-main">
@@ -200,7 +200,7 @@ export default function OnboardingPage() {
         <h1>{t.title}</h1>
         <p>{t.intro}</p>
       </div>
-      <div className="onboarding-role-grid">
+      <div className="onboarding-role-grid" role="group" aria-label={t.roleLabel}>
         {roles.map(role => <button
           type="button"
           key={role.value}
@@ -215,8 +215,9 @@ export default function OnboardingPage() {
         </button>)}
       </div>
       {error && <div className="notice notice-error onboarding-error" role="alert">{error}</div>}
+      <p className="onboarding-trust-note"><span aria-hidden="true">✓</span>{t.trustNote}</p>
       <div className="onboarding-actions">
-        <button className="onboarding-continue" disabled={busy} onClick={finish}>{busy ? t.saving : t.continue} <span aria-hidden="true">←</span></button>
+        <button className="onboarding-continue" disabled={busy} onClick={finish}>{busy ? t.saving : t.continue} <span aria-hidden="true">{language === "ar" ? "←" : "→"}</span></button>
         <button className="onboarding-skip" type="button" onClick={() => setChoice("tester")}>{t.skip}</button>
       </div>
     </section>
