@@ -57,7 +57,12 @@ export const profilesApi = {
   },
 
   updateCompletion(userId: string, input: ProfileCompletionUpdate) {
-    return getClient().from("profiles").update(input).eq("id", userId);
+    return getClient()
+      .from("profiles")
+      .update(input)
+      .eq("id", userId)
+      .select("id")
+      .maybeSingle();
   },
 
   async uploadAvatar(userId: string, input: AvatarUploadInput): Promise<AvatarUploadResult> {
