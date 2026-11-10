@@ -117,7 +117,6 @@ export default function WalletRewardsPage() {
   }), [ledger, filter, search]);
 
   const lifetimeEarned = ledger.filter((entry) => entry.wallet_type === "earned_points" && entry.amount > 0).reduce((sum, entry) => sum + entry.amount, 0);
-  const redeemed = ledger.filter((entry) => entry.wallet_type === "earned_points" && entry.amount < 0).reduce((sum, entry) => sum + Math.abs(entry.amount), 0);
   const nextMilestone = milestones.find((item) => item.points > wallet.earned_points) ?? milestones[milestones.length - 1];
   const milestoneProgress = Math.min(100, Math.round((wallet.earned_points / nextMilestone.points) * 100));
   const firstName = name.split(/\s+/)[0] || "Tester";
