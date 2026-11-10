@@ -140,10 +140,12 @@ export default function MyTestsPage(){
   <TesterSidebar
    nav={[
     { label: "Dashboard", icon: "flask", href: "/tester-dashboard" },
-    { label: "Discover", icon: "search", href: "/apps" },
+    ...(isDeveloper || isAdmin
+      ? [{ label: "Discover Apps", icon: "search", href: "/apps" }]
+      : [{ label: "Discover Tests", icon: "search", href: "/tester-dashboard#my-tests" }]),
     { label: "My Tests", icon: "tests", href: "/my-tests", active: true },
-    { label: "Billing", icon: "wallet", href: "/profile" },
-    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/profile" }] : [])
+    { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
+    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
    ]}
    name={name}
    firstName={firstName}
@@ -163,7 +165,7 @@ export default function MyTestsPage(){
     <article className="mt-stat"><span className="mt-stat-blue"><I name="tests" size={34}/></span><div><strong>{total}</strong><b>Total Tests</b><small>{done} Completed · {active.length} Active · {upcoming.length} Upcoming</small></div></article>
     <article className="mt-stat"><span className="mt-stat-teal"><i className="mt-progress-ring" style={{"--progress":overall+"%"} as CSSProperties}><b>{overall}%</b></i></span><div><b>Overall Progress</b><small>Across all your tests</small></div></article>
     <article className="mt-stat"><span className="mt-stat-gold"><I name="star" size={38}/></span><div><strong>{points.toLocaleString()}</strong><b>Total Points</b><small className="mt-green-copy">Earned points balance</small></div></article>
-    <article className="mt-stat mt-rewards-stat"><span className="mt-stat-purple"><I name="gift" size={34}/></span><div><strong>{achievements.filter(a=>a.earned).length}</strong><b>Rewards Earned</b><Link to="/profile">View Rewards <I name="arrow" size={13}/></Link></div></article>
+    <article className="mt-stat mt-rewards-stat"><span className="mt-stat-purple"><I name="gift" size={34}/></span><div><strong>{achievements.filter(a=>a.earned).length}</strong><b>Rewards Earned</b><Link to="/wallet-rewards">View Rewards <I name="arrow" size={13}/></Link></div></article>
    </section>
    <section className="mt-content-grid">
     <article className="mt-panel mt-active-panel"><div className="mt-panel-title"><h2><span className="mt-lightning">ϟ</span>Active Tests</h2><span className="mt-count">{active.length} active</span></div>
