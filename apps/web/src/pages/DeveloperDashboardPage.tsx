@@ -207,7 +207,7 @@ export default function DeveloperDashboardPage() {
 
   return <div className="dd-shell" dir={dir}>
     <aside className="dd-sidebar">
-      <Link to="/tester-dashboard" className="dd-brand"><span className="dd-brand-mark"><Icon name="tests" size={29}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
+      <Link to="/developer-dashboard" className="dd-brand"><span className="dd-brand-mark"><Icon name="tests" size={29}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
       <nav className="dd-nav">
         <Link to="/developer-dashboard" className="dd-nav-link active"><Icon name="home"/><span>{t.dashboard}</span></Link>
         <span className="dd-nav-label">APPS & WORKSPACE</span>
@@ -216,7 +216,7 @@ export default function DeveloperDashboardPage() {
         <span className="dd-nav-link dd-disabled"><Icon name="tests"/><span>{t.tests}</span><em>{t.soon}</em></span>
         <span className="dd-nav-link dd-disabled"><Icon name="chart"/><span>{t.analytics}</span><em>{t.soon}</em></span>
         <span className="dd-nav-label">DISCOVER & ACCOUNT</span>
-        <Link to="/tester-dashboard" className="dd-nav-link"><Icon name="search"/><span>{t.discover}</span></Link>
+        {canTester&&<Link to="/tester-dashboard" className="dd-nav-link"><Icon name="search"/><span>{t.discover}</span></Link>}
         <Link to="/profile" className="dd-nav-link"><Icon name="wallet"/><span>{t.billing}</span></Link>
         <Link to="/profile" className="dd-nav-link"><Icon name="settings"/><span>{t.settings}</span></Link>
       </nav>
