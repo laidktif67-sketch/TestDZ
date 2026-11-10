@@ -1,4 +1,4 @@
-import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import "../styles/tester-dashboard.css";
