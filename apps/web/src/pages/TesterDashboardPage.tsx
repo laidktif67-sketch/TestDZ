@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
+import { useIdentity } from "../features/identity/hooks/useIdentity";
 import "../styles/tester-dashboard.css";
 
 type TestItem = {
@@ -84,8 +84,7 @@ function Mascot() {
 }
 
 export default function TesterDashboardPage() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [roles, setRoles] = useState<string[]>([]);
+  const { roles: identityRoles } = useIdentity();
   const [name, setName] = useState("there");
   const [avatar, setAvatar] = useState("");
   const [stats, setStats] = useState(initialStats);
@@ -101,11 +100,11 @@ export default function TesterDashboardPage() {
   const [range, setRange] = useState("1W");
   const [animatedStats, setAnimatedStats] = useState({ available: 0, completed: 0, success: 0, points: 0 });
   const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
+  const roles = previewMode ? ["tester", "developer"] : identityRoles;
 
   useEffect(() => {
     if (previewMode) {
       setName("John Doe");
-      setRoles(["tester","developer"]);
       setStats({ available: 12, completed: 8, assignments: 10, points: 450, checkins: 0 });
       setChartPoints([40, 48, 55, 61, 68, 72, 75]);
       setChartLabels(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]);
@@ -123,8 +122,7 @@ export default function TesterDashboardPage() {
     if (!client) { setLoading(false); return; }
     let alive = true;
     const load = async (userId: string, userEmail?: string) => {
-      const [roleRes, profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
-        client.from("user_roles").select("role").eq("user_id", userId),
+      const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
         client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
         client.from("assignments").select("id,status,created_at,completed_at").eq("tester_id", userId),
@@ -132,10 +130,8 @@ export default function TesterDashboardPage() {
         client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
       ]);
       if (!alive) return;
-      const userRoles = (roleRes.data ?? []).map((r: { role: string }) => r.role);
       const assignments = assignmentRes.data ?? [];
       const completed = assignments.filter((a: { status: string }) => a.status === "completed").length;
-      setRoles(userRoles);
       setName(profileRes.data?.display_name?.trim() || userEmail?.split("@")[0] || "there");
       setAvatar(profileRes.data?.avatar_url || "");
       setStats({ available: testRes.count ?? testRes.data?.length ?? 0, completed, assignments: assignments.length, points: Number(walletRes.data?.earned_points ?? 0), checkins: 0 });
@@ -162,18 +158,16 @@ export default function TesterDashboardPage() {
       setChartLabels(labels); setChartPoints(points);
       setTests((testRes.data ?? []) as unknown as TestItem[]);
       setNotifications(notificationRes.count ?? 0);
-      if (roleRes.error || profileRes.error || assignmentRes.error || testRes.error) setError("Some dashboard information could not be loaded. Check your connection and try again.");
+      if (profileRes.error || assignmentRes.error || testRes.error) setError("Some dashboard information could not be loaded. Check your connection and try again.");
     };
     client.auth.getSession().then(({ data }) => {
       if (!alive) return;
-      setSession(data.session);
       if (data.session) void load(data.session.user.id, data.session.user.email);
       else setLoading(false);
     });
     const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
       if (nextSession) window.setTimeout(() => { if (alive) void load(nextSession.user.id, nextSession.user.email); }, 0);
-      else { setRoles([]); setLoading(false); }
+      else { setLoading(false); }
     });
     return () => { alive = false; data.subscription.unsubscribe(); };
   }, [previewMode, range]);
@@ -206,7 +200,7 @@ export default function TesterDashboardPage() {
   const isAdmin = roles.includes("admin");
   const nav = [
     { label: "Tester Dashboard", icon: "home", href: "/tester-dashboard", active: true },
-    ...(isDeveloper || roles.includes("both") ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
+    ...(isDeveloper || isAdmin ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
     { label: "Discover", icon: "search", href: "/apps" },
     { label: "My Tests", icon: "tests", href: "/my-tests" },
     { label: "Billing", icon: "wallet", href: "/profile" },
@@ -221,7 +215,7 @@ export default function TesterDashboardPage() {
       <Link to="/tester-dashboard" className="td-brand"><span className="td-brand-flask"><Icon name="tests" size={32}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
       <nav className="td-side-nav">{nav.map((item) => item.href.startsWith("#") ? <a key={item.label} href={item.href} className="td-nav-link"><Icon name={item.icon}/><span>{item.label}</span></a> : <Link key={item.label} to={item.href} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon}/><span>{item.label}</span></Link>)}</nav>
       <div className="td-sidebar-promo"><div className="td-rocket"><Icon name="rocket" size={42}/></div><strong>Build Better Together</strong><p>Create tests, help the community, and grow with TestDZ!</p><Link to="/apps">Explore More <Icon name="arrow" size={15}/></Link></div>
-      <div className="td-user-menu-wrap"><button type="button" className="td-user-mini td-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="td-workspace-menu"><Link to="/profile" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>Profile settings</span></Link>{(roles.includes("both") || (roles.includes("tester") && roles.includes("developer")))&&<><span className="td-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span><Icon name="check" size={14}/></Link><Link to="/developer-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span></Link></>}</div>}</div>
+      <div className="td-user-menu-wrap"><button type="button" className="td-user-mini td-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="td-workspace-menu"><Link to="/profile" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>Profile settings</span></Link>{(roles.includes("tester") && roles.includes("developer"))&&<><span className="td-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span><Icon name="check" size={14}/></Link><Link to="/developer-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span></Link></>}</div>}</div>
       {previewMode ? <div className="td-signout td-preview-note">Preview mode · read only</div> : <button className="td-signout" onClick={async () => { await supabase?.auth.signOut(); }}><Icon name="logout"/>Sign Out</button>}
     </aside>
 
