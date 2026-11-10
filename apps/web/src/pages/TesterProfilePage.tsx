@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import imageCompression from "browser-image-compression";
 import { Link, useNavigate } from "react-router-dom";
 import type { AvatarMimeType } from "@testdz/types";
+import { Brand } from "../components/Brand";
 import { profilesApi } from "../features/profiles/profiles-api";
 import { identityApi } from "../features/identity/identity-api";
 
