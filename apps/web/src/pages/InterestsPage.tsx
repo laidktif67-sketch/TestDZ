@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
 import { profilesApi } from "../features/profiles/profiles-api";
+import { useIdentity } from "../features/identity/hooks/useIdentity";
 import { useLenis } from "../hooks/useLenis";
 import "../styles/interests.css";
 
@@ -107,6 +108,7 @@ export default function InterestsPage(){
   const rootRef=useRef<HTMLElement>(null);
   const navigate=useNavigate();
   const location=useLocation();
+  const { refreshRoles } = useIdentity();
   const [language,setLanguage]=useState<Language>(()=>{const saved=window.localStorage.getItem("testdz-landing-language");return saved==="fr"||saved==="ar"?saved:"en";});
   const t=content[language];
   const roleFromState=(location.state as {choice?:string}|null)?.choice;
@@ -153,9 +155,20 @@ export default function InterestsPage(){
     setBusy(true);setError("");
     const roles=role==="both"?["tester","developer"]:[role];
     const interests=skip?[]:selected;
-    const {error:saveError}=await profilesApi.completeOnboarding(roles,interests);
-    if(saveError)setError(t.error);else navigate("/complete-profile",{replace:true});
-    setBusy(false);
+    try {
+      const {error:saveError}=await profilesApi.completeOnboarding(roles,interests);
+      if(saveError) {
+        setError(t.error);
+      } else {
+        // Refresh shared identity state after the RPC commits the role rows.
+        await refreshRoles();
+        navigate("/complete-profile",{replace:true});
+      }
+    } catch {
+      setError(t.error);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return <main ref={rootRef} className="interests-page" dir={language==="ar"?"rtl":"ltr"} lang={language}>
