@@ -123,7 +123,8 @@ export default function TesterDashboardPage() {
     if (!client) { setLoading(false); return; }
     let alive = true;
     const load = async (userId: string, userEmail?: string) => {
-      const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
+      try {
+        const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
         client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
         client.from("assignments").select("id,status,created_at,completed_at").eq("tester_id", userId),
@@ -160,15 +161,27 @@ export default function TesterDashboardPage() {
       setTests((testRes.data ?? []) as unknown as TestItem[]);
       setNotifications(notificationRes.count ?? 0);
       if (profileRes.error || assignmentRes.error || testRes.error) setError("Some dashboard information could not be loaded. Check your connection and try again.");
+      } catch {
+        if (alive) setError("We couldn’t load your dashboard. Check your connection and try again.");
+      } finally {
+        if (alive) setLoading(false);
+      }
     };
     client.auth.getSession().then(({ data }) => {
       if (!alive) return;
       if (data.session) void load(data.session.user.id, data.session.user.email);
       else setLoading(false);
+    }).catch(() => {
+      if (alive) {
+        setError("We couldn’t verify your session. Please refresh and try again.");
+        setLoading(false);
+      }
     });
     const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
-      if (nextSession) window.setTimeout(() => { if (alive) void load(nextSession.user.id, nextSession.user.email); }, 0);
-      else { setLoading(false); }
+      if (nextSession) {
+        setLoading(true);
+        window.setTimeout(() => { if (alive) void load(nextSession.user.id, nextSession.user.email); }, 0);
+      } else { setLoading(false); }
     });
     return () => { alive = false; data.subscription.unsubscribe(); };
   }, [previewMode, range]);
