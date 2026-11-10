@@ -57,6 +57,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [verified, setVerified] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -75,6 +76,7 @@ export default function ProfilePage() {
       setDisplayName(profile.display_name ?? "");
       setPhone(profile.phone ?? "");
       setBio(profile.bio ?? "");
+      setInterests(Array.isArray(profile.interests) ? profile.interests.filter((item): item is string => typeof item === "string") : []);
       setAvatarUrl(profile.avatar_url ?? "");
       setVerified(Boolean(profile.is_verified));
     }).catch(() => setError("We couldn't load your profile. Please refresh and try again."));
@@ -183,7 +185,7 @@ export default function ProfilePage() {
                 </form>
               </section>
 
-              <section className="tester-panel tester-device-panel"><div className="tester-device-art" aria-hidden="true"><ProfileIcon name="smartphone" /><span><ProfileIcon name="settings" /></span></div><div className="tester-device-copy"><h2>Tester Information</h2><p>Your testing details</p><div><span>Device Type</span><strong>Android Phone</strong></div><div><span>Android Version</span><strong>Android device</strong></div><div><span>Interests</span><strong className="tester-tags"><i>Productivity</i><i>Health</i><i>Games</i><i>+1</i></strong></div></div></section>
+              <section className="tester-panel tester-device-panel"><div className="tester-device-art" aria-hidden="true"><ProfileIcon name="smartphone" /><span><ProfileIcon name="settings" /></span></div><div className="tester-device-copy"><h2>Tester Information</h2><p>Your testing details</p><div><span>Device Type</span><strong>Not collected yet</strong></div><div><span>Android Version</span><strong>Not detected</strong></div><div><span>Interests</span><strong className="tester-tags">{interests.length ? interests.map((interest) => <i key={interest}>{interest}</i>) : <i>Not set</i>}</strong></div></div></section>
 
               <section className="tester-panel tester-verification-panel"><span className="tester-big-shield"><ProfileIcon name="shield-check" /></span><div className="tester-verification-copy"><h2>Account Verification</h2><p>Your account security status</p><span><ProfileIcon name={verified ? "check-circle" : "bell"} /> Email address {verified ? "verified" : "verification pending"}</span><span><ProfileIcon name="check-circle" /> Keep your profile information up to date</span></div><div className={`tester-verification-status ${verified ? "verified" : ""}`}><strong><ProfileIcon name={verified ? "shield-check" : "bell"} /></strong><span><b>{verified ? "Verified" : "In progress"}</b><small>{verified ? "All good!" : "Check your email"}</small></span></div></section>
 
