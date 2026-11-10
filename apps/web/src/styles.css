@@ -2131,3 +2131,15 @@ html:lang(fr),
  .tester-profile-page>.tester-sidebar{grid-column:auto;grid-row:auto}
  .tester-profile-page>.tester-profile-main{grid-column:auto;grid-row:auto}
 }
+
+
+/* Final desktop placement fix: anchor the sidebar to the physical left edge, independent of RTL grid direction. */
+@media(min-width:851px){
+ .tester-profile-page{display:block!important;position:relative!important;direction:ltr!important}
+ .tester-profile-page>.tester-sidebar{position:fixed!important;left:0!important;right:auto!important;top:0!important;bottom:0!important;width:239px!important;height:100vh!important;min-height:0!important;grid-column:auto!important;grid-row:auto!important}
+ .tester-profile-page>.tester-profile-main{margin-left:239px!important;margin-right:0!important;min-width:0!important;direction:ltr!important}
+}
+@media(min-width:851px) and (max-width:1100px){
+ .tester-profile-page>.tester-sidebar{width:215px!important}
+ .tester-profile-page>.tester-profile-main{margin-left:215px!important}
+}
