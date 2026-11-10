@@ -98,8 +98,8 @@ export default function ProfilePage() {
     if (!profilesApi.isConfigured()) { setMessage("Preview mode: connect the backend to save profile changes."); return; }
     setBusy(true); setMessage(""); setError("");
     try {
-      const { error: err } = await profilesApi.updateSettings(userId, { display_name: displayName.trim(), phone: phone.trim() || null, bio: bio.trim() || null });
-      if (err) setError("Couldn't save your profile. Check the details and try again.");
+      const { data: updatedProfile, error: err } = await profilesApi.updateSettings(userId, { display_name: displayName.trim(), phone: phone.trim() || null, bio: bio.trim() || null });
+      if (err || !updatedProfile) setError("Couldn't save your profile. Check the details and try again.");
       else {
         setSavedProfile({ displayName: displayName.trim(), phone: phone.trim(), bio: bio.trim() });
         setMessage("Profile updated successfully!");
