@@ -18,13 +18,14 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
   const [rolesError, setRolesError] = useState<Error | null>(null);
   const rolesRequestId = useRef(0);
 
-  const loadRoles = useCallback(async (userId: string) => {
+  const loadRoles = useCallback(async (targetUserId: string) => {
     const requestId = ++rolesRequestId.current;
+    setRoles([]);
     setRolesLoading(true);
     setRolesError(null);
 
     try {
-      const nextRoles = await identityApi.getUserRoles(userId);
+      const nextRoles = await identityApi.getUserRoles(targetUserId);
       if (requestId === rolesRequestId.current) setRoles(nextRoles);
     } catch (reason) {
       if (requestId === rolesRequestId.current) {
@@ -47,8 +48,10 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setRoles([]);
     void loadRoles(userId);
+    return () => {
+      rolesRequestId.current += 1;
+    };
   }, [userId, loadRoles]);
 
   useEffect(() => {
