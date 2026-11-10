@@ -30,9 +30,10 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Set up Supabase CLI
+        id: setup-cli
         uses: supabase/setup-cli@v3
         with:
-          version: 3.2.0
+          version: latest
 
       - name: Start isolated local Supabase services
         run: supabase start -x studio,edge-runtime,storage-api,imgproxy,logflare,vector
@@ -41,5 +42,5 @@ jobs:
         run: supabase test db
 
       - name: Stop local Supabase services
-        if: always()
+        if: always() && steps.setup-cli.outcome == 'success'
         run: supabase stop --no-backup
