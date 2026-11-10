@@ -80,8 +80,24 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [range, setRange] = useState("1W");
+  const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
 
   useEffect(() => {
+    if (previewMode) {
+      setName("John Doe");
+      setRoles(["developer"]);
+      setStats({ available: 12, completed: 8, assignments: 10, points: 450, checkins: 0 });
+      setChartPoints([40, 55, 68, 75, 75, 75, 75]);
+      setNotifications(3);
+      setTests([
+        { id: "preview-js", title: "JavaScript Basics", status: "recruiting", min_testers: 5, app: { name: "JavaScript", icon_url: null } },
+        { id: "preview-python", title: "Python Fundamentals", status: "recruiting", min_testers: 5, app: { name: "Python", icon_url: null } },
+        { id: "preview-react", title: "React Essentials", status: "ready", min_testers: 4, app: { name: "React", icon_url: null } },
+        { id: "preview-sql", title: "SQL Advanced", status: "running", min_testers: 3, app: { name: "SQL", icon_url: null } }
+      ]);
+      setLoading(false);
+      return;
+    }
     const client = supabase;
     if (!client) { setLoading(false); return; }
     let alive = true;
@@ -120,10 +136,10 @@ export default function DashboardPage() {
       else { setRoles([]); setLoading(false); }
     });
     return () => { alive = false; data.subscription.unsubscribe(); };
-  }, []);
+  }, [previewMode]);
 
   const filteredTests = useMemo(() => tests.filter((test) => `${test.title} ${test.app?.name ?? ""}`.toLowerCase().includes(search.toLowerCase())), [tests, search]);
-  const progress = stats.assignments ? Math.round((stats.completed / stats.assignments) * 100) : 0;
+  const progress = previewMode ? 75 : stats.assignments ? Math.round((stats.completed / stats.assignments) * 100) : 0;
   const chartLine = chartPoints.map((point, index) => (index ? "L" : "M") + " " + (index * 93.33) + " " + (162 - point * 1.35)).join(" ");
   const chartArea = "M0 162 L" + chartPoints.map((point, index) => (index * 93.33) + " " + (162 - point * 1.35)).join(" L ") + " L560 162 Z";
   const success = stats.assignments ? progress : 0;
@@ -139,7 +155,7 @@ export default function DashboardPage() {
   ];
 
   if (loading) return <div className="td-loading"><span className="td-spinner"/>Loading your dashboard…</div>;
-  if (!session) return <Navigate to="/auth" replace />;
+  if (!session && !previewMode) return <Navigate to="/auth" replace />;
 
   return <div className="td-dashboard">
     <aside className="td-sidebar">
@@ -147,7 +163,7 @@ export default function DashboardPage() {
       <nav className="td-side-nav">{nav.map((item) => item.href.startsWith("#") ? <a key={item.label} href={item.href} className="td-nav-link"><Icon name={item.icon}/><span>{item.label}</span></a> : <Link key={item.label} to={item.href} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon}/><span>{item.label}</span></Link>)}</nav>
       <div className="td-sidebar-promo"><div className="td-rocket">🚀</div><strong>Build Better Together</strong><p>Create tests, help the community, and grow with TestDZ!</p><Link to="/apps">Explore More <Icon name="arrow" size={15}/></Link></div>
       <div className="td-user-mini"><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Link to="/profile" aria-label="Profile settings"><Icon name="settings" size={18}/></Link></div>
-      <button className="td-signout" onClick={async () => { await supabase?.auth.signOut(); }}><Icon name="logout"/>Sign Out</button>
+      {previewMode ? <div className="td-signout td-preview-note">Preview mode · read only</div> : <button className="td-signout" onClick={async () => { await supabase?.auth.signOut(); }}><Icon name="logout"/>Sign Out</button>}
     </aside>
 
     <main className="td-main">
@@ -192,7 +208,7 @@ export default function DashboardPage() {
         </article>
         <article className="td-panel td-rewards-panel" id="rewards"><div className="td-panel-heading"><h2><span className="td-gift">🎁</span>Your Rewards</h2><a href="#rewards">View All <Icon name="arrow" size={15}/></a></div><div className="td-reward-content"><div className="td-trophy-visual">🏆<span>✦</span></div><div><strong>You've earned<br/>{stats.points.toLocaleString()} points!</strong><p>Keep going to unlock more rewards and badges.</p><Link to="/profile">View Profile <Icon name="arrow" size={14}/></Link></div></div></article>
       </section>
-      <footer className="td-footer">© {new Date().getFullYear()} TestDZ · Test · Learn · Grow</footer>
+      <footer className="td-footer">{previewMode ? "Preview only · sample data · no account changes" : `© ${new Date().getFullYear()} TestDZ · Test · Learn · Grow`}</footer>
     </main>
   </div>;
 }
