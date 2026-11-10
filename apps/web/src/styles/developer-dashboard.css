@@ -43,3 +43,42 @@
 .dd-workspace-option.active{background:linear-gradient(110deg,#1260ed,#08a4ed);color:#fff;box-shadow:0 4px 12px #0077ff35}
 .dd-workspace-option svg{width:15px;height:15px}
 @media(max-width:900px){.dd-workspace-switch{grid-column:1/-1;display:grid;justify-self:center;width:min(100%,280px);margin:0 0 5px}}
+
+/* Premium dashboard surface refinement */
+.dd-shell{background:#f3f7fd}
+.dd-sidebar{box-shadow:8px 0 28px #092b5b12}
+.dd-nav-link{border:1px solid transparent}
+.dd-nav-link.active{border-color:#ffffff22;box-shadow:0 10px 24px #0077ff35,inset 0 1px #ffffff35}
+.dd-main{padding-top:2px}
+.dd-search{border:1px solid #e0eafb;box-shadow:0 3px 12px #16477b08;transition:border-color .2s,box-shadow .2s}
+.dd-search:focus-within{border-color:#8bbaff;box-shadow:0 0 0 4px #1c72ed12}
+.dd-hero{height:184px;min-height:184px;padding:24px 30px;border:1px solid #ffffff28;background:radial-gradient(circle at 76% 25%,#ffffff26,transparent 26%),linear-gradient(112deg,#073d9e 0%,#075cda 48%,#50b1f4 100%);box-shadow:0 14px 32px #0756c51f}
+.dd-hero:before{right:13%;top:-235px;width:480px;height:480px;box-shadow:0 0 0 38px #ffffff0b,0 0 0 82px #ffffff08}
+.dd-hero h1{font-size:clamp(25px,2.2vw,34px);letter-spacing:-1.1px;text-shadow:0 2px 8px #052f7040}
+.dd-hero-copy p{max-width:460px;font-size:12px}
+.dd-developer-mascot{max-height:270px;transform:translateY(7px) scale(1.08);filter:drop-shadow(0 14px 18px #003b8755)}
+.dd-stats{gap:12px;margin-top:15px}
+.dd-stat{min-height:100px;padding:14px 15px;border:1px solid #ffffffb8;box-shadow:0 8px 22px #194b8310,inset 0 1px #ffffffb8;transition:transform .2s,box-shadow .2s}
+.dd-stat:hover{transform:translateY(-3px);box-shadow:0 13px 26px #194b8318}
+.dd-stat>span{width:60px;height:60px;border-radius:19px;box-shadow:inset 0 1px #ffffffb8}
+.dd-main-grid,.dd-lower-grid{gap:15px;margin-top:15px}
+.dd-panel{padding:17px 18px;border-color:#e8eff9;border-radius:20px;box-shadow:0 8px 24px #1d4e8b0b,inset 0 1px #fff;transition:box-shadow .2s,border-color .2s}
+.dd-panel:hover{border-color:#dce8f8;box-shadow:0 12px 30px #1d4e8b12,inset 0 1px #fff}
+.dd-panel-head{margin-bottom:15px}
+.dd-panel-head h2{font-size:16px}
+.dd-overview,.dd-quick{min-height:265px}
+.dd-chart-wrap{height:180px}
+.dd-chart{height:153px}
+.dd-quick-item{min-height:78px;border:1px solid #ffffffb5;box-shadow:inset 0 1px #ffffffa8}
+.dd-app-card{min-height:170px;border-color:#e5edf8;border-radius:17px;padding:13px 10px 11px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.dd-app-card:hover{transform:translateY(-4px);border-color:#b9d5fb;box-shadow:0 12px 22px #174b8416}
+.dd-app-icon{width:50px;height:50px;border-radius:15px;box-shadow:0 5px 12px #1764ef18}
+.dd-app-card>a{height:32px;border-radius:11px;transition:background .18s,transform .18s}
+.dd-app-card>a:hover{background:#0648c9;transform:translateY(-1px)}
+.dd-recent-trophy{background:radial-gradient(ellipse at center,#fff6d9 0%,#fffaf0 45%,transparent 72%);border-radius:50%}
+.dd-recent-trophy svg{filter:drop-shadow(0 8px 6px #b77a2440)}
+.dd-workspace-menu,.td-workspace-menu{backdrop-filter:blur(18px)}
+.dd-footer{padding-top:20px}
+@media(max-width:1200px){.dd-hero{height:172px;min-height:172px}.dd-stat{padding:11px}.dd-stat>span{width:50px;height:50px}}
+@media(max-width:900px){.dd-hero{height:160px;min-height:160px}.dd-hero-copy{max-width:61%}.dd-developer-mascot{max-height:205px}.dd-stats{gap:9px}.dd-main-grid,.dd-lower-grid{gap:10px}}
+@media(max-width:560px){.dd-hero{height:142px;min-height:142px;padding:13px 12px}.dd-hero h1{font-size:17px}.dd-developer-mascot{max-height:142px;transform:translateY(4px) scale(1.02)}.dd-stat{min-height:70px;padding:7px}.dd-stat>span{width:36px;height:36px}.dd-panel{padding:10px;border-radius:14px}}
