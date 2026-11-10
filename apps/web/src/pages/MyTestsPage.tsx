@@ -116,7 +116,24 @@ export default function MyTestsPage(){
   {title:"Consistency",sub:"Complete 7 check-ins",earned:checkinTotal>=7,tone:"fire",icon:"bolt"},
   {title:"Feedback Hero",sub:"Get 5 accepted feedbacks",earned:acceptedFeedback>=5,tone:"blue",icon:"award"}
  ];
- if(loading)return <div className="td-loading"><span className="td-spinner"/>Loading your tests…</div>;
+ if(loading)return <div className="td-dashboard mt-page mt-loading-page" aria-busy="true" aria-live="polite">
+  <aside className="td-sidebar mt-skeleton-sidebar">
+   <div className="td-brand"><span className="td-brand-flask"><I name="flask" size={31}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></div>
+   <div className="mt-skeleton-nav"><i/><i/><i/><i/></div>
+   <div className="mt-skeleton-promo"><i/><b/><i/><i/></div>
+   <div className="mt-skeleton-user"><i/><span><b/><small/></span></div>
+  </aside>
+  <main className="td-main mt-loading-main">
+   <header className="mt-loading-header"><div><span className="mt-skeleton-line short"/><span className="mt-skeleton-line medium"/></div><span className="mt-skeleton-circle"/></header>
+   <section className="mt-loading-content">
+    <div className="mt-loading-title"><span className="mt-skeleton-line title"/><span className="mt-skeleton-line subtitle"/></div>
+    <div className="mt-loading-stats">{[1,2,3,4].map(n=><div className="mt-skeleton-card stat" key={n}><i/><span><b/><small/></span></div>)}</div>
+    <div className="mt-loading-toolbar"><span className="mt-skeleton-line medium"/><span className="mt-skeleton-pill"/></div>
+    <div className="mt-loading-tests">{[1,2,3].map(n=><article className="mt-skeleton-card test" key={n}><div className="mt-skeleton-app-icon"/><div className="mt-skeleton-test-copy"><b/><span/><small/></div><div className="mt-skeleton-test-status"/></article>)}</div>
+    <p className="mt-loading-message"><span className="td-spinner"/> Preparing your tests…</p>
+   </section>
+  </main>
+ </div>;
  if(!session&&!previewMode)return <Navigate to="/auth" replace/>;
  return <div className="td-dashboard mt-page">
   <aside className="td-sidebar">
