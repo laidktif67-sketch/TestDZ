@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { getPostAuthRoute, translateAuthError } from "../lib/auth-routing";
 
