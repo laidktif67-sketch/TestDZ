@@ -11,3 +11,27 @@
 .otp-primary{font-weight:750;letter-spacing:.01em}
 .otp-secondary{font-weight:700}
 @media(max-width:700px){.otp-status{margin-bottom:12px;padding:7px 12px;font-size:11px}.otp-safe-note{font-size:11px;margin-top:12px}}
+
+
+/* Decorative motion + non-overlapping illustration footer */
+.otp-status-emoji{display:inline-block;transform-origin:50% 65%;animation:otp-shield-bob 2.8s ease-in-out infinite}
+.otp-heading-emoji{animation:otp-lock-bob 3.2s ease-in-out infinite}
+.otp-art-copy{top:64%;padding-inline:12px}
+.otp-art-copy h2{line-height:1.12;text-wrap:balance}
+.otp-art-copy p{line-height:1.38}
+.otp-script{left:50%;bottom:1%;transform:translateX(-50%) rotate(-3deg);display:flex;align-items:center;justify-content:center;gap:7px;width:max-content;max-width:94%;font-size:clamp(24px,3.1vw,40px);line-height:1.12;letter-spacing:.015em;text-shadow:0 2px 0 #fff,0 4px 14px #075ce81c}
+.otp-script-text{display:inline-block}
+.otp-script-sparkle{display:inline-block;color:#f4b52e;font-family:Inter,"Segoe UI",sans-serif;font-size:.7em;text-shadow:0 2px 7px #f4b52e55;animation:otp-sparkle 2.1s ease-in-out infinite}
+.otp-script i{position:absolute;left:16%;bottom:-8px;width:72%;height:7px;margin:0;border-top:3px solid #168bff;border-radius:50%;opacity:.8;transform:rotate(-2deg)}
+@keyframes otp-shield-bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(5deg)}}
+@keyframes otp-lock-bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-5deg)}}
+@keyframes otp-sparkle{0%,100%{transform:scale(.85) rotate(0);opacity:.72}50%{transform:scale(1.2) rotate(18deg);opacity:1}}
+@media(max-width:700px){
+ .otp-art-copy{top:62%;padding-inline:8px}
+ .otp-art-copy h2{font-size:clamp(21px,5.5vw,28px);margin-bottom:6px;letter-spacing:-.5px}
+ .otp-art-copy p{font-size:clamp(12px,3.3vw,15px);line-height:1.35}
+ .otp-script{bottom:1%;font-size:clamp(22px,6.1vw,30px);gap:5px;max-width:90%}
+ .otp-script i{bottom:-6px;border-top-width:2px}
+}
+@media(max-width:380px){.otp-script{font-size:21px}.otp-art-copy h2{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.otp-status-emoji,.otp-heading-emoji,.otp-script-sparkle{animation:none}}
