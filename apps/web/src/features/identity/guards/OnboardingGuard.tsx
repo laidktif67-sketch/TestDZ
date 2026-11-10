@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useIdentity } from "../hooks/useIdentity";
 import { profilesApi } from "../../profiles/profiles-api";
+import { getHomePath } from "./RoleGuard";
 import "./route-guards.css";
 
 type GuardState =
@@ -10,7 +11,7 @@ type GuardState =
   | { userId: string; status: "error" };
 
 export default function OnboardingGuard() {
-  const { user } = useIdentity();
+  const { user, roles, rolesLoading, rolesError, refreshRoles } = useIdentity();
   const location = useLocation();
   const userId = user?.id ?? "";
   const [attempt, setAttempt] = useState(0);
@@ -86,7 +87,28 @@ export default function OnboardingGuard() {
   }
 
   if (!isProfileCompletion && state.completed) {
-    return <Navigate to="/tester-dashboard" replace />;
+    if (rolesLoading) {
+      return (
+        <main className="route-guard-screen" aria-live="polite" aria-busy="true">
+          <span className="route-guard-spinner" aria-hidden="true" />
+          <p>Preparing your workspace…</p>
+        </main>
+      );
+    }
+
+    if (rolesError) {
+      return (
+        <main className="route-guard-screen" role="alert">
+          <div className="route-guard-message">
+            <strong>We couldn’t verify your account roles.</strong>
+            <p>Check your connection and try again.</p>
+            <button type="button" onClick={() => { void refreshRoles(); }}>Retry</button>
+          </div>
+        </main>
+      );
+    }
+
+    return <Navigate to={getHomePath(roles)} replace />;
   }
 
   return <Outlet />;
