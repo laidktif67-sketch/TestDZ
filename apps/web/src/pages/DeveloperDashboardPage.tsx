@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AppRecord } from "@testdz/types";
+import type { ReactNode } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import "../styles/developer-dashboard.css";
@@ -48,7 +49,7 @@ const copy = {
 
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
   const common = { width:size, height:size, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:1.9, strokeLinecap:"round" as const, strokeLinejoin:"round" as const, "aria-hidden":true as const };
-  const paths: Record<string, React.ReactNode> = {
+  const paths: Record<string, ReactNode> = {
     home:<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
     apps:<><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></>,
     plus:<><path d="M12 5v14M5 12h14"/></>,
@@ -104,6 +105,7 @@ export default function DeveloperDashboardPage() {
   const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
   const [language,setLanguage]=useState<Language>(()=>{const saved=window.localStorage.getItem("testdz-landing-language");return saved==="fr"||saved==="ar"?saved:"en";});
   const [sessionReady,setSessionReady]=useState(previewMode);
+  const [hasSession,setHasSession]=useState(previewMode);
   const [allowed,setAllowed]=useState(previewMode);
   const [name,setName]=useState("Developer");
   const [avatar,setAvatar]=useState("");
@@ -136,7 +138,8 @@ export default function DeveloperDashboardPage() {
       const {data:sessionData}=await supabase.auth.getSession();
       if(!alive)return;
       const user=sessionData.session?.user;
-      if(!user){setSessionReady(true);setLoading(false);return;}
+      if(!user){setHasSession(false);setSessionReady(true);setLoading(false);return;}
+      setHasSession(true);
       const [roleRes,profileRes,appsRes,limitRes]=await Promise.all([
         supabase!.from("user_roles").select("role").eq("user_id",user.id),
         supabase!.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
@@ -176,7 +179,7 @@ export default function DeveloperDashboardPage() {
   const statusClass=(status:string)=>"dd-status dd-status-"+status;
 
   if(loading)return <div className="dd-loading"><span/> {t.loading}</div>;
-  if(!previewMode&&!sessionReady)return <Navigate to="/auth" replace/>;
+  if(!previewMode&&sessionReady&&!hasSession)return <Navigate to="/auth" replace/>;
   if(!previewMode&&!allowed)return <Navigate to="/dashboard" replace/>;
 
   return <div className="dd-shell" dir={dir}>
