@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { AppRecord } from "@testdz/types";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
-import { useIdentity } from "../features/identity/hooks/useIdentity";
-import { RoleAccessNotice } from "../features/identity/guards/RoleGuard";
-import { getAppLimit, listApps } from "../features/apps/apps-api";
+import { supabase } from "../../../lib/supabase";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { RoleAccessNotice } from "../../../features/identity/guards/RoleGuard";
+import { getAppLimit, listApps } from "../../../features/apps/apps-api";
 import "../styles/developer-dashboard.css";
 
 type Language = "en" | "fr" | "ar";

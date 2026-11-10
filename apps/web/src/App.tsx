@@ -15,7 +15,7 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
 import MyTestsPage from "./modules/tester/pages/MyTestsPage";
-import DeveloperDashboardPage from "./pages/DeveloperDashboardPage";
+import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
