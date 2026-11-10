@@ -62,6 +62,7 @@ export default function MyTestsPage(){
   }
   const client=supabase;if(!client){setLoading(false);return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
+   try{
    const [roleRes,profileRes,walletRes,assignmentRes,feedbackRes,noticeRes]=await Promise.all([
     client.from("user_roles").select("role").eq("user_id",userId),
     client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
@@ -78,10 +79,29 @@ export default function MyTestsPage(){
    rows.forEach(a=>{if(a.completed_at)events.push({id:"done-"+a.id,kind:"completed",title:"You completed a test",detail:a.test?.title||"Test",date:a.completed_at});(a.checkins??[]).forEach(c=>events.push({id:"check-"+c.id,kind:"checkin",title:"You completed a check-in",detail:a.test?.title||"Test",date:c.created_at||c.checkin_date}));});
    (feedbackRes.data??[]).forEach((f:{id:string;created_at:string;assignment_id:string})=>{const a=rows.find(x=>x.id===f.assignment_id);events.push({id:"feedback-"+f.id,kind:"feedback",title:"You submitted feedback",detail:a?.test?.title||"Test feedback",date:f.created_at});});
    setActivities(events.sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,4));
-   if(roleRes.error||profileRes.error||assignmentRes.error||feedbackRes.error)setError("Some tester information could not be loaded. Please refresh and try again.");
+   if(roleRes.error||profileRes.error||walletRes.error||assignmentRes.error||feedbackRes.error||noticeRes.error)setError("Some tester information could not be loaded. Please refresh and try again.");
+   }catch(reason){
+    console.error("[MyTestsPage] Failed to load tester data",reason);
+    if(alive)setError("We couldn’t load your tests. Check your connection and retry.");
+   }finally{
+    if(alive)setLoading(false);
+   }
   };
-  client.auth.getSession().then(({data})=>{if(!alive)return;setSession(data.session);if(data.session)void load(data.session.user.id,data.session.user.email);else setLoading(false);});
-  const {data}=client.auth.onAuthStateChange((_event,next)=>{setSession(next);if(next)window.setTimeout(()=>{if(alive)void load(next.user.id,next.user.email);},0);else{setRoles([]);setLoading(false);}});
+  client.auth.getSession().then(({data,error:sessionError})=>{
+   if(!alive)return;
+   if(sessionError){setError("We couldn’t verify your session. Refresh and try again.");setLoading(false);return;}
+   setSession(data.session);
+   if(data.session){setLoading(true);void load(data.session.user.id,data.session.user.email);}else setLoading(false);
+  }).catch((reason:unknown)=>{
+   console.error("[MyTestsPage] Failed to get session",reason);
+   if(alive){setError("We couldn’t verify your session. Check your connection and retry.");setLoading(false);}
+  });
+  const {data}=client.auth.onAuthStateChange((_event,next)=>{
+   if(!alive)return;
+   setSession(next);
+   if(next){setLoading(true);window.setTimeout(()=>{if(alive)void load(next.user.id,next.user.email);},0);}
+   else{setRoles([]);setAssignments([]);setActivities([]);setLoading(false);}
+  });
   return()=>{alive=false;data.subscription.unsubscribe();};
  },[previewMode]);
  const firstName=name.split(/\s+/)[0],isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
