@@ -4,7 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
-import "../styles/dashboard.css";
+import "../styles/tester-dashboard.css";
 
 type TestItem = {
   id: string;
