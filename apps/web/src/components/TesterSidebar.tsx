@@ -60,10 +60,7 @@ type TesterSidebarProps = {
   sidebarClassName?: string;
 };
 
-const navEmoji: Record<string, string> = {
-  home: "🏠", tests: "🧪", star: "⭐", wallet: "👛", user: "👤", settings: "⚙️",
-  bell: "🎧", search: "🔎", code: "💻", shield: "🛡️", chart: "📊"
-};
+
 
 export default function TesterSidebar({
   nav, name, firstName, avatar, roles, isAdmin, isDeveloper,
