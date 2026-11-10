@@ -48,7 +48,9 @@ export default function App() {
           <Route path="/wallet-rewards" element={<TesterSectionPage />} />
           <Route path="/help-support" element={<TesterSectionPage />} />
           <Route path="/settings" element={<TesterSectionPage />} />
-          <Route path="/admin" element={<TesterSectionPage />} />
+          <Route element={<RoleGuard requiredRole="admin" />}>
+            <Route path="/admin" element={<TesterSectionPage />} />
+          </Route>
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
