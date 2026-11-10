@@ -61,7 +61,7 @@ type TesterSidebarProps = {
 };
 
 const navEmoji: Record<string, string> = {
-  home: "🏠", tests: "🧪", star: "⭐", wallet: "👛", settings: "👤",
+  home: "🏠", tests: "🧪", star: "⭐", wallet: "👛", user: "👤", settings: "⚙️",
   bell: "🎧", search: "🔎", code: "💻", shield: "🛡️", chart: "📊"
 };
 
