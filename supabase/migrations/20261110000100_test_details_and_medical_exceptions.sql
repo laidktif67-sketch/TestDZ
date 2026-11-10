@@ -166,7 +166,15 @@ for insert to authenticated with check (
   tester_id=(select auth.uid()) and status='pending' and reviewed_by is null and reviewed_at is null
   and exists (select 1 from public.assignments a where a.id=medical_exception_requests.assignment_id
     and a.tester_id=(select auth.uid()) and a.status='active')
-  and cardinality(requested_dates)=(select count(distinct d) from unnest(requested_dates) as d)
+  and not exists (
+    select 1
+    from unnest(requested_dates) as requested_date
+    where requested_date is null
+  )
+  and cardinality(requested_dates) = (
+    select count(distinct d)
+    from unnest(requested_dates) as d
+  )
 );
 
 create or replace function private.review_medical_exception(
@@ -176,6 +184,7 @@ language plpgsql security definer set search_path=pg_catalog, public, private
 as $$
 declare
   v_request public.medical_exception_requests%rowtype;
+  v_assignment public.assignments%rowtype;
 begin
   if auth.uid() is null or not private.is_admin() then
     raise exception 'ADMIN_ONLY' using errcode='42501';
@@ -187,9 +196,19 @@ begin
   if not found then raise exception 'MEDICAL_EXCEPTION_NOT_FOUND'; end if;
   if v_request.status<>'pending' then raise exception 'MEDICAL_EXCEPTION_ALREADY_REVIEWED'; end if;
 
-  perform 1 from public.assignments a
-    where a.id=v_request.assignment_id and a.tester_id=v_request.tester_id for update;
-  if not found then raise exception 'ASSIGNMENT_MISMATCH'; end if;
+  select * into v_assignment
+  from public.assignments
+  where id = v_request.assignment_id
+  for update;
+
+  if not found or v_assignment.tester_id <> v_request.tester_id then
+    raise exception 'ASSIGNMENT_MISMATCH';
+  end if;
+
+  if cardinality(v_request.requested_dates) <>
+     (select count(distinct d) from unnest(v_request.requested_dates) as d) then
+    raise exception 'DUPLICATE_EXCUSED_DATES';
+  end if;
 
   update public.medical_exception_requests
     set status=p_decision, review_note=nullif(btrim(p_review_note),''),
