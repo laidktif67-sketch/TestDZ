@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { profilesApi } from "../features/profiles/profiles-api";
 
 export function translateAuthError(message: string) {
   const value = message.toLowerCase();
@@ -11,12 +11,7 @@ export function translateAuthError(message: string) {
 }
 
 export async function getPostAuthRoute(userId: string): Promise<"/tester-dashboard" | "/onboarding"> {
-  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("onboarding_completed_at")
-    .eq("id", userId)
-    .maybeSingle();
+  const { data: profile, error } = await profilesApi.getOnboardingStatus(userId);
   if (error) throw error;
   return profile?.onboarding_completed_at ? "/tester-dashboard" : "/onboarding";
 }
