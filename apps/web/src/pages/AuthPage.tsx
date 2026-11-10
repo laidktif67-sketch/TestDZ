@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { getPostAuthRoute, translateAuthError } from "../lib/auth-routing";
+import { identityApi } from "../features/identity/identity-api";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -132,16 +133,17 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { data, error: authError } = await supabase.auth.signUp({
+        const { data, error: authError } = await identityApi.signUp({
           email: email.trim(),
           password,
-          options: { data: { full_name: fullName.trim(), phone: phone.trim() || null, account_type: accountType }, emailRedirectTo: window.location.origin + "/auth/callback" },
+          metadata: { full_name: fullName.trim(), phone: phone.trim() || null, account_type: accountType },
+          emailRedirectTo: window.location.origin + "/auth/callback",
         });
         if (authError) throw authError;
         if (data.session) navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
         else navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, { replace: true });
       } else {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        const { data, error: authError } = await identityApi.signInWithPassword(email.trim(), password);
         if (authError) throw authError;
         if (data.session) navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
       }
@@ -160,10 +162,7 @@ function AuthPage() {
     }
     setBusy(true);
     try {
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: window.location.origin + "/auth/callback" },
-      });
+      const { error: authError } = await identityApi.signInWithOAuth(provider, window.location.origin + "/auth/callback");
       if (authError) throw authError;
     } catch (err) {
       setError(err instanceof Error ? translateAuthError(err.message) : "تعذر تسجيل الدخول بهذه الخدمة.");

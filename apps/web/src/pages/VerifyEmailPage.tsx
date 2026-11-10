@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { useLenis } from "../hooks/useLenis";
 import { translateAuthError } from "../lib/auth-routing";
+import { identityApi } from "../features/identity/identity-api";
 import { supabase } from "../lib/supabase";
 
 export default function VerifyEmailPage() {
@@ -90,11 +91,7 @@ export default function VerifyEmailPage() {
     if (!supabase || !email.trim()) { setError("Enter a valid email address first."); return; }
     setBusy(true); setMessage(""); setError("");
     try {
-      const { error: resendError } = await supabase.auth.resend({
-        type: "signup",
-        email: email.trim(),
-        options: { emailRedirectTo: window.location.origin + "/auth/callback" },
-      });
+      const { error: resendError } = await identityApi.resendSignupVerification(email.trim(), window.location.origin + "/auth/callback");
       if (resendError) throw resendError;
       setMessage("A new verification link has been requested. Check your inbox and spam folder.");
       setSeconds(120);

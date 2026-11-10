@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { supabase } from "../lib/supabase";
 import { getPostAuthRoute } from "../lib/auth-routing";
+import { identityApi } from "../features/identity/identity-api";
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function AuthCallbackPage() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const errorDescription = hash.get("error_description");
     if (errorDescription) { setMessage("تعذر تأكيد الرابط: " + errorDescription); return; }
-    supabase.auth.getSession().then(async ({ data, error }) => {
+    identityApi.getSession().then(async ({ data, error }) => {
       if (error) {
         setMessage("تعذر إكمال المصادقة. اطلب رابطاً جديداً.");
         return;
