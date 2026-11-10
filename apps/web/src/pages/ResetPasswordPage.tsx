@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
           <span className="reset-brand-copy"><strong>TestDZ</strong><small>Test · Learn · Grow</small></span>
         </Link>
         <nav className="reset-language" aria-label="Language">
-          <span className="reset-globe" aria-hidden="true">◎</span>
+          <span className="reset-globe" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
           <span className="reset-language-option reset-language-active">العربية⌄</span>
           <i aria-hidden="true" />
           <span className="reset-language-option">Français</span>
@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3"/></svg>
               <span className="sr-only">New Password</span>
               <input autoComplete="new-password" type={showPassword ? "text" : "password"} placeholder="New Password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} aria-describedby="reset-password-strength" />
-              <button type="button" className="reset-eye" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "◉" : "◎"}</button>
+              <button type="button" className="reset-eye" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">{showPassword ? <><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.5 5.1 9 6-.3.5-1.4 2.2-3.4 3.7M6.2 6.2C4.1 7.6 2.9 9.6 2 11c.5.9 3.8 8 10 8 1 0 1.9-.2 2.8-.6"/></> : <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>}</svg></button>
             </label>
             <div className="reset-strength" id="reset-password-strength" aria-live="polite">
               <div className="reset-strength-bars">{[1, 2, 3, 4].map(n => <span key={n} className={strength >= n ? (isStrong ? "filled strong" : "filled") : ""} />)}</div>
@@ -119,13 +119,13 @@ export default function ResetPasswordPage() {
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3"/></svg>
               <span className="sr-only">Confirm New Password</span>
               <input autoComplete="new-password" type={showConfirm ? "text" : "password"} placeholder="Confirm New Password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
-              <button type="button" className="reset-eye" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? "Hide confirmation password" : "Show confirmation password"}>{showConfirm ? "◉" : "◎"}</button>
+              <button type="button" className="reset-eye" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? "Hide confirmation password" : "Show confirmation password"}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">{showConfirm ? <><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.5 5.1 9 6-.3.5-1.4 2.2-3.4 3.7M6.2 6.2C4.1 7.6 2.9 9.6 2 11c.5.9 3.8 8 10 8 1 0 1.9-.2 2.8-.6"/></> : <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>}</svg></button>
             </label>
-            <button className="reset-submit" disabled={busy || Boolean(message)}>{busy ? <><span className="reset-spinner" /> Updating Password…</> : <><span className="reset-submit-icon" aria-hidden="true">⟳</span> Reset Password</>}</button>
+            <button className="reset-submit" disabled={busy || Boolean(message)}>{busy ? <><span className="reset-spinner" /> Updating Password…</> : <><span className="reset-submit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 11.7-2L20 12M4 12l2.7 5a7 7 0 0 0 11.7-2"/></svg></span> Reset Password</>}</button>
           </form>
 
-          <div className="reset-password-tip"><span className="reset-info-icon" aria-hidden="true">i</span><p>Your password must be at least 8 characters, including a number and a letter.</p></div>
-          <Link className="reset-back-link" to="/auth"><span aria-hidden="true">←</span> Back to Login</Link>
+          <div className="reset-password-tip"><span className="reset-info-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span><p>Your password must be at least 8 characters, including a number and a letter.</p></div>
+          <Link className="reset-back-link" to="/auth"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span> Back to Login</Link>
         </section>
       </div>
     </main>
