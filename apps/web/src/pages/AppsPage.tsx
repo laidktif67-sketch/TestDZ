@@ -68,7 +68,7 @@ function AppsPage() {
     if(createError){setError(appError(createError.message));setBusy(false);return;}
     let postCreateWarning = "";
     if(icon){
-      const {uploadError,updateError}=await uploadAppIcon(userId,String(appId),icon);
+      const {uploadError,updateError}=await uploadAppIcon(userId,String(appId),icon,{name,description,category});
       if(uploadError){postCreateWarning="أُنشئ التطبيق، لكن تعذر رفع الأيقونة. يمكنك إضافتها لاحقاً.";}
       else if(updateError){postCreateWarning="أُنشئ التطبيق ورُفعت الأيقونة، لكن تعذر ربطها بالتطبيق.";}
     }

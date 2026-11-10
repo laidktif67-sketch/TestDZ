@@ -56,7 +56,7 @@ export function updateApp(input: {
 }
 
 /** Upload an icon and then attach its public URL to the newly-created app. */
-export async function uploadAppIcon(userId: string, appId: string, file: File) {
+export async function uploadAppIcon(userId: string, appId: string, file: File, metadata: { name: string; description: string; category: string }) {
   const storage = client().storage;
   const extension = file.type === "image/png" ? "png" : "jpg";
   const path = userId + "/" + appId + "/icon." + extension;
@@ -69,9 +69,9 @@ export async function uploadAppIcon(userId: string, appId: string, file: File) {
   const { data } = storage.from("app-icons").getPublicUrl(path);
   const { error: updateError } = await updateApp({
     id: appId,
-    name: "",
-    description: "",
-    category: "",
+    name: metadata.name,
+    description: metadata.description,
+    category: metadata.category,
     iconUrl: data.publicUrl,
   });
   return { uploadError: null, updateError };
