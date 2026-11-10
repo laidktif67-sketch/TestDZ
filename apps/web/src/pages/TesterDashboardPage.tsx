@@ -95,6 +95,7 @@ export default function TesterDashboardPage() {
   const [search, setSearch] = useState("");
   const [notifications, setNotifications] = useState(0);
   const [noticeOpen, setNoticeOpen] = useState(false);
+  const [workspaceMenuOpen,setWorkspaceMenuOpen]=useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [range, setRange] = useState("1W");
@@ -220,8 +221,7 @@ export default function TesterDashboardPage() {
       <Link to="/tester-dashboard" className="td-brand"><span className="td-brand-flask"><Icon name="tests" size={32}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
       <nav className="td-side-nav">{nav.map((item) => item.href.startsWith("#") ? <a key={item.label} href={item.href} className="td-nav-link"><Icon name={item.icon}/><span>{item.label}</span></a> : <Link key={item.label} to={item.href} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon}/><span>{item.label}</span></Link>)}</nav>
       <div className="td-sidebar-promo"><div className="td-rocket"><Icon name="rocket" size={42}/></div><strong>Build Better Together</strong><p>Create tests, help the community, and grow with TestDZ!</p><Link to="/apps">Explore More <Icon name="arrow" size={15}/></Link></div>
-      <div className="td-user-mini"><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Link to="/profile" aria-label="Profile settings"><Icon name="settings" size={18}/></Link></div>
-      {(roles.includes("both") || (roles.includes("tester") && roles.includes("developer"))) && <div className="td-role-switch" aria-label="Choose workspace"><Link to="/tester-dashboard" className="td-role-option active"><Icon name="flask" size={15}/><span>Tester</span></Link><Link to="/developer-dashboard" className="td-role-option"><Icon name="code" size={15}/><span>Developer</span></Link></div>}
+      <div className="td-user-menu-wrap"><button type="button" className="td-user-mini td-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="td-workspace-menu"><Link to="/profile" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>Profile settings</span></Link>{(roles.includes("both") || (roles.includes("tester") && roles.includes("developer")))&&<><span className="td-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span><Icon name="check" size={14}/></Link><Link to="/developer-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span></Link></>}</div>}</div>
       {previewMode ? <div className="td-signout td-preview-note">Preview mode · read only</div> : <button className="td-signout" onClick={async () => { await supabase?.auth.signOut(); }}><Icon name="logout"/>Sign Out</button>}
     </aside>
 
