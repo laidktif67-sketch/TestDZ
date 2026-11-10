@@ -114,8 +114,8 @@ function AuthPage() {
     event.preventDefault();
     setMessage("");
     setError("");
-    if (!supabase) {
-      setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة.");
+    if (mode === "signin" && !supabase) {
+      setError("Demo mode: sign-in is not connected yet. Use Register to preview the signup flow.");
       return;
     }
     if (mode === "signup" && !acceptedTerms) {
@@ -128,6 +128,10 @@ function AuthPage() {
     }
     if (mode === "signup" && (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password))) {
       setError("كلمة المرور يجب أن تحتوي على حرف ورقم، وبحد أدنى 8 أحرف.");
+      return;
+    }
+    if (mode === "signup" && !supabase) {
+      navigate(`/signup-success?email=${encodeURIComponent(email.trim())}`, { replace: true });
       return;
     }
     setBusy(true);
