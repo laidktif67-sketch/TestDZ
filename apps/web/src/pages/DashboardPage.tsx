@@ -205,6 +205,7 @@ export default function DashboardPage() {
   const isAdmin = roles.includes("admin");
   const nav = [
     { label: "Dashboard", icon: "home", href: "/dashboard", active: true },
+    ...(isDeveloper || roles.includes("both") ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
     { label: "Discover", icon: "search", href: "/apps" },
     { label: "My Tests", icon: "tests", href: "#my-tests" },
     { label: "Billing", icon: "wallet", href: "/profile" },
