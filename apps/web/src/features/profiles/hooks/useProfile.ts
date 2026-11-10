@@ -61,7 +61,7 @@ export function useProfile(userId: string | null | undefined): UseProfileResult 
     }
 
     setLoading(true);
-    void profilesApi.getProfile(userId)
+    void Promise.resolve(profilesApi.getProfile(userId))
       .then(({ data, error: profileError }) => {
         if (!active) return;
         if (profileError) throw profileError;
