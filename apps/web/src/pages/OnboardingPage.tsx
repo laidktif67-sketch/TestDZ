@@ -4,13 +4,49 @@ import { Brand } from "../components/Brand";
 import { supabase } from "../lib/supabase";
 import "../styles/onboarding.css";
 
-const roles = [
-  { value: "tester", title: "مختبِر", subtitle: "شارك في اختبار التطبيقات، واكسب النقاط وساعدنا على تحسين المنتجات.", icon: "tester" },
-  { value: "developer", title: "مطوّر", subtitle: "انشر تطبيقاتك وأنشئ حملات اختبار واحصل على آراء المستخدمين.", icon: "developer" },
-  { value: "both", title: "كلاهما", subtitle: "استخدم المنصة كمختبِر ومطوّر في الوقت نفسه.", icon: "both" },
-] as const;
+type OnboardingLanguage = "en" | "fr" | "ar";
 
-const interestsList = ["أدوات وإنتاجية", "تعليم", "ألعاب", "تجارة إلكترونية", "صحة ولياقة", "شبكات اجتماعية", "أخرى"];
+const onboardingCopy = {
+  en: {
+    language: "Language", step: "Step 3 · Set up your account", title: "Choose Your Account Type",
+    intro: "Select the role that best describes you. You can always change this later in your account settings.",
+    tester: "Tester", testerBody: "Participate in tests, earn points and help improve products.",
+    developer: "Developer", developerBody: "Publish your applications, create testing campaigns and get useful feedback.",
+    both: "Both", bothBody: "Use the platform as both a tester and a developer.",
+    interests: "What are you interested in?", optional: "Optional",
+    interestNames: ["Tools & Productivity", "Education", "Gaming", "E-commerce", "Health & Fitness", "Social Media", "Other"],
+    continue: "Continue", saving: "Saving...", skip: "Skip for now", errorConfig: "Supabase is not configured.",
+    errorSave: "Could not save your account setup. Please try again.", progress: "Step 3 of 4"
+  },
+  fr: {
+    language: "Langue", step: "Étape 3 · Configurez votre compte", title: "Choisissez votre type de compte",
+    intro: "Sélectionnez le rôle qui vous décrit le mieux. Vous pourrez le modifier plus tard dans les paramètres.",
+    tester: "Testeur", testerBody: "Participez aux tests, gagnez des points et contribuez à améliorer les produits.",
+    developer: "Développeur", developerBody: "Publiez vos applications, créez des campagnes de test et recevez des avis utiles.",
+    both: "Les deux", bothBody: "Utilisez la plateforme comme testeur et développeur.",
+    interests: "Quels sont vos centres d’intérêt ?", optional: "Facultatif",
+    interestNames: ["Outils et productivité", "Éducation", "Jeux", "E-commerce", "Santé et fitness", "Réseaux sociaux", "Autre"],
+    continue: "Continuer", saving: "Enregistrement...", skip: "Passer pour le moment", errorConfig: "Supabase n’est pas configuré.",
+    errorSave: "Impossible d’enregistrer votre compte. Veuillez réessayer.", progress: "Étape 3 sur 4"
+  },
+  ar: {
+    language: "اختر اللغة", step: "الخطوة الثالثة · إعداد حسابك", title: "اختر نوع حسابك",
+    intro: "اختر الدور الذي يصفك بشكل أفضل. يمكنك تغيير ذلك لاحقاً من إعدادات حسابك.",
+    tester: "مختبِر", testerBody: "شارك في اختبار التطبيقات، واكسب النقاط وساعد على تحسين المنتجات.",
+    developer: "مطوّر", developerBody: "انشر تطبيقاتك وأنشئ حملات اختبار واحصل على آراء مفيدة.",
+    both: "كلاهما", bothBody: "استخدم المنصة كمختبِر ومطوّر في الوقت نفسه.",
+    interests: "ما المجالات التي تهمك؟", optional: "اختياري",
+    interestNames: ["أدوات وإنتاجية", "تعليم", "ألعاب", "تجارة إلكترونية", "صحة ولياقة", "شبكات اجتماعية", "أخرى"],
+    continue: "متابعة", saving: "جارٍ الحفظ...", skip: "تخطي الآن", errorConfig: "إعداد Supabase غير مكتمل.",
+    errorSave: "تعذر حفظ إعدادات الحساب. حاول مرة أخرى.", progress: "الخطوة 3 من 4"
+  }
+} as const;
+
+const roles = [
+  { value: "tester", icon: "tester" },
+  { value: "developer", icon: "developer" },
+  { value: "both", icon: "both" },
+] as const;
 
 function RoleIllustration({ type }: { type: "tester" | "developer" | "both" }) {
   if (type === "tester") return (
@@ -48,8 +84,8 @@ function RoleIllustration({ type }: { type: "tester" | "developer" | "both" }) {
   );
 }
 
-function ProgressSteps() {
-  return <div className="onboarding-progress" aria-label="الخطوة 3 من 4">
+function ProgressSteps({ label }: { label: string }) {
+  return <div className="onboarding-progress" aria-label={label}>
     <span className="done"><b>✓</b></span><i />
     <span className="done"><b>✓</b></span><i />
     <span className="current">3</span><i />
@@ -71,10 +107,22 @@ function SideArtwork() {
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
+  const [language, setLanguage] = useState<OnboardingLanguage>(() => {
+    const saved = window.localStorage.getItem("testdz-landing-language");
+    return saved === "fr" || saved === "ar" ? saved : "en";
+  });
+  const t = onboardingCopy[language];
   const [choice, setChoice] = useState("tester");
   const [interests, setInterests] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const html = document.documentElement;
+    html.lang = language;
+    html.dir = language === "ar" ? "rtl" : "ltr";
+    window.localStorage.setItem("testdz-landing-language", language);
+  }, [language]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -96,30 +144,30 @@ export default function OnboardingPage() {
 
   async function finish() {
     if (!supabase) {
-      setError("إعداد Supabase غير مكتمل.");
+      setError(t.errorConfig);
       return;
     }
     setBusy(true);
     setError("");
     const rolesToSave = choice === "both" ? ["tester", "developer"] : [choice];
     const { error: err } = await supabase.rpc("complete_onboarding", { p_roles: rolesToSave, p_interests: interests });
-    if (err) setError("تعذر حفظ إعدادات الحساب. حاول مرة أخرى.");
+    if (err) setError(t.errorSave);
     else navigate("/dashboard", { replace: true });
     setBusy(false);
   }
 
-  return <main className="onboarding-page" dir="rtl">
+  return <main className="onboarding-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
     <header className="onboarding-header">
       <Brand />
-      <div className="onboarding-language"><span>◎</span> العربية <span className="language-chevron">⌄</span></div>
+      <div className="onboarding-language-switch" role="group" aria-label={t.language}>{(["en", "fr", "ar"] as const).map(code => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => setLanguage(code)}>{code.toUpperCase()}</button>)}</div>
     </header>
     <SideArtwork />
     <section className="onboarding-main">
-      <ProgressSteps />
+      <ProgressSteps label={t.progress} />
       <div className="onboarding-heading">
-        <span className="onboarding-kicker">الخطوة الثالثة · إعداد حسابك</span>
-        <h1>اختر نوع حسابك</h1>
-        <p>اختر الدور الذي يصفك بشكل أفضل. يمكنك تغيير ذلك لاحقاً من إعدادات حسابك.</p>
+        <span className="onboarding-kicker">{t.step}</span>
+        <h1>{t.title}</h1>
+        <p>{t.intro}</p>
       </div>
       <div className="onboarding-role-grid">
         {roles.map(role => <button
@@ -131,20 +179,20 @@ export default function OnboardingPage() {
         >
           <span className="role-check" aria-hidden="true">✓</span>
           <span className="role-art"><RoleIllustration type={role.icon} /></span>
-          <strong>{role.title}</strong>
-          <span className="role-description">{role.subtitle}</span>
+          <strong>{t[role.value]}</strong>
+          <span className="role-description">{t[`${role.value}Body` as "testerBody" | "developerBody" | "bothBody"]}</span>
         </button>)}
       </div>
       <section className="onboarding-interests">
-        <h2>ما المجالات التي تهمك؟ <small>اختياري</small></h2>
+        <h2>{t.interests} <small>{t.optional}</small></h2>
         <div className="onboarding-interest-list">
-          {interestsList.map(item => <button type="button" key={item} className={interests.includes(item) ? "active" : ""} aria-pressed={interests.includes(item)} onClick={() => toggle(item)}>{item}</button>)}
+          {t.interestNames.map((item, index) => <button type="button" key={index} className={interests.includes(String(index)) ? "active" : ""} aria-pressed={interests.includes(String(index))} onClick={() => toggle(String(index))}>{item}</button>)}
         </div>
       </section>
       {error && <div className="notice notice-error onboarding-error" role="alert">{error}</div>}
       <div className="onboarding-actions">
-        <button className="onboarding-continue" disabled={busy} onClick={finish}>{busy ? "جارٍ الحفظ..." : "متابعة"} <span aria-hidden="true">←</span></button>
-        <button className="onboarding-skip" type="button" onClick={() => { setChoice("tester"); setInterests([]); }}>تخطي الآن</button>
+        <button className="onboarding-continue" disabled={busy} onClick={finish}>{busy ? t.saving : t.continue} <span aria-hidden="true">←</span></button>
+        <button className="onboarding-skip" type="button" onClick={() => { setChoice("tester"); setInterests([]); }}>{t.skip}</button>
       </div>
     </section>
   </main>;
