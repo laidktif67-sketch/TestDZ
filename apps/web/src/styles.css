@@ -2015,3 +2015,29 @@ html:lang(fr),
   .signup-success-envelope,.signup-success-check,.signup-success-icon,.signup-success-celebration {animation:none}
   .signup-success-brand,.signup-success-footer-brand,.signup-success-footer nav a {transition:none}
 }
+
+
+/* Signup-success UX refinement: next-step progress, copyable address and stronger mobile rhythm. */
+.signup-success-steps {margin:22px 0 6px;text-align:start}
+.signup-success-steps-label {display:block;margin-bottom:11px;color:#7890b4;font-size:9px;font-weight:850;letter-spacing:1.5px}
+.signup-success-steps ol {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;list-style:none;padding:0;margin:0}
+.signup-success-steps li {display:flex;align-items:center;gap:7px;min-width:0;color:#8b9bb5;font-size:10px;line-height:1.35}
+.signup-success-step-number {width:27px;height:27px;flex:0 0 27px;display:grid;place-items:center;border-radius:50%;border:1px solid #d8e3f3;background:#f7faff;color:#8296b8;font-weight:800}
+.signup-success-steps li.is-complete {color:#19815a;font-weight:700}
+.signup-success-steps li.is-complete .signup-success-step-number {border-color:#b7ecd4;background:#e7f9ef;color:#119765}
+.signup-success-steps li.is-current {color:#1a4c9c;font-weight:750}
+.signup-success-steps li.is-current .signup-success-step-number {border-color:#9bc4ff;background:#e8f2ff;color:#1767ed;box-shadow:0 0 0 4px rgba(23,103,237,.07)}
+.signup-success-email-copy {min-width:0;flex:1}
+.signup-success-copy-email {display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:0;border:0;background:transparent;color:#1767ed;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+.signup-success-copy-email:hover {text-decoration:underline}
+.signup-success-copy-email:focus-visible {outline:3px solid rgba(23,103,237,.25);outline-offset:3px;border-radius:5px}
+.signup-success-email strong {word-break:break-word}
+@media(max-width:520px) {
+  .signup-success-steps {margin-top:19px}
+  .signup-success-steps ol {gap:5px}
+  .signup-success-steps li {align-items:flex-start;flex-direction:column;font-size:9px;gap:5px}
+  .signup-success-step-number {width:25px;height:25px;flex-basis:25px}
+}
+@media(prefers-reduced-motion:reduce) {
+  .signup-success-page * {scroll-behavior:auto!important;animation:none!important;transition:none!important}
+}
