@@ -3,7 +3,7 @@ import type { AccountRole } from "@testdz/types";
 import { useIdentity } from "../hooks/useIdentity";
 import "./route-guards.css";
 
-type WorkspaceRole = Extract<AccountRole, "tester" | "developer">;
+type WorkspaceRole = Extract<AccountRole, "tester" | "developer" | "admin">;
 
 export function getHomePath(roles: AccountRole[]): string {
   if (roles.includes("admin") || roles.includes("tester")) return "/tester-dashboard";
