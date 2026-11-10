@@ -10,7 +10,7 @@
 .onboarding-logo strong{font-size:39px;letter-spacing:-1.6px;font-weight:850}
 .onboarding-logo small{font-size:15px;font-weight:650;margin-top:5px;letter-spacing:-.2px}
 .onboarding-language-switch{display:flex;align-items:center;gap:4px;padding:5px;border:1px solid #d9e7fa;border-radius:28px;background:rgba(255,255,255,.9);box-shadow:0 5px 15px rgba(39,91,160,.08)}
-.onboarding-language-switch button{min-width:43px;height:34px;padding:0 10px;border:0;border-radius:20px;background:transparent;color:#55719e;font:750 12px/1 inherit;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.onboarding-language-switch button{min-width:43px;height:34px;padding:0 10px;border:0;border-radius:20px;background:transparent;color:#55719e;font-family:inherit;font-size:12px;font-weight:750;line-height:1;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
 .onboarding-language-switch button:hover{background:#edf5ff;color:#075bd5}
 .onboarding-language-switch button.active{background:linear-gradient(135deg,#168cff,#0759e8);color:#fff;box-shadow:0 4px 10px rgba(8,104,232,.2)}
 .onboarding-main{position:relative;z-index:2;width:66%;max-width:1015px;margin:0 0 0 auto;padding-top:0;text-align:center;flex:1;display:flex;flex-direction:column;align-items:stretch}
