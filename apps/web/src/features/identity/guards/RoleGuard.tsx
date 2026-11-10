@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import type { AccountRole } from "@testdz/types";
 import { useIdentity } from "../hooks/useIdentity";
 import "./route-guards.css";
@@ -68,4 +68,12 @@ export function RoleHomeRedirect() {
   if (rolesError) return <RoleLoadError retry={() => { void refreshRoles(); }} />;
 
   return <Navigate to={getHomePath(roles)} replace />;
+}
+
+export function RoleAccessNotice() {
+  const location = useLocation();
+  const notice = (location.state as { accessNotice?: unknown } | null)?.accessNotice;
+
+  if (typeof notice !== "string" || !notice) return null;
+  return <div className="role-access-notice" role="status">{notice}</div>;
 }
