@@ -60,6 +60,7 @@ export default function ProfilePage() {
   const [interests, setInterests] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [verified, setVerified] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -72,6 +73,7 @@ export default function ProfilePage() {
       if (authError || !data.user) { navigate("/auth", { replace: true }); return; }
       setUserId(data.user.id);
       setEmail(data.user.email ?? "");
+      setEmailVerified(Boolean(data.user.email_confirmed_at));
       const { data: profile, error: profileError } = await profilesApi.getProfile(data.user.id);
       if (profileError) { setError("We couldn't load your profile. Please refresh and try again."); return; }
       setDisplayName(profile.display_name ?? "");
@@ -154,7 +156,7 @@ export default function ProfilePage() {
       <section className="tester-profile-main">
         <header className="tester-topbar">
           <label className="tester-search"><span>⌕</span><input aria-label="Search" placeholder="Search anything..." /></label>
-          <div className="tester-top-actions"><button type="button" className="tester-notification" aria-label="Notifications">🔔<i>3</i></button><span className="tester-top-divider" /><span className="tester-top-avatar">{initials}</span><strong>{displayName || "Tester"}</strong><span className="tester-chevron">⌄</span></div>
+          <div className="tester-top-actions"><button type="button" className="tester-notification" aria-label="Notifications">🔔</button><span className="tester-top-divider" /><span className="tester-top-avatar">{initials}</span><strong>{displayName || "Tester"}</strong><span className="tester-chevron">⌄</span></div>
         </header>
 
         <div className="tester-profile-content">
@@ -166,7 +168,7 @@ export default function ProfilePage() {
           <section className="tester-summary-card">
             <div className="tester-summary-person">
               <div className="tester-large-avatar">{avatarUrl ? <img src={avatarUrl} alt="Profile" /> : <span className="tester-avatar-emoji" aria-label="Profile avatar">👨🏻‍💻</span>}<label className="tester-camera" title="Change profile photo"><ProfileIcon name="camera" /><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} /></label></div>
-              <div className="tester-summary-copy"><h2>{displayName || "Your Name"} {verified && <span className="tester-verified-badge" title="Verified account"><ProfileIcon name="badge-check" /></span>}</h2><p>Tester ID: <strong>TST-{userId ? userId.replace(/-/g, "").slice(0, 8).toUpperCase() : "PREVIEW"}</strong> <span className="tester-level">⭐ Level 1</span></p><small>{bio || "Passionate about testing and improving apps ✨"}</small></div>
+              <div className="tester-summary-copy"><h2>{displayName || "Your Name"} {verified && <span className="tester-verified-badge" title="Verified account"><ProfileIcon name="badge-check" /></span>}</h2><p>Tester ID: <strong>TST-{userId ? userId.replace(/-/g, "").slice(0, 8).toUpperCase() : "PREVIEW"}</strong> <span className="tester-level">⭐ Level 1</span></p><small>{bio || "Add a short bio to introduce yourself to the community."}</small></div>
             </div>
             <div className="tester-stat"><span><ProfileIcon name="flask" /></span><strong>—</strong><small>Total Tests</small></div>
             <div className="tester-stat"><span><ProfileIcon name="star" /></span><strong>—</strong><small>Average Rating</small></div>
@@ -202,7 +204,7 @@ export default function ProfilePage() {
 
               <section className="tester-panel tester-device-panel"><div className="tester-device-art" aria-hidden="true"><ProfileIcon name="smartphone" /><span><ProfileIcon name="settings" /></span></div><div className="tester-device-copy"><h2>Tester Information</h2><p>Your testing details</p><div><span>Device Type</span><strong>Not collected yet</strong></div><div><span>Android Version</span><strong>Not detected</strong></div><div><span>Interests</span><strong className="tester-tags">{interests.length ? interests.map((interest) => <i key={interest}>{interest}</i>) : <i>Not set</i>}</strong></div></div></section>
 
-              <section className="tester-panel tester-verification-panel"><span className="tester-big-shield"><ProfileIcon name="shield-check" /></span><div className="tester-verification-copy"><h2>Account Verification</h2><p>Your account security status</p><span><ProfileIcon name={verified ? "check-circle" : "bell"} /> Email address {verified ? "verified" : "verification pending"}</span><span><ProfileIcon name="check-circle" /> Keep your profile information up to date</span></div><div className={`tester-verification-status ${verified ? "verified" : ""}`}><strong><ProfileIcon name={verified ? "shield-check" : "bell"} /></strong><span><b>{verified ? "Verified" : "In progress"}</b><small>{verified ? "All good!" : "Check your email"}</small></span></div></section>
+              <section className="tester-panel tester-verification-panel"><span className="tester-big-shield"><ProfileIcon name="shield-check" /></span><div className="tester-verification-copy"><h2>Account Verification</h2><p>Your account security status</p><span><ProfileIcon name={emailVerified ? "check-circle" : "bell"} /> Email address {emailVerified ? "verified" : "verification pending"}</span><span><ProfileIcon name="check-circle" /> Keep your profile information up to date</span></div><div className={`tester-verification-status ${verified ? "verified" : ""}`}><strong><ProfileIcon name={verified ? "shield-check" : "bell"} /></strong><span><b>{verified ? "Verified" : "In progress"}</b><small>{verified ? "All good!" : "Check your email"}</small></span></div></section>
 
               <section className="tester-account-actions"><span className="tester-logout-icon"><ProfileIcon name="log-out" /></span><div><h2>Account Actions</h2><p>Manage your account actions</p></div><button type="button" onClick={() => void logout()}><ProfileIcon name="log-out" /> Log Out</button><button type="button" className="danger" onClick={() => setMessage("To close your account, contact TestDZ support.")}><ProfileIcon name="trash" /> Close Account</button></section>
             </div>
@@ -212,7 +214,7 @@ export default function ProfilePage() {
 
               <section className="tester-panel tester-setting-panel"><div className="tester-setting-art language"><ProfileIcon name="globe" /></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="globe" /></span><div><h2>Language &amp; Preferences</h2><p>Choose your preferred settings</p></div></div><div className="tester-setting-row tester-choice-row"><span>Language</span><span className="tester-setting-unavailable">Not available yet</span></div><div className="tester-setting-row tester-choice-row"><span>Theme</span><span className="tester-setting-unavailable">Not available yet</span></div></div></section>
 
-              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art notifications"><ProfileIcon name="bell" /><i>1</i></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="bell" /></span><div><h2>Notification Preferences</h2><p>Control what notifications you receive</p></div></div><div className="tester-setting-row"><span><ProfileIcon name="mail" /></span><span>Email Notifications <em>Not configured</em></span><Toggle label="Email notifications" /></div><div className="tester-setting-row"><span><ProfileIcon name="smartphone" /></span><span>Push Notifications <em>Not configured</em></span><Toggle label="Push notifications" /></div></div></section>
+              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art notifications"><ProfileIcon name="bell" /></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="bell" /></span><div><h2>Notification Preferences</h2><p>Control what notifications you receive</p></div></div><div className="tester-setting-row"><span><ProfileIcon name="mail" /></span><span>Email Notifications <em>Not configured</em></span><Toggle label="Email notifications" /></div><div className="tester-setting-row"><span><ProfileIcon name="smartphone" /></span><span>Push Notifications <em>Not configured</em></span><Toggle label="Push notifications" /></div></div></section>
             </div>
           </div>
         </div>
