@@ -16,6 +16,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AccountRole[]>([]);
   const [rolesLoading, setRolesLoading] = useState(false);
   const [rolesError, setRolesError] = useState<Error | null>(null);
+  const [rolesRevision, setRolesRevision] = useState(0);
   const rolesRequestId = useRef(0);
 
   const loadRoles = useCallback(async (targetUserId: string) => {
@@ -52,7 +53,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     return () => {
       rolesRequestId.current += 1;
     };
-  }, [userId, loadRoles]);
+  }, [userId, rolesRevision, loadRoles]);
 
   useEffect(() => {
     if (!identityApi.isConfigured()) {
@@ -67,6 +68,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
       receivedAuthEvent = true;
       if (!active) return;
       rolesRequestId.current += 1;
+      setRolesRevision((revision) => revision + 1);
       setRoles([]);
       setRolesLoading(Boolean(nextSession));
       setRolesError(null);
@@ -114,6 +116,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
       const { data, error: sessionError } = await identityApi.getSession();
       if (sessionError) throw sessionError;
       rolesRequestId.current += 1;
+      setRolesRevision((revision) => revision + 1);
       setRoles([]);
       setRolesLoading(Boolean(data.session));
       setRolesError(null);
