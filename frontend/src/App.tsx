@@ -793,11 +793,130 @@ function ForgotPasswordPage() {
 }
 
 function ResetPasswordPage() {
-  const [password,setPassword]=useState("");const [confirm,setConfirm]=useState("");const [message,setMessage]=useState("");const [error,setError]=useState("");const [busy,setBusy]=useState(false);
-  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setError("");setMessage("");if(password.length<8||!/[A-Za-z]/.test(password)||!/[0-9]/.test(password)){setError("استخدم 8 أحرف على الأقل، مع حرف ورقم.");return;}if(password!==confirm){setError("كلمتا المرور غير متطابقتين.");return;}if(!supabase){setError("إعداد Supabase غير مكتمل.");return;}setBusy(true);const {error:err}=await supabase.auth.updateUser({password});if(err)setError("الرابط غير صالح أو انتهت صلاحيته. اطلب رابطاً جديداً.");else setMessage("تم تحديث كلمة المرور. يمكنك الآن تسجيل الدخول.");setBusy(false);}
-  return <main className="auth-layout"><section className="auth-panel"><div className="auth-form-wrap"><Brand /><span className="eyebrow">كلمة مرور جديدة</span><h2>أعد تعيين كلمة المرور</h2>{message&&<div className="notice notice-success">{message} <Link to="/auth">تسجيل الدخول</Link></div>}{error&&<div className="notice notice-error">{error}</div>}<form className="auth-form" onSubmit={submit}><label>كلمة المرور الجديدة<input type="password" required minLength={8} value={password} onChange={e=>setPassword(e.target.value)} dir="ltr"/></label><label>تأكيد كلمة المرور<input type="password" required value={confirm} onChange={e=>setConfirm(e.target.value)} dir="ltr"/></label><button className="button button-primary button-large" disabled={busy}>{busy?"جارٍ الحفظ...":"حفظ كلمة المرور"}</button></form></div></section></main>;
-}
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const hasLength = password.length >= 8;
+  const hasLetter = /[A-Za-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const isStrong = hasLength && hasLetter && hasNumber;
+  const strength = password.length === 0 ? 0 : [hasLength, hasLetter, hasNumber, password.length >= 12].filter(Boolean).length;
 
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    if (!isStrong) {
+      setError("Use at least 8 characters, including a letter and a number.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("The passwords do not match.");
+      return;
+    }
+    if (!supabase) {
+      setError("Supabase is not configured. Please try again later.");
+      return;
+    }
+    setBusy(true);
+    const { error: err } = await supabase.auth.updateUser({ password });
+    if (err) setError("This reset link is invalid or has expired. Please request a new one.");
+    else {
+      setMessage("Your password has been updated. You can now sign in.");
+      setPassword("");
+      setConfirm("");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <main className="reset-page">
+      <header className="reset-topbar">
+        <Link className="reset-brand" to="/" aria-label="TestDZ home">
+          <span className="reset-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 56" fill="none"><path d="M17 4h14v8l13 29a7 7 0 0 1-6.4 10H10.4A7 7 0 0 1 4 41L17 12V4Z" fill="url(#resetFlask)"/><path d="M17 4h14v8l13 29a7 7 0 0 1-6.4 10H10.4A7 7 0 0 1 4 41L17 12V4Z" stroke="#0C65F4" strokeWidth="2"/><path d="M12 35h24l5 9H7l5-9Z" fill="#42D5FF"/><circle cx="22" cy="30" r="4" fill="#fff" fillOpacity=".85"/><circle cx="30" cy="40" r="2.5" fill="#0C65F4"/><defs><linearGradient id="resetFlask" x1="8" y1="5" x2="40" y2="50" gradientUnits="userSpaceOnUse"><stop stopColor="#5DEBFF"/><stop offset=".55" stopColor="#087DFF"/><stop offset="1" stopColor="#1647DF"/></linearGradient></defs></svg>
+          </span>
+          <span className="reset-brand-copy"><strong>TestDZ</strong><small>Test · Learn · Grow</small></span>
+        </Link>
+        <nav className="reset-language" aria-label="Language">
+          <span className="reset-globe" aria-hidden="true">◎</span>
+          <button type="button" aria-label="Arabic language">العربية⌄</button>
+          <i aria-hidden="true" />
+          <button type="button" aria-label="French language">Français</button>
+        </nav>
+      </header>
+
+      <div className="reset-content">
+        <section className="reset-intro" aria-label="Reset password">
+          <div className="reset-intro-copy">
+            <h1>Reset<br /><span>Password</span></h1>
+            <p>Enter your new password to<br className="reset-desktop-break" /> regain access to your account.</p>
+          </div>
+          <div className="reset-lock-art" aria-hidden="true">
+            <div className="reset-art-orbit reset-art-orbit-one" />
+            <div className="reset-art-orbit reset-art-orbit-two" />
+            <div className="reset-spark reset-spark-one" />
+            <div className="reset-spark reset-spark-two" />
+            <svg className="reset-lock-svg" viewBox="0 0 360 390" fill="none">
+              <defs>
+                <linearGradient id="lockBody" x1="90" y1="145" x2="260" y2="315" gradientUnits="userSpaceOnUse"><stop stopColor="#45C9FF"/><stop offset=".48" stopColor="#087BFA"/><stop offset="1" stopColor="#1246D8"/></linearGradient>
+                <linearGradient id="lockShackle" x1="130" y1="55" x2="220" y2="165" gradientUnits="userSpaceOnUse"><stop stopColor="#4CCFFF"/><stop offset="1" stopColor="#0754E8"/></linearGradient>
+                <filter id="lockShadow" x="20" y="60" width="330" height="330" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="13"/></filter>
+              </defs>
+              <ellipse cx="181" cy="306" rx="120" ry="24" fill="#1675F5" fillOpacity=".22" filter="url(#lockShadow)"/>
+              <path d="M112 155V116C112 78 139 51 176 51C213 51 240 78 240 116V155" stroke="url(#lockShackle)" strokeWidth="25" strokeLinecap="round"/>
+              <path d="M95 147H257C271 147 282 158 282 172V285C282 302 269 315 252 315H100C83 315 70 302 70 285V172C70 158 81 147 95 147Z" fill="url(#lockBody)"/>
+              <path d="M92 160H255" stroke="#9DE8FF" strokeOpacity=".75" strokeWidth="4" strokeLinecap="round"/>
+              <circle cx="176" cy="218" r="26" fill="#F5FBFF"/>
+              <path d="M163 234H189L195 264H157L163 234Z" fill="#F5FBFF"/>
+              <circle cx="111" cy="184" r="4" fill="#fff" fillOpacity=".45"/><circle cx="241" cy="285" r="5" fill="#fff" fillOpacity=".3"/>
+            </svg>
+            <div className="reset-password-pill"><span>✱</span><span>✱</span><span>✱</span><span>✱</span><span>✱</span><span>✱</span></div>
+          </div>
+          <p className="reset-script">Test. Learn. Grow.<span /></p>
+        </section>
+
+        <section className="reset-card" aria-labelledby="reset-card-title">
+          <div className="reset-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 100 100" fill="none"><path d="M31 43V30a19 19 0 0 1 38 0v13" stroke="#1763E9" strokeWidth="8" strokeLinecap="round"/><rect x="20" y="40" width="60" height="43" rx="9" fill="#1674EC"/><circle cx="50" cy="59" r="6" fill="white"/><path d="M50 64v8" stroke="white" strokeWidth="5" strokeLinecap="round"/><path d="M73 70a20 20 0 0 1-18 18M72 61l2 10 9-2M27 31a20 20 0 0 1 18-18M28 40l-2-10-9 2" stroke="#1674EC" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          <h2 id="reset-card-title">Create New Password</h2>
+          <p className="reset-card-subtitle">Your new password must be secure and easy to remember.</p>
+
+          {message && <div className="reset-feedback reset-feedback-success" role="status">{message} <Link to="/auth">Back to Login</Link></div>}
+          {error && <div className="reset-feedback reset-feedback-error" role="alert">{error}</div>}
+
+          <form className="reset-form" onSubmit={submit}>
+            <label className="reset-input-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3"/></svg>
+              <span className="sr-only">New Password</span>
+              <input autoComplete="new-password" type={showPassword ? "text" : "password"} placeholder="New Password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} aria-describedby="reset-password-strength" />
+              <button type="button" className="reset-eye" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? "◉" : "◎"}</button>
+            </label>
+            <div className="reset-strength" id="reset-password-strength" aria-live="polite">
+              <div className="reset-strength-bars">{[1, 2, 3, 4].map(n => <span key={n} className={strength >= n ? (isStrong ? "filled strong" : "filled") : ""} />)}</div>
+              <span className={isStrong ? "reset-strength-label is-strong" : "reset-strength-label"}>{password.length === 0 ? "Use 8+ characters, a letter and a number" : isStrong ? "Strong" : "Keep going"}</span>
+            </div>
+            <label className="reset-input-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3"/></svg>
+              <span className="sr-only">Confirm New Password</span>
+              <input autoComplete="new-password" type={showConfirm ? "text" : "password"} placeholder="Confirm New Password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+              <button type="button" className="reset-eye" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? "Hide confirmation password" : "Show confirmation password"}>{showConfirm ? "◉" : "◎"}</button>
+            </label>
+            <button className="reset-submit" disabled={busy || Boolean(message)}>{busy ? <><span className="reset-spinner" /> Updating Password…</> : <><span className="reset-submit-icon" aria-hidden="true">⟳</span> Reset Password</>}</button>
+          </form>
+
+          <div className="reset-password-tip"><span className="reset-info-icon" aria-hidden="true">i</span><p>Your password must be at least 8 characters, including a number and a letter.</p></div>
+          <Link className="reset-back-link" to="/auth"><span aria-hidden="true">←</span> Back to Login</Link>
+        </section>
+      </div>
+    </main>
+  );
+}
 function OnboardingPage() {
   const navigate=useNavigate();const [choice,setChoice]=useState("tester");const [interests,setInterests]=useState<string[]>([]);const [busy,setBusy]=useState(false);const [error,setError]=useState("");
   const options=["أدوات وإنتاجية","تعليم","ألعاب","تجارة إلكترونية","صحة ولياقة","شبكات اجتماعية","أخرى"];
