@@ -52,6 +52,13 @@ export default function SignupSuccessPage() {
   const email = useMemo(() => new URLSearchParams(window.location.search).get("email")?.trim() || "your email address", []);
   const t = copy[language];
   const isRtl = language === "ar";
+  function openMailbox() {
+    const domain = email.split("@")[1]?.toLowerCase();
+    const mailbox = domain === "gmail.com" ? "https://mail.google.com/" :
+      domain === "outlook.com" || domain === "hotmail.com" || domain === "live.com" ? "https://outlook.live.com/mail/" :
+      domain === "yahoo.com" ? "https://mail.yahoo.com/" : "mailto:" + encodeURIComponent(email);
+    window.open(mailbox, "_blank", "noopener,noreferrer");
+  }
 
   return (
     <main className="signup-success-page" dir={isRtl ? "rtl" : "ltr"} lang={language}>
@@ -98,9 +105,10 @@ export default function SignupSuccessPage() {
           <p className="signup-success-note">{t.note}</p>
           {resent && <p className="signup-success-feedback" role="status">{t.resent}</p>}
           <div className="signup-success-actions">
-            <button type="button" className="signup-success-primary" onClick={() => { setResent(true); }}>↻ <span>{t.resend}</span></button>
+            <button type="button" className="signup-success-primary" onClick={openMailbox}>✉ <span>{t.open}</span></button>
             <button type="button" className="signup-success-secondary" onClick={() => navigate("/")}>⌂ <span>{t.home}</span></button>
           </div>
+          <button type="button" className="signup-success-resend" onClick={() => setResent(true)}>↻ {t.resend}</button>
           <p className="signup-success-demo">Mock Data preview · No email is sent in this demo.</p>
         </section>
       </div>
