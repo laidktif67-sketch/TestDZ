@@ -42,7 +42,7 @@ export const profilesApi = {
   getProfile(userId: string) {
     return getClient()
       .from("profiles")
-      .select("id, display_name, phone, bio, avatar_url, is_verified, locale, onboarding_completed_at")
+      .select("id, display_name, phone, bio, avatar_url, is_verified, locale, interests, onboarding_completed_at")
       .eq("id", userId)
       .single();
   },
