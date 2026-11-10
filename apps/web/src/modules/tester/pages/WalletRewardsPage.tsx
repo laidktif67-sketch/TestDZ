@@ -61,7 +61,6 @@ export default function WalletRewardsPage() {
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [catalogNotice, setCatalogNotice] = useState(false);
   const [animatedBalance, setAnimatedBalance] = useState(0);
-  const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
 
@@ -119,8 +118,8 @@ export default function WalletRewardsPage() {
 
   const lifetimeEarned = ledger.filter((entry) => entry.wallet_type === "earned_points" && entry.amount > 0).reduce((sum, entry) => sum + entry.amount, 0);
   const redeemed = ledger.filter((entry) => entry.wallet_type === "earned_points" && entry.amount < 0).reduce((sum, entry) => sum + Math.abs(entry.amount), 0);
-  const nextMilestone = milestones.find((item) => item.points > lifetimeEarned) ?? milestones[milestones.length - 1];
-  const milestoneProgress = Math.min(100, Math.round((lifetimeEarned / nextMilestone.points) * 100));
+  const nextMilestone = milestones.find((item) => item.points > wallet.earned_points) ?? milestones[milestones.length - 1];
+  const milestoneProgress = Math.min(100, Math.round((wallet.earned_points / nextMilestone.points) * 100));
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
@@ -169,18 +168,18 @@ export default function WalletRewardsPage() {
 
       <section className="tw-summary" aria-label="Wallet summary">
         <article className="tw-balance-card tw-balance-blue"><span className="tw-card-icon">👛</span><div><b>Total Balance</b><strong>{animatedBalance.toLocaleString()} <i>pts</i></strong><small>Available earned points</small></div><span className="tw-card-decoration">▂▅▇</span></article>
-        <article className="tw-balance-card tw-balance-green"><span className="tw-card-icon">🏆</span><div><b>Earned Points</b><strong>{lifetimeEarned.toLocaleString()} <i>pts</i></strong><small>Positive ledger entries loaded</small></div><span className="tw-card-decoration">▂▅▇</span></article>
+        <article className="tw-balance-card tw-balance-green"><span className="tw-card-icon">🏆</span><div><b>Earned Points</b><strong>{lifetimeEarned.toLocaleString()} <i>pts</i></strong><small>Sum of latest 100 ledger entries</small></div><span className="tw-card-decoration">▂▅▇</span></article>
         <article className="tw-balance-card tw-balance-gold"><span className="tw-card-icon">⏳</span><div><b>Pending Rewards</b><strong>—</strong><small>Pending rewards aren't tracked yet</small></div><span className="tw-hourglass">⌛</span></article>
       </section>
 
       <section className="tw-middle">
         <article className="tw-panel tw-milestones">
-          <div className="tw-panel-heading"><h2>🏆 Reward Milestones</h2><span className="tw-earned-label">{lifetimeEarned.toLocaleString()} earned</span></div>
-          <div className="tw-milestone-track"><span className="tw-track-base" /><span className="tw-track-fill" style={{ width: Math.min(100, Math.round((lifetimeEarned / 2000) * 100)) + "%" }} />{milestones.map((item) => {
+          <div className="tw-panel-heading"><h2>🏆 Reward Milestones</h2><span className="tw-earned-label">{wallet.earned_points.toLocaleString()} available</span></div>
+          <div className="tw-milestone-track"><span className="tw-track-base" /><span className="tw-track-fill" style={{ width: Math.min(100, Math.round((wallet.earned_points / 2000) * 100)) + "%" }} />{milestones.map((item) => {
             const achieved = lifetimeEarned >= item.points;
             return <div className={"tw-milestone " + (achieved ? "achieved" : "")} key={item.points}><span className="tw-milestone-dot">{achieved ? "✓" : item.icon}</span><b>{item.points.toLocaleString()} pts</b><small>{item.title}</small></div>;
           })}</div>
-          <div className="tw-milestone-progress"><span>Next milestone: <strong>{nextMilestone.points.toLocaleString()} pts · {nextMilestone.title}</strong></span><b>{milestoneProgress}%</b></div>
+          <div className="tw-milestone-progress"><span>Balance progress: <strong>toward {nextMilestone.points.toLocaleString()} pts · {nextMilestone.title}</strong></span><b>{milestoneProgress}%</b></div>
         </article>
         <article className="tw-redeem-card"><div className="tw-gift-art" aria-hidden="true">🎁</div><div><span className="tw-redeem-kicker">A little thank-you</span><h2>Redeem Rewards</h2><p>Explore reward options as soon as the TestDZ rewards catalogue is available.</p><button type="button" onClick={() => setCatalogNotice((value) => !value)}>🎁 Browse Rewards <span>→</span></button>{catalogNotice && <small className="tw-catalog-note">The rewards catalogue is not enabled yet. Your points remain safely in your wallet.</small>}</div></article>
       </section>
