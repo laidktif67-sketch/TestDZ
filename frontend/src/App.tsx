@@ -5,7 +5,7 @@ import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import WithdrawalStatusPage from "./WithdrawalStatusPage";
-import DiscoverTestsPage from "./DiscoverTestsPage";
+import DiscoverTestsPage, { TestPreviewPage } from "./DiscoverTestsPage";
 
 function Brand() {
   return <Link className="brand" to="/" aria-label="TestDZ الصفحة الرئيسية"><span className="brand-mark">T</span><span>Test<span className="brand-accent">DZ</span></span></Link>;
@@ -473,5 +473,5 @@ function WithdrawalPage() {
 }
 
 export default function App() {
-  return <Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/dashboard" element={<DashboardPage />} /><Route path="/discover" element={<DiscoverTestsPage />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="/wallet/withdraw" element={<WithdrawalPage />} /><Route path="/wallet/withdrawals/:requestId" element={<WithdrawalStatusPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+  return <Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/dashboard" element={<DashboardPage />} /><Route path="/discover" element={<DiscoverTestsPage />} /><Route path="/tests/:id" element={<TestPreviewPage />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="/wallet/withdraw" element={<WithdrawalPage />} /><Route path="/wallet/withdrawals/:requestId" element={<WithdrawalStatusPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
 }
