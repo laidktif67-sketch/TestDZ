@@ -42,6 +42,8 @@ const onboardingCopy = {
   }
 } as const;
 
+const interestsList = ["أدوات وإنتاجية", "تعليم", "ألعاب", "تجارة إلكترونية", "صحة ولياقة", "شبكات اجتماعية", "أخرى"];
+
 const roles = [
   { value: "tester", icon: "tester" },
   { value: "developer", icon: "developer" },
@@ -186,7 +188,7 @@ export default function OnboardingPage() {
       <section className="onboarding-interests">
         <h2>{t.interests} <small>{t.optional}</small></h2>
         <div className="onboarding-interest-list">
-          {t.interestNames.map((item, index) => <button type="button" key={index} className={interests.includes(String(index)) ? "active" : ""} aria-pressed={interests.includes(String(index))} onClick={() => toggle(String(index))}>{item}</button>)}
+          {t.interestNames.map((item, index) => <button type="button" key={index} className={interests.includes(interestsList[index]) ? "active" : ""} aria-pressed={interests.includes(interestsList[index])} onClick={() => toggle(interestsList[index])}>{item}</button>)}
         </div>
       </section>
       {error && <div className="notice notice-error onboarding-error" role="alert">{error}</div>}
