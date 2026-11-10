@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
+import { profilesApi } from "../features/profiles/profiles-api";
 import { useLenis } from "../hooks/useLenis";
 import "../styles/interests.css";
 
@@ -152,7 +153,7 @@ export default function InterestsPage(){
     setBusy(true);setError("");
     const roles=role==="both"?["tester","developer"]:[role];
     const interests=skip?[]:selected;
-    const {error:saveError}=await supabase.rpc("complete_onboarding",{p_roles:roles,p_interests:interests});
+    const {error:saveError}=await profilesApi.completeOnboarding(roles,interests);
     if(saveError)setError(t.error);else navigate("/complete-profile",{replace:true});
     setBusy(false);
   }
