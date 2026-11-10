@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import TesterSidebar from "../components/TesterSidebar";
-import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 
 const sections: Record<string, { title: string; subtitle: string; icon: string; items: { title: string; description: string; href: string }[] }> = {
   "/feedback-history": {

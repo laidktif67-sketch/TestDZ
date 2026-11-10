@@ -4,7 +4,7 @@ import type { AvatarMimeType } from "@testdz/types";
 import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { profilesApi } from "../features/profiles/profiles-api";
-import { identityApi } from "../features/identity/identity-api";
+import { identityApi } from "../shared/auth/identity-api";
 import { Brand } from "../components/Brand";
 import { useLenis } from "../hooks/useLenis";
 import "../styles/profile-completion.css";

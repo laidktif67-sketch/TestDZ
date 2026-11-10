@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { useLenis } from "../hooks/useLenis";
 import { translateAuthError } from "../lib/auth-routing";
-import { identityApi } from "../features/identity/identity-api";
+import { identityApi } from "../shared/auth/identity-api";
 import { supabase } from "../lib/supabase";
 
 export default function VerifyEmailPage() {

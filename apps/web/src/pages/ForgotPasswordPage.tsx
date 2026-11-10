@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { supabase } from "../lib/supabase";
-import { identityApi } from "../features/identity/identity-api";
+import { identityApi } from "../shared/auth/identity-api";
 
 export default function ForgotPasswordPage() {
   const [email,setEmail]=useState(""); const [message,setMessage]=useState(""); const [error,setError]=useState(""); const [busy,setBusy]=useState(false);

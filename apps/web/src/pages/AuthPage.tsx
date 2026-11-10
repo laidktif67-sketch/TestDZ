@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { getPostAuthRoute, translateAuthError } from "../lib/auth-routing";
-import { identityApi } from "../features/identity/identity-api";
+import { identityApi } from "../shared/auth/identity-api";
 
 function AuthPage() {
   const navigate = useNavigate();

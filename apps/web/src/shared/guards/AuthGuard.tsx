@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useIdentity } from "../../features/identity/hooks/useIdentity";
+import { useIdentity } from "../auth/hooks/useIdentity";
 import "./route-guards.css";
 
 export default function AuthGuard() {

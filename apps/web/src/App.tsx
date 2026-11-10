@@ -19,7 +19,7 @@ import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboard
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
-import { IdentityProvider } from "./features/identity/identity-provider";
+import { IdentityProvider } from "./shared/auth/identity-provider";
 import AuthGuard from "./shared/guards/AuthGuard";
 import OnboardingGuard from "./shared/guards/OnboardingGuard";
 import RoleGuard, { RoleHomeRedirect } from "./shared/guards/RoleGuard";
