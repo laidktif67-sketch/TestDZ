@@ -81,7 +81,7 @@ export default function WithdrawalRequestPage() {
     <main className="td-main twr-main">
       <header className="twr-topbar">
         <div><span className="twr-eyebrow">WALLET · PAYOUTS</span><h1>Withdrawal Request <span>💸</span></h1><p>Request a payout of your TestDZ rewards.</p></div>
-        <Link to="/wallet-rewards" className="twr-back">← Back to Wallet</Link>
+        <div className="twr-header-actions"><Link to="/withdrawal-status" className="twr-status-link">📦 View Details & Status</Link><Link to="/wallet-rewards" className="twr-back">← Back to Wallet</Link></div>
       </header>
 
       {loadError && <div className="twr-alert twr-alert-warning" role="alert">{loadError}</div>}
