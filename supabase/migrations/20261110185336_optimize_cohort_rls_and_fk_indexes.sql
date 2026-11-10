@@ -10,8 +10,8 @@ CREATE INDEX IF NOT EXISTS cohort_tests_developer_id_fk_idx
 CREATE INDEX IF NOT EXISTS cohort_tests_test_developer_fk_idx
   ON public.cohort_tests (test_id, developer_id);
 
-CREATE INDEX IF NOT EXISTS medical_exception_requests_reviewed_by_fk_idx
-  ON public.medical_exception_requests (reviewed_by);
+-- medical_exception_requests is not part of the current schema/migration set.
+-- Add its FK index in the migration that introduces that table, if needed.
 
 DROP POLICY IF EXISTS cohort_tests_select_participants ON public.cohort_tests;
 CREATE POLICY cohort_tests_select_participants
