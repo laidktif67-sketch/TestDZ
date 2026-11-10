@@ -49,7 +49,7 @@ export default function OnboardingGuard() {
     return () => {
       active = false;
     };
-  }, [userId, attempt]);
+  }, [userId, attempt, location.pathname]);
 
   const retry = useCallback(() => {
     setAttempt((current) => current + 1);
