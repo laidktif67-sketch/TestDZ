@@ -5,6 +5,7 @@ import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import "../styles/tester-dashboard.css";
 import "../styles/my-tests.css";
+import TesterSidebar from "../components/TesterSidebar";
 
 type Assignment = { id:string; status:string; start_date:string|null; completed_at:string|null; created_at:string; points_awarded?:number|null; test?:{id:string;title:string;status:string;end_date:string|null;app?:{name:string;icon_url:string|null}|null}|null; checkins?:{id:string;checkin_date:string;created_at:string}[] };
 type Activity = {id:string;kind:"checkin"|"feedback"|"completed";title:string;detail:string;date:string};
@@ -136,14 +137,24 @@ export default function MyTestsPage(){
  </div>;
  if(!session&&!previewMode)return <Navigate to="/auth" replace/>;
  return <div className="td-dashboard mt-page">
-  <aside className="td-sidebar">
-   <Link to="/tester-dashboard" className="td-brand"><span className="td-brand-flask"><I name="flask" size={31}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
-   <nav className="td-side-nav"><Link to="/tester-dashboard" className="td-nav-link"><I name="flask"/><span>Dashboard</span></Link><Link to="/apps" className="td-nav-link"><I name="search"/><span>Discover</span></Link><Link to="/my-tests" className="td-nav-link active"><I name="tests"/><span>My Tests</span></Link><Link to="/profile" className="td-nav-link"><I name="wallet"/><span>Billing</span></Link>{isAdmin&&<Link to="/profile" className="td-nav-link"><I name="shield"/><span>Admin</span></Link>}</nav>
-   <div className="td-sidebar-promo"><div className="td-rocket"><I name="trophy" size={40}/></div><strong>Reach Your Full Potential</strong><p>Build skills, earn points and grow with TestDZ!</p><Link to="/profile">View Rewards <I name="arrow" size={14}/></Link></div>
-   <div className="td-user-menu-wrap"><button type="button" className="td-user-mini td-user-trigger" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}><div className="td-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper?"Developer":"Tester"}</small></div><I name="chevron" size={17}/></button>{menuOpen&&<div className="td-workspace-menu"><Link to="/profile" onClick={()=>setMenuOpen(false)}><I name="settings" size={16}/><span>Profile settings</span></Link>{isDeveloper&&<><span className="td-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" onClick={()=>setMenuOpen(false)}><I name="flask" size={16}/><span>Tester Dashboard</span></Link><Link to="/developer-dashboard" onClick={()=>setMenuOpen(false)}><I name="code" size={16}/><span>Developer Dashboard</span></Link></>}</div>}</div>
-   {previewMode?<div className="td-signout td-preview-note">Preview mode · read only</div>:<button className="td-signout" onClick={async()=>{await supabase?.auth.signOut();}}><I name="logout"/>Sign Out</button>}
-  </aside>
-  <main className="td-main mt-main">
+  <TesterSidebar
+   nav={[
+    { label: "Dashboard", icon: "flask", href: "/tester-dashboard" },
+    { label: "Discover", icon: "search", href: "/apps" },
+    { label: "My Tests", icon: "tests", href: "/my-tests", active: true },
+    { label: "Billing", icon: "wallet", href: "/profile" },
+    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/profile" }] : [])
+   ]}
+   name={name}
+   firstName={firstName}
+   avatar={avatar}
+   roles={roles}
+   isAdmin={isAdmin}
+   isDeveloper={isDeveloper}
+   workspaceMenuOpen={menuOpen}
+   setWorkspaceMenuOpen={setMenuOpen}
+   previewMode={previewMode}
+  />  <main className="td-main mt-main">
    <header className="td-topbar"><label className="td-search"><I name="search" size={21}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search tests, topics, or skills…"/></label><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><I name="bell" size={22}/>{notifications>0&&<i>{notifications>9?"9+":notifications}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:firstName.slice(0,2).toUpperCase()}</span><b>⌄</b></Link></div></header>
    <div className="mt-breadcrumb"><Link to="/tester-dashboard">← Back to My Tests</Link><span>/</span><strong>Tester Progress</strong></div>
    <section className="mt-hero"><div className="mt-avatar">{avatar?<img src={avatar} alt=""/>:<span>{firstName.slice(0,1).toUpperCase()}</span>}<i>✓</i></div><div className="mt-identity"><h1>{name}</h1><p><span className="mt-online-dot"/>Active Tester <b>·</b> Member since {previewMode?"Apr 2025":session?.user.created_at?dateLabel(session.user.created_at):"your first day"}</p><strong className="mt-points"><I name="star" size={18}/>{points.toLocaleString()} pts</strong></div><div className="mt-quote"><p>“Keep going!<br/>You’re doing great!”</p><span>✦</span></div><div className="mt-hero-trophy"><TrophyArt/></div></section>
