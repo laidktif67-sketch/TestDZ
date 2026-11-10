@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import BlurText from "../components/react-bits/BlurText";
 import "../styles/onboarding.css";
 
 type OnboardingLanguage = "en" | "fr" | "ar";
@@ -141,6 +143,7 @@ function SideArtwork() {
 }
 
 export default function OnboardingPage() {
+  const pageRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const [language, setLanguage] = useState<OnboardingLanguage>(() => {
     const saved = window.localStorage.getItem("testdz-landing-language");
@@ -150,6 +153,24 @@ export default function OnboardingPage() {
   const [choice, setChoice] = useState("tester");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!root) return;
+    const context = gsap.context(() => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const entrance = gsap.timeline({ defaults: { ease: "power3.out" } });
+      entrance
+        .fromTo(".onboarding-progress", { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.55 })
+        .fromTo(".onboarding-heading h1", { y: 24, autoAlpha: 0, filter: "blur(8px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.72 }, "-=0.28")
+        .fromTo(".onboarding-intro-motion", { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.55 }, "-=0.42")
+        .fromTo(".onboarding-role-card", { y: 30, autoAlpha: 0, scale: 0.97 }, { y: 0, autoAlpha: 1, scale: 1, duration: 0.62, stagger: 0.12 }, "-=0.2")
+        .fromTo(".onboarding-trust-note, .onboarding-actions", { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.1 }, "-=0.25");
+      gsap.to(".onboarding-art", { y: -11, duration: 3.8, ease: "sine.inOut", yoyo: true, repeat: -1 });
+      gsap.to(".onboarding-bg-top", { rotate: -12, scale: 1.04, duration: 7, ease: "sine.inOut", yoyo: true, repeat: -1 });
+    }, root);
+    return () => context.revert();
+  }, []);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -186,7 +207,7 @@ export default function OnboardingPage() {
     setBusy(false);
   }
 
-  return <main className="onboarding-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
+  return <main ref={pageRef} className="onboarding-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
     <div className="onboarding-bg-shape onboarding-bg-top"/><div className="onboarding-bg-shape onboarding-bg-bottom"/>
     <header className="onboarding-header">
       <TestDZLogo />
@@ -198,7 +219,7 @@ export default function OnboardingPage() {
       <div className="onboarding-heading">
         <span className="onboarding-kicker">{t.step}</span>
         <h1>{t.title}</h1>
-        <p>{t.intro}</p>
+        <BlurText text={t.intro} className="onboarding-intro-motion" animateBy="words" delay={45} direction="top" effect="focus" stepDuration={0.32} trigger="load" />
       </div>
       <div className="onboarding-role-grid" role="group" aria-label={t.roleLabel}>
         {roles.map(role => <button
@@ -206,7 +227,7 @@ export default function OnboardingPage() {
           key={role.value}
           className={`onboarding-role-card ${choice === role.value ? "is-selected" : ""}`}
           aria-pressed={choice === role.value}
-          onClick={() => setChoice(role.value)}
+          onClick={event => { setChoice(role.value); gsap.fromTo(event.currentTarget, { scale: 0.985 }, { scale: 1, duration: 0.38, ease: "back.out(2)" }); }}
         >
           <span className="role-check" aria-hidden="true">✓</span>
           <span className="role-art"><RoleIllustration type={role.icon} /></span>
