@@ -230,7 +230,7 @@ export default function OnboardingPage() {
       <p className="onboarding-trust-note"><span aria-hidden="true">✓</span>{t.trustNote}</p>
       <div className="onboarding-actions">
         <button className="onboarding-continue" onClick={continueToInterests}>{t.continue} <span aria-hidden="true">{language === "ar" ? "←" : "→"}</span></button>
-        <button className="onboarding-skip" type="button" onClick={() => navigate("/interests", { state: { choice: "tester" } })}>{t.skip}</button>
+        <button className="onboarding-skip" type="button" onClick={() => navigate("/interests", { state: { choice } })}>{t.skip}</button>
       </div>
     </section>
   </main>;
