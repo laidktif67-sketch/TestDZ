@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import type { AccountRole } from "@testdz/types";
-import { useIdentity } from "../hooks/useIdentity";
+import { useIdentity } from "../../features/identity/hooks/useIdentity";
 import "./route-guards.css";
 
 type WorkspaceRole = Extract<AccountRole, "tester" | "developer" | "admin">;

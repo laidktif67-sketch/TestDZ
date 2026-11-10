@@ -20,9 +20,9 @@ import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./features/identity/identity-provider";
-import AuthGuard from "./features/identity/guards/AuthGuard";
-import OnboardingGuard from "./features/identity/guards/OnboardingGuard";
-import RoleGuard, { RoleHomeRedirect } from "./features/identity/guards/RoleGuard";
+import AuthGuard from "./shared/guards/AuthGuard";
+import OnboardingGuard from "./shared/guards/OnboardingGuard";
+import RoleGuard, { RoleHomeRedirect } from "./shared/guards/RoleGuard";
 
 export default function App() {
   return (
