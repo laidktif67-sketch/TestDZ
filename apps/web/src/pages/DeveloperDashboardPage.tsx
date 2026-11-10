@@ -178,7 +178,7 @@ export default function DeveloperDashboardPage() {
       const roles=(roleRes.data??[]).map((row:{role:string})=>row.role);
       const metadataRole=user.user_metadata?.account_type;
       const canDeveloper=roles.includes("developer")||roles.includes("both")||metadataRole==="developer"||metadataRole==="both";
-      const hasTester=roles.includes("tester")||roles.includes("both")||metadataRole==="tester"||metadataRole==="both";
+      const hasTester=roles.includes("tester")||roles.includes("both");
       setAllowed(canDeveloper);setCanTester(hasTester);
       setName(profileRes.data?.display_name?.trim()||user.email?.split("@")[0]||"Developer");
       setAvatar(profileRes.data?.avatar_url||"");
