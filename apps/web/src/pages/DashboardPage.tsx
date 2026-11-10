@@ -104,7 +104,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (previewMode) {
       setName("John Doe");
-      setRoles(["developer"]);
+      setRoles(["tester","developer"]);
       setStats({ available: 12, completed: 8, assignments: 10, points: 450, checkins: 0 });
       setChartPoints([40, 48, 55, 61, 68, 72, 75]);
       setChartLabels(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]);
@@ -221,6 +221,7 @@ export default function DashboardPage() {
       <nav className="td-side-nav">{nav.map((item) => item.href.startsWith("#") ? <a key={item.label} href={item.href} className="td-nav-link"><Icon name={item.icon}/><span>{item.label}</span></a> : <Link key={item.label} to={item.href} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon}/><span>{item.label}</span></Link>)}</nav>
       <div className="td-sidebar-promo"><div className="td-rocket"><Icon name="rocket" size={42}/></div><strong>Build Better Together</strong><p>Create tests, help the community, and grow with TestDZ!</p><Link to="/apps">Explore More <Icon name="arrow" size={15}/></Link></div>
       <div className="td-user-mini"><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Link to="/profile" aria-label="Profile settings"><Icon name="settings" size={18}/></Link></div>
+      {(roles.includes("both") || (roles.includes("tester") && roles.includes("developer"))) && <div className="td-role-switch" aria-label="Choose workspace"><Link to="/dashboard" className="td-role-option active"><Icon name="flask" size={15}/><span>Tester</span></Link><Link to="/developer-dashboard" className="td-role-option"><Icon name="code" size={15}/><span>Developer</span></Link></div>}
       {previewMode ? <div className="td-signout td-preview-note">Preview mode · read only</div> : <button className="td-signout" onClick={async () => { await supabase?.auth.signOut(); }}><Icon name="logout"/>Sign Out</button>}
     </aside>
 
