@@ -17,29 +17,45 @@ type DashboardStats = { available: number; completed: number; assignments: numbe
 const initialStats: DashboardStats = { available: 0, completed: 0, assignments: 0, points: 0, checkins: 0 };
 
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
-  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
+  const common = {
+    className: `td-icon td-icon-${name}`,
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true as const
+  };
   const paths: Record<string, ReactNode> = {
-    home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9M9 21v-7h6v7"/></>,
-    search: <><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16 16 5 5"/></>,
-    tests: <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3.5h6M8 12l2.5 2.5L16 9"/></>,
-    wallet: <><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9h18M16 14h2"/><path d="M6 6V4h12"/></>,
-    shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></>,
-    chart: <><path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 6-7"/></>,
-    star: <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>,
-    bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></>,
-    arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
-    play: <path d="m8 5 12 7-12 7V5Z"/>,
-    bolt: <path d="m13 2-3 9h7l-6 11 2-9H6l7-11Z"/>,
-    menu: <><path d="M4 6h16M4 12h16M4 18h16"/></>,
-    settings: <><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.6.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.6-.9l-1.7.6-1.4-2.4 1.4-1.1a7 7 0 0 1 0-1.9l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.6-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.6.9l1.7-.6 1.4 2.4-1.4 1.1a7 7 0 0 1 0 1.9Z"/></>,
-    logout: <><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></>,
-    clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
-    code: <><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></>,
-    trophy: <><path d="M8 21h8M12 17v4M7 4h10v7a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v3a4 4 0 0 0 4 4M17 6h3v3a4 4 0 0 1-4 4"/></>
+    home: <><path d="m3.5 10.5 8.5-7 8.5 7"/><path d="M5.5 9.5v10.8a.7.7 0 0 0 .7.7h11.6a.7.7 0 0 0 .7-.7V9.5"/><path d="M9.3 21v-6.5h5.4V21"/></>,
+    search: <><circle cx="10.8" cy="10.8" r="7.1"/><path d="m16 16 4.5 4.5"/></>,
+    tests: <><rect x="5" y="3.5" width="14" height="17" rx="2.2"/><path d="M9 3.5V2.8h6v.7M8.5 10h7M8.5 13.5h4.2M8.5 17h2.2"/><path d="m14.5 15.7 1.3 1.3 2.6-3"/></>,
+    wallet: <><rect x="3" y="6" width="18" height="15" rx="2.3"/><path d="M3 9.5h18M16 14h2.5M6 6V4.5a1.5 1.5 0 0 1 1.5-1.5H18"/></>,
+    shield: <><path d="M12 21.5s8-3.8 8-9.6V5.2L12 2.5 4 5.2v6.7c0 5.8 8 9.6 8 9.6Z"/><path d="m8.7 12 2.1 2.1 4.6-4.7"/></>,
+    chart: <><path d="M4 19.5V5M4 19.5h16"/><path d="m7.5 15 3.2-3.4 3 1.8 5.2-6"/><path d="M15.8 7.4h3.1v3.1"/></>,
+    star: <path d="m12 2.8 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9L12 2.8Z"/>,
+    bell: <><path d="M18.2 9a6.2 6.2 0 0 0-12.4 0c0 7-2.8 7.1-2.8 9h18c0-1.9-2.8-2-2.8-9Z"/><path d="M9.5 21h5"/><path d="M19.5 4.5 21 3"/></>,
+    arrow: <><path d="M5 12h13.5"/><path d="m13 6.5 5.5 5.5-5.5 5.5"/></>,
+    play: <><circle cx="12" cy="12" r="9"/><path d="m10 8.5 6 3.5-6 3.5v-7Z" fill="currentColor" stroke="none"/></>,
+    bolt: <path d="m13.2 2.5-8 11h6l-.5 8 8.1-11h-6.1l.5-8Z"/>,
+    menu: <><path d="M4 6.5h16M4 12h16M4 17.5h16"/></>,
+    settings: <><circle cx="12" cy="12" r="3.1"/><path d="m19.2 13.8 1.1.9-1.7 2.9-1.4-.6a7.8 7.8 0 0 1-1.7 1l-.2 1.5h-3.4l-.2-1.5a7.8 7.8 0 0 1-1.7-1l-1.4.6-1.7-2.9 1.1-.9a7.2 7.2 0 0 1 0-2l-1.1-.9 1.7-2.9 1.4.6a7.8 7.8 0 0 1 1.7-1l.2-1.5h3.4l.2 1.5a7.8 7.8 0 0 1 1.7 1l1.4-.6 1.7 2.9-1.1.9a7.2 7.2 0 0 1 0 2Z"/></>,
+    logout: <><path d="M10 17.2 15.2 12 10 6.8M15 12H3.5"/><path d="M12.5 3.5h6A2.5 2.5 0 0 1 21 6v12a2.5 2.5 0 0 1-2.5 2.5h-6"/></>,
+    clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></>,
+    code: <><path d="m8.2 8-4 4 4 4M15.8 8l4 4-4 4M14 4.5l-4 15"/></>,
+    trophy: <><path d="M8 3.5h8v6.2a4 4 0 0 1-8 0V3.5Z"/><path d="M8 6H4v2.2a4.2 4.2 0 0 0 4.2 4.2M16 6h4v2.2a4.2 4.2 0 0 1-4.2 4.2M12 14v5M8.5 21h7M9 18.8h6"/></>,
+    rocket: <><path d="M14.5 4.2c2.2-1.3 4.1-1.5 5.3-1.5.1 1.2-.2 3.1-1.5 5.3l-5.5 8-5.2-5.2 6.9-6.6Z"/><path d="m8.2 10.5-3.4.8-2.1 4.1 5.4-.3M13.5 15.8l-.8 3.4-4.1 2.1.3-5.4"/><circle cx="15.7" cy="7.7" r="1.5"/><path d="M5.8 18.2c-1.4.2-2.3 1.1-2.5 2.5 1.4-.2 2.3-1.1 2.5-2.5Z"/></>,
+    flask: <><path d="M9 3h6M10 3v6.2l-5.4 9.1A2.4 2.4 0 0 0 6.7 22h10.6a2.4 2.4 0 0 0 2.1-3.7L14 9.2V3"/><path d="M7.8 15h8.4M10 18.2h.1M14 17.5h.1"/></>,
+    gift: <><rect x="3" y="9" width="18" height="12" rx="1.8"/><path d="M2.5 6.5h19v3h-19zM12 6.5v14.5"/><path d="M12 6.5H8.3a2.3 2.3 0 1 1 2.3-2.3c0 1.2 1.4 2.3 1.4 2.3ZM12 6.5h3.7a2.3 2.3 0 1 0-2.3-2.3c0 1.2-1.4 2.3-1.4 2.3Z"/></>,
+    award: <><circle cx="12" cy="8.5" r="5.5"/><path d="m8.5 13-1 8 4.5-2.5 4.5 2.5-1-8"/><path d="m10 8.5 1.3 1.3 2.7-2.7"/></>,
+    check: <path d="m5 12.5 4.2 4.2L19.5 6.5"/>,
+    chevron: <path d="m7 10 5 5 5-5"/>
   };
   return <svg {...common}>{paths[name] ?? paths.star}</svg>;
 }
-
 function Mascot() {
   return <svg className="td-mascot" viewBox="0 0 420 220" role="img" aria-label="TestDZ student mascot">
     <circle cx="220" cy="108" r="104" fill="#ffffff" opacity=".12"/>
@@ -202,7 +218,7 @@ export default function DashboardPage() {
     <aside className="td-sidebar">
       <Link to="/dashboard" className="td-brand"><span className="td-brand-flask"><Icon name="tests" size={32}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
       <nav className="td-side-nav">{nav.map((item) => item.href.startsWith("#") ? <a key={item.label} href={item.href} className="td-nav-link"><Icon name={item.icon}/><span>{item.label}</span></a> : <Link key={item.label} to={item.href} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon}/><span>{item.label}</span></Link>)}</nav>
-      <div className="td-sidebar-promo"><div className="td-rocket">🚀</div><strong>Build Better Together</strong><p>Create tests, help the community, and grow with TestDZ!</p><Link to="/apps">Explore More <Icon name="arrow" size={15}/></Link></div>
+      <div className="td-sidebar-promo"><div className="td-rocket"><Icon name="rocket" size={42}/></div><strong>Build Better Together</strong><p>Create tests, help the community, and grow with TestDZ!</p><Link to="/apps">Explore More <Icon name="arrow" size={15}/></Link></div>
       <div className="td-user-mini"><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Link to="/profile" aria-label="Profile settings"><Icon name="settings" size={18}/></Link></div>
       {previewMode ? <div className="td-signout td-preview-note">Preview mode · read only</div> : <button className="td-signout" onClick={async () => { await supabase?.auth.signOut(); }}><Icon name="logout"/>Sign Out</button>}
     </aside>
@@ -245,9 +261,9 @@ export default function DashboardPage() {
 
       <section className="td-bottom-grid">
         <article className="td-panel td-discover-panel" id="my-tests"><div className="td-panel-heading"><h2><Icon name="star" size={22}/>Discover New Tests</h2><Link to="/apps">View All <Icon name="arrow" size={15}/></Link></div>
-          {filteredTests.length ? <div className="td-test-grid">{filteredTests.slice(0,4).map((test,index)=><article className="td-test-card" key={test.id}><div className={`td-test-art art-${index}`}>{test.app?.icon_url ? <img src={test.app.icon_url} alt=""/> : index===0 ? <Icon name="code" size={35}/> : index===1 ? <b>Py</b> : index===2 ? <b>⚛</b> : <b>▤</b>}</div><strong>{test.title}</strong><small>{test.app?.name ?? "TestDZ community"} · {test.min_testers} testers</small><div className="td-test-meta"><span>● {test.status.replace("_"," ")}</span><span><Icon name="clock" size={13}/> Open</span></div><Link to="/apps">View Test <Icon name="arrow" size={14}/></Link></article>)}</div> : <div className="td-empty-tests"><span>🧪</span><strong>{search ? "No tests match your search" : "New tests are on the way"}</strong><p>{search ? "Try another topic or skill." : "Explore the app directory and check back as developers publish new test cycles."}</p><Link to="/apps">Explore Apps <Icon name="arrow" size={15}/></Link></div>}
+          {filteredTests.length ? <div className="td-test-grid">{filteredTests.slice(0,4).map((test,index)=><article className="td-test-card" key={test.id}><div className={`td-test-art art-${index}`}>{test.app?.icon_url ? <img src={test.app.icon_url} alt=""/> : index===0 ? <Icon name="code" size={35}/> : index===1 ? <b>Py</b> : index===2 ? <b>⚛</b> : <b>▤</b>}</div><strong>{test.title}</strong><small>{test.app?.name ?? "TestDZ community"} · {test.min_testers} testers</small><div className="td-test-meta"><span>● {test.status.replace("_"," ")}</span><span><Icon name="clock" size={13}/> Open</span></div><Link to="/apps">View Test <Icon name="arrow" size={14}/></Link></article>)}</div> : <div className="td-empty-tests"><span><Icon name="flask" size={28}/></span><strong>{search ? "No tests match your search" : "New tests are on the way"}</strong><p>{search ? "Try another topic or skill." : "Explore the app directory and check back as developers publish new test cycles."}</p><Link to="/apps">Explore Apps <Icon name="arrow" size={15}/></Link></div>}
         </article>
-        <article className="td-panel td-rewards-panel" id="rewards"><div className="td-panel-heading"><h2><span className="td-gift">🎁</span>Your Rewards</h2><a href="#rewards">View All <Icon name="arrow" size={15}/></a></div><div className="td-reward-content"><div className="td-trophy-visual">🏆<span>✦</span></div><div><strong>You've earned<br/>{animatedStats.points.toLocaleString()} points!</strong><p>Keep going to unlock more rewards and badges.</p><Link to="/profile">View Profile <Icon name="arrow" size={14}/></Link></div></div></article>
+        <article className="td-panel td-rewards-panel" id="rewards"><div className="td-panel-heading"><h2><span className="td-gift"><Icon name="gift" size={20}/></span>Your Rewards</h2><a href="#rewards">View All <Icon name="arrow" size={15}/></a></div><div className="td-reward-content"><div className="td-trophy-visual"><Icon name="trophy" size={76}/><span>✦</span></div><div><strong>You've earned<br/>{animatedStats.points.toLocaleString()} points!</strong><p>Keep going to unlock more rewards and badges.</p><Link to="/profile">View Profile <Icon name="arrow" size={14}/></Link></div></div></article>
       </section>
       <footer className="td-footer">{previewMode ? "Preview only · sample data · no account changes" : `© ${new Date().getFullYear()} TestDZ · Test · Learn · Grow`}</footer>
     </main>
