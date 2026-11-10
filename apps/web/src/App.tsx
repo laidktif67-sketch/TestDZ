@@ -10,6 +10,7 @@ import InvalidOtpPage from "./pages/InvalidOtpPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import InterestsPage from "./pages/InterestsPage";
 import LandingPage from "./pages/LandingPage";
+import LegalPage from "./pages/LegalPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import TesterDashboardPage from "./pages/TesterDashboardPage";
@@ -28,6 +29,8 @@ export default function App() {
     <IdentityProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/terms" element={<LegalPage kind="terms" />} />
+        <Route path="/privacy" element={<LegalPage kind="privacy" />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/signup-success" element={<SignupSuccessPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
