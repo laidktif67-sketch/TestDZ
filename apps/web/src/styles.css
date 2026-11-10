@@ -2382,3 +2382,37 @@ html:lang(fr),
   .tester-profile-page .tester-summary-copy small{font-size:10px}
   .tester-profile-page .tester-stat small{font-size:9px}
 }
+
+
+/* Consistent, crisp line icons for Profile (replace platform-dependent emoji glyphs). */
+.tester-profile-page .profile-line-icon{display:inline-block;flex:0 0 auto;width:1em;height:1em;vertical-align:-.14em;stroke:currentColor;fill:none;overflow:visible}
+.tester-profile-page .tester-verified-badge{display:inline-grid;place-items:center}
+.tester-profile-page .tester-verified-badge .profile-line-icon{width:17px;height:17px;stroke:#fff;stroke-width:2.1}
+.tester-profile-page .tester-camera .profile-line-icon{width:17px;height:17px}
+.tester-profile-page .tester-stat>span .profile-line-icon{width:25px;height:25px;stroke-width:1.9}
+.tester-profile-page .tester-panel-icon .profile-line-icon{width:25px;height:25px;stroke:#fff;stroke-width:1.8}
+.tester-profile-page .tester-id-card>.profile-line-icon{width:42px;height:42px;stroke:#2876e8;stroke-width:1.5}
+.tester-profile-page .tester-id-card>b .profile-line-icon{width:17px;height:17px;stroke:#fff;stroke-width:2.4}
+.tester-profile-page .tester-readonly-value i .profile-line-icon{width:13px;height:13px;stroke-width:2.4}
+.tester-profile-page .tester-device-art>.profile-line-icon{width:74px;height:74px;stroke:#1766df;stroke-width:1.55}
+.tester-profile-page .tester-device-art>span .profile-line-icon{width:27px;height:27px;stroke:#1766df}
+.tester-profile-page .tester-big-shield{clip-path:none;width:66px;height:66px;border-radius:19px;background:linear-gradient(145deg,#35d987,#079454);box-shadow:0 7px 16px rgba(9,153,85,.19);text-shadow:none}
+.tester-profile-page .tester-big-shield .profile-line-icon{width:43px;height:43px;stroke:#fff;stroke-width:1.8}
+.tester-profile-page .tester-verification-copy>span{display:flex;align-items:center;gap:6px}
+.tester-profile-page .tester-verification-copy>span .profile-line-icon{width:14px;height:14px;color:#129a59;stroke-width:2.3}
+.tester-profile-page .tester-verification-status>strong{display:grid;place-items:center}
+.tester-profile-page .tester-verification-status>strong .profile-line-icon{width:22px;height:22px;stroke:#fff;stroke-width:2.2}
+.tester-profile-page .tester-logout-icon .profile-line-icon{width:30px;height:30px;color:#e33d52;stroke-width:2}
+.tester-profile-page .tester-account-actions>button .profile-line-icon{width:17px;height:17px;stroke-width:2}
+.tester-profile-page .tester-setting-art .profile-line-icon{width:68px;height:68px;stroke-width:1.45;filter:drop-shadow(0 3px 2px rgba(19,91,206,.12))}
+.tester-profile-page .tester-setting-art.security .profile-line-icon{width:72px;height:72px;stroke:#1767e7}
+.tester-profile-page .tester-setting-art.language .profile-line-icon{width:75px;height:75px;stroke:#1767e7}
+.tester-profile-page .tester-setting-art.notifications .profile-line-icon{width:65px;height:65px;stroke:#267cf0}
+.tester-profile-page .tester-panel-heading.compact>span .profile-line-icon{width:23px;height:23px;stroke-width:1.9}
+.tester-profile-page .tester-setting-row>span:first-child .profile-line-icon{width:19px;height:19px;stroke-width:1.9}
+@media(max-width:850px){
+ .tester-profile-page .tester-big-shield{width:44px;height:44px;border-radius:13px}
+ .tester-profile-page .tester-big-shield .profile-line-icon{width:29px;height:29px}
+ .tester-profile-page .tester-setting-art .profile-line-icon,.tester-profile-page .tester-setting-art.security .profile-line-icon,.tester-profile-page .tester-setting-art.language .profile-line-icon,.tester-profile-page .tester-setting-art.notifications .profile-line-icon{width:36px;height:36px}
+ .tester-profile-page .tester-device-art>.profile-line-icon{width:52px;height:52px}
+}
