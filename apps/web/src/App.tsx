@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AppsPage from "./pages/AppsPage";
 import AppDetailPage from "./pages/AppDetailPage";
 import AuthPage from "./pages/AuthPage";
+import SignupSuccessPage from "./pages/SignupSuccessPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PasswordResetSuccessPage from "./pages/PasswordResetSuccessPage";
@@ -27,6 +28,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/signup-success" element={<SignupSuccessPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
