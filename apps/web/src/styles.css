@@ -1973,3 +1973,45 @@ html:lang(fr),
 }
 .signup-success-resend:hover {text-decoration:underline}
 .signup-success-resend:focus-visible {outline:3px solid rgba(23,103,237,.24);outline-offset:3px;border-radius:8px}
+
+
+/* Final polish: clearer hierarchy, crisp iconography, subtle motion and focus states. */
+.signup-success-page {position:relative;isolation:isolate}
+.signup-success-page::before {
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.32;
+  background-image:radial-gradient(#6aa9ed 0.7px,transparent 0.7px);
+  background-size:22px 22px;mask-image:linear-gradient(90deg,transparent,#000 24%,transparent 75%);
+}
+.signup-success-brand,.signup-success-footer-brand {transition:opacity .2s ease}
+.signup-success-brand:hover,.signup-success-footer-brand:hover {opacity:.82}
+.signup-success-flask {display:inline-flex;align-items:center;justify-content:center}
+.signup-success-flask svg {filter:drop-shadow(0 3px 4px rgba(10,104,235,.15))}
+.signup-success-envelope {animation:signup-envelope-float 5s ease-in-out infinite}
+.signup-success-letter {border:1px solid rgba(148,190,244,.55)}
+.signup-success-letter span {font-family:Arial,sans-serif;text-shadow:0 4px 9px rgba(16,185,129,.12)}
+.signup-success-check {animation:signup-check-pop 4.5s ease-in-out infinite}
+.signup-success-spark {display:inline-flex;filter:drop-shadow(0 4px 9px rgba(23,103,237,.16))}
+.signup-success-icon {animation:signup-success-glow 4s ease-in-out infinite}
+.signup-success-celebration {display:inline-block;font-size:.82em;vertical-align:middle;transform-origin:70% 80%;animation:signup-celebrate 3.8s ease-in-out infinite}
+.signup-success-email {box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}
+.signup-success-mail-icon {box-shadow:0 7px 15px rgba(23,103,237,.2)}
+.signup-success-mail-icon svg {filter:drop-shadow(0 1px 1px rgba(0,0,0,.08))}
+.signup-success-actions button svg,.signup-success-resend svg {flex:0 0 auto}
+.signup-success-actions button:focus-visible,.signup-success-resend:focus-visible,.signup-success-language select:focus-visible {
+  outline:3px solid rgba(23,103,237,.3);outline-offset:3px
+}
+.signup-success-demo {display:flex;align-items:center;justify-content:center;gap:6px}
+.signup-success-demo svg {color:#7b91b5;flex:0 0 auto}
+.signup-success-footer nav a {transition:color .18s ease}
+@keyframes signup-envelope-float {0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes signup-check-pop {0%,88%,100%{transform:scale(1)}92%{transform:scale(1.07)}}
+@keyframes signup-success-glow {0%,100%{filter:drop-shadow(0 9px 15px rgba(16,185,129,.1))}50%{filter:drop-shadow(0 10px 20px rgba(16,185,129,.24))}}
+@keyframes signup-celebrate {0%,80%,100%{transform:rotate(0) scale(1)}85%{transform:rotate(12deg) scale(1.12)}90%{transform:rotate(-8deg) scale(1.06)}}
+@media(max-width:850px) {
+  .signup-success-envelope {animation:none}
+  .signup-success-check {animation:none}
+}
+@media(prefers-reduced-motion:reduce) {
+  .signup-success-envelope,.signup-success-check,.signup-success-icon,.signup-success-celebration {animation:none}
+  .signup-success-brand,.signup-success-footer-brand,.signup-success-footer nav a {transition:none}
+}
