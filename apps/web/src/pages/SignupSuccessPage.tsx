@@ -29,6 +29,10 @@ const copy = {
     brand: "Test · Learn · Grow",
     foot: "Build. Test. Reward.",
     language: "Language",
+    copyEmail: "Copy email",
+    copied: "Email copied",
+    steps: ["Account created", "Verify email", "Start testing"],
+    stepLabel: "YOUR NEXT STEPS",
   },
   ar: {
     title: "تم إنشاء حسابك بنجاح!",
@@ -42,6 +46,10 @@ const copy = {
     brand: "اختبر · تعلّم · تطوّر",
     foot: "أنشئ. اختبر. اكسب.",
     language: "اللغة",
+    copyEmail: "نسخ البريد",
+    copied: "تم نسخ البريد",
+    steps: ["إنشاء الحساب", "تحقق من البريد", "ابدأ الاختبار"],
+    stepLabel: "الخطوات التالية",
   },
   fr: {
     title: "Votre compte a été créé !",
@@ -55,6 +63,10 @@ const copy = {
     brand: "Tester · Apprendre · Progresser",
     foot: "Créer. Tester. Récompenser.",
     language: "Langue",
+    copyEmail: "Copier l’e-mail",
+    copied: "E-mail copié",
+    steps: ["Compte créé", "Vérifier l’e-mail", "Commencer les tests"],
+    stepLabel: "VOS PROCHAINES ÉTAPES",
   },
 };
 
@@ -62,9 +74,20 @@ export default function SignupSuccessPage() {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>("en");
   const [resent, setResent] = useState(false);
+  const [copied, setCopied] = useState(false);
   const email = useMemo(() => new URLSearchParams(window.location.search).get("email")?.trim() || "your email address", []);
   const t = copy[language];
   const isRtl = language === "ar";
+  async function copyEmail() {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   function openMailbox() {
     const domain = email.split("@")[1]?.toLowerCase();
     const mailbox = domain === "gmail.com" ? "https://mail.google.com/" :
@@ -111,9 +134,13 @@ export default function SignupSuccessPage() {
           <span className="signup-success-eyebrow">TESTDZ ACCOUNT</span>
           <h1 id="signup-success-title">{t.title} <span className="signup-success-celebration" aria-hidden="true">🎉</span></h1>
           <p className="signup-success-intro">{t.intro}</p>
+          <div className="signup-success-steps" aria-label={t.stepLabel}>
+            <span className="signup-success-steps-label">{t.stepLabel}</span>
+            <ol>{t.steps.map((step, index) => <li key={step} className={index === 0 ? "is-complete" : index === 1 ? "is-current" : ""}><span className="signup-success-step-number">{index === 0 ? <Icon name="check" size={15} /> : index + 1}</span><span>{step}</span></li>)}</ol>
+          </div>
           <div className="signup-success-email">
             <span className="signup-success-mail-icon"><Icon name="mail" size={27} /></span>
-            <span><small>{t.sent}</small><strong>{email}</strong></span>
+            <span className="signup-success-email-copy"><small>{t.sent}</small><strong dir="ltr">{email}</strong><button type="button" onClick={copyEmail} className="signup-success-copy-email" aria-live="polite"><Icon name="check" size={14} /> {copied ? t.copied : t.copyEmail}</button></span>
           </div>
           <p className="signup-success-note">{t.note}</p>
           {resent && <p className="signup-success-feedback" role="status">{t.resent}</p>}
