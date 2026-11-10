@@ -167,9 +167,24 @@ export default function WalletRewardsPage() {
       {error && <div className="tw-error" role="alert">{error}</div>}
 
       <section className="tw-summary" aria-label="Wallet summary">
-        <article className="tw-balance-card tw-balance-blue"><span className="tw-card-icon">👛</span><div><b>Total Balance</b><strong>{animatedBalance.toLocaleString()} <i>pts</i></strong><small>Available earned points</small></div><span className="tw-card-decoration">▂▅▇</span></article>
-        <article className="tw-balance-card tw-balance-green"><span className="tw-card-icon">🏆</span><div><b>Earned Points</b><strong>{lifetimeEarned.toLocaleString()} <i>pts</i></strong><small>Sum of latest 100 ledger entries</small></div><span className="tw-card-decoration">▂▅▇</span></article>
-        <article className="tw-balance-card tw-balance-gold"><span className="tw-card-icon">⏳</span><div><b>Pending Rewards</b><strong>—</strong><small>Pending rewards aren't tracked yet</small></div><span className="tw-hourglass">⌛</span></article>
+        <article className="tw-balance-card tw-balance-blue">
+          <div className="tw-card-top"><span className="tw-card-icon">👛</span><span className="tw-card-caption">WALLET BALANCE</span></div>
+          <div className="tw-card-content"><b>Total Balance</b><strong>{animatedBalance.toLocaleString()} <i>pts</i></strong><small><span className="tw-live-dot" /> Available earned points</small></div>
+          <span className="tw-card-decoration" aria-hidden="true"><i /><i /><i /><i /></span>
+          <span className="tw-card-glow" aria-hidden="true" />
+        </article>
+        <article className="tw-balance-card tw-balance-green">
+          <div className="tw-card-top"><span className="tw-card-icon">🏆</span><span className="tw-card-caption">TOTAL EARNED</span></div>
+          <div className="tw-card-content"><b>Earned Points</b><strong>{lifetimeEarned.toLocaleString()} <i>pts</i></strong><small>From the latest 100 ledger entries</small></div>
+          <span className="tw-card-decoration" aria-hidden="true"><i /><i /><i /><i /></span>
+          <span className="tw-card-glow" aria-hidden="true" />
+        </article>
+        <article className="tw-balance-card tw-balance-gold">
+          <div className="tw-card-top"><span className="tw-card-icon">⏳</span><span className="tw-card-caption">IN REVIEW</span></div>
+          <div className="tw-card-content"><b>Pending Rewards</b><strong>—</strong><small>Pending rewards are not tracked yet</small></div>
+          <span className="tw-hourglass" aria-hidden="true">⌛</span>
+          <span className="tw-card-glow" aria-hidden="true" />
+        </article>
       </section>
 
       <section className="tw-middle">
