@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { identityApi } from "../features/identity/identity-api";
 import "../styles/reset-password.css";
 
 export default function ResetPasswordPage() {
+  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -39,9 +40,9 @@ export default function ResetPasswordPage() {
     const { error: err } = await identityApi.updatePassword(password);
     if (err) setError("This reset link is invalid or has expired. Please request a new one.");
     else {
-      setMessage("Your password has been updated. You can now sign in.");
       setPassword("");
       setConfirm("");
+      navigate("/password-reset-success");
     }
     setBusy(false);
   }
