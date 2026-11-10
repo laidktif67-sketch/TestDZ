@@ -134,6 +134,7 @@ export default function DeveloperDashboardPage() {
   const [sessionReady,setSessionReady]=useState(previewMode);
   const [hasSession,setHasSession]=useState(previewMode);
   const [allowed,setAllowed]=useState(previewMode);
+  const [canTester,setCanTester]=useState(previewMode);
   const [name,setName]=useState("Developer");
   const [avatar,setAvatar]=useState("");
   const [apps,setApps]=useState<AppRecord[]>([]);
@@ -157,7 +158,7 @@ export default function DeveloperDashboardPage() {
         {id:"preview-3",developer_id:"preview",name:"EduTest",package_name:"com.testdz.edutest",description:"A sample learning app.",category:"education",icon_url:null,status:"draft",created_at:new Date(now-5*86400000).toISOString()},
         {id:"preview-4",developer_id:"preview",name:"SkillCheck",package_name:"com.testdz.skillcheck",description:"A sample skills app.",category:"tools",icon_url:null,status:"paused",created_at:new Date(now-9*86400000).toISOString()}
       ];
-      setApps(sample);setName("John Doe");setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
+      setApps(sample);setName("John Doe");setCanTester(true);setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
     }
     if(!supabase){setError("Supabase is not configured.");setLoading(false);setSessionReady(true);return;}
     let alive=true;
@@ -177,7 +178,8 @@ export default function DeveloperDashboardPage() {
       const roles=(roleRes.data??[]).map((row:{role:string})=>row.role);
       const metadataRole=user.user_metadata?.account_type;
       const canDeveloper=roles.includes("developer")||roles.includes("both")||metadataRole==="developer"||metadataRole==="both";
-      setAllowed(canDeveloper);
+      const hasTester=roles.includes("tester")||roles.includes("both")||metadataRole==="tester"||metadataRole==="both";
+      setAllowed(canDeveloper);setCanTester(hasTester);
       setName(profileRes.data?.display_name?.trim()||user.email?.split("@")[0]||"Developer");
       setAvatar(profileRes.data?.avatar_url||"");
       if(appsRes.error)setError("Could not load your applications. Check your connection and permissions.");
@@ -207,7 +209,7 @@ export default function DeveloperDashboardPage() {
 
   if(loading)return <div className="dd-loading"><span/> {t.loading}</div>;
   if(!previewMode&&sessionReady&&!hasSession)return <Navigate to="/auth" replace/>;
-  if(!previewMode&&!allowed)return <Navigate to="/dashboard" replace/>;
+  if(!previewMode&&!allowed)return <Navigate to="/tester-dashboard" replace/>;
 
   return <div className="dd-shell" dir={dir}>
     <aside className="dd-sidebar">
@@ -226,6 +228,7 @@ export default function DeveloperDashboardPage() {
       </nav>
       <div className="dd-promo"><div className="dd-rocket"><Icon name="rocket" size={43}/></div><strong>{t.promoTitle}</strong><p>{t.promoBody}</p><Link to="/apps">{t.promoCta}<Icon name="arrow" size={15}/></Link></div>
       <div className="dd-user"><span className="dd-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</span><span><strong>{name}</strong><small>{t.account}</small></span><Link to="/profile" aria-label={t.settings}><Icon name="settings" size={18}/></Link></div>
+      {canTester && <div className="dd-workspace-switch" aria-label="Choose workspace"><Link to="/tester-dashboard" className="dd-workspace-option"><Icon name="flask" size={15}/><span>Tester</span></Link><Link to="/developer-dashboard" className="dd-workspace-option active"><Icon name="code" size={15}/><span>Developer</span></Link></div>}
       {previewMode?<div className="dd-preview-note">{t.preview}</div>:<button className="dd-signout" onClick={async()=>{await supabase?.auth.signOut();}}><Icon name="arrow" size={17}/>Sign Out</button>}
     </aside>
 
