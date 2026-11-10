@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import type { AvatarMimeType } from "@testdz/types";
 import { profilesApi } from "../features/profiles/profiles-api";
 import { identityApi } from "../features/identity/identity-api";
+import { useIdentity } from "../features/identity/hooks/useIdentity";
+import TesterSidebar from "../components/TesterSidebar";
 
 function avatarMimeType(value: string): AvatarMimeType {
   if (value === "image/png" || value === "image/webp") return value;
@@ -18,6 +20,8 @@ function Toggle({ defaultOn = true, label }: { defaultOn?: boolean; label: strin
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { roles: identityRoles } = useIdentity();
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [userId, setUserId] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -86,20 +90,26 @@ export default function ProfilePage() {
   const initials = displayName.trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "T";
   return (
     <main className="tester-profile-page">
-      <aside className="tester-sidebar">
-        <Link to="/dashboard" className="tester-brand"><span className="tester-brand-mark">✓</span><span><strong>TestDZ</strong><small>Test · Review · Earn</small></span></Link>
-        <nav className="tester-nav" aria-label="Main navigation">
-          <Link to="/dashboard"><span>⌂</span>Dashboard</Link>
-          <Link to="/my-tests"><span>▣</span>My Tests</Link>
-          <Link to="/my-tests"><span>★</span>Feedback History</Link>
-          <Link to="/dashboard"><span>▰</span>Wallet &amp; Rewards</Link>
-          <Link to="/profile" className="active"><span>♟</span>Profile</Link>
-          <Link to="/dashboard"><span>☏</span>Help &amp; Support</Link>
-          <Link to="/profile"><span>⚙</span>Settings</Link>
-        </nav>
-        <div className="tester-sidebar-promo"><div className="tester-trophy">🏆</div><strong>Your feedback helps build a better Android experience!</strong><span>♥</span></div>
-        <small className="tester-sidebar-version">♥ &nbsp; TestDZ v1.0.0</small>
-      </aside>
+      <TesterSidebar
+        nav={[
+          { label: "Tester Dashboard", icon: "home", href: "/tester-dashboard" },
+          ...(identityRoles.includes("developer") || identityRoles.includes("admin") ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
+          ...(identityRoles.includes("developer") || identityRoles.includes("admin") ? [{ label: "Discover", icon: "search", href: "/apps" }] : []),
+          { label: "My Tests", icon: "tests", href: "/my-tests" },
+          { label: "Billing", icon: "wallet", href: "/profile" },
+          ...(identityRoles.includes("admin") ? [{ label: "Admin", icon: "shield", href: "/profile" }] : []),
+          { label: "Profile", icon: "settings", href: "/profile", active: true }
+        ]}
+        name={displayName || email.split("@")[0] || "Tester"}
+        firstName={(displayName || email.split("@")[0] || "Tester").split(/\\s+/)[0]}
+        avatar={avatarUrl}
+        roles={identityRoles}
+        isAdmin={identityRoles.includes("admin")}
+        isDeveloper={identityRoles.includes("developer")}
+        workspaceMenuOpen={workspaceMenuOpen}
+        setWorkspaceMenuOpen={setWorkspaceMenuOpen}
+        previewMode={!profilesApi.isConfigured()}
+      />
 
       <section className="tester-profile-main">
         <header className="tester-topbar">
