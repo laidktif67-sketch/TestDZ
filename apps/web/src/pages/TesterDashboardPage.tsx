@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
