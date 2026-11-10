@@ -16,6 +16,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./features/identity/identity-provider";
 import AuthGuard from "./features/identity/guards/AuthGuard";
+import OnboardingGuard from "./features/identity/guards/OnboardingGuard";
 
 export default function App() {
   return (
@@ -29,9 +30,11 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route element={<AuthGuard />}>
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route path="/interests" element={<InterestsPage />} />
-          <Route path="/complete-profile" element={<ProfileCompletionPage />} />
+          <Route element={<OnboardingGuard />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/interests" element={<InterestsPage />} />
+            <Route path="/complete-profile" element={<ProfileCompletionPage />} />
+          </Route>
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
           <Route path="/my-tests" element={<MyTestsPage />} />
