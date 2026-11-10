@@ -25,6 +25,21 @@ export const profilesApi = {
     return getClient().auth.getUser();
   },
 
+  getOnboardingStatus(userId: string) {
+    return getClient()
+      .from("profiles")
+      .select("onboarding_completed_at")
+      .eq("id", userId)
+      .maybeSingle();
+  },
+
+  completeOnboarding(roles: string[], interests: string[]) {
+    return getClient().rpc("complete_onboarding", {
+      p_roles: roles,
+      p_interests: interests,
+    });
+  },
+
   getProfile(userId: string) {
     return getClient().from("profiles")
       .select("display_name, phone, bio, avatar_url, is_verified, locale")
