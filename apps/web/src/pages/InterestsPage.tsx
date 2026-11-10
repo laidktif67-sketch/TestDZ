@@ -153,7 +153,7 @@ export default function InterestsPage(){
     const roles=role==="both"?["tester","developer"]:[role];
     const interests=skip?[]:selected;
     const {error:saveError}=await supabase.rpc("complete_onboarding",{p_roles:roles,p_interests:interests});
-    if(saveError)setError(t.error);else navigate("/dashboard",{replace:true});
+    if(saveError)setError(t.error);else navigate("/complete-profile",{replace:true});
     setBusy(false);
   }
 
