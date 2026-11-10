@@ -29,13 +29,6 @@ function InvalidOtpArtwork() {
 
 export default function InvalidOtpPage() {
   const navigate = useNavigate();
-  const [resending, setResending] = useState(false);
-  const [notice, setNotice] = useState("");
-  function resendOtp() {
-    setResending(true);
-    setNotice("Please return to login and request a new verification code.");
-    window.setTimeout(() => setResending(false), 500);
-  }
   return <main className="otp-page">
     <header className="otp-header">
       <Link className="otp-brand" to="/" aria-label="TestDZ home"><FlaskLogo/><span><strong>TestDZ</strong><small>Test · Learn · Grow</small></span></Link>
@@ -44,13 +37,12 @@ export default function InvalidOtpPage() {
     <div className="otp-layout">
       <section className="otp-story"><InvalidOtpArtwork/></section>
       <section className="otp-card" aria-labelledby="otp-title">
-        <div className="otp-alert-icon" aria-hidden="true"><span>!</span><i/><b/><em/></div>
-        <h1 id="otp-title">Invalid or Expired OTP</h1>
+        <div className="otp-alert-icon" aria-hidden="true"><svg viewBox="0 0 96 96" fill="none"><path d="M48 8 78 20v24c0 19-12 32-30 43C30 76 18 63 18 44V20L48 8Z" fill="#fff" stroke="#F04452" strokeWidth="5"/><path d="m36 36 24 24m0-24L36 60" stroke="#F04452" strokeWidth="7" strokeLinecap="round"/><circle cx="75" cy="23" r="14" fill="#F04452" stroke="#fff" strokeWidth="4"/><path d="M75 16v8" stroke="#fff" strokeWidth="3.5" strokeLinecap="round"/><circle cx="75" cy="28" r="1.8" fill="#fff"/></svg><i/><b/><em/></div>
+        <h1 id="otp-title">Invalid or Expired OTP <span className="otp-heading-emoji" aria-hidden="true">🔐</span></h1>
         <p className="otp-description">The verification code is either incorrect<br className="otp-desktop"/> or has expired. Please try again.</p>
-        {notice && <p className="otp-notice" role="status">{notice}</p>}
-        <button className="otp-primary" type="button" onClick={resendOtp} disabled={resending}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 11.7-2L20 12M4 12l2.7 5a7 7 0 0 0 11.7-2"/></svg>{resending ? "Please wait…" : "Resend OTP"}</button>
+        <button className="otp-primary" type="button" onClick={() => navigate("/auth")}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 11.7-2L20 12M4 12l2.7 5a7 7 0 0 0 11.7-2"/></svg>Request a New Code</button>
         <button className="otp-secondary" type="button" onClick={() => navigate("/auth")}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7"/></svg>Back to Login</button>
-        <div className="otp-info"><span aria-hidden="true">i</span><p>OTP codes are valid for a limited time<br className="otp-desktop"/> (usually 5 minutes).</p></div>
+        <div className="otp-info"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg></span><p><strong>⏱️ Time-sensitive code</strong><br/>OTP codes are valid for a limited time (usually 5 minutes).</p></div>
       </section>
     </div>
   </main>;
