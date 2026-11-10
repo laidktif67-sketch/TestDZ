@@ -160,7 +160,7 @@ export default function WalletRewardsPage() {
       </header>
 
       <section className="tw-hero">
-        <div className="tw-hero-copy"><span className="tw-hero-tag">⭐ TestDZ Rewards</span><h1>Track your earnings,<br />check your points and redeem <em>rewards.</em></h1><p>Your testing effort deserves recognition. Keep earning with every test.</p></div>
+        <div className="tw-hero-copy"><span className="tw-hero-tag">⭐ TestDZ Rewards</span><h1>Track your earnings,<br />check your points and redeem <em>rewards.</em></h1><p>Your testing effort deserves recognition. Keep earning with every test.</p><Link to="/withdrawal-request" className="tw-withdraw-link">💸 Request Withdrawal <span>→</span></Link></div>
         <WalletHeroArt />
       </section>
 
