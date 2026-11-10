@@ -41,8 +41,6 @@ const onboardingCopy = {
   }
 } as const;
 
-const interestsList = ["أدوات وإنتاجية", "تعليم", "ألعاب", "تجارة إلكترونية", "صحة ولياقة", "شبكات اجتماعية", "أخرى"];
-
 const roles = [
   { value: "tester", icon: "tester" },
   { value: "developer", icon: "developer" },
