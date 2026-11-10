@@ -92,13 +92,16 @@ export default function ProfilePage() {
     <main className="tester-profile-page">
       <TesterSidebar
         nav={[
-          { label: "Tester Dashboard", icon: "home", href: "/tester-dashboard" },
-          ...(identityRoles.includes("developer") || identityRoles.includes("admin") ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
-          ...(identityRoles.includes("developer") || identityRoles.includes("admin") ? [{ label: "Discover", icon: "search", href: "/apps" }] : []),
+          { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
           { label: "My Tests", icon: "tests", href: "/my-tests" },
-          { label: "Billing", icon: "wallet", href: "/profile" },
-          ...(identityRoles.includes("admin") ? [{ label: "Admin", icon: "shield", href: "/profile" }] : []),
-          { label: "Profile", icon: "settings", href: "/profile", active: true }
+          { label: "Feedback History", icon: "star", href: "/feedback-history" },
+          { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
+          { label: "Profile", icon: "settings", href: "/profile", active: true },
+          { label: "Help & Support", icon: "bell", href: "/help-support" },
+          { label: "Settings", icon: "settings", href: "/settings" },
+          ...(identityRoles.includes("developer") || identityRoles.includes("admin") ? [{ label: "Discover Apps", icon: "search", href: "/apps" }] : []),
+          ...(identityRoles.includes("developer") || identityRoles.includes("admin") ? [{ label: "Developer Dashboard", icon: "code", href: "/developer-dashboard" }] : []),
+          ...(identityRoles.includes("admin") ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
         ]}
         name={displayName || email.split("@")[0] || "Tester"}
         firstName={(displayName || email.split("@")[0] || "Tester").split(/\s+/)[0]}
