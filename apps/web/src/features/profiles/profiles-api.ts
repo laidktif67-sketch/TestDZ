@@ -2,7 +2,6 @@ import { supabase } from "../../lib/supabase";
 import type {
   AvatarUploadInput,
   AvatarUploadResult,
-  IdentityUserMetadataUpdate,
   ProfileCompletionUpdate,
   ProfileSettingsUpdate,
 } from "@testdz/types";
@@ -58,10 +57,6 @@ export const profilesApi = {
 
   updateCompletion(userId: string, input: ProfileCompletionUpdate) {
     return getClient().from("profiles").update(input).eq("id", userId);
-  },
-
-  updateUserMetadata(data: IdentityUserMetadataUpdate) {
-    return getClient().auth.updateUser({ data });
   },
 
   async uploadAvatar(userId: string, input: AvatarUploadInput): Promise<AvatarUploadResult> {

@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import type { IdentityOAuthProvider, IdentitySignUpInput } from "@testdz/types";
+import type { IdentityOAuthProvider, IdentitySignUpInput, IdentityUserMetadataUpdate } from "@testdz/types";
 
 export type { IdentityOAuthProvider } from "@testdz/types";
 
@@ -42,6 +42,10 @@ export const identityApi = {
 
   updatePassword(password: string) {
     return getClient().auth.updateUser({ password });
+  },
+
+  updateUserMetadata(data: IdentityUserMetadataUpdate) {
+    return getClient().auth.updateUser({ data });
   },
 
   getSession() {
