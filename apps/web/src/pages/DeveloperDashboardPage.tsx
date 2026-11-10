@@ -72,6 +72,33 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
   return <svg {...common}>{paths[name] ?? paths.box}</svg>;
 }
 
+function DeveloperMascot() {
+  return <svg className="dd-developer-mascot" viewBox="0 0 470 250" role="img" aria-label="Developer working on a laptop">
+    <circle cx="248" cy="128" r="112" fill="#fff" opacity=".12"/>
+    <rect x="28" y="52" width="92" height="66" rx="13" fill="#fff" opacity=".95"/>
+    <path d="M45 72h49M45 84h34M45 96h42" stroke="#65aef7" strokeWidth="5" strokeLinecap="round"/>
+    <rect x="352" y="34" width="88" height="70" rx="13" fill="#fff" opacity=".94"/>
+    <path d="M372 83V67m18 16V54m18 29V46" stroke="#0875ed" strokeWidth="9" strokeLinecap="round"/>
+    <path d="M151 165c11-45 39-65 87-65 50 0 78 26 91 77l8 73H139l12-85Z" fill="#0754b9"/>
+    <path d="M188 147c10-25 27-37 50-37 26 0 45 14 55 41l15 99H173l15-103Z" fill="#0878e8"/>
+    <path d="M211 143h54l-12 26h-30z" fill="#fff" opacity=".9"/>
+    <path d="M190 89c-9-12-13-27-13-45 0-38 24-62 59-62 38 0 62 27 62 66 0 22-8 40-22 53l-17 14h-52l-17-26Z" fill="#f2b88f"/>
+    <path d="M177 57c-9-45 17-74 59-74 37 0 63 24 64 64-16-6-28-20-34-37-18 20-49 29-84 25l-5 22Z" fill="#39251f"/>
+    <path d="M177 20c18-26 51-37 81-23" stroke="#553027" strokeWidth="14" fill="none" strokeLinecap="round"/>
+    <rect x="190" y="59" width="37" height="28" rx="11" fill="none" stroke="#142b50" strokeWidth="5"/>
+    <rect x="235" y="59" width="37" height="28" rx="11" fill="none" stroke="#142b50" strokeWidth="5"/>
+    <path d="M227 71h8" stroke="#142b50" strokeWidth="5"/>
+    <circle cx="208" cy="73" r="4.5" fill="#15284a"/><circle cx="253" cy="73" r="4.5" fill="#15284a"/>
+    <path d="M217 101q15 12 30 0" fill="none" stroke="#a34e45" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M299 151q22-19 36-5l18 27q0 15-16 16l-36-20" fill="#f2b88f"/>
+    <path d="M345 163q-10-15-3-22 8-5 14 8 9-17 17-10 8 7-6 25l-12 14-10-15Z" fill="#f2b88f"/>
+    <rect x="101" y="190" width="265" height="45" rx="9" fill="#102c5b"/>
+    <rect x="116" y="197" width="235" height="29" rx="5" fill="#d9edff"/>
+    <path d="M85 238h298l-17 8H103l-18-8Z" fill="#a9c9e9"/>
+    <path d="m218 204 12 14 12-14" fill="none" stroke="#176ce1" strokeWidth="4"/>
+  </svg>;
+}
+
 function MiniChart({ apps, range }: { apps: AppRecord[]; range: Range }) {
   const count = range === "7D" ? 7 : range === "30D" ? 4 : range === "90D" ? 3 : 12;
   const labels = range === "7D" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : range === "30D" ? ["W1","W2","W3","W4"] : range === "90D" ? ["M1","M2","M3"] : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -210,7 +237,7 @@ export default function DeveloperDashboardPage() {
 
       <section className="dd-hero">
         <div className="dd-hero-copy"><span className="dd-hero-kicker">TESTDZ · DEVELOPER SPACE</span><h1>👋 {t.welcome}</h1><p>{t.subtitle}</p><Link to="/apps" className="dd-primary"><Icon name="plus"/>{t.createApp}<Icon name="arrow" size={17}/></Link></div>
-        <div className="dd-hero-art" aria-hidden="true"><div className="dd-code-window"><i/><i/><i/><code>const app = TestDZ();<br/>build(); test(); share();</code></div><div className="dd-art-orbit"/><div className="dd-art-laptop"><Icon name="code" size={54}/><span>TestDZ</span></div><div className="dd-art-rocket"><Icon name="rocket" size={42}/></div></div>
+        <div className="dd-hero-art" aria-hidden="true"><DeveloperMascot/></div>
       </section>
 
       {error&&<div className="dd-error">{error}</div>}
