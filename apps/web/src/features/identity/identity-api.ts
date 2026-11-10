@@ -1,8 +1,20 @@
 import { supabase } from "../../lib/supabase";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import type { IdentityOAuthProvider, IdentitySignUpInput, IdentityUserMetadataUpdate } from "@testdz/types";
+import type {
+  AccountRole,
+  IdentityOAuthProvider,
+  IdentitySignUpInput,
+  IdentityUserMetadataUpdate,
+} from "@testdz/types";
 
-export type { IdentityOAuthProvider } from "@testdz/types";
+export type { AccountRole, IdentityOAuthProvider } from "@testdz/types";
+
+const ACCOUNT_ROLES = new Set<AccountRole>([
+  "tester",
+  "developer",
+  "admin",
+  "support",
+]);
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -24,6 +36,21 @@ export const identityApi = {
 
   getCurrentUser() {
     return getClient().auth.getUser();
+  },
+
+  getUserRoles(userId: string): Promise<AccountRole[]> {
+    return getClient()
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return (data ?? [])
+          .map((row) => row.role)
+          .filter((role): role is AccountRole =>
+            ACCOUNT_ROLES.has(role as AccountRole)
+          );
+      });
   },
 
   signUp({ email, password, metadata, emailRedirectTo }: IdentitySignUpInput) {
