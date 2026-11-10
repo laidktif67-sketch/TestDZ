@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { profilesApi } from "../features/profiles/profiles-api";
 import { identityApi } from "../shared/auth/identity-api";
-import { Brand } from "../components/Brand";
+import { Brand } from "../shared/components/Brand";
 import { useLenis } from "../hooks/useLenis";
 import "../styles/profile-completion.css";
 

@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { AppRecord } from "@testdz/types";
 import { supabase } from "../lib/supabase";
-import { Brand } from "../components/Brand";
+import { Brand } from "../shared/components/Brand";
 import { APP_CATEGORIES, appError } from "../lib/app-utils";
 import { archiveApp, getAppById, restoreApp, updateApp } from "../features/apps/apps-api";
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Brand } from "../components/Brand";
+import { Brand } from "../shared/components/Brand";
 import { supabase } from "../lib/supabase";
 import { identityApi } from "../shared/auth/identity-api";
 
