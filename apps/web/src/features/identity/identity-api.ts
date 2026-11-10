@@ -9,6 +9,10 @@ function getClient() {
 }
 
 export const identityApi = {
+  getCurrentUser() {
+    return getClient().auth.getUser();
+  },
+
   signUp({ email, password, metadata, emailRedirectTo }: IdentitySignUpInput) {
     return getClient().auth.signUp({
       email,

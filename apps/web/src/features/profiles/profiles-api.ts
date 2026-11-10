@@ -24,10 +24,6 @@ export const profilesApi = {
     return Boolean(supabase);
   },
 
-  getCurrentUser() {
-    return getClient().auth.getUser();
-  },
-
   getOnboardingStatus(userId: string) {
     return getClient()
       .from("profiles")
