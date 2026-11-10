@@ -1,6 +1,7 @@
 export type { AppLimit, AppRecord, AppStatus } from "./apps";
 
 export type {
+  AccountRole,
   IdentityAccountType,
   IdentityOAuthProvider,
   IdentitySignUpInput,
