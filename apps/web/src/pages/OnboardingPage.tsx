@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brand } from "../components/Brand";
 import { supabase } from "../lib/supabase";
 import "../styles/onboarding.css";
 
@@ -95,15 +94,51 @@ function ProgressSteps({ label }: { label: string }) {
   </div>;
 }
 
+function TestDZLogo() {
+  return <a className="onboarding-logo" href="/" aria-label="TestDZ home">
+    <svg viewBox="0 0 64 76" aria-hidden="true"><defs><linearGradient id="flaskBlue" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#36c5ff"/><stop offset=".55" stopColor="#0878f5"/><stop offset="1" stopColor="#0646ce"/></linearGradient></defs><path d="M22 5h20v7h-4v18l19 31c4 7 0 12-8 12H15C7 73 3 68 7 61l19-31V12h-4z" fill="url(#flaskBlue)"/><path d="M27 12h10v22L18 62h29L37 34V12" fill="#75d5ff" opacity=".28"/><path d="M14 56h36l7 9c2 3 0 5-5 5H13c-5 0-7-2-5-5z" fill="#0b5de2"/><circle cx="25" cy="48" r="3" fill="#b9f1ff"/><circle cx="34" cy="57" r="2" fill="#d8f7ff"/><path d="M17 22l4 4-4 4-4-4z" fill="#b9f1ff" opacity=".9"/></svg>
+    <span><strong>TestDZ</strong><small>Test · Learn · Grow</small></span>
+  </a>;
+}
+
 function SideArtwork() {
   return <aside className="onboarding-art" aria-hidden="true">
-    <div className="art-dots art-dots-top" />
-    <div className="art-orbit" />
-    <div className="art-rocket"><span className="rocket-window" /><i /><b /></div>
-    <div className="art-laptop"><div className="laptop-screen"><span>⚗</span></div><div className="laptop-base" /></div>
-    <span className="art-code">&lt;/&gt;</span><span className="art-star">★</span>
-    <p>اختبر. تعلّم. انمُ.</p>
-    <div className="art-dots art-dots-bottom" />
+    <svg className="onboarding-scene" viewBox="0 0 620 650" role="presentation">
+      <defs>
+        <linearGradient id="rocketBody" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff"/><stop offset=".48" stopColor="#d9efff"/><stop offset="1" stopColor="#1680f4"/></linearGradient>
+        <linearGradient id="rocketFin" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#29aaff"/><stop offset="1" stopColor="#064acb"/></linearGradient>
+        <linearGradient id="screenBlue" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#e7f7ff"/><stop offset="1" stopColor="#8dcaff"/></linearGradient>
+        <linearGradient id="laptopMetal" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#dff5ff"/><stop offset="1" stopColor="#5799e8"/></linearGradient>
+        <filter id="sceneShadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur stdDeviation="13"/></filter>
+      </defs>
+      <g fill="#fff" opacity=".8"><ellipse cx="94" cy="554" rx="105" ry="39"/><ellipse cx="178" cy="570" rx="102" ry="45"/><ellipse cx="35" cy="590" rx="92" ry="38"/><ellipse cx="320" cy="586" rx="95" ry="35"/></g>
+      <ellipse cx="278" cy="483" rx="280" ry="115" fill="#8bcaff" opacity=".14"/>
+      <ellipse cx="268" cy="470" rx="270" ry="105" fill="none" stroke="#55b9ff" strokeWidth="4" opacity=".6" transform="rotate(-13 268 470)"/>
+      <ellipse cx="265" cy="470" rx="244" ry="82" fill="none" stroke="#fff" strokeWidth="5" opacity=".7" transform="rotate(-13 265 470)"/>
+      <g transform="translate(22 295) rotate(-13)">
+        <ellipse cx="204" cy="226" rx="190" ry="22" fill="#3a8fe8" opacity=".2" filter="url(#sceneShadow)"/>
+        <path d="M36 22h324a15 15 0 0 1 15 15v174H21V37a15 15 0 0 1 15-15" fill="#092b68"/>
+        <rect x="32" y="33" width="332" height="165" rx="8" fill="url(#screenBlue)"/>
+        <path d="M185 80c-14 0-22 10-22 22v43c0 10 7 17 17 17h32c10 0 17-7 17-17v-43c0-12-8-22-22-22z" fill="url(#flaskBlue)"/>
+        <path d="M188 69h17v15h-17z" fill="#0875ed"/><path d="M179 129h48l8 19h-64z" fill="#0b68e6"/>
+        <path d="M10 209h365l-35 22H46z" fill="url(#laptopMetal)" stroke="#478ee0" strokeWidth="2"/>
+        <path d="M145 209h93l-8 8h-77z" fill="#397bc7" opacity=".5"/>
+      </g>
+      <g transform="translate(90 32) rotate(35 120 120)">
+        <path d="M120 8c-42 40-54 94-47 162l47 83 47-83c7-68-5-122-47-162" fill="url(#rocketBody)" stroke="#1678eb" strokeWidth="5"/>
+        <path d="M75 145 26 197l55 5M165 145l49 52-55 5" fill="url(#rocketFin)" stroke="#0755c8" strokeWidth="5" strokeLinejoin="round"/>
+        <path d="M98 206 120 278l22-72" fill="#0b5bdb"/>
+        <circle cx="120" cy="111" r="34" fill="#0755d4" stroke="#5cbcff" strokeWidth="9"/>
+        <circle cx="120" cy="111" r="22" fill="#138ef5"/><circle cx="110" cy="101" r="8" fill="#d9f7ff" opacity=".9"/>
+        <path d="M105 258q15 38 30 0l-15 65z" fill="#ffb73e"/>
+        <path d="M111 260q9 28 18 0l-9 47z" fill="#ffdf70"/>
+      </g>
+      <g transform="translate(390 290) rotate(12)"><rect width="106" height="82" rx="15" fill="#0785f6"/><text x="53" y="55" textAnchor="middle" fill="#fff" fontSize="38" fontWeight="800">&lt;/&gt;</text></g>
+      <g transform="translate(418 440) rotate(12)"><rect width="72" height="72" rx="14" fill="#1688f5"/><path d="m36 13 7 15 16 2-12 11 3 17-14-8-14 8 3-17-12-11 16-2z" fill="#fff"/></g>
+      <circle cx="490" cy="220" r="8" fill="#8ad5ff"/><circle cx="525" cy="235" r="5" fill="#35aaff"/>
+    </svg>
+    <p>Test. Learn. Grow.</p>
+    <div className="art-dots art-dots-top"/><div className="art-dots art-dots-bottom"/>
   </aside>;
 }
 
@@ -115,7 +150,6 @@ export default function OnboardingPage() {
   });
   const t = onboardingCopy[language];
   const [choice, setChoice] = useState("tester");
-  const [interests, setInterests] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -140,10 +174,6 @@ export default function OnboardingPage() {
     });
   }, [navigate]);
 
-  function toggle(item: string) {
-    setInterests(current => current.includes(item) ? current.filter(x => x !== item) : current.length < 7 ? [...current, item] : current);
-  }
-
   async function finish() {
     if (!supabase) {
       setError(t.errorConfig);
@@ -152,16 +182,17 @@ export default function OnboardingPage() {
     setBusy(true);
     setError("");
     const rolesToSave = choice === "both" ? ["tester", "developer"] : [choice];
-    const { error: err } = await supabase.rpc("complete_onboarding", { p_roles: rolesToSave, p_interests: interests });
+    const { error: err } = await supabase.rpc("complete_onboarding", { p_roles: rolesToSave, p_interests: [] });
     if (err) setError(t.errorSave);
     else navigate("/dashboard", { replace: true });
     setBusy(false);
   }
 
   return <main className="onboarding-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
+    <div className="onboarding-bg-shape onboarding-bg-top"/><div className="onboarding-bg-shape onboarding-bg-bottom"/>
     <header className="onboarding-header">
-      <Brand />
-      <div className="onboarding-language-switch" role="group" aria-label={t.language}>{(["en", "fr", "ar"] as const).map(code => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => setLanguage(code)}>{code.toUpperCase()}</button>)}</div>
+      <TestDZLogo />
+      <label className="onboarding-language"><span aria-hidden="true">◎</span><select aria-label={t.language} value={language} onChange={event => setLanguage(event.target.value as OnboardingLanguage)}><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select><span className="language-chevron" aria-hidden="true">⌄</span></label>
     </header>
     <SideArtwork />
     <section className="onboarding-main">
@@ -185,16 +216,10 @@ export default function OnboardingPage() {
           <span className="role-description">{t[`${role.value}Body` as "testerBody" | "developerBody" | "bothBody"]}</span>
         </button>)}
       </div>
-      <section className="onboarding-interests">
-        <h2>{t.interests} <small>{t.optional}</small></h2>
-        <div className="onboarding-interest-list">
-          {t.interestNames.map((item, index) => <button type="button" key={index} className={interests.includes(interestsList[index]) ? "active" : ""} aria-pressed={interests.includes(interestsList[index])} onClick={() => toggle(interestsList[index])}>{item}</button>)}
-        </div>
-      </section>
       {error && <div className="notice notice-error onboarding-error" role="alert">{error}</div>}
       <div className="onboarding-actions">
         <button className="onboarding-continue" disabled={busy} onClick={finish}>{busy ? t.saving : t.continue} <span aria-hidden="true">←</span></button>
-        <button className="onboarding-skip" type="button" onClick={() => { setChoice("tester"); setInterests([]); }}>{t.skip}</button>
+        <button className="onboarding-skip" type="button" onClick={() => setChoice("tester")}>{t.skip}</button>
       </div>
     </section>
   </main>;
