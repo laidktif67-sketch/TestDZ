@@ -87,8 +87,9 @@ export function useProfile(userId: string | null | undefined): UseProfileResult 
 
   const updateCompletion = useCallback(async (input: ProfileCompletionUpdate) => {
     if (!userId) throw new Error("PROFILE_USER_REQUIRED");
-    const { error: updateError } = await profilesApi.updateCompletion(userId, input);
+    const { data: updatedProfile, error: updateError } = await profilesApi.updateCompletion(userId, input);
     if (updateError) throw updateError;
+    if (!updatedProfile) throw new Error("PROFILE_UPDATE_NO_ROW");
     await reload();
   }, [userId, reload]);
 
