@@ -44,9 +44,8 @@ function avatarMimeType(value: string): AvatarMimeType {
   return "image/jpeg";
 }
 
-function Toggle({ defaultOn = true, label }: { defaultOn?: boolean; label: string }) {
-  const [on, setOn] = useState(defaultOn);
-  return <button type="button" className={`tester-toggle ${on ? "is-on" : ""}`} aria-label={label} aria-pressed={on} onClick={() => setOn((value) => !value)}><span /></button>;
+function Toggle({ label }: { label: string }) {
+  return <button type="button" className="tester-toggle" aria-label={`${label} — not configured`} aria-pressed={false} title="This setting is not available yet" disabled><span /></button>;
 }
 
 export default function ProfilePage() {
@@ -64,8 +63,6 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
-  const [language, setLanguage] = useState("English");
-  const [theme, setTheme] = useState("Light");
 
   useEffect(() => {
     if (!profilesApi.isConfigured()) return;
@@ -196,9 +193,9 @@ export default function ProfilePage() {
             <div className="tester-profile-right">
               <section className="tester-panel tester-setting-panel"><div className="tester-setting-art security"><ProfileIcon name="shield-check" /></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="lock" /></span><div><h2>Security Settings</h2><p>Keep your account secure</p></div></div><Link to="/reset-password" className="tester-setting-row"><span><ProfileIcon name="key" /></span><span>Change Password</span><b>›</b></Link><div className="tester-setting-row"><span><ProfileIcon name="shield-check" /></span><span>Two-Factor Authentication <em>Not configured</em></span><Toggle label="Two-factor authentication" defaultOn={false} /></div></div></section>
 
-              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art language"><ProfileIcon name="globe" /></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="globe" /></span><div><h2>Language &amp; Preferences</h2><p>Choose your preferred settings</p></div></div><div className="tester-setting-row tester-choice-row"><span>Language</span><div className="tester-choice-group">{["English", "العربية", "Français"].map((item) => <button type="button" key={item} className={language === item ? "selected" : ""} onClick={() => setLanguage(item)}>{item}</button>)}</div></div><div className="tester-setting-row tester-choice-row"><span>Theme</span><div className="tester-choice-group">{["☼ Light", "☾ Dark"].map((item) => <button type="button" key={item} className={theme === item.replace(/^☀ |^☾ /, "") ? "selected" : ""} onClick={() => setTheme(item.replace(/^☀ |^☾ /, ""))}>{item}</button>)}</div></div></div></section>
+              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art language"><ProfileIcon name="globe" /></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="globe" /></span><div><h2>Language &amp; Preferences</h2><p>Choose your preferred settings</p></div></div><div className="tester-setting-row tester-choice-row"><span>Language</span><span className="tester-setting-unavailable">Not available yet</span></div><div className="tester-setting-row tester-choice-row"><span>Theme</span><span className="tester-setting-unavailable">Not available yet</span></div></div></section>
 
-              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art notifications"><ProfileIcon name="bell" /><i>1</i></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="bell" /></span><div><h2>Notification Preferences</h2><p>Control what notifications you receive</p></div></div><div className="tester-setting-row"><span><ProfileIcon name="mail" /></span><span>Email Notifications</span><Toggle label="Email notifications" /></div><div className="tester-setting-row"><span><ProfileIcon name="smartphone" /></span><span>Push Notifications</span><Toggle label="Push notifications" /></div></div></section>
+              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art notifications"><ProfileIcon name="bell" /><i>1</i></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span><ProfileIcon name="bell" /></span><div><h2>Notification Preferences</h2><p>Control what notifications you receive</p></div></div><div className="tester-setting-row"><span><ProfileIcon name="mail" /></span><span>Email Notifications <em>Not configured</em></span><Toggle label="Email notifications" /></div><div className="tester-setting-row"><span><ProfileIcon name="smartphone" /></span><span>Push Notifications <em>Not configured</em></span><Toggle label="Push notifications" /></div></div></section>
             </div>
           </div>
         </div>
