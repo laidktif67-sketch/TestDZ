@@ -37,14 +37,19 @@ export default function ResetPasswordPage() {
       return;
     }
     setBusy(true);
-    const { error: err } = await identityApi.updatePassword(password);
-    if (err) setError("This reset link is invalid or has expired. Please request a new one.");
-    else {
-      setPassword("");
-      setConfirm("");
-      navigate("/password-reset-success");
+    try {
+      const { error: err } = await identityApi.updatePassword(password);
+      if (err) setError("This reset link is invalid or has expired. Please request a new one.");
+      else {
+        setPassword("");
+        setConfirm("");
+        navigate("/password-reset-success");
+      }
+    } catch {
+      setError("Could not update your password. Check your connection and request a new reset link if needed.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   return (
