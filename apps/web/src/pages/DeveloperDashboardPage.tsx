@@ -191,7 +191,7 @@ export default function DeveloperDashboardPage() {
       setSessionReady(true);setLoading(false);
     };
     void load();
-    const {data}=supabase.auth.onAuthStateChange(()=>{void load();});
+    const {data}=client.auth.onAuthStateChange(()=>{void load();});
     return()=>{alive=false;data.subscription.unsubscribe();};
   },[previewMode]);
 
