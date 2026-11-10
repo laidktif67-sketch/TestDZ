@@ -16,6 +16,7 @@ import TesterDashboardPage from "./pages/TesterDashboardPage";
 import MyTestsPage from "./pages/MyTestsPage";
 import DeveloperDashboardPage from "./pages/DeveloperDashboardPage";
 import TesterProfilePage from "./pages/TesterProfilePage";
+import TesterSectionPage from "./pages/TesterSectionPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./features/identity/identity-provider";
 import AuthGuard from "./features/identity/guards/AuthGuard";
@@ -43,6 +44,11 @@ export default function App() {
             <Route path="/complete-profile" element={<ProfileCompletionPage />} />
           </Route>
           <Route path="/profile" element={<TesterProfilePage />} />
+          <Route path="/feedback-history" element={<TesterSectionPage />} />
+          <Route path="/wallet-rewards" element={<TesterSectionPage />} />
+          <Route path="/help-support" element={<TesterSectionPage />} />
+          <Route path="/settings" element={<TesterSectionPage />} />
+          <Route path="/admin" element={<TesterSectionPage />} />
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
