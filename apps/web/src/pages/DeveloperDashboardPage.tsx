@@ -135,6 +135,7 @@ export default function DeveloperDashboardPage() {
   const [hasSession,setHasSession]=useState(previewMode);
   const [allowed,setAllowed]=useState(previewMode);
   const [canTester,setCanTester]=useState(previewMode);
+  const [workspaceMenuOpen,setWorkspaceMenuOpen]=useState(false);
   const [name,setName]=useState("Developer");
   const [avatar,setAvatar]=useState("");
   const [apps,setApps]=useState<AppRecord[]>([]);
@@ -227,8 +228,7 @@ export default function DeveloperDashboardPage() {
         <Link to="/profile" className="dd-nav-link"><Icon name="settings"/><span>{t.settings}</span></Link>
       </nav>
       <div className="dd-promo"><div className="dd-rocket"><Icon name="rocket" size={43}/></div><strong>{t.promoTitle}</strong><p>{t.promoBody}</p><Link to="/apps">{t.promoCta}<Icon name="arrow" size={15}/></Link></div>
-      <div className="dd-user"><span className="dd-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</span><span><strong>{name}</strong><small>{t.account}</small></span><Link to="/profile" aria-label={t.settings}><Icon name="settings" size={18}/></Link></div>
-      {canTester && <div className="dd-workspace-switch" aria-label="Choose workspace"><Link to="/tester-dashboard" className="dd-workspace-option"><Icon name="flask" size={15}/><span>Tester</span></Link><Link to="/developer-dashboard" className="dd-workspace-option active"><Icon name="code" size={15}/><span>Developer</span></Link></div>}
+      <div className="dd-user-menu-wrap"><button type="button" className="dd-user dd-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><span className="dd-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</span><span><strong>{name}</strong><small>{t.account}</small></span><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="dd-workspace-menu"><Link to="/profile" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>{t.settings}</span></Link>{canTester&&<><span className="dd-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span></Link><Link to="/developer-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span><Icon name="check" size={14}/></Link></>}</div>}</div>
       {previewMode?<div className="dd-preview-note">{t.preview}</div>:<button className="dd-signout" onClick={async()=>{await supabase?.auth.signOut();}}><Icon name="arrow" size={17}/>Sign Out</button>}
     </aside>
 
