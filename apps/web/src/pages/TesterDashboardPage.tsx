@@ -208,7 +208,7 @@ export default function TesterDashboardPage() {
     { label: "Tester Dashboard", icon: "home", href: "/tester-dashboard", active: true },
     ...(isDeveloper || roles.includes("both") ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
     { label: "Discover", icon: "search", href: "/apps" },
-    { label: "My Tests", icon: "tests", href: "#my-tests" },
+    { label: "My Tests", icon: "tests", href: "/my-tests" },
     { label: "Billing", icon: "wallet", href: "/profile" },
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/profile" }] : [])
   ];
