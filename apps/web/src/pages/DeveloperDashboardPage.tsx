@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AppRecord } from "@testdz/types";
 import type { ReactNode } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useIdentity } from "../features/identity/hooks/useIdentity";
 import { getAppLimit, listApps } from "../features/apps/apps-api";
 import "../styles/developer-dashboard.css";
 
@@ -131,11 +132,10 @@ function MiniChart({ apps, range }: { apps: AppRecord[]; range: Range }) {
 
 export default function DeveloperDashboardPage() {
   const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
+  const { roles: identityRoles } = useIdentity();
+  const roles = previewMode ? ["tester", "developer"] : identityRoles;
+  const canTester = roles.includes("tester") || roles.includes("admin");
   const [language,setLanguage]=useState<Language>(()=>{const saved=window.localStorage.getItem("testdz-landing-language");return saved==="fr"||saved==="ar"?saved:"en";});
-  const [sessionReady,setSessionReady]=useState(previewMode);
-  const [hasSession,setHasSession]=useState(previewMode);
-  const [allowed,setAllowed]=useState(previewMode);
-  const [canTester,setCanTester]=useState(previewMode);
   const [workspaceMenuOpen,setWorkspaceMenuOpen]=useState(false);
   const [name,setName]=useState("Developer");
   const [avatar,setAvatar]=useState("");
@@ -160,36 +160,28 @@ export default function DeveloperDashboardPage() {
         {id:"preview-3",developer_id:"preview",name:"EduTest",package_name:"com.testdz.edutest",description:"A sample learning app.",category:"education",icon_url:null,status:"draft",created_at:new Date(now-5*86400000).toISOString()},
         {id:"preview-4",developer_id:"preview",name:"SkillCheck",package_name:"com.testdz.skillcheck",description:"A sample skills app.",category:"tools",icon_url:null,status:"paused",created_at:new Date(now-9*86400000).toISOString()}
       ];
-      setApps(sample);setName("John Doe");setCanTester(true);setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
+      setApps(sample);setName("John Doe");setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
     }
     const client=supabase;
-    if(!client){setError("Supabase is not configured.");setLoading(false);setSessionReady(true);return;}
+    if(!client){setError("Supabase is not configured.");setLoading(false);return;}
     let alive=true;
     const load=async()=>{
       const {data:sessionData}=await client.auth.getSession();
       if(!alive)return;
       const user=sessionData.session?.user;
-      if(!user){setHasSession(false);setSessionReady(true);setLoading(false);return;}
-      setHasSession(true);
-      const [roleRes,profileRes,appsRes,limitRes]=await Promise.all([
-        client.from("user_roles").select("role").eq("user_id",user.id),
+      if(!user){setLoading(false);return;}
+      const [profileRes,appsRes,limitRes]=await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
         listApps(),
         getAppLimit()
       ]);
       if(!alive)return;
-      const roles=(roleRes.data??[]).map((row:{role:string})=>row.role);
-      const metadataRole=user.user_metadata?.account_type;
-      const canDeveloper=roles.includes("developer")||roles.includes("both")||metadataRole==="developer"||metadataRole==="both";
-      const hasTester=roles.includes("tester")||roles.includes("both");
-      setAllowed(canDeveloper);setCanTester(hasTester);
       setName(profileRes.data?.display_name?.trim()||user.email?.split("@")[0]||"Developer");
       setAvatar(profileRes.data?.avatar_url||"");
       if(appsRes.error)setError("Could not load your applications. Check your connection and permissions.");
       else setApps((appsRes.data??[]) as AppRecord[]);
       if(!limitRes.error){const value=Array.isArray(limitRes.data)?limitRes.data[0]:limitRes.data;setLimit(value as typeof limit);}
-      if(roleRes.error)setError("Could not verify your developer role.");
-      setSessionReady(true);setLoading(false);
+      setLoading(false);
     };
     void load();
     const {data}=client.auth.onAuthStateChange(()=>{void load();});
@@ -211,8 +203,6 @@ export default function DeveloperDashboardPage() {
   const statusClass=(status:string)=>"dd-status dd-status-"+status;
 
   if(loading)return <div className="dd-loading"><span/> {t.loading}</div>;
-  if(!previewMode&&sessionReady&&!hasSession)return <Navigate to="/auth" replace/>;
-  if(!previewMode&&!allowed)return <Navigate to="/tester-dashboard" replace/>;
 
   return <div className="dd-shell" dir={dir}>
     <aside className="dd-sidebar">
