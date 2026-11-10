@@ -1,0 +1,55 @@
+.onboarding-page{--ob-blue:#0875f5;--ob-navy:#102d72;position:relative;isolation:isolate;min-height:100svh;overflow:hidden;background:radial-gradient(ellipse at 88% 0%,rgba(42,139,255,.17),transparent 25%),radial-gradient(ellipse at 0% 85%,rgba(66,153,255,.12),transparent 28%),linear-gradient(135deg,#f7faff 0%,#edf4ff 52%,#f8fbff 100%);color:var(--ob-navy);padding:26px clamp(24px,4.7vw,72px) 34px}
+.onboarding-page:before,.onboarding-page:after{content:"";position:absolute;z-index:-1;border-radius:50%;pointer-events:none}
+.onboarding-page:before{width:440px;height:440px;right:-220px;top:-270px;background:linear-gradient(145deg,#0875f5,#73baff);opacity:.92}
+.onboarding-page:after{width:360px;height:360px;left:-230px;bottom:-240px;background:linear-gradient(145deg,#c8e2ff,#4b9dff);opacity:.55}
+.onboarding-header{height:66px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2}
+.onboarding-header .brand{font-size:26px;color:#102d72;gap:11px}.onboarding-header .brand-mark{width:43px;height:43px;border-radius:13px;background:linear-gradient(145deg,#32b9ff,#0755df);box-shadow:0 8px 18px rgba(7,95,222,.2);font-size:22px}.onboarding-header .brand-accent{color:#0875f5}
+.onboarding-language{display:flex;align-items:center;gap:9px;padding:11px 17px;border:1px solid #d8e6fb;border-radius:30px;background:rgba(255,255,255,.78);box-shadow:0 6px 18px rgba(39,91,160,.07);font-size:13px;font-weight:700;color:#173a7e}.onboarding-language>span:first-child{font-size:19px}.language-chevron{font-size:17px;color:#6684b4}
+.onboarding-main{position:relative;z-index:1;width:min(100%,990px);margin:0 auto;padding-top:4px;text-align:center}
+.onboarding-progress{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 auto 31px;direction:ltr}
+.onboarding-progress span{width:39px;height:39px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:800;background:#e0eafa;color:#6e83aa;box-shadow:inset 0 0 0 1px rgba(87,128,190,.06)}
+.onboarding-progress span.done,.onboarding-progress span.current{background:linear-gradient(145deg,#1596ff,#0758e9);color:#fff;box-shadow:0 5px 13px rgba(8,104,232,.2)}
+.onboarding-progress span.done{font-size:21px}.onboarding-progress i{width:46px;height:2px;background:#c8d9f2}
+.onboarding-heading{max-width:690px;margin:0 auto 27px}.onboarding-kicker{display:none}
+.onboarding-heading h1{font-size:clamp(31px,3.2vw,45px);letter-spacing:-1.2px;line-height:1.2;margin:0 0 10px;color:#102d72;font-weight:850}
+.onboarding-heading p{max-width:680px;margin:0 auto;color:#526b98;font-size:clamp(14px,1.4vw,18px);line-height:1.75}
+.onboarding-role-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:23px;max-width:990px;margin:0 auto}
+.onboarding-role-card{position:relative;min-height:300px;padding:23px 22px 20px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border:1.5px solid #e0e8f4;border-radius:27px;background:rgba(255,255,255,.84);color:#102d72;box-shadow:0 12px 28px rgba(42,86,151,.08);cursor:pointer;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.onboarding-role-card:hover{transform:translateY(-4px);border-color:#8bbaff;box-shadow:0 18px 32px rgba(29,103,211,.13)}
+.onboarding-role-card.is-selected{border:2.5px solid #0875f5;background:rgba(255,255,255,.94);box-shadow:0 12px 26px rgba(8,112,245,.12),0 0 0 3px rgba(8,117,245,.04)}
+.role-check{position:absolute;top:13px;left:15px;width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#0875f5;color:#fff;font-size:17px;font-weight:800;opacity:0;transform:scale(.7);transition:opacity .18s,transform .18s}
+.is-selected .role-check{opacity:1;transform:scale(1)}
+.role-art{width:100%;height:145px;display:grid;place-items:center;margin-bottom:6px;background:radial-gradient(ellipse at center,#e6f3ff 0%,rgba(230,243,255,0) 70%)}
+.role-art svg{width:170px;max-width:100%;height:145px;overflow:visible;filter:drop-shadow(0 7px 8px rgba(24,106,211,.09))}
+.onboarding-role-card strong{font-size:25px;font-weight:850;margin:0 0 9px;color:#102d72}
+.role-description{max-width:245px;color:#526b98;font-size:14px;line-height:1.65}
+.onboarding-interests{margin:18px auto 0;max-width:850px}
+.onboarding-interests h2{font-size:13px;margin:0 0 10px;color:#385785}.onboarding-interests h2 small{font-size:11px;color:#7b91b4;font-weight:500;margin-inline-start:5px}
+.onboarding-interest-list{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.onboarding-interest-list button{border:1px solid #dbe7f7;border-radius:22px;background:rgba(255,255,255,.66);color:#5d759e;padding:6px 12px;font-size:11px;cursor:pointer;transition:all .18s}
+.onboarding-interest-list button.active{border-color:#0875f5;background:#e8f3ff;color:#075bd5}
+.onboarding-error{max-width:550px;margin:13px auto 0;text-align:right;color:#a83434}
+.onboarding-actions{width:min(100%,485px);margin:20px auto 0;display:flex;flex-direction:column;align-items:center;gap:10px}
+.onboarding-continue{width:100%;min-height:58px;border:0;border-radius:40px;background:linear-gradient(100deg,#087bf5,#0757e9);box-shadow:0 12px 24px rgba(8,103,231,.23);color:#fff;font-size:19px;font-weight:750;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:transform .2s,box-shadow .2s}
+.onboarding-continue:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(8,103,231,.28)}.onboarding-continue:disabled{opacity:.65;cursor:wait;transform:none}
+.onboarding-continue span{font-size:25px;line-height:1}
+.onboarding-skip{border:0;border-bottom:1px solid #8ba5cc;padding:3px 5px;background:none;color:#58739f;font-size:12px;cursor:pointer}
+.onboarding-art{position:absolute;z-index:0;left:0;top:22%;width:28%;height:65%;pointer-events:none}
+.art-dots{position:absolute;width:120px;height:90px;background-image:radial-gradient(#7db8f4 2px,transparent 2.5px);background-size:22px 22px;opacity:.7}
+.art-dots-top{top:-40px;left:15px}.art-dots-bottom{bottom:0;right:0}
+.art-orbit{position:absolute;left:-14%;top:24%;width:115%;height:48%;border:2px solid rgba(57,168,255,.4);border-radius:50%;transform:rotate(-14deg);box-shadow:0 0 0 10px rgba(98,184,255,.05)}
+.art-rocket{position:absolute;left:13%;top:2%;width:92px;height:150px;border-radius:50% 50% 37% 37%;background:linear-gradient(100deg,#8dd5ff 0%,#fff 42%,#1679f4 100%);transform:rotate(38deg);box-shadow:inset -10px -5px 0 rgba(4,75,190,.12),0 16px 24px rgba(12,97,213,.17);clip-path:polygon(50% 0,76% 19%,88% 66%,100% 83%,76% 82%,50% 100%,24% 82%,0 83%,12% 66%,24% 19%)}
+.rocket-window{position:absolute;left:27px;top:38px;width:38px;height:38px;border:7px solid #075adf;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d8f5ff,#1688ff 60%,#0643b8);box-shadow:0 0 0 4px #8bcaff}
+.rocket-window:after{content:"";position:absolute;left:3px;top:3px;width:9px;height:9px;border-radius:50%;background:#fff;opacity:.8}
+.art-rocket i,.art-rocket b{position:absolute;bottom:15px;width:22px;height:40px;background:linear-gradient(#0b72ed,#0643ba);border-radius:4px 4px 18px 18px}.art-rocket i{left:5px;transform:rotate(-24deg)}.art-rocket b{right:5px;transform:rotate(24deg)}
+.art-laptop{position:absolute;left:5%;bottom:12%;width:260px;height:170px;transform:rotate(-9deg)}
+.laptop-screen{height:145px;border:9px solid #12336f;border-radius:13px;background:linear-gradient(145deg,#d9f3ff,#fff);box-shadow:0 13px 24px rgba(10,72,153,.18);display:grid;place-items:center}
+.laptop-screen span{font-size:55px;color:#0875f5;text-shadow:0 4px 9px rgba(8,117,245,.2)}
+.laptop-base{height:13px;margin:0 -13px;background:linear-gradient(#c8e6ff,#5e9ee9);border-radius:2px 2px 13px 13px;box-shadow:0 8px 12px rgba(10,72,153,.15)}
+.art-code,.art-star{position:absolute;display:grid;place-items:center;width:55px;height:55px;border-radius:14px;background:linear-gradient(145deg,#28aaff,#0871ec);color:white;font-size:23px;font-weight:800;box-shadow:0 12px 22px rgba(8,117,245,.2);transform:rotate(9deg)}
+.art-code{right:1%;top:29%}.art-star{right:7%;bottom:28%;font-size:26px}
+.onboarding-art>p{position:absolute;bottom:0;left:8%;margin:0;color:#176ce5;font-family:cursive;font-size:clamp(22px,2.5vw,35px);font-style:italic;transform:rotate(-7deg);white-space:nowrap}
+@media(max-width:1100px){.onboarding-art{opacity:.22;width:22%}.onboarding-main{width:min(100%,900px)}.onboarding-role-grid{gap:14px}.onboarding-role-card{min-height:280px;padding-inline:15px}}
+@media(max-width:760px){.onboarding-page{padding:16px 18px 28px;overflow-x:hidden}.onboarding-header{height:52px}.onboarding-header .brand{font-size:21px}.onboarding-header .brand-mark{width:36px;height:36px}.onboarding-language{padding:8px 12px;font-size:11px}.onboarding-art{display:none}.onboarding-main{padding-top:12px}.onboarding-progress{gap:8px;margin-bottom:23px}.onboarding-progress span{width:32px;height:32px;font-size:13px}.onboarding-progress i{width:27px}.onboarding-heading{margin-bottom:21px}.onboarding-heading h1{font-size:29px}.onboarding-heading p{font-size:13px;line-height:1.7}.onboarding-role-grid{grid-template-columns:1fr;gap:11px;max-width:480px}.onboarding-role-card{min-height:0;display:grid;grid-template-columns:94px 1fr;grid-template-rows:auto auto;column-gap:14px;align-items:center;text-align:right;padding:13px 16px;border-radius:19px}.role-art{grid-column:1;grid-row:1/3;width:94px;height:88px;margin:0}.role-art svg{width:100px;height:88px}.onboarding-role-card strong{grid-column:2;grid-row:1;justify-self:start;font-size:19px;margin:0 0 3px}.role-description{grid-column:2;grid-row:2;max-width:none;font-size:11px;line-height:1.55}.role-check{top:9px;left:9px;width:23px;height:23px;font-size:13px}.onboarding-interests{margin-top:17px}.onboarding-interests h2{font-size:12px}.onboarding-interest-list{gap:6px}.onboarding-interest-list button{font-size:10px;padding:6px 10px}.onboarding-actions{margin-top:18px;gap:8px}.onboarding-continue{min-height:52px;font-size:16px}.onboarding-skip{font-size:11px}}
+@media(max-width:380px){.onboarding-page{padding-inline:13px}.onboarding-heading h1{font-size:26px}.onboarding-role-card{grid-template-columns:78px 1fr;padding:11px}.role-art{width:78px;height:76px}.role-art svg{width:88px;height:78px}.role-description{font-size:10px}.onboarding-progress i{width:20px}}
+@media(prefers-reduced-motion:reduce){.onboarding-role-card,.onboarding-continue,.onboarding-interest-list button{transition:none}}
