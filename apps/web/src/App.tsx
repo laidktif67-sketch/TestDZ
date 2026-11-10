@@ -17,6 +17,7 @@ import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./features/identity/identity-provider";
 import AuthGuard from "./features/identity/guards/AuthGuard";
 import OnboardingGuard from "./features/identity/guards/OnboardingGuard";
+import RoleGuard, { RoleHomeRedirect } from "./features/identity/guards/RoleGuard";
 
 export default function App() {
   return (
@@ -36,12 +37,16 @@ export default function App() {
             <Route path="/complete-profile" element={<ProfileCompletionPage />} />
           </Route>
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
-          <Route path="/my-tests" element={<MyTestsPage />} />
-          <Route path="/dashboard" element={<Navigate to="/tester-dashboard" replace />} />
-          <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
-          <Route path="/apps" element={<AppsPage />} />
-          <Route path="/apps/:id" element={<AppDetailPage />} />
+          <Route path="/dashboard" element={<RoleHomeRedirect />} />
+          <Route element={<RoleGuard requiredRole="tester" />}>
+            <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
+            <Route path="/my-tests" element={<MyTestsPage />} />
+          </Route>
+          <Route element={<RoleGuard requiredRole="developer" />}>
+            <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
+            <Route path="/apps" element={<AppsPage />} />
+            <Route path="/apps/:id" element={<AppDetailPage />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
