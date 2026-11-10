@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import imageCompression from "browser-image-compression";
 import { Link, useNavigate } from "react-router-dom";
 import type { AvatarMimeType } from "@testdz/types";
@@ -14,7 +14,7 @@ type ProfileIconName =
   | "id-card" | "check-circle" | "smartphone" | "shield-check" | "log-out"
   | "trash" | "lock" | "key" | "globe" | "bell" | "mail" | "settings";
 
-const profileIconPaths: Record<ProfileIconName, React.ReactNode> = {
+const profileIconPaths: Record<ProfileIconName, ReactNode> = {
   "badge-check": <><path d="M12 3.2 14.1 4l2.2-.1 1.1 1.9 1.9 1.1-.1 2.2.8 2.1-.8 2.1.1 2.2-1.9 1.1-1.1 1.9-2.2-.1-2.1.8-2.1-.8-2.2.1-1.1-1.9-1.9-1.1.1-2.2-.8-2.1.8-2.1-.1-2.2 1.9-1.1 1.1-1.9 2.2.1z"/><path d="m8.5 12.1 2.2 2.2 4.8-5"/> </>,
   camera: <><path d="M4 7.5h3l1.5-2h7l1.5 2h3A1.5 1.5 0 0 1 21.5 9v9A1.5 1.5 0 0 1 20 19.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5Z"/><circle cx="12" cy="13" r="3.5"/></>,
   flask: <><path d="M9 3.5h6M10 3.5v6l-5.3 8.2A2 2 0 0 0 6.4 21h11.2a2 2 0 0 0 1.7-3.3L14 9.5v-6"/><path d="M8 15h8"/></>,
