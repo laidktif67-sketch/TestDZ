@@ -109,6 +109,7 @@ export default function ProfilePage() {
         workspaceMenuOpen={workspaceMenuOpen}
         setWorkspaceMenuOpen={setWorkspaceMenuOpen}
         previewMode={!profilesApi.isConfigured()}
+        sidebarClassName="tester-sidebar"
       />
 
       <section className="tester-profile-main">
