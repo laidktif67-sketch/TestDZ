@@ -14,6 +14,7 @@ const onboardingCopy = {
     intro: "Select the role that best describes you. You can always change this later in your account settings.",
     tester: "Tester", testerBody: "Participate in tests, earn points and help improve products.",
     developer: "Developer", developerBody: "Publish your applications, create testing campaigns and get useful feedback.",
+    both: "Tester & Developer", bothBody: "Test products and publish your own applications from one account.",
     interests: "What are you interested in?", optional: "Optional",
     interestNames: ["Tools & Productivity", "Education", "Gaming", "E-commerce", "Health & Fitness", "Social Media", "Other"],
     continue: "Continue", saving: "Saving...", skip: "Skip for now", errorConfig: "Supabase is not configured.",
@@ -24,6 +25,7 @@ const onboardingCopy = {
     intro: "Sélectionnez le rôle qui vous décrit le mieux. Vous pourrez le modifier plus tard dans les paramètres.",
     tester: "Testeur", testerBody: "Participez aux tests, gagnez des points et contribuez à améliorer les produits.",
     developer: "Développeur", developerBody: "Publiez vos applications, créez des campagnes de test et recevez des avis utiles.",
+    both: "Testeur et développeur", bothBody: "Testez des produits et publiez vos propres applications avec un seul compte.",
     interests: "Quels sont vos centres d’intérêt ?", optional: "Facultatif",
     interestNames: ["Outils et productivité", "Éducation", "Jeux", "E-commerce", "Santé et fitness", "Réseaux sociaux", "Autre"],
     continue: "Continuer", saving: "Enregistrement...", skip: "Passer pour le moment", errorConfig: "Supabase n’est pas configuré.",
@@ -34,6 +36,7 @@ const onboardingCopy = {
     intro: "اختر الدور الذي يصفك بشكل أفضل. يمكنك تغيير ذلك لاحقاً من إعدادات حسابك.",
     tester: "مختبِر", testerBody: "شارك في اختبار التطبيقات، واكسب النقاط وساعد على تحسين المنتجات.",
     developer: "مطوّر", developerBody: "انشر تطبيقاتك وأنشئ حملات اختبار واحصل على آراء مفيدة.",
+    both: "مختبِر ومطوّر", bothBody: "اختبر المنتجات وانشر تطبيقاتك الخاصة باستخدام حساب واحد.",
     interests: "ما المجالات التي تهمك؟", optional: "اختياري",
     interestNames: ["أدوات وإنتاجية", "تعليم", "ألعاب", "تجارة إلكترونية", "صحة ولياقة", "شبكات اجتماعية", "أخرى"],
     continue: "متابعة", saving: "جارٍ الحفظ...", skip: "تخطي الآن", errorConfig: "إعداد Supabase غير مكتمل.",
@@ -44,6 +47,7 @@ const onboardingCopy = {
 const roles = [
   { value: "tester", icon: "tester" },
   { value: "developer", icon: "developer" },
+  { value: "both", icon: "both" },
 ] as const;
 
 function RoleIllustration({ type }: { type: "tester" | "developer" | "both" }) {
@@ -220,7 +224,7 @@ export default function OnboardingPage() {
           <span className="role-check" aria-hidden="true">✓</span>
           <span className="role-art"><RoleIllustration type={role.icon} /></span>
           <strong>{t[role.value]}</strong>
-          <span className="role-description">{role.value === "tester" ? t.testerBody : t.developerBody}</span>
+          <span className="role-description">{role.value === "tester" ? t.testerBody : role.value === "developer" ? t.developerBody : t.bothBody}</span>
         </button>)}
       </div>
       <p className="onboarding-trust-note"><span aria-hidden="true">✓</span>{t.trustNote}</p>
