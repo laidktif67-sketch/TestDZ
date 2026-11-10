@@ -35,3 +35,17 @@
 }
 @media(max-width:380px){.otp-script{font-size:21px}.otp-art-copy h2{font-size:21px}}
 @media(prefers-reduced-motion:reduce){.otp-status-emoji,.otp-heading-emoji,.otp-script-sparkle{animation:none}}
+
+
+/* Lock desktop composition: illustration LEFT, action card RIGHT. Mobile keeps card first. */
+@media(min-width:701px){
+ .otp-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;direction:ltr!important}
+ .otp-story{grid-column:1;grid-row:1;justify-self:stretch}
+ .otp-card{grid-column:2;grid-row:1;justify-self:end}
+ .otp-art{margin-inline:auto}
+}
+@media(max-width:700px){
+ .otp-layout{display:flex!important;flex-direction:column!important}
+ .otp-card{order:0!important}
+ .otp-story{order:1!important}
+}
