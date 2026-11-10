@@ -118,23 +118,23 @@ export default function ProfilePage() {
       <section className="tester-profile-main">
         <header className="tester-topbar">
           <label className="tester-search"><span>⌕</span><input aria-label="Search" placeholder="Search anything..." /></label>
-          <div className="tester-top-actions"><button type="button" className="tester-notification" aria-label="Notifications">♧<i>3</i></button><span className="tester-top-divider" /><span className="tester-top-avatar">{initials}</span><strong>{displayName || "Tester"}</strong><span className="tester-chevron">⌄</span></div>
+          <div className="tester-top-actions"><button type="button" className="tester-notification" aria-label="Notifications">🔔<i>3</i></button><span className="tester-top-divider" /><span className="tester-top-avatar">{initials}</span><strong>{displayName || "Tester"}</strong><span className="tester-chevron">⌄</span></div>
         </header>
 
         <div className="tester-profile-content">
           <section className="tester-profile-hero">
             <div><h1>Your Profile,<br />Your Control!</h1><p>Manage your information and customize your experience.</p></div>
-            <div className="tester-hero-art" aria-hidden="true"><span className="tester-art-gear">⚙</span><span className="tester-art-id">▤<b>✓</b></span><span className="tester-art-shield">✓</span><i>✦</i><em>✦</em></div>
+            <div className="tester-hero-art" aria-hidden="true"><span className="tester-art-gear">⚙️</span><span className="tester-art-id">🪪<b>✓</b></span><span className="tester-art-shield">🛡️</span><i>✨</i><em>⭐</em></div>
           </section>
 
           <section className="tester-summary-card">
             <div className="tester-summary-person">
               <div className="tester-large-avatar">{avatarUrl ? <img src={avatarUrl} alt="Profile" /> : <span>{initials}</span>}<label className="tester-camera" title="Change profile photo">📷<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} /></label></div>
-              <div className="tester-summary-copy"><h2>{displayName || "Your Name"} <span className="tester-verified-badge">✓</span></h2><p>Tester ID: <strong>TST-{userId ? userId.replace(/-/g, "").slice(0, 8).toUpperCase() : "PREVIEW"}</strong> <span className="tester-level">⭐ Level 1</span></p><small>{bio || "Passionate about testing and improving apps ✨"}</small></div>
+              <div className="tester-summary-copy"><h2>{displayName || "Your Name"} <span className="tester-verified-badge">☑️</span></h2><p>Tester ID: <strong>TST-{userId ? userId.replace(/-/g, "").slice(0, 8).toUpperCase() : "PREVIEW"}</strong> <span className="tester-level">⭐ Level 1</span></p><small>{bio || "Passionate about testing and improving apps ✨"}</small></div>
             </div>
-            <div className="tester-stat"><span>▤</span><strong>—</strong><small>Total Tests</small></div>
+            <div className="tester-stat"><span>🧪</span><strong>—</strong><small>Total Tests</small></div>
             <div className="tester-stat"><span>⭐</span><strong>—</strong><small>Average Rating</small></div>
-            <div className="tester-stat"><span>♔</span><strong>—</strong><small>Total Points</small></div>
+            <div className="tester-stat"><span>🎁</span><strong>—</strong><small>Total Points</small></div>
           </section>
 
           {(message || error) && <div className={`tester-profile-alert ${error ? "is-error" : ""}`} role="status">{error || message}<button type="button" onClick={() => { setMessage(""); setError(""); }} aria-label="Dismiss">×</button></div>}
@@ -142,9 +142,9 @@ export default function ProfilePage() {
           <div className="tester-profile-grid">
             <div className="tester-profile-left">
               <section className="tester-panel tester-personal-panel">
-                <div className="tester-panel-heading"><span className="tester-panel-icon blue">♟</span><div><h2>Personal Information</h2><p>Update your basic information</p></div><button className="tester-edit-button" type="button" onClick={() => setEditing((value) => !value)}>{editing ? "Cancel" : "✎ Edit"}</button></div>
+                <div className="tester-panel-heading"><span className="tester-panel-icon blue">👤</span><div><h2>Personal Information</h2><p>Update your basic information</p></div><button className="tester-edit-button" type="button" onClick={() => setEditing((value) => !value)}>{editing ? "Cancel" : "✎ Edit"}</button></div>
                 <form className="tester-profile-form" onSubmit={save}>
-                  <div className="tester-info-illustration" aria-hidden="true"><div className="tester-id-card">▰<span /><span /><b>✓</b></div></div>
+                  <div className="tester-info-illustration" aria-hidden="true"><div className="tester-id-card">🪪<span /><span /><b>✓</b></div></div>
                   <div className="tester-profile-fields">
                     <label><span>Full Name</span><input required minLength={2} value={displayName} readOnly={!editing} onChange={(e) => setDisplayName(e.target.value)} /></label>
                     <label><span>Email Address</span><strong className="tester-readonly-value">{email || "Connect account to view"} <i className={verified ? "verified" : ""}>{verified ? "✓" : "•"}</i></strong></label>
@@ -155,19 +155,19 @@ export default function ProfilePage() {
                 </form>
               </section>
 
-              <section className="tester-panel tester-device-panel"><div className="tester-device-art" aria-hidden="true">📱<span>⚙</span></div><div className="tester-device-copy"><h2>Tester Information</h2><p>Your testing details</p><div><span>Device Type</span><strong>Android Phone</strong></div><div><span>Android Version</span><strong>Android device</strong></div><div><span>Interests</span><strong className="tester-tags"><i>Productivity</i><i>Health</i><i>Games</i><i>+1</i></strong></div></div></section>
+              <section className="tester-panel tester-device-panel"><div className="tester-device-art" aria-hidden="true">📱<span>⚙️</span></div><div className="tester-device-copy"><h2>Tester Information</h2><p>Your testing details</p><div><span>Device Type</span><strong>Android Phone</strong></div><div><span>Android Version</span><strong>Android device</strong></div><div><span>Interests</span><strong className="tester-tags"><i>Productivity</i><i>Health</i><i>Games</i><i>+1</i></strong></div></div></section>
 
-              <section className="tester-panel tester-verification-panel"><span className="tester-big-shield">✓</span><div className="tester-verification-copy"><h2>Account Verification</h2><p>Your account security status</p><span>✓ &nbsp; Email address {verified ? "verified" : "verification pending"}</span><span>✓ &nbsp; Keep your profile information up to date</span></div><div className={`tester-verification-status ${verified ? "verified" : ""}`}><strong>✓</strong><span><b>{verified ? "Verified" : "In progress"}</b><small>{verified ? "All good!" : "Check your email"}</small></span></div></section>
+              <section className="tester-panel tester-verification-panel"><span className="tester-big-shield">🛡️</span><div className="tester-verification-copy"><h2>Account Verification</h2><p>Your account security status</p><span>✓ &nbsp; Email address {verified ? "verified" : "verification pending"}</span><span>✓ &nbsp; Keep your profile information up to date</span></div><div className={`tester-verification-status ${verified ? "verified" : ""}`}><strong>✓</strong><span><b>{verified ? "Verified" : "In progress"}</b><small>{verified ? "All good!" : "Check your email"}</small></span></div></section>
 
-              <section className="tester-account-actions"><span className="tester-logout-icon">⇥</span><div><h2>Account Actions</h2><p>Manage your account actions</p></div><button type="button" onClick={() => void logout()}>⇥ Log Out</button><button type="button" className="danger" onClick={() => setMessage("To close your account, contact TestDZ support.")}>▤ Close Account</button></section>
+              <section className="tester-account-actions"><span className="tester-logout-icon">🚪</span><div><h2>Account Actions</h2><p>Manage your account actions</p></div><button type="button" onClick={() => void logout()}>🚪 Log Out</button><button type="button" className="danger" onClick={() => setMessage("To close your account, contact TestDZ support.")}>🗑️ Close Account</button></section>
             </div>
 
             <div className="tester-profile-right">
-              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art security">♙</div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span>♙</span><div><h2>Security Settings</h2><p>Keep your account secure</p></div></div><Link to="/reset-password" className="tester-setting-row"><span>⚿</span><span>Change Password</span><b>›</b></Link><div className="tester-setting-row"><span>✦</span><span>Two-Factor Authentication <em>Not configured</em></span><Toggle label="Two-factor authentication" defaultOn={false} /></div></div></section>
+              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art security">🔐</div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span>🔒</span><div><h2>Security Settings</h2><p>Keep your account secure</p></div></div><Link to="/reset-password" className="tester-setting-row"><span>🔑</span><span>Change Password</span><b>›</b></Link><div className="tester-setting-row"><span>🛡️</span><span>Two-Factor Authentication <em>Not configured</em></span><Toggle label="Two-factor authentication" defaultOn={false} /></div></div></section>
 
-              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art language">◎</div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span>◎</span><div><h2>Language &amp; Preferences</h2><p>Choose your preferred settings</p></div></div><div className="tester-setting-row tester-choice-row"><span>Language</span><div className="tester-choice-group">{["English", "العربية", "Français"].map((item) => <button type="button" key={item} className={language === item ? "selected" : ""} onClick={() => setLanguage(item)}>{item}</button>)}</div></div><div className="tester-setting-row tester-choice-row"><span>Theme</span><div className="tester-choice-group">{["☀ Light", "☾ Dark"].map((item) => <button type="button" key={item} className={theme === item.replace(/^☀ |^☾ /, "") ? "selected" : ""} onClick={() => setTheme(item.replace(/^☀ |^☾ /, ""))}>{item}</button>)}</div></div></div></section>
+              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art language">🌐</div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span>🌐</span><div><h2>Language &amp; Preferences</h2><p>Choose your preferred settings</p></div></div><div className="tester-setting-row tester-choice-row"><span>Language</span><div className="tester-choice-group">{["English", "العربية", "Français"].map((item) => <button type="button" key={item} className={language === item ? "selected" : ""} onClick={() => setLanguage(item)}>{item}</button>)}</div></div><div className="tester-setting-row tester-choice-row"><span>Theme</span><div className="tester-choice-group">{["☀ Light", "☾ Dark"].map((item) => <button type="button" key={item} className={theme === item.replace(/^☀ |^☾ /, "") ? "selected" : ""} onClick={() => setTheme(item.replace(/^☀ |^☾ /, ""))}>{item}</button>)}</div></div></div></section>
 
-              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art notifications">♟<i>1</i></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span>♧</span><div><h2>Notification Preferences</h2><p>Control what notifications you receive</p></div></div><div className="tester-setting-row"><span>✉</span><span>Email Notifications</span><Toggle label="Email notifications" /></div><div className="tester-setting-row"><span>♟</span><span>Push Notifications</span><Toggle label="Push notifications" /></div></div></section>
+              <section className="tester-panel tester-setting-panel"><div className="tester-setting-art notifications">🔔<i>1</i></div><div className="tester-setting-content"><div className="tester-panel-heading compact"><span>🔔</span><div><h2>Notification Preferences</h2><p>Control what notifications you receive</p></div></div><div className="tester-setting-row"><span>📧</span><span>Email Notifications</span><Toggle label="Email notifications" /></div><div className="tester-setting-row"><span>📲</span><span>Push Notifications</span><Toggle label="Push notifications" /></div></div></section>
             </div>
           </div>
         </div>
