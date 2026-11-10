@@ -2112,3 +2112,22 @@ html:lang(fr),
  .tester-setting-panel{grid-template-columns:75px minmax(0,1fr);min-height:0;padding:12px;gap:9px}
  .tester-setting-art{width:70px;height:70px;font-size:48px}
 }
+
+
+/* Keep the dashboard sidebar physically on the LEFT even when the site shell is RTL. */
+.tester-profile-page{direction:ltr!important;grid-template-columns:239px minmax(0,1fr)!important}
+.tester-profile-page>.tester-sidebar{grid-column:1;grid-row:1}
+.tester-profile-page>.tester-profile-main{grid-column:2;grid-row:1;direction:ltr}
+@media(max-width:1100px) and (min-width:851px){
+ .tester-profile-page{grid-template-columns:215px minmax(0,1fr)!important}
+}
+@media(max-width:850px){
+ .tester-profile-page{display:grid!important;grid-template-columns:minmax(0,1fr)!important}
+ .tester-profile-page>.tester-sidebar{grid-column:1;grid-row:1}
+ .tester-profile-page>.tester-profile-main{grid-column:1;grid-row:2}
+}
+@media(max-width:600px){
+ .tester-profile-page{display:block!important}
+ .tester-profile-page>.tester-sidebar{grid-column:auto;grid-row:auto}
+ .tester-profile-page>.tester-profile-main{grid-column:auto;grid-row:auto}
+}
