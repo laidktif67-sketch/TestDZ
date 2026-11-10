@@ -177,10 +177,12 @@ export default function TesterDashboardPage() {
   const nav = [
     { label: "Tester Dashboard", icon: "home", href: "/tester-dashboard", active: true },
     ...(isDeveloper || isAdmin ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
-    ...(isDeveloper || isAdmin ? [{ label: "Discover", icon: "search", href: "/apps" }] : []),
+    ...(isDeveloper || isAdmin
+      ? [{ label: "Discover Apps", icon: "search", href: "/apps" }]
+      : [{ label: "Discover Tests", icon: "search", href: "/tester-dashboard#my-tests" }]),
     { label: "My Tests", icon: "tests", href: "/my-tests" },
-    { label: "Billing", icon: "wallet", href: "/profile" },
-    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/profile" }] : [])
+    { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
+    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
   ];
 
   if (loading) return <div className="td-loading"><span className="td-spinner"/>Loading your dashboard…</div>;
