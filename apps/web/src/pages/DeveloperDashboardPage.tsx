@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useIdentity } from "../features/identity/hooks/useIdentity";
+import { RoleAccessNotice } from "../features/identity/guards/RoleGuard";
 import { getAppLimit, listApps } from "../features/apps/apps-api";
 import "../styles/developer-dashboard.css";
 
@@ -225,6 +226,7 @@ export default function DeveloperDashboardPage() {
     </aside>
 
     <main className="dd-main">
+      <RoleAccessNotice />
       <header className="dd-topbar">
         <label className="dd-search"><Icon name="search"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t.search}/></label>
         <div className="dd-top-actions"><span className="dd-online-dot"/><select aria-label={t.language} value={language} onChange={e=>setLanguage(e.target.value as Language)}><option value="en">EN</option><option value="fr">FR</option><option value="ar">AR</option></select><Link to="/profile" className="dd-top-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,2).toUpperCase()}</Link></div>
