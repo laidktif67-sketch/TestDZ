@@ -2279,3 +2279,106 @@ html:lang(fr),
   .tester-profile-page .tester-stat strong{font-size:18px}
   .tester-profile-page .tester-stat small{font-size:9px}
 }
+
+
+/* Mobile-first repair for the complete tester profile page. */
+@media(max-width:850px){
+  .tester-profile-page{width:100%;min-width:0;overflow-x:clip;background:#f1f5ff}
+  .tester-profile-page>.tester-sidebar{width:100%;max-width:100%;overflow:hidden;padding:12px 12px 9px;border-radius:0 0 16px 16px}
+  .tester-profile-page .tester-brand{gap:10px;padding:0 2px 11px}
+  .tester-profile-page .tester-brand-mark{width:39px;height:39px;font-size:28px}
+  .tester-profile-page .tester-brand strong{font-size:21px}
+  .tester-profile-page .tester-nav{width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px 0 5px}
+  .tester-profile-page .tester-nav::-webkit-scrollbar{display:none}
+  .tester-profile-page .tester-nav a{min-height:42px;padding:0 11px;gap:7px;font-size:12px}
+  .tester-profile-page>.tester-profile-main{width:100%;max-width:100%;margin:0!important;min-width:0;overflow:hidden}
+  .tester-profile-page .tester-topbar{height:auto;min-height:62px;padding:10px 14px;gap:10px}
+  .tester-profile-page .tester-search{height:42px;min-width:0;flex:1;width:auto;padding:0 12px;gap:8px;border-radius:14px}
+  .tester-profile-page .tester-search>span{font-size:22px}
+  .tester-profile-page .tester-search input{font-size:13px}
+  .tester-profile-page .tester-top-actions{gap:7px;font-size:12px}
+  .tester-profile-page .tester-top-actions strong{display:none}
+  .tester-profile-page .tester-top-divider{height:27px;margin:0 2px}
+  .tester-profile-page .tester-top-avatar{width:32px;height:32px;flex:none}
+  .tester-profile-page .tester-notification{font-size:23px}
+  .tester-profile-page .tester-notification i{width:17px;height:17px;font-size:9px}
+  .tester-profile-page .tester-chevron{display:none}
+  .tester-profile-page .tester-profile-content{width:100%;max-width:none;padding:0 12px 22px;margin:0}
+  .tester-profile-page .tester-profile-hero{height:auto;min-height:136px;padding:23px 20px;border-radius:17px}
+  .tester-profile-page .tester-profile-hero h1{max-width:72%;font-size:clamp(25px,6vw,32px);line-height:1.02;letter-spacing:-.7px}
+  .tester-profile-page .tester-profile-hero p{max-width:68%;font-size:12px;line-height:1.45}
+  .tester-profile-page .tester-hero-art{right:-14%;width:48%;opacity:.72;transform:scale(.72);transform-origin:right center}
+  .tester-profile-page .tester-summary-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:12px;padding:14px;border-radius:17px;min-width:0}
+  .tester-profile-page .tester-summary-person{grid-column:1/-1;display:flex;align-items:center;gap:13px;min-width:0;padding:0 0 13px;margin:0 0 10px;border-bottom:1px solid #dbe5f8}
+  .tester-profile-page .tester-large-avatar{width:76px;height:76px;flex:0 0 76px}
+  .tester-profile-page .tester-large-avatar .tester-avatar-emoji{font-size:43px;padding-top:4px}
+  .tester-profile-page .tester-summary-copy{flex:1;min-width:0}
+  .tester-profile-page .tester-summary-copy h2{font-size:clamp(17px,4.5vw,21px);overflow-wrap:anywhere}
+  .tester-profile-page .tester-summary-copy p{font-size:11px;gap:5px;line-height:1.5}
+  .tester-profile-page .tester-summary-copy small{font-size:11px;line-height:1.4}
+  .tester-profile-page .tester-level{font-size:10px;padding:5px 7px}
+  .tester-profile-page .tester-stat{height:auto;min-height:70px;display:flex;justify-content:center;gap:5px;padding:6px 3px;border-left:0}
+  .tester-profile-page .tester-stat+.tester-stat{border-left:1px solid #d5e0f5}
+  .tester-profile-page .tester-stat>span{font-size:22px;min-height:23px}
+  .tester-profile-page .tester-stat strong{font-size:18px}
+  .tester-profile-page .tester-stat small{font-size:10px;line-height:1.25;overflow-wrap:anywhere}
+  .tester-profile-page .tester-profile-grid{grid-template-columns:minmax(0,1fr);gap:12px;margin-top:12px}
+  .tester-profile-page .tester-profile-left,.tester-profile-page .tester-profile-right{grid-template-columns:minmax(0,1fr);gap:12px}
+  .tester-profile-page .tester-panel{border-radius:17px}
+  .tester-profile-page .tester-personal-panel{padding:14px}
+  .tester-profile-page .tester-panel-heading{gap:10px}
+  .tester-profile-page .tester-panel-heading h2,.tester-profile-page .tester-device-copy h2,.tester-profile-page .tester-verification-copy h2{font-size:17px}
+  .tester-profile-page .tester-panel-heading p{font-size:11px;line-height:1.4}
+  .tester-profile-page .tester-panel-icon{width:39px;height:39px;border-radius:11px;font-size:22px}
+  .tester-profile-page .tester-edit-button{padding:9px 11px;font-size:11px}
+  .tester-profile-page .tester-profile-form{grid-template-columns:minmax(0,1fr);gap:8px;margin-top:12px}
+  .tester-profile-page .tester-info-illustration{display:none}
+  .tester-profile-page .tester-profile-fields{gap:10px}
+  .tester-profile-page .tester-profile-fields label{grid-template-columns:minmax(0,1fr);gap:4px;font-size:12px}
+  .tester-profile-page .tester-profile-fields input,.tester-profile-page .tester-profile-fields textarea{min-height:39px;padding:9px 10px;border:1px solid #e0e8f8;border-radius:10px;background:#fbfcff;font-size:13px}
+  .tester-profile-page .tester-readonly-value{min-height:39px;padding:8px 10px;border:1px solid #e0e8f8;border-radius:10px;background:#fbfcff;font-size:12px}
+  .tester-profile-page .tester-save-button{width:100%;justify-self:stretch}
+  .tester-profile-page .tester-device-panel{grid-template-columns:72px minmax(0,1fr);gap:12px;padding:13px;min-height:0}
+  .tester-profile-page .tester-device-art{min-height:92px;font-size:48px}
+  .tester-profile-page .tester-device-art span{font-size:24px}
+  .tester-profile-page .tester-device-copy>div{grid-template-columns:minmax(82px,.7fr) minmax(0,1fr);gap:7px;font-size:11px}
+  .tester-profile-page .tester-tags i{padding:4px 7px;font-size:10px}
+  .tester-profile-page .tester-verification-panel{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;padding:13px}
+  .tester-profile-page .tester-big-shield{width:44px;height:50px;font-size:27px}
+  .tester-profile-page .tester-verification-copy>span{font-size:10px;line-height:1.4}
+  .tester-profile-page .tester-verification-status{grid-column:1/-1;justify-self:stretch;padding:9px 11px}
+  .tester-profile-page .tester-verification-status>strong{width:29px;height:29px;font-size:19px}
+  .tester-profile-page .tester-account-actions{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;padding:12px;border-radius:15px}
+  .tester-profile-page .tester-logout-icon{font-size:27px}
+  .tester-profile-page .tester-account-actions>div{grid-column:2}
+  .tester-profile-page .tester-account-actions>button{grid-column:1/-1;width:100%;padding:11px;font-size:12px}
+  .tester-profile-page .tester-setting-panel{grid-template-columns:58px minmax(0,1fr);gap:10px;padding:12px;min-height:0}
+  .tester-profile-page .tester-setting-art,.tester-profile-page .tester-setting-art.security,.tester-profile-page .tester-setting-art.language,.tester-profile-page .tester-setting-art.notifications{width:56px;height:56px;font-size:35px}
+  .tester-profile-page .tester-setting-art.notifications i{top:0;right:0;width:17px;height:17px;font-size:9px}
+  .tester-profile-page .tester-panel-heading.compact{gap:8px;margin-bottom:8px}
+  .tester-profile-page .tester-panel-heading.compact>span{font-size:20px}
+  .tester-profile-page .tester-panel-heading.compact h2{font-size:16px}
+  .tester-profile-page .tester-panel-heading.compact p{font-size:11px}
+  .tester-profile-page .tester-setting-row{gap:7px;font-size:11px;min-height:36px}
+  .tester-profile-page .tester-setting-row>span:first-child{width:20px;font-size:18px}
+  .tester-profile-page .tester-toggle{width:38px;height:22px}
+  .tester-profile-page .tester-toggle span{width:16px;height:16px}
+  .tester-profile-page .tester-toggle.is-on span{transform:translateX(16px)}
+}
+@media(max-width:420px){
+  .tester-profile-page .tester-profile-content{padding-inline:9px}
+  .tester-profile-page .tester-topbar{padding-inline:10px}
+  .tester-profile-page .tester-profile-hero{min-height:126px;padding:19px 15px}
+  .tester-profile-page .tester-profile-hero h1{max-width:78%;font-size:25px}
+  .tester-profile-page .tester-profile-hero p{max-width:75%;font-size:11px}
+  .tester-profile-page .tester-hero-art{right:-22%;opacity:.5;transform:scale(.6);transform-origin:right center}
+  .tester-profile-page .tester-summary-card{padding:11px 8px}
+  .tester-profile-page .tester-summary-person{gap:10px}
+  .tester-profile-page .tester-large-avatar{width:64px;height:64px;flex-basis:64px}
+  .tester-profile-page .tester-large-avatar .tester-avatar-emoji{font-size:36px}
+  .tester-profile-page .tester-camera{width:24px;height:24px;font-size:10px}
+  .tester-profile-page .tester-summary-copy h2{font-size:17px}
+  .tester-profile-page .tester-summary-copy p{font-size:10px}
+  .tester-profile-page .tester-summary-copy small{font-size:10px}
+  .tester-profile-page .tester-stat small{font-size:9px}
+}
