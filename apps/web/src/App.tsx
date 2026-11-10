@@ -15,7 +15,7 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import TesterDashboardPage from "./pages/TesterDashboardPage";
 import MyTestsPage from "./pages/MyTestsPage";
 import DeveloperDashboardPage from "./pages/DeveloperDashboardPage";
-import ProfilePage from "./pages/ProfilePage";
+import TesterProfilePage from "./pages/TesterProfilePage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./features/identity/identity-provider";
 import AuthGuard from "./features/identity/guards/AuthGuard";
@@ -42,7 +42,7 @@ export default function App() {
             <Route path="/interests" element={<InterestsPage />} />
             <Route path="/complete-profile" element={<ProfileCompletionPage />} />
           </Route>
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<TesterProfilePage />} />
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
