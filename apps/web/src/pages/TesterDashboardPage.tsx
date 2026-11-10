@@ -249,7 +249,7 @@ export default function TesterDashboardPage() {
         </article>
 
         <article className="td-panel td-quick-panel"><div className="td-panel-heading"><h2><Icon name="bolt" size={22}/>Quick Actions</h2></div><div className="td-quick-grid">
-          <Link to="/apps" className="td-quick-action blue"><span><Icon name="play" size={23}/></span><div><strong>{isDeveloper ? "Create an App" : "Start a Test"}</strong><small>{isDeveloper ? "Publish your next app" : "Begin a new test"}</small></div><Icon name="arrow" size={18}/></Link>
+          <Link to={isDeveloper || isAdmin ? "/apps" : "/my-tests"} className="td-quick-action blue"><span><Icon name="play" size={23}/></span><div><strong>{isDeveloper ? "Create an App" : "Start a Test"}</strong><small>{isDeveloper ? "Publish your next app" : "Begin a new test"}</small></div><Icon name="arrow" size={18}/></Link>
           <Link to={isDeveloper || isAdmin ? "/apps" : "#my-tests"} className="td-quick-action violet"><span><Icon name="search" size={25}/></span><div><strong>Discover Tests</strong><small>Find best topics</small></div><Icon name="arrow" size={18}/></Link>
           <a href="#my-tests" className="td-quick-action green"><span><Icon name="chart" size={23}/></span><div><strong>View My Tests</strong><small>Track your results</small></div><Icon name="arrow" size={18}/></a>
           <Link to="/profile" className="td-quick-action amber"><span><Icon name="wallet" size={23}/></span><div><strong>Manage Account</strong><small>Update your profile</small></div><Icon name="arrow" size={18}/></Link>
