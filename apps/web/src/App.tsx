@@ -5,7 +5,6 @@ import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "./lib/supabase";
-import { getPostAuthRoute } from "./lib/auth-routing";
 import { Brand } from "./components/Brand";
 import AuthPage from "./pages/AuthPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -13,6 +12,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import LandingPage from "./pages/LandingPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 
 function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -76,33 +76,6 @@ function DashboardPage() {
   return <main className="dashboard-shell"><header className="site-header container"><Brand /><button className="button button-quiet" onClick={async () => { await supabase?.auth.signOut(); }}>تسجيل الخروج</button></header><section className="dashboard-welcome container"><span className="eyebrow">مساحة العمل</span><h1>مرحباً بك في <span>TestDZ</span></h1><p>تم تسجيل الدخول بنجاح. نبني الآن لوحة مهام المختبر والمطور.</p><div className="dashboard-card"><strong>{session.user.email}</strong><span>الأدوار: {roles.length ? roles.join(" · ") : "غير محدد"}</span><span>حالة البريد: {session.user.email_confirmed_at ? "مؤكد" : "بانتظار التأكيد"}</span><Link to="/profile">إدارة الملف الشخصي ←</Link>{roles.includes("developer") && <><span>مساحة المطور — إدارة تطبيقاتك ودورات الاختبار.</span><Link to="/apps">إدارة تطبيقاتي ←</Link></>}{roles.includes("tester") && <span>مساحة المختبر — اكتشاف الاختبارات ستكون متاحة بعد اكتمال محرك الاختبارات.</span>}</div><p className="dashboard-note">هذه نسخة تأسيسية؛ لم نعرض بيانات وهمية أو مهام تجريبية.</p></section></main>;
 }
 
-
-function AuthCallbackPage() {
-  const navigate = useNavigate();
-  const [message, setMessage] = useState("جارٍ التحقق من رابط الدخول...");
-  useEffect(() => {
-    if (!supabase) { setMessage("إعداد الاتصال غير مكتمل."); return; }
-    const hash = new URLSearchParams(window.location.hash.slice(1));
-    const errorDescription = hash.get("error_description");
-    if (errorDescription) { setMessage("تعذر تأكيد الرابط: " + errorDescription); return; }
-    supabase.auth.getSession().then(async ({ data, error }) => {
-      if (error) {
-        setMessage("تعذر إكمال المصادقة. اطلب رابطاً جديداً.");
-        return;
-      }
-      if (!data.session) {
-        setMessage("الرابط غير صالح أو انتهت صلاحيته. ارجع لصفحة الدخول واطلب رابطاً جديداً.");
-        return;
-      }
-      try {
-        navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
-      } catch {
-        setMessage("تم تسجيل الدخول، لكن تعذر التحقق من إعداد الحساب. حدّث الصفحة أو حاول مجدداً.");
-      }
-    });
-  }, [navigate]);
-  return <main className="auth-layout"><section className="auth-panel"><div className="auth-form-wrap"><Brand /><h2>تأكيد الحساب</h2><p>{message}</p><Link className="button button-primary" to="/auth">العودة للدخول</Link></div></section></main>;
-}
 
 function ProfilePage() {
   const navigate=useNavigate();
