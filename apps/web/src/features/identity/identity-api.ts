@@ -39,18 +39,19 @@ export const identityApi = {
   },
 
   getUserRoles(userId: string): Promise<AccountRole[]> {
-    return getClient()
+    const query = getClient()
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return (data ?? [])
-          .map((row) => row.role)
-          .filter((role): role is AccountRole =>
-            ACCOUNT_ROLES.has(role as AccountRole)
-          );
-      });
+      .eq("user_id", userId);
+
+    return Promise.resolve(query).then(({ data, error }) => {
+      if (error) throw error;
+      return (data ?? [])
+        .map((row) => row.role)
+        .filter((role): role is AccountRole =>
+          ACCOUNT_ROLES.has(role as AccountRole)
+        );
+    });
   },
 
   signUp({ email, password, metadata, emailRedirectTo }: IdentitySignUpInput) {
