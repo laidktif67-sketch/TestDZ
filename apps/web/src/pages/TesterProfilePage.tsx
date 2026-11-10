@@ -101,7 +101,7 @@ export default function ProfilePage() {
           { label: "Profile", icon: "settings", href: "/profile", active: true }
         ]}
         name={displayName || email.split("@")[0] || "Tester"}
-        firstName={(displayName || email.split("@")[0] || "Tester").split(/\\s+/)[0]}
+        firstName={(displayName || email.split("@")[0] || "Tester").split(/\s+/)[0]}
         avatar={avatarUrl}
         roles={identityRoles}
         isAdmin={identityRoles.includes("admin")}
