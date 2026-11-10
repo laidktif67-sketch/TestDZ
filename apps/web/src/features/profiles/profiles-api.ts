@@ -17,12 +17,19 @@ export type ProfileCompletionUpdate = Pick<
 >;
 
 export const profilesApi = {
+  isConfigured() {
+    return Boolean(supabase);
+  },
+
   getCurrentUser() {
     return getClient().auth.getUser();
   },
 
   getProfile(userId: string) {
-    return getClient().from("profiles").select("*").eq("id", userId).single();
+    return getClient().from("profiles")
+      .select("display_name, phone, bio, avatar_url, is_verified, locale")
+      .eq("id", userId)
+      .single();
   },
 
   updateSettings(userId: string, input: ProfileSettingsUpdate) {
