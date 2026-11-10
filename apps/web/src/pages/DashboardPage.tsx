@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
+import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
 import "../styles/dashboard.css";
 
@@ -81,6 +82,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [range, setRange] = useState("1W");
+  const [animatedStats, setAnimatedStats] = useState({ available: 0, completed: 0, success: 0, points: 0 });
   const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
 
   useEffect(() => {
@@ -164,6 +166,24 @@ export default function DashboardPage() {
   const chartLine = chartPoints.map((point, index) => (index ? "L" : "M") + " " + (index * 93.33) + " " + (162 - point * 1.35)).join(" ");
   const chartArea = "M0 162 L" + chartPoints.map((point, index) => (index * 93.33) + " " + (162 - point * 1.35)).join(" L ") + " L560 162 Z";
   const success = stats.assignments ? progress : 0;
+  useEffect(() => {
+    const values = { available: stats.available, completed: stats.completed, success, points: stats.points };
+    const counter = { available: 0, completed: 0, success: 0, points: 0 };
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) { setAnimatedStats(values); return; }
+    const tween = gsap.to(counter, {
+      ...values,
+      duration: 1.35,
+      ease: "power3.out",
+      onUpdate: () => setAnimatedStats({
+        available: Math.round(counter.available),
+        completed: Math.round(counter.completed),
+        success: Math.round(counter.success),
+        points: Math.round(counter.points)
+      })
+    });
+    return () => { tween.kill(); };
+  }, [stats.available, stats.completed, stats.points, success]);
   const firstName = name.split(/\s+/)[0];
   const isDeveloper = roles.includes("developer");
   const isAdmin = roles.includes("admin");
@@ -202,16 +222,16 @@ export default function DashboardPage() {
       {error && <div className="td-error">{error}</div>}
 
       <section className="td-stat-grid" aria-label="Your statistics">
-        <article className="td-stat-card lavender"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{stats.available}</strong><b>Available Tests</b><small>Explore and start testing</small></div><Link to="/apps" aria-label="Explore tests"><Icon name="arrow"/></Link></article>
-        <article className="td-stat-card mint"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{stats.completed}</strong><b>Completed</b><small>Great job!</small></div><a href="#my-tests" aria-label="View completed"><Icon name="arrow"/></a></article>
-        <article className="td-stat-card sky"><span className="td-stat-icon"><Icon name="chart" size={34}/></span><div><strong>{success}%</strong><b>Success Rate</b><small>Keep it up!</small></div><a href="#progress" aria-label="View progress"><Icon name="arrow"/></a></article>
-        <article className="td-stat-card gold"><span className="td-stat-icon"><Icon name="star" size={34}/></span><div><strong>{stats.points.toLocaleString()}</strong><b>Points</b><small>Earn more points</small></div><a href="#rewards" aria-label="View rewards"><Icon name="arrow"/></a></article>
+        <article className="td-stat-card lavender"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{animatedStats.available}</strong><b>Available Tests</b><small>Explore and start testing</small></div><Link to="/apps" aria-label="Explore tests"><Icon name="arrow"/></Link></article>
+        <article className="td-stat-card mint"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{animatedStats.completed}</strong><b>Completed</b><small>Great job!</small></div><a href="#my-tests" aria-label="View completed"><Icon name="arrow"/></a></article>
+        <article className="td-stat-card sky"><span className="td-stat-icon"><Icon name="chart" size={34}/></span><div><strong>{animatedStats.success}%</strong><b>Success Rate</b><small>Keep it up!</small></div><a href="#progress" aria-label="View progress"><Icon name="arrow"/></a></article>
+        <article className="td-stat-card gold"><span className="td-stat-icon"><Icon name="star" size={34}/></span><div><strong>{animatedStats.points.toLocaleString()}</strong><b>Points</b><small>Earn more points</small></div><a href="#rewards" aria-label="View rewards"><Icon name="arrow"/></a></article>
       </section>
 
       <section className="td-middle-grid">
         <article className="td-panel td-progress-panel" id="progress">
           <div className="td-panel-heading"><h2><Icon name="chart" size={22}/>Your Progress</h2><div className="td-range">{["1W","1M","3M","1Y"].map((item) => <button key={item} onClick={() => setRange(item)} className={range === item ? "selected" : ""}>{item}</button>)}</div></div>
-          <div className="td-progress-content"><div className="td-progress-ring" style={{ "--progress": `${progress * 3.6}deg` } as CSSProperties & { "--progress": string }}><div><strong>{progress}%</strong><b>Overall<br/>Progress</b></div></div><div className="td-chart-area"><div className="td-chart-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><svg viewBox="0 0 560 180" preserveAspectRatio="none" className="td-line-chart" aria-label="Progress chart"><defs><linearGradient id="td-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#1764ef" stopOpacity=".22"/><stop offset="100%" stopColor="#1764ef" stopOpacity=".02"/></linearGradient></defs>{[10,48,86,124,162].map(y=><line key={y} x1="0" y1={y} x2="560" y2={y} stroke="#dce6f5" strokeWidth="1"/>) }<path d={chartArea} fill="url(#td-chart-fill)"/><path d={chartLine} fill="none" stroke="#1764ef" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>{chartPoints.map((point,index)=><circle key={index} cx={index*93.33} cy={162-point*1.35} r="5" fill="#1764ef"/>)}</svg><div className="td-chart-days">{chartLabels.map(d=><span key={d}>{d}</span>)}</div><b className="td-chart-bubble">{progress}%</b></div></div>
+          <div className="td-progress-content"><div className="td-progress-ring" style={{ "--progress": `${progress * 3.6}deg` } as CSSProperties & { "--progress": string }}><div><strong>{animatedStats.success}%</strong><b>Overall<br/>Progress</b></div></div><div className="td-chart-area"><div className="td-chart-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><svg viewBox="0 0 560 180" preserveAspectRatio="none" className="td-line-chart" aria-label="Progress chart"><defs><linearGradient id="td-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#1764ef" stopOpacity=".22"/><stop offset="100%" stopColor="#1764ef" stopOpacity=".02"/></linearGradient></defs>{[10,48,86,124,162].map(y=><line key={y} x1="0" y1={y} x2="560" y2={y} stroke="#dce6f5" strokeWidth="1"/>) }<path d={chartArea} fill="url(#td-chart-fill)"/><path d={chartLine} fill="none" stroke="#1764ef" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>{chartPoints.map((point,index)=><circle key={index} cx={index*93.33} cy={162-point*1.35} r="5" fill="#1764ef"/>)}</svg><div className="td-chart-days">{chartLabels.map(d=><span key={d}>{d}</span>)}</div><b className="td-chart-bubble">{progress}%</b></div></div>
           <div className="td-track-pill"><span>🏆</span><div><strong>{stats.assignments ? "On track!" : "Your journey starts here"}</strong><small>{stats.assignments ? `${stats.completed} of ${stats.assignments} tests completed` : "Join a test to start building progress"}</small></div></div>
         </article>
 
@@ -227,7 +247,7 @@ export default function DashboardPage() {
         <article className="td-panel td-discover-panel" id="my-tests"><div className="td-panel-heading"><h2><Icon name="star" size={22}/>Discover New Tests</h2><Link to="/apps">View All <Icon name="arrow" size={15}/></Link></div>
           {filteredTests.length ? <div className="td-test-grid">{filteredTests.slice(0,4).map((test,index)=><article className="td-test-card" key={test.id}><div className={`td-test-art art-${index}`}>{test.app?.icon_url ? <img src={test.app.icon_url} alt=""/> : index===0 ? <Icon name="code" size={35}/> : index===1 ? <b>Py</b> : index===2 ? <b>⚛</b> : <b>▤</b>}</div><strong>{test.title}</strong><small>{test.app?.name ?? "TestDZ community"} · {test.min_testers} testers</small><div className="td-test-meta"><span>● {test.status.replace("_"," ")}</span><span><Icon name="clock" size={13}/> Open</span></div><Link to="/apps">View Test <Icon name="arrow" size={14}/></Link></article>)}</div> : <div className="td-empty-tests"><span>🧪</span><strong>{search ? "No tests match your search" : "New tests are on the way"}</strong><p>{search ? "Try another topic or skill." : "Explore the app directory and check back as developers publish new test cycles."}</p><Link to="/apps">Explore Apps <Icon name="arrow" size={15}/></Link></div>}
         </article>
-        <article className="td-panel td-rewards-panel" id="rewards"><div className="td-panel-heading"><h2><span className="td-gift">🎁</span>Your Rewards</h2><a href="#rewards">View All <Icon name="arrow" size={15}/></a></div><div className="td-reward-content"><div className="td-trophy-visual">🏆<span>✦</span></div><div><strong>You've earned<br/>{stats.points.toLocaleString()} points!</strong><p>Keep going to unlock more rewards and badges.</p><Link to="/profile">View Profile <Icon name="arrow" size={14}/></Link></div></div></article>
+        <article className="td-panel td-rewards-panel" id="rewards"><div className="td-panel-heading"><h2><span className="td-gift">🎁</span>Your Rewards</h2><a href="#rewards">View All <Icon name="arrow" size={15}/></a></div><div className="td-reward-content"><div className="td-trophy-visual">🏆<span>✦</span></div><div><strong>You've earned<br/>{animatedStats.points.toLocaleString()} points!</strong><p>Keep going to unlock more rewards and badges.</p><Link to="/profile">View Profile <Icon name="arrow" size={14}/></Link></div></div></article>
       </section>
       <footer className="td-footer">{previewMode ? "Preview only · sample data · no account changes" : `© ${new Date().getFullYear()} TestDZ · Test · Learn · Grow`}</footer>
     </main>
