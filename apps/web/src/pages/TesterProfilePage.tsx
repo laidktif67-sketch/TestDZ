@@ -129,7 +129,7 @@ export default function ProfilePage() {
 
           <section className="tester-summary-card">
             <div className="tester-summary-person">
-              <div className="tester-large-avatar">{avatarUrl ? <img src={avatarUrl} alt="Profile" /> : <span>{initials}</span>}<label className="tester-camera" title="Change profile photo">📷<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} /></label></div>
+              <div className="tester-large-avatar">{avatarUrl ? <img src={avatarUrl} alt="Profile" /> : <span className="tester-avatar-emoji" aria-label="Profile avatar">👨🏻‍💻</span>}<label className="tester-camera" title="Change profile photo">📷<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} /></label></div>
               <div className="tester-summary-copy"><h2>{displayName || "Your Name"} <span className="tester-verified-badge">☑️</span></h2><p>Tester ID: <strong>TST-{userId ? userId.replace(/-/g, "").slice(0, 8).toUpperCase() : "PREVIEW"}</strong> <span className="tester-level">⭐ Level 1</span></p><small>{bio || "Passionate about testing and improving apps ✨"}</small></div>
             </div>
             <div className="tester-stat"><span>🧪</span><strong>—</strong><small>Total Tests</small></div>
