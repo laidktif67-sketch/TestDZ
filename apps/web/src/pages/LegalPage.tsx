@@ -108,7 +108,7 @@ const contentByKind: Record<LegalKind, {
       {
         title: "Testing activity and submitted material",
         paragraphs: [
-          "The database schema includes records for apps, tests, cohorts, assignments, check-ins, feedback, Google Play opt-in events, notifications, reports, disputes and administrative audit history. These records support coordinating tests, reviewing submitted feedback, operating the account and handling reports or disputes.",
+          "The database schema includes records for apps, tests, cohorts, assignments, check-ins, feedback, Google Play opt-in events, notifications, reports, disputes and administrative audit history. These records support coordinating tests, reviewing submitted feedback, operating the account and handling reports or disputes. Report-attachment metadata and the separate test-evidence storage rules appear in a migration explicitly marked staging-only; they must not be assumed active in the deployed database.",
           "Only provide content needed for the relevant test. Do not upload passwords, private keys, confidential business information or unrelated personal information into app descriptions, feedback or report attachments."
         ]
       },
@@ -116,7 +116,7 @@ const contentByKind: Record<LegalKind, {
         title: "Images, storage and visibility",
         paragraphs: [
           "The current migrations configure profile avatars and app icons in public storage buckets. Files stored in those buckets may be accessible publicly; do not treat those image locations as private.",
-          "A separate test-evidence bucket and report-attachment metadata are configured for restricted report evidence. The migration describes access for the reporting tester, the developer responsible for the tested app, and administrators. Do not assume that every uploaded file is private; visibility depends on the specific storage feature."
+          "A separate migration proposes a test-evidence bucket and report-attachment metadata with restricted access for the reporting tester, the developer responsible for the tested app, and administrators. That migration is explicitly marked staging-only and says not to apply it without separate approval, so this draft does not claim that private evidence storage is active in production. Do not assume that every uploaded file is private; visibility depends on the specific storage feature and deployed configuration."
         ]
       },
       {
@@ -143,7 +143,7 @@ const contentByKind: Record<LegalKind, {
       {
         title: "Retention, access, correction and deletion",
         paragraphs: [
-          "The reviewed repository does not establish a complete, verified retention schedule or a working self-service account-deletion process. Some testing, financial, report and audit records may need different retention rules, but the applicable periods and legal grounds have not yet been approved.",
+          "The profile screen currently shows a Close Account action that tells the user to contact TestDZ support, but the reviewed repository does not establish a public support contact or a complete, verified account-deletion workflow. The repository also does not establish a retention schedule. Some testing, financial, report and audit records may need different retention rules, but the applicable periods and legal grounds have not yet been approved.",
           "Before launch, TestDZ must publish a working contact channel and explain how users can request access to, correction of, or deletion of their information, how identity is verified for such requests, and which records may need to be retained under applicable law. This draft does not promise that a request can already be completed through the current UI."
         ]
       },
