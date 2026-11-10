@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import BlurText from "../components/react-bits/BlurText";
 import { useLenis } from "../hooks/useLenis";
@@ -147,12 +147,14 @@ export default function OnboardingPage() {
   useLenis();
   const pageRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const incomingChoice = (location.state as { choice?: string } | null)?.choice;
   const [language, setLanguage] = useState<OnboardingLanguage>(() => {
     const saved = window.localStorage.getItem("testdz-landing-language");
     return saved === "fr" || saved === "ar" ? saved : "en";
   });
   const t = onboardingCopy[language];
-  const [choice, setChoice] = useState("tester");
+  const [choice, setChoice] = useState(() => incomingChoice === "developer" || incomingChoice === "both" ? incomingChoice : "tester");
 
   useEffect(() => {
     const root = pageRef.current;
@@ -187,11 +189,11 @@ export default function OnboardingPage() {
         return;
       }
       const preferredRole = data.session.user.user_metadata?.account_type;
-      if (preferredRole === "tester" || preferredRole === "developer" || preferredRole === "both") {
+      if (!incomingChoice && (preferredRole === "tester" || preferredRole === "developer" || preferredRole === "both")) {
         setChoice(preferredRole);
       }
     });
-  }, [navigate]);
+  }, [navigate, incomingChoice]);
 
   function continueToInterests() {
     navigate("/interests", { state: { choice } });
