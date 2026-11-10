@@ -43,17 +43,18 @@ export default function MyTestsPage(){
  useEffect(()=>{
   if(previewMode){
    setName("John Doe");setRoles(["tester","developer"]);setPoints(2450);setAcceptedFeedback(5);setNotifications(3);
+   const today=new Date();const start=new Date(today);start.setDate(start.getDate()-8);const end=new Date(today);end.setDate(end.getDate()+6);const iso=(d:Date)=>d.toISOString().slice(0,10);const completedOne=new Date(today);completedOne.setDate(completedOne.getDate()-3);const completedTwo=new Date(today);completedTwo.setDate(completedTwo.getDate()-2);const createdOld=new Date(today);createdOld.setDate(createdOld.getDate()-9);const createdRecent=new Date(today);createdRecent.setDate(createdRecent.getDate()-1);
    const demo:Assignment[]=[
-    {id:"p1",status:"active",start_date:"2025-04-07",completed_at:null,created_at:"2025-04-07",test:{id:"t1",title:"Web Development Basics",status:"running",end_date:"2025-04-21",app:{name:"CodeMaster",icon_url:null}},checkins:Array.from({length:8},(_,i)=>({id:"c"+i,checkin_date:"2025-04-"+String(7+i).padStart(2,"0"),created_at:"2025-04-"+String(7+i).padStart(2,"0")+"T10:00:00Z"}))},
-    {id:"p2",status:"completed",start_date:"2025-04-01",completed_at:"2025-04-14T10:00:00Z",created_at:"2025-04-01",test:{id:"t2",title:"Python Basics",status:"completed",end_date:"2025-04-14",app:{name:"Python",icon_url:null}},checkins:[]},
-    {id:"p3",status:"completed",start_date:"2025-04-01",completed_at:"2025-04-15T10:00:00Z",created_at:"2025-04-01",test:{id:"t3",title:"Data Science Intro",status:"completed",end_date:"2025-04-15",app:{name:"DataLab",icon_url:null}},checkins:[]},
-    {id:"p4",status:"pending",start_date:null,completed_at:null,created_at:"2025-04-18",test:{id:"t4",title:"React Native Essentials",status:"ready",end_date:null,app:{name:"React Native",icon_url:null}},checkins:[]},
-    {id:"p5",status:"pending",start_date:null,completed_at:null,created_at:"2025-04-19",test:{id:"t5",title:"UI Design Foundations",status:"recruiting",end_date:null,app:{name:"DesignLab",icon_url:null}},checkins:[]}
+    {id:"p1",status:"active",start_date:iso(start),completed_at:null,created_at:iso(start),test:{id:"t1",title:"Web Development Basics",status:"running",end_date:iso(end),app:{name:"CodeMaster",icon_url:null}},checkins:Array.from({length:8},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return{id:"c"+i,checkin_date:iso(d),created_at:iso(d)+"T10:00:00Z"};})},
+    {id:"p2",status:"completed",start_date:iso(createdOld),completed_at:completedOne.toISOString(),created_at:iso(createdOld),test:{id:"t2",title:"Python Basics",status:"completed",end_date:iso(completedOne),app:{name:"Python",icon_url:null}},checkins:[]},
+    {id:"p3",status:"completed",start_date:iso(createdOld),completed_at:completedTwo.toISOString(),created_at:iso(createdOld),test:{id:"t3",title:"Data Science Intro",status:"completed",end_date:iso(completedTwo),app:{name:"DataLab",icon_url:null}},checkins:[]},
+    {id:"p4",status:"pending",start_date:null,completed_at:null,created_at:iso(createdRecent),test:{id:"t4",title:"React Native Essentials",status:"ready",end_date:null,app:{name:"React Native",icon_url:null}},checkins:[]},
+    {id:"p5",status:"pending",start_date:null,completed_at:null,created_at:iso(today),test:{id:"t5",title:"UI Design Foundations",status:"recruiting",end_date:null,app:{name:"DesignLab",icon_url:null}},checkins:[]}
    ];
    setAssignments(demo);setActivities([
-    {id:"a1",kind:"completed",title:"You earned +120 points",detail:"from Python Basics",date:"2025-04-20T12:00:00Z"},
-    {id:"a2",kind:"feedback",title:"You submitted feedback",detail:"on Web Development Basics",date:"2025-04-15T12:00:00Z"},
-    {id:"a3",kind:"checkin",title:"You completed a test check-in",detail:"Web Development Basics",date:"2025-04-15T08:00:00Z"}
+    {id:"a1",kind:"completed",title:"You earned +120 points",detail:"from Python Basics",date:completedOne.toISOString()},
+    {id:"a2",kind:"feedback",title:"You submitted feedback",detail:"on Web Development Basics",date:completedTwo.toISOString()},
+    {id:"a3",kind:"checkin",title:"You completed a test check-in",detail:"Web Development Basics",date:iso(start)+"T08:00:00Z"}
    ]);setLoading(false);return;
   }
   const client=supabase;if(!client){setLoading(false);return;}let alive=true;
@@ -63,7 +64,7 @@ export default function MyTestsPage(){
     client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
     client.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
     client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id",userId).order("created_at",{ascending:false}),
-    client.from("feedback").select("id,quality_status,created_at,assignment_id").eq("tester_id",userId).order("created_at",{ascending:false}).limit(20),
+    client.from("feedback").select("id,quality_status,created_at,assignment_id").eq("tester_id",userId).order("created_at",{ascending:false}),
     client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
    ]);
    if(!alive)return;
@@ -103,7 +104,7 @@ export default function MyTestsPage(){
    {previewMode?<div className="td-signout td-preview-note">Preview mode · read only</div>:<button className="td-signout" onClick={async()=>{await supabase?.auth.signOut();}}><I name="logout"/>Sign Out</button>}
   </aside>
   <main className="td-main mt-main">
-   <header className="td-topbar"><label className="td-search"><I name="search" size={21}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search your tests…"/></label><div className="td-top-actions"><button className="td-notification" aria-label="Notifications"><I name="bell" size={22}/>{notifications>0&&<i>{notifications>9?"9+":notifications}</i>}</button><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:firstName.slice(0,2).toUpperCase()}</span><b>⌄</b></Link></div></header>
+   <header className="td-topbar"><label className="td-search"><I name="search" size={21}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search your tests…"/></label><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><I name="bell" size={22}/>{notifications>0&&<i>{notifications>9?"9+":notifications}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:firstName.slice(0,2).toUpperCase()}</span><b>⌄</b></Link></div></header>
    <div className="mt-breadcrumb"><Link to="/tester-dashboard">← Back to Dashboard</Link><span>/</span><strong>Tester Progress</strong></div>
    <section className="mt-hero"><div className="mt-avatar">{avatar?<img src={avatar} alt=""/>:<span>{firstName.slice(0,1).toUpperCase()}</span>}<i>✓</i></div><div className="mt-identity"><h1>{name}</h1><p><span className="mt-online-dot"/>Active Tester <b>·</b> Member since {session?.user.created_at?dateLabel(session.user.created_at):"your first day"}</p><strong className="mt-points"><I name="star" size={18}/>{points.toLocaleString()} pts</strong></div><div className="mt-quote"><p>“Keep going!<br/>You’re doing great!”</p><span>✦</span></div><div className="mt-hero-trophy"><I name="trophy" size={86}/><i>✦</i></div></section>
    {error&&<div className="mt-error">{error}</div>}
