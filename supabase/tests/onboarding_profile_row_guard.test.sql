@@ -7,15 +7,15 @@ select ok(
   'private onboarding function exists'
 );
 
-select like(
-  pg_get_functiondef('private.complete_onboarding(text[],jsonb)'::regprocedure),
-  '%having count(*) > 1%',
+select ok(
+  pg_get_functiondef('private.complete_onboarding(text[],jsonb)'::regprocedure)
+    LIKE '%having count(*) > 1%',
   'duplicate role selections are rejected'
 );
 
-select like(
-  pg_get_functiondef('private.complete_onboarding(text[],jsonb)'::regprocedure),
-  '%if not found%',
+select ok(
+  pg_get_functiondef('private.complete_onboarding(text[],jsonb)'::regprocedure)
+    LIKE '%if not found%',
   'missing profile row causes an exception'
 );
 
