@@ -161,19 +161,20 @@ export default function DeveloperDashboardPage() {
       ];
       setApps(sample);setName("John Doe");setCanTester(true);setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
     }
-    if(!supabase){setError("Supabase is not configured.");setLoading(false);setSessionReady(true);return;}
+    const client=supabase;
+    if(!client){setError("Supabase is not configured.");setLoading(false);setSessionReady(true);return;}
     let alive=true;
     const load=async()=>{
-      const {data:sessionData}=await supabase.auth.getSession();
+      const {data:sessionData}=await client.auth.getSession();
       if(!alive)return;
       const user=sessionData.session?.user;
       if(!user){setHasSession(false);setSessionReady(true);setLoading(false);return;}
       setHasSession(true);
       const [roleRes,profileRes,appsRes,limitRes]=await Promise.all([
-        supabase!.from("user_roles").select("role").eq("user_id",user.id),
-        supabase!.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
-        supabase!.from("apps").select("id,developer_id,name,package_name,description,category,icon_url,status,created_at").order("created_at",{ascending:false}),
-        supabase!.rpc("get_app_limit")
+        client.from("user_roles").select("role").eq("user_id",user.id),
+        client.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
+        client.from("apps").select("id,developer_id,name,package_name,description,category,icon_url,status,created_at").order("created_at",{ascending:false}),
+        client.rpc("get_app_limit")
       ]);
       if(!alive)return;
       const roles=(roleRes.data??[]).map((row:{role:string})=>row.role);
