@@ -6,6 +6,7 @@ import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "../lib/supabase";
 import { Brand } from "../components/Brand";
 import { APP_CATEGORIES, appError } from "../lib/app-utils";
+import { createApp, getAppLimit, listApps, updateApp, uploadAppIcon } from "../features/apps/apps-api";
 
 function useCurrentUser() {
   const [userId,setUserId]=useState<string|null>(null);
@@ -36,8 +37,8 @@ function AppsPage() {
     if(!supabase)return;
     setLoading(true);setError("");
     const [{data:rows,error:appsError},{data:limits,error:limitError}]=await Promise.all([
-      supabase.from("apps").select("id,developer_id,name,package_name,description,category,icon_url,status,created_at").order("created_at",{ascending:false}),
-      supabase.rpc("get_app_limit")
+      listApps(),
+      getAppLimit()
     ]);
     if(appsError)setError("تعذر تحميل التطبيقات. حاول تحديث الصفحة.");
     else setApps((rows??[]) as AppRecord[]);
@@ -63,19 +64,13 @@ function AppsPage() {
     if(name.trim().length<3||name.trim().length>50||description.trim().length<20||description.trim().length>500){setError("الاسم 3–50 حرفاً والوصف 20–500 حرف.");return;}
     if(!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(packageName.trim())){setError("اسم الحزمة غير صالح. مثال: dz.testdz.myapp");return;}
     setBusy(true);setError("");setNotice("");
-    const {data:appId,error:createError}=await supabase.rpc("create_app",{p_name:name,p_package_name:packageName,p_description:description,p_category:category});
+    const {data:appId,error:createError}=await createApp({name,packageName,description,category});
     if(createError){setError(appError(createError.message));setBusy(false);return;}
     let postCreateWarning = "";
     if(icon){
-      const ext=icon.type==="image/png"?"png":"jpg";
-      const path=userId+"/"+appId+"/icon."+ext;
-      const {error:uploadError}=await supabase.storage.from("app-icons").upload(path,icon,{upsert:true,contentType:icon.type,cacheControl:"3600"});
+      const {uploadError,updateError}=await uploadAppIcon(userId,String(appId),icon);
       if(uploadError){postCreateWarning="أُنشئ التطبيق، لكن تعذر رفع الأيقونة. يمكنك إضافتها لاحقاً.";}
-      else{
-        const {data}=supabase.storage.from("app-icons").getPublicUrl(path);
-        const {error:updateError}=await supabase.rpc("update_app",{p_app_id:appId,p_name:name,p_description:description,p_category:category,p_icon_url:data.publicUrl});
-        if(updateError)postCreateWarning="أُنشئ التطبيق ورُفعت الأيقونة، لكن تعذر ربطها بالتطبيق.";
-      }
+      else if(updateError){postCreateWarning="أُنشئ التطبيق ورُفعت الأيقونة، لكن تعذر ربطها بالتطبيق.";}
     }
     resetForm();setNotice("تم إنشاء التطبيق كمسودة.");await load();if(postCreateWarning)setError(postCreateWarning);setBusy(false);
   }

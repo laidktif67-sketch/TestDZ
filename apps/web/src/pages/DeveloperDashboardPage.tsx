@@ -3,6 +3,7 @@ import type { AppRecord } from "@testdz/types";
 import type { ReactNode } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { getAppLimit, listApps } from "../features/apps/apps-api";
 import "../styles/developer-dashboard.css";
 
 type Language = "en" | "fr" | "ar";
@@ -173,8 +174,8 @@ export default function DeveloperDashboardPage() {
       const [roleRes,profileRes,appsRes,limitRes]=await Promise.all([
         client.from("user_roles").select("role").eq("user_id",user.id),
         client.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
-        client.from("apps").select("id,developer_id,name,package_name,description,category,icon_url,status,created_at").order("created_at",{ascending:false}),
-        client.rpc("get_app_limit")
+        listApps(),
+        getAppLimit()
       ]);
       if(!alive)return;
       const roles=(roleRes.data??[]).map((row:{role:string})=>row.role);
