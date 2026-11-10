@@ -258,7 +258,7 @@ export default function DeveloperDashboardPage() {
             <Link to="/apps" className="dd-quick-item q-blue"><span><Icon name="plus" size={24}/></span><div><strong>{t.createApp}</strong><small>{t.create}</small></div><Icon name="arrow"/></Link>
             <Link to="/apps" className="dd-quick-item q-green"><span><Icon name="apps" size={24}/></span><div><strong>{t.manage}</strong><small>{t.all}</small></div><Icon name="arrow"/></Link>
             <Link to="/profile" className="dd-quick-item q-violet"><span><Icon name="wallet" size={24}/></span><div><strong>{t.billing}</strong><small>{limit?.plan_code?.toUpperCase()||"—"}</small></div><Icon name="arrow"/></Link>
-            <Link to="/tester-dashboard" className="dd-quick-item q-amber"><span><Icon name="search" size={24}/></span><div><strong>{t.discover}</strong><small>{t.tests}</small></div><Icon name="arrow"/></Link>
+            {canTester&&<Link to="/tester-dashboard" className="dd-quick-item q-amber"><span><Icon name="search" size={24}/></span><div><strong>{t.discover}</strong><small>{t.tests}</small></div><Icon name="arrow"/></Link>}
           </div>
         </article>
       </section>
