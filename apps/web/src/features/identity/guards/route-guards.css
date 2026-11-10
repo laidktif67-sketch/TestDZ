@@ -57,3 +57,14 @@
 @media (prefers-reduced-motion: reduce) {
   .route-guard-spinner { animation-duration: 2s; }
 }
+
+.role-access-notice {
+  margin: 16px 24px 0;
+  padding: 12px 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  color: #17427c;
+  background: #eff6ff;
+  font-size: 14px;
+  line-height: 1.5;
+}
