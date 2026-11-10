@@ -1,6 +1,6 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 import "../styles/tester-dashboard.css";
 
 export function Icon({ name, size = 20 }: { name: string; size?: number }) {

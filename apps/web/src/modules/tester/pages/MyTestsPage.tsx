@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../../lib/supabase";
 import "../styles/tester-dashboard.css";
-import "../styles/my-tests.css";
+import "../../../styles/my-tests.css";
 import TesterSidebar from "../components/TesterSidebar";
 
 type Assignment = { id:string; status:string; start_date:string|null; completed_at:string|null; created_at:string; points_awarded?:number|null; test?:{id:string;title:string;status:string;end_date:string|null;app?:{name:string;icon_url:string|null}|null}|null; checkins?:{id:string;checkin_date:string;created_at:string}[] };

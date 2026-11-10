@@ -3,9 +3,9 @@ import type { FormEvent, ReactNode } from "react";
 import imageCompression from "browser-image-compression";
 import { Link, useNavigate } from "react-router-dom";
 import type { AvatarMimeType } from "@testdz/types";
-import { profilesApi } from "../features/profiles/profiles-api";
-import { identityApi } from "../features/identity/identity-api";
-import { useIdentity } from "../features/identity/hooks/useIdentity";
+import { profilesApi } from "../../../features/profiles/profiles-api";
+import { identityApi } from "../../../features/identity/identity-api";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 
 
