@@ -38,7 +38,7 @@ export default function TesterSectionPage() {
     { label: "My Tests", icon: "tests", href: "/my-tests" },
     { label: "Feedback History", icon: "star", href: "/feedback-history", active: location.pathname === "/feedback-history" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards", active: location.pathname === "/wallet-rewards" },
-    { label: "Profile", icon: "settings", href: "/profile" },
+    { label: "Profile", icon: "user", href: "/profile" },
     { label: "Help & Support", icon: "bell", href: "/help-support", active: location.pathname === "/help-support" },
     { label: "Settings", icon: "settings", href: "/settings", active: location.pathname === "/settings" },
     ...(isDeveloper || isAdmin ? [{ label: "Discover Apps", icon: "search", href: "/apps" }] : []),
