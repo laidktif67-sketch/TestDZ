@@ -33,7 +33,7 @@ function I({name,size=20}:{name:string;size?:number}){
  return <svg className="mt-icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.star}</svg>;
 }
 function dateLabel(value:string){return new Date(value).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});}
-function dayDiff(a:string,b:string){return Math.max(0,Math.ceil((new Date(b+"T23:59:59").getTime()-new Date(a+"T00:00:00").getTime())/86400000));}
+function dayDiff(a:string,b:string){return Math.max(0,Math.round((new Date(b+"T00:00:00").getTime()-new Date(a+"T00:00:00").getTime())/86400000));}
 export default function MyTestsPage(){
  const [session,setSession]=useState<Session|null>(null),[roles,setRoles]=useState<string[]>([]);
  const [name,setName]=useState("there"),[avatar,setAvatar]=useState(""),[assignments,setAssignments]=useState<Assignment[]>([]);
