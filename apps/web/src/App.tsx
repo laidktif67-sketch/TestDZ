@@ -20,6 +20,7 @@ import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
+import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
 import AuthGuard from "./shared/guards/AuthGuard";
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/feedback-history" element={<TesterSectionPage />} />
           <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
           <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
+          <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
           <Route path="/help-support" element={<TesterSectionPage />} />
           <Route path="/settings" element={<TesterSectionPage />} />
           <Route element={<RoleGuard requiredRole="admin" />}>
