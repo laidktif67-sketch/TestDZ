@@ -10,7 +10,7 @@ type OnboardingLanguage = "en" | "fr" | "ar";
 
 const onboardingCopy = {
   en: {
-    language: "Choose language", roleLabel: "Choose your account role", trustNote: "Your choice can be changed later in account settings.", step: "Step 3 · Set up your account", title: "Choose Your Account Type",
+    language: "Choose language", roleLabel: "Choose your account role", trustNote: "Your choice can be changed later in account settings.", step: "Step 2 · Set up your account", title: "Choose Your Account Type",
     intro: "Select the role that best describes you. You can always change this later in your account settings.",
     tester: "Tester", testerBody: "Participate in tests, earn points and help improve products.",
     developer: "Developer", developerBody: "Publish your applications, create testing campaigns and get useful feedback.",
@@ -18,10 +18,10 @@ const onboardingCopy = {
     interests: "What are you interested in?", optional: "Optional",
     interestNames: ["Tools & Productivity", "Education", "Gaming", "E-commerce", "Health & Fitness", "Social Media", "Other"],
     continue: "Continue", saving: "Saving...", skip: "Skip for now", errorConfig: "Supabase is not configured.",
-    errorSave: "Could not save your account setup. Please try again.", progress: "Step 3 of 4"
+    errorSave: "Could not save your account setup. Please try again.", progress: "Step 2 of 4"
   },
   fr: {
-    language: "Choisir la langue", roleLabel: "Choisissez votre type de compte", trustNote: "Vous pourrez modifier votre choix dans les paramètres.", step: "Étape 3 · Configurez votre compte", title: "Choisissez votre type de compte",
+    language: "Choisir la langue", roleLabel: "Choisissez votre type de compte", trustNote: "Vous pourrez modifier votre choix dans les paramètres.", step: "Étape 2 · Configurez votre compte", title: "Choisissez votre type de compte",
     intro: "Sélectionnez le rôle qui vous décrit le mieux. Vous pourrez le modifier plus tard dans les paramètres.",
     tester: "Testeur", testerBody: "Participez aux tests, gagnez des points et contribuez à améliorer les produits.",
     developer: "Développeur", developerBody: "Publiez vos applications, créez des campagnes de test et recevez des avis utiles.",
@@ -29,10 +29,10 @@ const onboardingCopy = {
     interests: "Quels sont vos centres d’intérêt ?", optional: "Facultatif",
     interestNames: ["Outils et productivité", "Éducation", "Jeux", "E-commerce", "Santé et fitness", "Réseaux sociaux", "Autre"],
     continue: "Continuer", saving: "Enregistrement...", skip: "Passer pour le moment", errorConfig: "Supabase n’est pas configuré.",
-    errorSave: "Impossible d’enregistrer votre compte. Veuillez réessayer.", progress: "Étape 3 sur 4"
+    errorSave: "Impossible d’enregistrer votre compte. Veuillez réessayer.", progress: "Étape 2 sur 4"
   },
   ar: {
-    language: "اختر اللغة", roleLabel: "اختر نوع الحساب", trustNote: "يمكنك تغيير اختيارك لاحقاً من إعدادات الحساب.", step: "الخطوة الثالثة · إعداد حسابك", title: "اختر نوع حسابك",
+    language: "اختر اللغة", roleLabel: "اختر نوع الحساب", trustNote: "يمكنك تغيير اختيارك لاحقاً من إعدادات الحساب.", step: "الخطوة الثانية · إعداد حسابك", title: "اختر نوع حسابك",
     intro: "اختر الدور الذي يصفك بشكل أفضل. يمكنك تغيير ذلك لاحقاً من إعدادات حسابك.",
     tester: "مختبِر", testerBody: "شارك في اختبار التطبيقات، واكسب النقاط وساعد على تحسين المنتجات.",
     developer: "مطوّر", developerBody: "انشر تطبيقاتك وأنشئ حملات اختبار واحصل على آراء مفيدة.",
@@ -40,7 +40,7 @@ const onboardingCopy = {
     interests: "ما المجالات التي تهمك؟", optional: "اختياري",
     interestNames: ["أدوات وإنتاجية", "تعليم", "ألعاب", "تجارة إلكترونية", "صحة ولياقة", "شبكات اجتماعية", "أخرى"],
     continue: "متابعة", saving: "جارٍ الحفظ...", skip: "تخطي الآن", errorConfig: "إعداد Supabase غير مكتمل.",
-    errorSave: "تعذر حفظ إعدادات الحساب. حاول مرة أخرى.", progress: "الخطوة 3 من 4"
+    errorSave: "تعذر حفظ إعدادات الحساب. حاول مرة أخرى.", progress: "الخطوة 2 من 4"
   }
 } as const;
 
@@ -89,8 +89,8 @@ function RoleIllustration({ type }: { type: "tester" | "developer" | "both" }) {
 function ProgressSteps({ label }: { label: string }) {
   return <div className="onboarding-progress" aria-label={label}>
     <span className="done"><b>✓</b></span><i />
-    <span className="done"><b>✓</b></span><i />
-    <span className="current">3</span><i />
+    <span className="current">2</span><i />
+    <span className="upcoming">3</span><i />
     <span className="upcoming">4</span>
   </div>;
 }
@@ -153,8 +153,6 @@ export default function OnboardingPage() {
   });
   const t = onboardingCopy[language];
   const [choice, setChoice] = useState("tester");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const root = pageRef.current;
@@ -195,18 +193,8 @@ export default function OnboardingPage() {
     });
   }, [navigate]);
 
-  async function finish() {
-    if (!supabase) {
-      setError(t.errorConfig);
-      return;
-    }
-    setBusy(true);
-    setError("");
-    const rolesToSave = choice === "both" ? ["tester", "developer"] : [choice];
-    const { error: err } = await supabase.rpc("complete_onboarding", { p_roles: rolesToSave, p_interests: [] });
-    if (err) setError(t.errorSave);
-    else navigate("/dashboard", { replace: true });
-    setBusy(false);
+  function continueToInterests() {
+    navigate("/interests", { state: { choice } });
   }
 
   return <main ref={pageRef} className="onboarding-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
@@ -237,11 +225,10 @@ export default function OnboardingPage() {
           <span className="role-description">{t[`${role.value}Body` as "testerBody" | "developerBody" | "bothBody"]}</span>
         </button>)}
       </div>
-      {error && <div className="notice notice-error onboarding-error" role="alert">{error}</div>}
       <p className="onboarding-trust-note"><span aria-hidden="true">✓</span>{t.trustNote}</p>
       <div className="onboarding-actions">
-        <button className="onboarding-continue" disabled={busy} onClick={finish}>{busy ? t.saving : t.continue} <span aria-hidden="true">{language === "ar" ? "←" : "→"}</span></button>
-        <button className="onboarding-skip" type="button" onClick={() => setChoice("tester")}>{t.skip}</button>
+        <button className="onboarding-continue" onClick={continueToInterests}>{t.continue} <span aria-hidden="true">{language === "ar" ? "←" : "→"}</span></button>
+        <button className="onboarding-skip" type="button" onClick={() => navigate("/interests", { state: { choice: "tester" } })}>{t.skip}</button>
       </div>
     </section>
   </main>;
