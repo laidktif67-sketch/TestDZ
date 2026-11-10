@@ -844,9 +844,9 @@ function ResetPasswordPage() {
         </Link>
         <nav className="reset-language" aria-label="Language">
           <span className="reset-globe" aria-hidden="true">◎</span>
-          <button type="button" aria-label="Arabic language">العربية⌄</button>
+          <span className="reset-language-option reset-language-active">العربية⌄</span>
           <i aria-hidden="true" />
-          <button type="button" aria-label="French language">Français</button>
+          <span className="reset-language-option">Français</span>
         </nav>
       </header>
 
