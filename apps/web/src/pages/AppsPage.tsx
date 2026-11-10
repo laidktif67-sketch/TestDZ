@@ -6,7 +6,7 @@ import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "../lib/supabase";
 import { Brand } from "../components/Brand";
 import { APP_CATEGORIES, appError } from "../lib/app-utils";
-import { createApp, getAppLimit, listApps, updateApp, uploadAppIcon } from "../features/apps/apps-api";
+import { createApp, getAppLimit, listApps, uploadAppIcon } from "../features/apps/apps-api";
 
 function useCurrentUser() {
   const [userId,setUserId]=useState<string|null>(null);
