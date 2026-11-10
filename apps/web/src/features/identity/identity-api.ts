@@ -1,17 +1,7 @@
 import { supabase } from "../../lib/supabase";
+import type { IdentityOAuthProvider, IdentitySignUpInput } from "@testdz/types";
 
-export type IdentityOAuthProvider = "google" | "github" | "azure";
-
-type SignUpInput = {
-  email: string;
-  password: string;
-  metadata: {
-    full_name: string;
-    phone: string | null;
-    account_type: "tester" | "developer";
-  };
-  emailRedirectTo: string;
-};
+export type { IdentityOAuthProvider } from "@testdz/types";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -19,7 +9,7 @@ function getClient() {
 }
 
 export const identityApi = {
-  signUp({ email, password, metadata, emailRedirectTo }: SignUpInput) {
+  signUp({ email, password, metadata, emailRedirectTo }: IdentitySignUpInput) {
     return getClient().auth.signUp({
       email,
       password,

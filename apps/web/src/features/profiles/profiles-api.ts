@@ -1,20 +1,24 @@
 import { supabase } from "../../lib/supabase";
-import type { TablesUpdate } from "@testdz/types";
+import type {
+  AvatarUploadInput,
+  AvatarUploadResult,
+  IdentityUserMetadataUpdate,
+  ProfileCompletionUpdate,
+  ProfileSettingsUpdate,
+} from "@testdz/types";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
   return supabase;
 }
 
-export type ProfileSettingsUpdate = Pick<
-  TablesUpdate<"profiles">,
-  "display_name" | "phone" | "bio"
->;
+const AVATAR_EXTENSIONS = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+} as const;
 
-export type ProfileCompletionUpdate = Pick<
-  TablesUpdate<"profiles">,
-  "display_name" | "bio" | "locale"
->;
+const LEGACY_AVATAR_NAME = /^avatar(?:-[0-9]+)?\.(?:jpe?g|png|webp)$/i;
 
 export const profilesApi = {
   isConfigured() {
@@ -41,7 +45,8 @@ export const profilesApi = {
   },
 
   getProfile(userId: string) {
-    return getClient().from("profiles")
+    return getClient()
+      .from("profiles")
       .select("display_name, phone, bio, avatar_url, is_verified, locale")
       .eq("id", userId)
       .single();
@@ -55,43 +60,75 @@ export const profilesApi = {
     return getClient().from("profiles").update(input).eq("id", userId);
   },
 
-  updateUserMetadata(data: {
-    username: string;
-    country: string;
-    portfolio_url: string;
-  }) {
+  updateUserMetadata(data: IdentityUserMetadataUpdate) {
     return getClient().auth.updateUser({ data });
   },
 
-  async uploadAvatar(userId: string, file: File) {
+  async uploadAvatar(userId: string, input: AvatarUploadInput): Promise<AvatarUploadResult> {
     const client = getClient();
-    const extension =
-      file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-    const path = userId + "/avatar." + extension;
+    const extension = AVATAR_EXTENSIONS[input.contentType];
 
-    const { error: uploadError } = await client.storage
-      .from("avatars")
-      .upload(path, file, {
-        upsert: true,
-        contentType: file.type,
-        cacheControl: "3600",
-      });
-
-    if (uploadError) {
-      return { url: null, stage: "upload" as const, error: uploadError };
+    if (!extension || input.body.byteLength === 0) {
+      return {
+        ok: false,
+        stage: "upload",
+        errorCode: "AVATAR_UPLOAD_FAILED",
+        cleanupPending: false,
+      };
     }
 
-    const { data } = client.storage.from("avatars").getPublicUrl(path);
-    const url = data.publicUrl + "?v=" + Date.now();
+    // Versioned names avoid CDN stale-content issues and do not require Storage upsert permissions.
+    const path = `${userId}/avatar-${Date.now()}.${extension}`;
+    const bucket = client.storage.from("avatars");
+    const { error: uploadError } = await bucket.upload(path, input.body, {
+      upsert: false,
+      contentType: input.contentType,
+      cacheControl: "3600",
+    });
+
+    if (uploadError) {
+      return {
+        ok: false,
+        stage: "upload",
+        errorCode: "AVATAR_UPLOAD_FAILED",
+        cleanupPending: false,
+      };
+    }
+
+    const { data } = bucket.getPublicUrl(path);
+    const url = `${data.publicUrl}?v=${Date.now()}`;
     const { error: profileError } = await client
       .from("profiles")
       .update({ avatar_url: url })
       .eq("id", userId);
 
     if (profileError) {
-      return { url: null, stage: "profile-update" as const, error: profileError };
+      // Keep the previously saved avatar intact; remove only this newly uploaded object.
+      const { error: rollbackError } = await bucket.remove([path]);
+      return {
+        ok: false,
+        stage: "profile-update",
+        errorCode: "PROFILE_UPDATE_FAILED",
+        cleanupPending: Boolean(rollbackError),
+      };
     }
 
-    return { url, stage: null, error: null };
+    // Cleanup is deliberately best-effort and happens only after the profile points to the new image.
+    // RLS may deny listing/deleting; in that case the new avatar remains valid and cleanup is reported as pending.
+    const { data: objects, error: listError } = await bucket.list(userId, {
+      limit: 1000,
+      search: "avatar",
+    });
+
+    if (listError) return { ok: true, url, cleanupPending: true };
+
+    const obsoletePaths = (objects ?? [])
+      .filter((object) => object.name !== path.split("/").pop() && LEGACY_AVATAR_NAME.test(object.name))
+      .map((object) => `${userId}/${object.name}`);
+
+    if (obsoletePaths.length === 0) return { ok: true, url, cleanupPending: false };
+
+    const { error: cleanupError } = await bucket.remove(obsoletePaths);
+    return { ok: true, url, cleanupPending: Boolean(cleanupError) };
   },
 };
