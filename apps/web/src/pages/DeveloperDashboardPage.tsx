@@ -247,7 +247,10 @@ export default function DeveloperDashboardPage() {
         </article>
         <article className="dd-panel dd-recent">
           <div className="dd-panel-head"><h2><Icon name="clock"/>{t.recent}</h2><Link to="/apps">{t.view}<Icon name="arrow" size={15}/></Link></div>
-          {apps.length?<div className="dd-recent-list">{[...apps].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,4).map(app=><Link to={"/apps/"+app.id} key={app.id}><span className="dd-recent-icon"><Icon name="box"/></span><span><strong>{app.name}</strong><small>{app.package_name}</small></span><time>{new Date(app.created_at).toLocaleDateString(language==="ar"?"ar-DZ":language==="fr"?"fr-FR":"en-GB")}</time></Link>)}</div>:<div className="dd-recent-empty"><Icon name="clock" size={31}/><p>{t.noTrend}</p></div>}
+          <div className="dd-recent-content">
+            {apps.length?<div className="dd-recent-list">{[...apps].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,4).map(app=><Link to={"/apps/"+app.id} key={app.id}><span className="dd-recent-icon"><Icon name="box"/></span><span><strong>{app.name}</strong><small>{app.package_name}</small></span><time>{new Date(app.created_at).toLocaleDateString(language==="ar"?"ar-DZ":language==="fr"?"fr-FR":"en-GB")}</time></Link>)}</div>:<div className="dd-recent-empty"><Icon name="clock" size={31}/><p>{t.noTrend}</p></div>}
+            <div className="dd-recent-trophy" aria-hidden="true"><Icon name="award" size={104}/><span>TestDZ</span></div>
+          </div>
           <div className="dd-recent-foot"><span>{t.latest}</span><Icon name="rocket" size={23}/></div>
         </article>
       </section>
