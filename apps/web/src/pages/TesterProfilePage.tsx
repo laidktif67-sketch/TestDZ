@@ -64,6 +64,7 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
+  const [savedProfile, setSavedProfile] = useState({ displayName: "", phone: "", bio: "" });
 
   useEffect(() => {
     if (!profilesApi.isConfigured()) return;
@@ -76,6 +77,7 @@ export default function ProfilePage() {
       setDisplayName(profile.display_name ?? "");
       setPhone(profile.phone ?? "");
       setBio(profile.bio ?? "");
+      setSavedProfile({ displayName: profile.display_name ?? "", phone: profile.phone ?? "", bio: profile.bio ?? "" });
       setInterests(Array.isArray(profile.interests) ? profile.interests.filter((item): item is string => typeof item === "string") : []);
       setAvatarUrl(profile.avatar_url ?? "");
       setVerified(Boolean(profile.is_verified));
@@ -96,7 +98,11 @@ export default function ProfilePage() {
     try {
       const { error: err } = await profilesApi.updateSettings(userId, { display_name: displayName.trim(), phone: phone.trim() || null, bio: bio.trim() || null });
       if (err) setError("Couldn't save your profile. Check the details and try again.");
-      else { setMessage("Profile updated successfully!"); setEditing(false); }
+      else {
+        setSavedProfile({ displayName: displayName.trim(), phone: phone.trim(), bio: bio.trim() });
+        setMessage("Profile updated successfully!");
+        setEditing(false);
+      }
     } catch { setError("Couldn't save your profile. Check the details and try again."); }
     finally { setBusy(false); }
   }
@@ -172,7 +178,16 @@ export default function ProfilePage() {
           <div className="tester-profile-grid">
             <div className="tester-profile-left">
               <section className="tester-panel tester-personal-panel">
-                <div className="tester-panel-heading"><span className="tester-panel-icon blue"><ProfileIcon name="user" /></span><div><h2>Personal Information</h2><p>Update your basic information</p></div><button className="tester-edit-button" type="button" onClick={() => setEditing((value) => !value)}>{editing ? "Cancel" : "✎ Edit"}</button></div>
+                <div className="tester-panel-heading"><span className="tester-panel-icon blue"><ProfileIcon name="user" /></span><div><h2>Personal Information</h2><p>Update your basic information</p></div><button className="tester-edit-button" type="button" onClick={() => {
+                  if (editing) {
+                    setDisplayName(savedProfile.displayName);
+                    setPhone(savedProfile.phone);
+                    setBio(savedProfile.bio);
+                    setEditing(false);
+                  } else {
+                    setEditing(true);
+                  }
+                }}>{editing ? "Cancel" : "✎ Edit"}</button></div>
                 <form className="tester-profile-form" onSubmit={save}>
                   <div className="tester-info-illustration" aria-hidden="true"><div className="tester-id-card"><ProfileIcon name="id-card" /><span /><span /><b><ProfileIcon name="check-circle" /></b></div></div>
                   <div className="tester-profile-fields">
