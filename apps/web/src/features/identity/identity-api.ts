@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type { IdentityOAuthProvider, IdentitySignUpInput, IdentityUserMetadataUpdate } from "@testdz/types";
 
 export type { IdentityOAuthProvider } from "@testdz/types";
@@ -9,6 +10,18 @@ function getClient() {
 }
 
 export const identityApi = {
+  isConfigured() {
+    return Boolean(supabase);
+  },
+
+  onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
+    return getClient().auth.onAuthStateChange(callback);
+  },
+
+  signOut() {
+    return getClient().auth.signOut();
+  },
+
   getCurrentUser() {
     return getClient().auth.getUser();
   },

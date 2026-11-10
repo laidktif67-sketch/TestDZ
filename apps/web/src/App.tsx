@@ -14,10 +14,11 @@ import MyTestsPage from "./pages/MyTestsPage";
 import DeveloperDashboardPage from "./pages/DeveloperDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
+import { IdentityProvider } from "./features/identity/identity-provider";
 
 
 
 
 export default function App() {
-  return <Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/interests" element={<InterestsPage />} /><Route path="/complete-profile" element={<ProfileCompletionPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/tester-dashboard" element={<TesterDashboardPage />} /><Route path="/my-tests" element={<MyTestsPage />} /><Route path="/dashboard" element={<Navigate to="/tester-dashboard" replace />} /><Route path="/developer-dashboard" element={<DeveloperDashboardPage />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+  return <IdentityProvider><Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/interests" element={<InterestsPage />} /><Route path="/complete-profile" element={<ProfileCompletionPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/tester-dashboard" element={<TesterDashboardPage />} /><Route path="/my-tests" element={<MyTestsPage />} /><Route path="/dashboard" element={<Navigate to="/tester-dashboard" replace />} /><Route path="/developer-dashboard" element={<DeveloperDashboardPage />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes></IdentityProvider>;
 }
