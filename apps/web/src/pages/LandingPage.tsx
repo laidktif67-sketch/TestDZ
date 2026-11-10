@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLenis } from "../hooks/useLenis";
-import { LpIcon } from "../components/LpIcon";
+import { LpIcon } from "../shared/components/LpIcon";
 
 const BlurText = lazy(() => import("../components/react-bits/BlurText"));
 const LightRays = lazy(() => import("../components/react-bits/LightRays"));
