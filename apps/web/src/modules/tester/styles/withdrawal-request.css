@@ -1,0 +1,77 @@
+.twr-page{min-height:100vh;background:#f2f6ff;display:grid;grid-template-columns:250px minmax(0,1fr);font-family:"Plus Jakarta Sans",sans-serif;color:#10265a}
+.twr-main{grid-column:2;grid-row:1;min-width:0;padding:26px 30px 22px}
+.twr-topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:4px 0 22px}
+.twr-eyebrow{display:block;color:#4776c5;font-size:10px;font-weight:850;letter-spacing:1.5px}
+.twr-topbar h1{margin:6px 0 5px;font-size:clamp(25px,3vw,35px);letter-spacing:-1.3px;font-weight:900;color:#091e59}
+.twr-topbar h1 span{font-size:.8em}
+.twr-topbar p{margin:0;color:#7182a3;font-size:13px}
+.twr-back{flex:none;text-decoration:none;color:#075bdc;background:#fff;border:1px solid #dce7fb;border-radius:13px;padding:12px 16px;font-size:12px;font-weight:800;box-shadow:0 5px 15px #174b8c0a}
+.twr-balance{position:relative;overflow:hidden;display:flex;align-items:center;gap:18px;padding:21px 25px;border-radius:20px;background:linear-gradient(110deg,#071b65,#0755ce 65%,#168cf6);color:#fff;box-shadow:0 12px 25px #0755ce25}
+.twr-balance:after{content:"";position:absolute;width:230px;height:230px;border:1px solid #ffffff2b;border-radius:50%;right:7%;top:-145px;box-shadow:0 0 0 25px #ffffff0c,0 0 0 55px #ffffff09}
+.twr-balance-icon{width:64px;height:64px;display:grid;place-items:center;border-radius:19px;background:#ffffff20;font-size:35px;flex:none}
+.twr-balance>div:nth-child(2){position:relative;z-index:1}
+.twr-balance>div>span{font-size:9px;letter-spacing:1.3px;font-weight:850;color:#c8ddff}
+.twr-balance strong{display:block;font-size:32px;line-height:1.2;margin-top:3px;font-weight:900}
+.twr-balance strong small{font-size:16px}
+.twr-balance p{font-size:11px;color:#d4e5ff;margin:5px 0 0}
+.twr-balance-spark{position:absolute;right:10%;bottom:8px;color:#ffdc70;font-size:46px;animation:twr-spark 3s ease-in-out infinite}
+.twr-content-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.8fr);gap:18px;align-items:start;margin-top:18px}
+.twr-form-card,.twr-info-card{background:#fff;border:1px solid #e1eafa;border-radius:20px;box-shadow:0 7px 22px #173d7510}
+.twr-form-card{padding:23px 24px}
+.twr-card-heading{display:flex;align-items:center;gap:13px;margin-bottom:17px}
+.twr-heading-icon{width:48px;height:48px;display:grid;place-items:center;background:#edf3ff;border-radius:15px;font-size:25px}
+.twr-card-heading h2{margin:0;color:#0b225e;font-size:19px;font-weight:900}
+.twr-card-heading p{margin:4px 0 0;color:#7a8aa7;font-size:11px}
+.twr-demo-notice{display:flex;gap:10px;padding:12px 13px;border-radius:13px;background:#fff8e9;border:1px solid #ffe4ae;margin-bottom:19px;color:#8b5a0b}
+.twr-demo-notice>span{font-size:19px}
+.twr-demo-notice p{margin:0;font-size:10px;line-height:1.55}
+.twr-demo-notice strong{display:block;font-size:11px;margin-bottom:2px}
+.twr-field-label{display:block;margin:16px 0 7px;color:#1a3268;font-size:11px;font-weight:850}
+.twr-field-label span{color:#8a99b2;font-weight:600}
+.twr-input,.twr-input-wrap{width:100%;box-sizing:border-box;border:1px solid #dce6f5;border-radius:11px;background:#fbfcff;color:#152b5c;font:600 12px "Plus Jakarta Sans",sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.twr-input{padding:12px 13px}
+.twr-input:focus,.twr-input-wrap:focus-within{border-color:#4389f2;box-shadow:0 0 0 3px #4389f21a}
+.twr-input::placeholder{color:#a1aec3;font-weight:500}
+.twr-input-wrap{display:flex;align-items:center;padding:0 13px}
+.twr-input-wrap input{width:100%;border:0;outline:0;background:transparent;padding:12px 0;color:#152b5c;font:700 14px "Plus Jakarta Sans",sans-serif}
+.twr-input-wrap b{font-size:12px;color:#5075b4}
+.twr-field-hint{display:block;margin-top:6px;color:#9a7a43;font-size:9px}
+.twr-methods{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.twr-method{position:relative;display:flex;align-items:center;gap:8px;min-width:0;padding:11px 9px;border:1px solid #dce6f5;border-radius:12px;background:#fbfcff;cursor:pointer;transition:border-color .2s,background .2s,transform .2s}
+.twr-method:hover{transform:translateY(-2px)}
+.twr-method.selected{border-color:#4389f2;background:#eff5ff;box-shadow:0 0 0 2px #4389f212}
+.twr-method input{position:absolute;opacity:0;pointer-events:none}
+.twr-method-logo{font-size:21px}
+.twr-method strong,.twr-method small{display:block}
+.twr-method strong{font-size:10px;color:#142d66}
+.twr-method small{font-size:8px;color:#8594ae;margin-top:3px}
+.twr-method i{display:none;margin-left:auto;color:#0871e8;font-size:11px;font-style:normal;font-weight:900}
+.twr-method.selected i{display:block}
+.twr-textarea{resize:vertical;min-height:75px}
+.twr-submit{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;margin-top:20px;padding:14px 18px;border:0;border-radius:12px;background:linear-gradient(100deg,#0758df,#0786f3);color:white;font:850 12px "Plus Jakarta Sans",sans-serif;cursor:pointer;box-shadow:0 8px 17px #075ce52c;transition:transform .2s,box-shadow .2s}
+.twr-submit:hover{transform:translateY(-2px);box-shadow:0 11px 22px #075ce540}
+.twr-submit span{font-size:18px}
+.twr-alert{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;font-size:11px;line-height:1.5;margin-top:13px}
+.twr-alert-warning{background:#fff8e9;color:#805719;border:1px solid #ffe5b8}
+.twr-alert-success{background:#eafaf1;color:#087647;border:1px solid #bdebd1}
+.twr-secure-note{text-align:center;color:#9aa7bb;font-size:9px;margin:12px 0 0}
+.twr-side-column{display:grid;gap:14px}
+.twr-info-card{padding:20px}
+.twr-info-art{font-size:39px;margin-bottom:10px;animation:twr-float 4s ease-in-out infinite}
+.twr-info-card h2{margin:6px 0 16px;font-size:19px;color:#0b225e;font-weight:900}
+.twr-info-card ol{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.twr-info-card li{display:flex;align-items:center;gap:11px;color:#637593;font-size:10px;line-height:1.45}
+.twr-info-card li b{display:grid;place-items:center;width:31px;height:31px;flex:none;border-radius:10px;background:#edf4ff;color:#1764d7;font-size:10px}
+.twr-help-card{background:linear-gradient(140deg,#f0f5ff,#e8efff)}
+.twr-help-icon{font-size:26px}
+.twr-help-card h3{margin:8px 0 7px;font-size:14px;color:#10265e}
+.twr-help-card p{font-size:10px;line-height:1.65;color:#657797;margin:0 0 12px}
+.twr-help-card a{font-size:10px;color:#075bdc;text-decoration:none;font-weight:850}
+.twr-footer{text-align:center;padding:20px 0 0;color:#94a2b8;font-size:10px}
+.twr-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:12px;background:#f2f6ff;color:#365782;font-size:13px;font-weight:700}
+@keyframes twr-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes twr-spark{0%,100%{opacity:.45;transform:rotate(0) scale(.9)}50%{opacity:1;transform:rotate(18deg) scale(1.1)}}
+@media(max-width:1150px){.twr-page{grid-template-columns:215px minmax(0,1fr)}.twr-main{padding:22px 18px}.twr-content-grid{grid-template-columns:minmax(0,1.3fr) minmax(240px,.8fr)}.twr-form-card{padding:19px}}
+@media(max-width:920px){.twr-page{grid-template-columns:1fr}.twr-page .td-sidebar,.twr-main{grid-column:1;grid-row:auto}.twr-page .td-sidebar{min-height:0;height:auto;padding:12px 15px}.twr-page .td-brand{display:flex;flex-direction:row;justify-content:flex-start;padding:0;gap:9px}.twr-page .td-brand-flask{width:38px;height:38px}.twr-page .td-brand strong{font-size:21px}.twr-page .td-brand small{display:none}.twr-page .td-side-nav{display:flex;overflow-x:auto;justify-content:flex-start;margin-top:10px}.twr-page .td-nav-link{height:42px;padding:0 11px;font-size:11px;white-space:nowrap}.twr-page .td-sidebar-promo,.twr-page .td-user-menu-wrap,.twr-page .td-signout{display:none}.twr-main{padding:18px 15px}}
+@media(max-width:700px){.twr-main{padding:15px 10px}.twr-topbar{align-items:flex-start;flex-direction:column;margin-bottom:15px}.twr-topbar h1{font-size:26px}.twr-back{padding:10px 13px}.twr-balance{padding:16px;border-radius:15px;gap:12px}.twr-balance-icon{width:49px;height:49px;font-size:27px;border-radius:14px}.twr-balance strong{font-size:26px}.twr-balance p{font-size:9px;max-width:260px}.twr-content-grid{grid-template-columns:1fr;gap:12px;margin-top:12px}.twr-form-card{padding:15px 12px;border-radius:15px}.twr-card-heading h2{font-size:16px}.twr-methods{grid-template-columns:1fr}.twr-method{padding:10px}.twr-method small{font-size:9px}.twr-info-card{padding:16px;border-radius:15px}}
+@media(prefers-reduced-motion:reduce){.twr-page *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
