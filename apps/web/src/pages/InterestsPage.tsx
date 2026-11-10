@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
@@ -67,7 +67,7 @@ const otherItems: Item[] = [
 
 function Icon({name,size=24}:{name:string;size?:number}) {
   const common={width:size,height:size,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:1.8,strokeLinecap:"round" as const,strokeLinejoin:"round" as const,"aria-hidden":true as const};
-  const paths:Record<string,React.ReactNode>={
+  const paths:Record<string,ReactNode>={
     android:<><path d="M7 8 5.5 5M17 8l1.5-3"/><path d="M4 10a8 8 0 0 1 16 0v7a2 2 0 0 1-2 2h-1v-5H7v5H6a2 2 0 0 1-2-2z"/><path d="M8 12h.01M16 12h.01"/></>,
     design:<><rect x="3" y="4" width="18" height="13" rx="2"/><path d="m8 21 4-4 4 4M8 8h8M8 12h5"/></>,
     gauge:<><path d="M4 18a9 9 0 1 1 16 0"/><path d="m12 13 4-4M7 18h10"/><circle cx="12" cy="13" r="1"/></>,
