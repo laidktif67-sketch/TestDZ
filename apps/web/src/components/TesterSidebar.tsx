@@ -57,14 +57,15 @@ type TesterSidebarProps = {
   workspaceMenuOpen: boolean;
   setWorkspaceMenuOpen: Dispatch<SetStateAction<boolean>>;
   previewMode: boolean;
+  sidebarClassName?: string;
 };
 
 export default function TesterSidebar({
   nav, name, firstName, avatar, roles, isAdmin, isDeveloper,
-  workspaceMenuOpen, setWorkspaceMenuOpen, previewMode
+  workspaceMenuOpen, setWorkspaceMenuOpen, previewMode, sidebarClassName
 }: TesterSidebarProps) {
   return (
-    <aside className="td-sidebar">
+    <aside className={`td-sidebar ${sidebarClassName ?? ""}`.trim()}>
       <Link to="/tester-dashboard" className="td-brand"><span className="td-brand-flask"><Icon name="tests" size={32}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
       <nav className="td-side-nav">{nav.map((item) => item.href.startsWith("#") ? <a key={item.label} href={item.href} className="td-nav-link"><Icon name={item.icon}/><span>{item.label}</span></a> : <Link key={item.label} to={item.href} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon}/><span>{item.label}</span></Link>)}</nav>
       <div className="td-sidebar-promo"><div className="td-rocket"><Icon name="rocket" size={42}/></div><strong>Build Better Together</strong><p>Create tests, help the community, and grow with TestDZ!</p><Link to="#my-tests">Explore More <Icon name="arrow" size={15}/></Link></div>
