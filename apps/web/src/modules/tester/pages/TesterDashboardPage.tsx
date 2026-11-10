@@ -89,16 +89,17 @@ export default function TesterDashboardPage() {
         const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
         client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
-        client.from("assignments").select("id,status,created_at,completed_at").eq("tester_id", userId),
+        client.from("assignments").select("id,status,created_at,completed_at,checkins(id)").eq("tester_id", userId),
         client.from("tests").select("id,title,status,min_testers,app:apps(name,icon_url)", { count: "exact" }).in("status", ["recruiting","ready","running"]).order("created_at", { ascending: false }).limit(4),
         client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
       ]);
       if (!alive) return;
       const assignments = assignmentRes.data ?? [];
       const completed = assignments.filter((a: { status: string }) => a.status === "completed").length;
+      const checkins = assignments.reduce((total: number, assignment: { checkins?: { id: string }[] | null }) => total + (assignment.checkins?.length ?? 0), 0);
       setName(profileRes.data?.display_name?.trim() || userEmail?.split("@")[0] || "there");
       setAvatar(profileRes.data?.avatar_url || "");
-      setStats({ available: testRes.count ?? testRes.data?.length ?? 0, completed, assignments: assignments.length, points: Number(walletRes.data?.earned_points ?? 0), checkins: 0 });
+      setStats({ available: testRes.count ?? testRes.data?.length ?? 0, completed, assignments: assignments.length, points: Number(walletRes.data?.earned_points ?? 0), checkins });
       const completedAssignments = assignments.filter((a: { status: string; completed_at?: string | null }) => a.status === "completed" && a.completed_at);
       const now = new Date();
       const bucketCount = range === "1W" ? 7 : range === "1M" ? 5 : 12;
@@ -122,7 +123,7 @@ export default function TesterDashboardPage() {
       setChartLabels(labels); setChartPoints(points);
       setTests((testRes.data ?? []) as unknown as TestItem[]);
       setNotifications(notificationRes.count ?? 0);
-      if (profileRes.error || assignmentRes.error || testRes.error) setError("Some dashboard information could not be loaded. Check your connection and try again.");
+      if (profileRes.error || walletRes.error || assignmentRes.error || testRes.error || notificationRes.error) setError("Some dashboard information could not be loaded. Check your connection and try again.");
       } catch {
         if (alive) setError("We couldn’t load your dashboard. Check your connection and try again.");
       } finally {
@@ -207,7 +208,7 @@ export default function TesterDashboardPage() {
 
       <section className="td-stat-grid" aria-label="Your statistics">
         <article className="td-stat-card lavender"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{animatedStats.available}</strong><b>Available Tests</b><small>Explore and start testing</small></div><Link to="#my-tests" aria-label="Explore tests"><Icon name="arrow"/></Link></article>
-        <article className="td-stat-card mint"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{animatedStats.completed}</strong><b>Completed</b><small>Great job!</small></div><a href="#my-tests" aria-label="View completed"><Icon name="arrow"/></a></article>
+        <article className="td-stat-card mint"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{animatedStats.completed}</strong><b>Completed</b><small>Great job · {stats.checkins} check-ins</small></div><a href="#my-tests" aria-label="View completed"><Icon name="arrow"/></a></article>
         <article className="td-stat-card sky"><span className="td-stat-icon"><Icon name="chart" size={34}/></span><div><strong>{animatedStats.success}%</strong><b>Success Rate</b><small>Keep it up!</small></div><a href="#progress" aria-label="View progress"><Icon name="arrow"/></a></article>
         <article className="td-stat-card gold"><span className="td-stat-icon"><Icon name="star" size={34}/></span><div><strong>{animatedStats.points.toLocaleString()}</strong><b>Points</b><small>Earn more points</small></div><a href="#rewards" aria-label="View rewards"><Icon name="arrow"/></a></article>
       </section>
