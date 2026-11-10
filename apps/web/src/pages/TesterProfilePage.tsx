@@ -96,7 +96,7 @@ export default function ProfilePage() {
           { label: "My Tests", icon: "tests", href: "/my-tests" },
           { label: "Feedback History", icon: "star", href: "/feedback-history" },
           { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
-          { label: "Profile", icon: "settings", href: "/profile", active: true },
+          { label: "Profile", icon: "user", href: "/profile", active: true },
           { label: "Help & Support", icon: "bell", href: "/help-support" },
           { label: "Settings", icon: "settings", href: "/settings" },
           ...(identityRoles.includes("developer") || identityRoles.includes("admin") ? [{ label: "Discover Apps", icon: "search", href: "/apps" }] : []),
