@@ -96,7 +96,9 @@ export default function ResetPasswordPage() {
 
         <section className="reset-card" aria-labelledby="reset-card-title">
           <div className="reset-card-icon" aria-hidden="true">
-            <svg viewBox="0 0 100 100" fill="none"><path d="M31 43V30a19 19 0 0 1 38 0v13" stroke="#1763E9" strokeWidth="8" strokeLinecap="round"/><rect x="20" y="40" width="60" height="43" rx="9" fill="#1674EC"/><circle cx="50" cy="59" r="6" fill="white"/><path d="M50 64v8" stroke="white" strokeWidth="5" strokeLinecap="round"/><path d="M73 70a20 20 0 0 1-18 18M72 61l2 10 9-2M27 31a20 20 0 0 1 18-18M28 40l-2-10-9 2" stroke="#1674EC" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span className="reset-icon-halo" />
+            <svg viewBox="0 0 100 100" fill="none"><path d="M31 43V30a19 19 0 0 1 38 0v13" stroke="currentColor" strokeWidth="8" strokeLinecap="round"/><rect x="20" y="40" width="60" height="43" rx="9" fill="currentColor"/><circle cx="50" cy="59" r="6" fill="white"/><path d="M50 64v8" stroke="white" strokeWidth="5" strokeLinecap="round"/><path d="M76 67a20 20 0 0 1-17 20M76 59l1 9 8-2" stroke="#38BDF8" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span className="reset-icon-check"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6"/></svg></span>
           </div>
           <h2 id="reset-card-title">Create New Password</h2>
           <p className="reset-card-subtitle">Your new password must be secure and easy to remember.</p>
