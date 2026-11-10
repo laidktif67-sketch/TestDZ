@@ -1,5 +1,6 @@
 export type IdentityOAuthProvider = "google" | "github" | "azure";
 export type IdentityAccountType = "tester" | "developer";
+export type AccountRole = "tester" | "developer" | "admin" | "support";
 
 export interface IdentitySignUpInput {
   email: string;
