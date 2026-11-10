@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
@@ -16,7 +17,7 @@ const initialStats: DashboardStats = { available: 0, completed: 0, assignments: 
 
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
-  const paths: Record<string, React.ReactNode> = {
+  const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9M9 21v-7h6v7"/></>,
     search: <><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16 16 5 5"/></>,
     tests: <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3.5h6M8 12l2.5 2.5L16 9"/></>,
@@ -71,6 +72,7 @@ export default function DashboardPage() {
   const [name, setName] = useState("there");
   const [avatar, setAvatar] = useState("");
   const [stats, setStats] = useState(initialStats);
+  const [chartPoints, setChartPoints] = useState<number[]>([0,0,0,0,0,0,0]);
   const [tests, setTests] = useState<TestItem[]>([]);
   const [search, setSearch] = useState("");
   const [notifications, setNotifications] = useState(0);
@@ -83,13 +85,13 @@ export default function DashboardPage() {
     const client = supabase;
     if (!client) { setLoading(false); return; }
     let alive = true;
-    const load = async (userId: string) => {
+    const load = async (userId: string, userEmail?: string) => {
       const [roleRes, profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
         client.from("user_roles").select("role").eq("user_id", userId),
         client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
         client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
         client.from("assignments").select("id,status,created_at,completed_at").eq("tester_id", userId),
-        client.from("tests").select("id,title,status,min_testers,app:apps(name,icon_url)").in("status", ["recruiting","ready","running"]).order("created_at", { ascending: false }).limit(4),
+        client.from("tests").select("id,title,status,min_testers,app:apps(name,icon_url)", { count: "exact" }).in("status", ["recruiting","ready","running"]).order("created_at", { ascending: false }).limit(4),
         client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
       ]);
       if (!alive) return;
@@ -97,9 +99,11 @@ export default function DashboardPage() {
       const assignments = assignmentRes.data ?? [];
       const completed = assignments.filter((a: { status: string }) => a.status === "completed").length;
       setRoles(userRoles);
-      setName(profileRes.data?.display_name?.trim() || session?.user.email?.split("@")[0] || "there");
+      setName(profileRes.data?.display_name?.trim() || userEmail?.split("@")[0] || "there");
       setAvatar(profileRes.data?.avatar_url || "");
       setStats({ available: testRes.count ?? testRes.data?.length ?? 0, completed, assignments: assignments.length, points: Number(walletRes.data?.earned_points ?? 0), checkins: 0 });
+      const week = Array.from({ length: 7 }, (_, index) => { const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - (6-index)); const doneByDay = assignments.filter((a: { status: string; completed_at?: string | null }) => a.status === "completed" && a.completed_at && new Date(a.completed_at).getTime() <= end.getTime()).length; return assignments.length ? Math.round(doneByDay / assignments.length * 100) : 0; });
+      setChartPoints(week);
       setTests((testRes.data ?? []) as unknown as TestItem[]);
       setNotifications(notificationRes.count ?? 0);
       if (roleRes.error || profileRes.error || assignmentRes.error || testRes.error) setError("Some dashboard information could not be loaded. Check your connection and try again.");
@@ -107,12 +111,12 @@ export default function DashboardPage() {
     client.auth.getSession().then(({ data }) => {
       if (!alive) return;
       setSession(data.session);
-      if (data.session) void load(data.session.user.id);
+      if (data.session) void load(data.session.user.id, data.session.user.email);
       else setLoading(false);
     });
     const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
-      if (nextSession) window.setTimeout(() => { if (alive) void load(nextSession.user.id); }, 0);
+      if (nextSession) window.setTimeout(() => { if (alive) void load(nextSession.user.id, nextSession.user.email); }, 0);
       else { setRoles([]); setLoading(false); }
     });
     return () => { alive = false; data.subscription.unsubscribe(); };
@@ -168,7 +172,7 @@ export default function DashboardPage() {
       <section className="td-middle-grid">
         <article className="td-panel td-progress-panel" id="progress">
           <div className="td-panel-heading"><h2><Icon name="chart" size={22}/>Your Progress</h2><div className="td-range">{["1W","1M","3M","1Y"].map((item) => <button key={item} onClick={() => setRange(item)} className={range === item ? "selected" : ""}>{item}</button>)}</div></div>
-          <div className="td-progress-content"><div className="td-progress-ring" style={{ "--progress": `${progress * 3.6}deg` } as React.CSSProperties}><div><strong>{progress}%</strong><b>Overall<br/>Progress</b></div></div><div className="td-chart-area"><div className="td-chart-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><svg viewBox="0 0 560 180" preserveAspectRatio="none" className="td-line-chart" aria-label="Progress chart"><defs><linearGradient id="td-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#1764ef" stopOpacity=".22"/><stop offset="100%" stopColor="#1764ef" stopOpacity=".02"/></linearGradient></defs>{[10,48,86,124,162].map(y=><line key={y} x1="0" y1={y} x2="560" y2={y} stroke="#dce6f5" strokeWidth="1"/>) }<path d={`M0 162 L560 162 L560 ${162-progress*1.35} L0 ${162-progress*1.35} Z`} fill="url(#td-chart-fill)"/><path d={`M0 ${162-progress*1.35} L112 ${162-progress*1.35} L224 ${162-progress*1.35} L336 ${162-progress*1.35} L448 ${162-progress*1.35} L560 ${162-progress*1.35}`} fill="none" stroke="#1764ef" strokeWidth="3" strokeLinecap="round"/>{[0,112,224,336,448,560].map((x)=><circle key={x} cx={x} cy={162-progress*1.35} r="5" fill="#1764ef"/>)}</svg><div className="td-chart-days">{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=><span key={d}>{d}</span>)}</div><b className="td-chart-bubble">{progress}%</b></div></div>
+          <div className="td-progress-content"><div className="td-progress-ring" style={{ "--progress": `${progress * 3.6}deg` } as CSSProperties}><div><strong>{progress}%</strong><b>Overall<br/>Progress</b></div></div><div className="td-chart-area"><div className="td-chart-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><svg viewBox="0 0 560 180" preserveAspectRatio="none" className="td-line-chart" aria-label="Progress chart"><defs><linearGradient id="td-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#1764ef" stopOpacity=".22"/><stop offset="100%" stopColor="#1764ef" stopOpacity=".02"/></linearGradient></defs>{[10,48,86,124,162].map(y=><line key={y} x1="0" y1={y} x2="560" y2={y} stroke="#dce6f5" strokeWidth="1"/>) }<path d={`M0 162 L560 162 L560 ${162-progress*1.35} L0 ${162-progress*1.35} Z`} fill="url(#td-chart-fill)"/><path d={`M0 ${162-progress*1.35} L112 ${162-progress*1.35} L224 ${162-progress*1.35} L336 ${162-progress*1.35} L448 ${162-progress*1.35} L560 ${162-progress*1.35}`} fill="none" stroke="#1764ef" strokeWidth="3" strokeLinecap="round"/>{[0,112,224,336,448,560].map((x)=><circle key={x} cx={x} cy={162-progress*1.35} r="5" fill="#1764ef"/>)}</svg><div className="td-chart-days">{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=><span key={d}>{d}</span>)}</div><b className="td-chart-bubble">{progress}%</b></div></div>
           <div className="td-track-pill"><span>🏆</span><div><strong>{stats.assignments ? "On track!" : "Your journey starts here"}</strong><small>{stats.assignments ? `${stats.completed} of ${stats.assignments} tests completed` : "Join a test to start building progress"}</small></div></div>
         </article>
 
