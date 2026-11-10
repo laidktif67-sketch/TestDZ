@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -37,6 +38,7 @@ export default function ProfilePage() {
     identityApi.getCurrentUser().then(async ({ data, error: authError }) => {
       if (authError || !data.user) { navigate("/auth", { replace: true }); return; }
       setUserId(data.user.id);
+      setEmail(data.user.email ?? "");
       const { data: profile, error: profileError } = await profilesApi.getProfile(data.user.id);
       if (profileError) { setError("We couldn't load your profile. Please refresh and try again."); return; }
       setDisplayName(profile.display_name ?? "");
@@ -46,6 +48,13 @@ export default function ProfilePage() {
       setVerified(Boolean(profile.is_verified));
     }).catch(() => setError("We couldn't load your profile. Please refresh and try again."));
   }, [navigate]);
+
+  async function logout() {
+    if (identityApi.isConfigured()) {
+      try { await identityApi.signOut(); } catch { setError("Could not sign out. Please try again."); return; }
+    }
+    navigate("/auth", { replace: true });
+  }
 
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -125,7 +134,7 @@ export default function ProfilePage() {
                   <div className="tester-info-illustration" aria-hidden="true"><div className="tester-id-card">▰<span /><span /><b>✓</b></div></div>
                   <div className="tester-profile-fields">
                     <label><span>Full Name</span><input required minLength={2} value={displayName} readOnly={!editing} onChange={(e) => setDisplayName(e.target.value)} /></label>
-                    <label><span>Email Address</span><strong className="tester-readonly-value">{identityApi.isConfigured() ? "Your account email" : "Connect account to view"} <i className={verified ? "verified" : ""}>{verified ? "✓" : "•"}</i></strong></label>
+                    <label><span>Email Address</span><strong className="tester-readonly-value">{email || "Connect account to view"} <i className={verified ? "verified" : ""}>{verified ? "✓" : "•"}</i></strong></label>
                     <label><span>Phone Number</span><input type="tel" dir="ltr" value={phone} readOnly={!editing} placeholder="Add a phone number" onChange={(e) => setPhone(e.target.value)} /></label>
                     <label className="tester-bio-field"><span>Short Bio</span><textarea rows={2} maxLength={300} value={bio} readOnly={!editing} placeholder="Tell the community about yourself" onChange={(e) => setBio(e.target.value)} /></label>
                   </div>
@@ -137,7 +146,7 @@ export default function ProfilePage() {
 
               <section className="tester-panel tester-verification-panel"><span className="tester-big-shield">✓</span><div className="tester-verification-copy"><h2>Account Verification</h2><p>Your account security status</p><span>✓ &nbsp; Email address {verified ? "verified" : "verification pending"}</span><span>✓ &nbsp; Keep your profile information up to date</span></div><div className={`tester-verification-status ${verified ? "verified" : ""}`}><strong>✓</strong><span><b>{verified ? "Verified" : "In progress"}</b><small>{verified ? "All good!" : "Check your email"}</small></span></div></section>
 
-              <section className="tester-account-actions"><span className="tester-logout-icon">⇥</span><div><h2>Account Actions</h2><p>Manage your account actions</p></div><button type="button" onClick={() => navigate("/auth")}>⇥ Log Out</button><button type="button" className="danger" onClick={() => setMessage("To close your account, contact TestDZ support.")}>▤ Close Account</button></section>
+              <section className="tester-account-actions"><span className="tester-logout-icon">⇥</span><div><h2>Account Actions</h2><p>Manage your account actions</p></div><button type="button" onClick={() => void logout()}>⇥ Log Out</button><button type="button" className="danger" onClick={() => setMessage("To close your account, contact TestDZ support.")}>▤ Close Account</button></section>
             </div>
 
             <div className="tester-profile-right">
