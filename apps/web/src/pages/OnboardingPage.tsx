@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import BlurText from "../components/react-bits/BlurText";
+import { useLenis } from "../hooks/useLenis";
 import "../styles/onboarding.css";
 
 type OnboardingLanguage = "en" | "fr" | "ar";
@@ -143,6 +144,7 @@ function SideArtwork() {
 }
 
 export default function OnboardingPage() {
+  useLenis();
   const pageRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const [language, setLanguage] = useState<OnboardingLanguage>(() => {
@@ -227,7 +229,7 @@ export default function OnboardingPage() {
           key={role.value}
           className={`onboarding-role-card ${choice === role.value ? "is-selected" : ""}`}
           aria-pressed={choice === role.value}
-          onClick={event => { setChoice(role.value); gsap.fromTo(event.currentTarget, { scale: 0.985 }, { scale: 1, duration: 0.38, ease: "back.out(2)" }); }}
+          onClick={() => setChoice(role.value)}
         >
           <span className="role-check" aria-hidden="true">✓</span>
           <span className="role-art"><RoleIllustration type={role.icon} /></span>
