@@ -10,7 +10,7 @@ export function translateAuthError(message: string) {
   return "تعذر إكمال العملية. تحقق من البيانات وحاول مرة أخرى.";
 }
 
-export async function getPostAuthRoute(userId: string): Promise<"/dashboard" | "/onboarding"> {
+export async function getPostAuthRoute(userId: string): Promise<"/tester-dashboard" | "/onboarding"> {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
   const { data: profile, error } = await supabase
     .from("profiles")
@@ -18,5 +18,5 @@ export async function getPostAuthRoute(userId: string): Promise<"/dashboard" | "
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
-  return profile?.onboarding_completed_at ? "/dashboard" : "/onboarding";
+  return profile?.onboarding_completed_at ? "/tester-dashboard" : "/onboarding";
 }
