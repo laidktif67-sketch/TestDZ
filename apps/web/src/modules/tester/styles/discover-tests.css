@@ -130,3 +130,14 @@
  .discover-hero-copy{width:100%}
  .discover-categories{flex-wrap:wrap}
 }
+
+
+/* Desktop: keep all five Discover filters in one horizontal row. */
+@media(min-width:851px){
+ .discover-hero-copy{width:74%;max-width:none}
+ .discover-categories{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;width:100%;max-width:100%;overflow:visible}
+ .discover-categories button{flex:1 1 0;min-width:0;height:41px;padding:0 9px;gap:7px;justify-content:center}
+ .discover-categories button .discover-filter-icon{width:24px;height:24px;flex:0 0 24px}
+ .discover-categories button .discover-filter-label{font-size:10px;white-space:nowrap}
+ .discover-categories button .discover-filter-selected{width:15px;height:15px;flex:0 0 15px}
+}
