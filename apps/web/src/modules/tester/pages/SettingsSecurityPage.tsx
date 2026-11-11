@@ -187,7 +187,6 @@ export default function SettingsSecurityPage() {
     { key: "system", title: "System Updates", icon: "settings" },
     { key: "promotions", title: "Promotions & News", icon: "bell" }
   ];
-  const createdLabel = "the current device";
   const tabsView = <div className="ss-tabs" role="tablist">{tabs.map(item => <button type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? "active" : ""} key={item.id} onClick={() => setTab(item.id)}><Icon name={item.icon} size={19}/>{item.label}</button>)}</div>;
 
   return <div className="td-dashboard ss-dashboard">
