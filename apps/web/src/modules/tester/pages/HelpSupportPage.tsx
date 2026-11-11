@@ -54,7 +54,7 @@ export default function HelpSupportPage() {
     const term = query.trim().toLowerCase();
     return helpItems.filter(item => (category === "all" || item.category === category) && (!term || (item.question + " " + item.answer).toLowerCase().includes(term)));
   }, [query, category]);
-  const chooseCategory = (value: HelpCategory) => { setCategory(value); setExpanded(null); };
+  const chooseCategory = (value: HelpCategory) => { setCategory(value); setExpanded(null); document.getElementById("hs-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   return <div className="td-dashboard hs-dashboard">
     <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/>
     <main className="td-main hs-main">
@@ -76,12 +76,12 @@ export default function HelpSupportPage() {
         </section>
         <section className="hs-quick-section">
           <div className="hs-section-heading"><div><h2><Icon name="bolt" size={23}/> Quick Help</h2><p>Find quick answers to common questions</p></div><button type="button" onClick={() => { setCategory("all"); setQuery(""); document.getElementById("hs-faq")?.scrollIntoView({ behavior: "smooth" }); }}>View All FAQs <Icon name="arrow" size={16}/></button></div>
-          <div className="hs-category-grid">{categories.map(item => <button type="button" key={item.id} className={`hs-category-card ${item.tone} ${category === item.id ? "selected" : ""}`} onClick={() => chooseCategory(item.id)} aria-pressed={category === item.id}><span className="hs-category-icon"><Icon name={item.icon} size={29}/></span><strong>{item.title}</strong><small>{item.question}</small><span className="hs-category-arrow"><Icon name="arrow" size={17}/></span></button>)}</div>
+          <div className="hs-category-grid">{categories.map(item => { const count = helpItems.filter(article => article.category === item.id).length; return <button type="button" key={item.id} className={`hs-category-card ${item.tone} ${category === item.id ? "selected" : ""}`} onClick={() => chooseCategory(item.id)} aria-pressed={category === item.id} aria-label={`${item.title}: show ${count} help articles`}><span className="hs-category-icon"><Icon name={item.icon} size={27}/></span><span className="hs-category-copy"><strong>{item.title}</strong><small>{item.question}</small><span className="hs-category-meta">{count} helpful {count === 1 ? "article" : "articles"}</span></span><span className="hs-category-arrow" aria-hidden="true"><Icon name="arrow" size={17}/></span></button>; })}</div>
         </section>
         <div className="hs-lower-grid">
           <section className="hs-tickets-panel" id="hs-faq">
             <div className="hs-section-heading hs-ticket-heading"><div><h2><Icon name="receipt" size={22}/> Frequently Asked Questions</h2><p>Browse answers from the TestDZ help center</p></div><span className="hs-count">{filtered.length} articles</span></div>
-            <div className="hs-faq-tools"><label><Icon name="search" size={17}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search questions…"/></label><button type="button" className={category === "all" ? "active" : ""} onClick={() => setCategory("all")}>All topics</button></div>
+            <div className="hs-faq-tools"><label><Icon name="search" size={17}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search questions…"/></label><button type="button" className={category === "all" ? "active" : ""} onClick={() => { setCategory("all"); setExpanded(null); }}>All topics <span>{helpItems.length}</span></button></div>
             <div className="hs-faq-list">{filtered.length ? filtered.map(item => <article className={expanded === item.id ? "open" : ""} key={item.id}><button type="button" onClick={() => setExpanded(expanded === item.id ? null : item.id)} aria-expanded={expanded === item.id}><span>{item.question}</span><Icon name="chevron" size={18}/></button>{expanded === item.id && <p>{item.answer}</p>}</article>) : <div className="hs-no-results"><Icon name="search" size={25}/><strong>No matching help articles</strong><p>Try a different keyword or select another topic.</p><button type="button" onClick={() => { setQuery(""); setCategory("all"); }}>Clear search</button></div>}</div>
           </section>
           <aside className="hs-side-column">
