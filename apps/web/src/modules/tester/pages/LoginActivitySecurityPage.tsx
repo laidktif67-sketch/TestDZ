@@ -21,7 +21,20 @@ export default function LoginActivitySecurityPage() {
   const [activity, setActivity] = useState<Array<{id:string;event:string;occurred_at:string;ip_address:string|null}>>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
   const device = useMemo(getDevice, []);
-  useEffect(() => {\n    let alive = true;\n    async function loadActivity() {\n      if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }\n      setLoadingActivity(true);\n      const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });\n      if (!alive) return;\n      if (result.error) setNotice("Login history is temporarily unavailable. Please try again.");\n      else setActivity((result.data || []) as typeof activity);\n      setLoadingActivity(false);\n    }\n    void loadActivity();\n    return () => { alive = false; };\n  }, [user?.id]);\n  const firstName = user?.email?.split("@")[0] || "Tester";
+  useEffect(() => {
+    let alive = true;
+    async function loadActivity() {\n      if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }
+      setLoadingActivity(true);
+      const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
+      if (!alive) return;
+      if (result.error) setNotice("Login history is temporarily unavailable. Please try again.");
+      else setActivity((result.data || []) as typeof activity);
+      setLoadingActivity(false);
+    }
+    void loadActivity();
+    return () => { alive = false; };
+  }, [user?.id]);
+  const firstName = user?.email?.split("@")[0] || "Tester";
   const lastLogin = user?.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
   const verified = Boolean(user?.email_confirmed_at);
   const formattedLogin = lastLogin ? lastLogin.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not available";
