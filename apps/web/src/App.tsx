@@ -31,6 +31,7 @@ import SubmitFeedbackPage from "./modules/tester/pages/SubmitFeedbackPage";
 import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
 import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
 import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
+import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
 import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
             <Route path="/check-in-history" element={<CheckInHistoryPage />} />
             <Route path="/activity-history" element={<ActivityHistoryPage />} />
+            <Route path="/referral-program" element={<ReferralProgramPage />} />
             <Route path="/discover-tests" element={<DiscoverTestsPage />} />
             <Route path="/tests/:id" element={<TestPreviewPage />} />
           </Route>
