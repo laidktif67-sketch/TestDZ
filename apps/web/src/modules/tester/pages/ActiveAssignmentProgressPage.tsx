@@ -10,7 +10,7 @@ type Assignment={id:string;status:string;start_date:string|null;medical_extensio
 type Checkin={id:string;checkin_date:string;evidence_url:string|null};
 type Leader={id:string;name:string;avatar:string|null;points:number};
 const dateOnly=(v:Date)=>{const d=new Date(v.getTime()-v.getTimezoneOffset()*60000);return d.toISOString().slice(0,10);};
-const dateLabel=(v:string|null)=>v?new Date(v+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"To be announced";
+const dateLabel=(v:string|null|undefined)=>v?new Date(v+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"To be announced";
 const initials=(v:string)=>v.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase()||"T";
 
 export default function ActiveAssignmentProgressPage(){
