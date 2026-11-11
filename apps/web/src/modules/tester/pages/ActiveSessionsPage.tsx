@@ -18,7 +18,8 @@ function getDeviceInfo() {
 export default function ActiveSessionsPage() {
   const { user, roles = [] } = useIdentity();
   const [sessionReady, setSessionReady] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
+  const [sessions, setSessions] = useState<Array<{id:string;created_at:string;last_active_at:string;user_agent:string|null;ip_address:string|null;assurance_level:string|null;is_current:boolean}>>([]);
+  const hasSession = sessions.some(session => session.is_current);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -45,19 +46,18 @@ export default function ActiveSessionsPage() {
 
   useEffect(() => {
     let alive = true;
-    async function loadSession() {
-      if (!supabase) { setSessionReady(true); return; }
-      const result = await supabase.auth.getSession();
+    async function loadSessions() {
+      if (!supabase) { if (alive) setSessionReady(true); return; }
+      const [auth, result] = await Promise.all([supabase.auth.getSession(), supabase.rpc("get_my_active_sessions")]);
       if (!alive) return;
-      setHasSession(Boolean(result.data.session));
+      if (auth.error) setError("Could not verify the current session. Refresh and try again.");
+      if (result.error) setError("Could not load your active sessions. Please try again.");
+      else setSessions((result.data || []) as typeof sessions);
       setSessionReady(true);
-      if (result.error) setError("Could not verify the current session. Refresh and try again.");
     }
-    void loadSession();
-    const { data } = supabase?.auth.onAuthStateChange((_event, session) => {
-      if (alive) setHasSession(Boolean(session));
-    }) ?? { data: { subscription: { unsubscribe: () => undefined } } };
-    return () => { alive = false; data.subscription.unsubscribe(); };
+    void loadSessions();
+    const subscription = supabase?.auth.onAuthStateChange(() => { void loadSessions(); });
+    return () => { alive = false; subscription?.data.subscription.unsubscribe(); };
   }, []);
 
   async function signOutOtherSessions() {
@@ -72,6 +72,7 @@ export default function ActiveSessionsPage() {
   }
 
   const formattedLogin = lastLogin ? lastLogin.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not available";
+  const latestSession = sessions.reduce((latest, item) => !latest || item.last_active_at > latest.last_active_at ? item : latest, null as typeof sessions[number] | null);
   const securityGood = Boolean(user?.email_confirmed_at);
   return <div className="td-dashboard as-dashboard">
     <TesterSidebar nav={nav} name={firstName} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
@@ -85,8 +86,8 @@ export default function ActiveSessionsPage() {
         <section className="as-hero"><div className="as-hero-icon"><Icon name="lock" size={54}/></div><div className="as-hero-copy"><h1>Active Sessions</h1><p>Manage your active sessions and devices for better security.</p></div><div className="as-hero-art"><Icon name="shield" size={104}/><span>✓</span></div></section>
 
         <section className="as-summary-grid">
-          <article className="as-summary-card"><span className="as-summary-icon"><Icon name="monitor" size={42}/></span><i className={hasSession ? "online" : "offline"}/><div><strong>{sessionReady ? (hasSession ? "1" : "0") : "—"}</strong><small>Current Session{hasSession ? " Active" : ""}</small></div></article>
-          <article className="as-summary-card"><span className="as-summary-icon solid"><Icon name="clock" size={35}/></span><div><small>Last Login</small><strong className="as-date">{formattedLogin}</strong></div></article>
+          <article className="as-summary-card"><span className="as-summary-icon"><Icon name="monitor" size={42}/></span><i className={hasSession ? "online" : "offline"}/><div><strong>{sessionReady ? String(sessions.length) : "—"}</strong><small>Active Sessions</small></div></article>
+          <article className="as-summary-card"><span className="as-summary-icon solid"><Icon name="clock" size={35}/></span><div><small>Last Login</small><strong className="as-date">{latestSession ? new Date(latestSession.last_active_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : formattedLogin}</strong></div></article>
           <article className="as-summary-card"><span className="as-summary-icon shield"><Icon name="shield" size={42}/></span><div><small>Account Security</small><strong className={securityGood ? "as-good" : "as-review"}><Icon name="check" size={17}/>{securityGood ? "Email verified" : "Needs review"}</strong></div></article>
         </section>
 
@@ -94,13 +95,13 @@ export default function ActiveSessionsPage() {
 
         <div className="as-columns">
           <section className="as-card as-session-card">
-            <h2><Icon name="monitor" size={26}/>Your Active Session</h2>
-            {!sessionReady ? <div className="as-empty">Checking your current session…</div> : hasSession ? <article className="as-device">
-              <span className="as-device-icon"><Icon name={device.isMobile ? "smartphone" : "monitor"} size={45}/></span>
-              <div className="as-device-copy"><div className="as-device-title"><strong>{device.label}</strong><span className="as-current"><i/>Current Session</span></div><p>{device.os} · {device.browser}</p><div className="as-device-meta"><span><Icon name="globe" size={16}/>Location not shared by the browser</span><span><Icon name="clock" size={16}/>{formattedLogin}</span></div></div>
+            <h2><Icon name="monitor" size={26}/>Your Active Sessions</h2>
+            {!sessionReady ? <div className="as-empty">Loading your active sessions…</div> : sessions.length ? sessions.map(item => { const agent = item.user_agent || "Device details not provided"; const mobile = /Android|iPhone|iPad|Mobile/i.test(agent); const os = /Android/i.test(agent) ? "Android" : /iPhone|iPad/i.test(agent) ? "iOS" : /Windows/i.test(agent) ? "Windows" : /Mac OS/i.test(agent) ? "macOS" : /Linux/i.test(agent) ? "Linux" : "Unknown OS"; const browser = /Edg\//i.test(agent) ? "Microsoft Edge" : /Firefox\//i.test(agent) ? "Firefox" : /Chrome\//i.test(agent) ? "Chrome" : /Safari\//i.test(agent) ? "Safari" : "Browser"; return <article className="as-device" key={item.id}>
+              <span className="as-device-icon"><Icon name={mobile ? "smartphone" : "monitor"} size={45}/></span>
+              <div className="as-device-copy"><div className="as-device-title"><strong>{mobile ? "Mobile Device" : "Web Browser"}{item.is_current ? " · Current" : ""}</strong>{item.is_current && <span className="as-current"><i/>Current Session</span>}</div><p>{os} · {browser}</p><div className="as-device-meta"><span><Icon name="globe" size={16}/>{item.ip_address || "IP not available"}</span><span><Icon name="clock" size={16}/>{new Date(item.last_active_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</span></div></div>
               <span className="as-status"><Icon name="check" size={16}/>Active</span>
-            </article> : <div className="as-empty">No authenticated session was found. Please sign in again to manage sessions.</div>}
-            <div className="as-session-foot"><Icon name="info" size={19}/><p>For privacy, this page only displays the device currently connected to this browser. Other device sessions are not exposed by the standard client session API.</p></div>
+            </article>; }) : <div className="as-empty">No active sessions were returned for this account.</div>}
+            <div className="as-session-foot"><Icon name="info" size={19}/><p>Session details come from Supabase Auth. Device names are inferred from the recorded user agent; precise geographic location is not assumed from an IP address.</p></div>
           </section>
 
           <aside className="as-side-column">
