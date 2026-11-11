@@ -67,7 +67,7 @@ export default function DiscoverTestsPage(){
       <p>Find exciting testing opportunities, share useful feedback, and grow your tester journey.</p>
       <form className="discover-search" onSubmit={event=>event.preventDefault()}>
        <span><Icon name="search" size={18}/></span>
-       <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search for tests, applications or developers..." aria-label="Search tests"/>
+       <input value={query} onChange={event=>setQuery(event.target.value)} type="search" placeholder="Search for tests, applications or developers..." aria-label="Search tests"/>
        <button type="submit"><Icon name="search" size={16}/> Search</button>
       </form>
       <div className="discover-categories">
