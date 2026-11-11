@@ -37,7 +37,7 @@ export default function ReportProblemPage() {
     { label: "Feedback History", icon: "star", href: "/feedback-history" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
     { label: "Profile", icon: "user", href: "/profile" },
-    { label: "Help & Support", icon: "headset", href: "/help-support", active: true },
+    { label: "Support Center", icon: "headset", href: "/support", active: true },
     { label: "Settings", icon: "settings", href: "/settings" },
     ...(isDeveloper ? [{ label: "Developer Dashboard", icon: "code", href: "/developer-dashboard" }] : []),
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
@@ -63,7 +63,7 @@ export default function ReportProblemPage() {
         <div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div>
       </header>
       <div className="rp-content">
-        <Link to="/help-support" className="rp-back">← <span>Back to Help Center</span></Link>
+        <Link to="/support" className="rp-back">← <span>Back to Support Center</span></Link>
         <section className="rp-hero"><div className="rp-hero-icon"><Icon name="headset" size={54}/></div><div className="rp-hero-copy"><h1>Report a Problem</h1><p>Found an issue? Let us know. We’re here to help.</p></div><div className="rp-hero-art" aria-hidden="true"><Icon name="monitor" size={100}/><span>!</span></div></section>
         <form className="rp-layout" onSubmit={submit}>
           <section className="rp-form-card">
