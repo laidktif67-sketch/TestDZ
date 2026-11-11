@@ -41,6 +41,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></>,
     eye: <><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></>,
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></>,
+    filter: <><path d="M4 5h16l-6.5 7.5v5l-3 1.5v-6.5L4 5Z"/></>,
     code: <><path d="m8.2 8-4 4 4 4M15.8 8l4 4-4 4M14 4.5l-4 15"/></>,
     trophy: <><path d="M8 3.5h8v6.2a4 4 0 0 1-8 0V3.5Z"/><path d="M8 6H4v2.2a4.2 4.2 0 0 0 4.2 4.2M16 6h4v2.2a4.2 4.2 0 0 1-4.2 4.2M12 14v5M8.5 21h7"/></>,
     rocket: <><path d="M14.5 4.2c2.2-1.3 4.1-1.5 5.3-1.5.1 1.2-.2 3.1-1.5 5.3l-5.5 8-5.2-5.2 6.9-6.6Z"/></>,
