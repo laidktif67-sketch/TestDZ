@@ -45,13 +45,14 @@ export default function TestPreviewPage(){
 
  useEffect(()=>{
   if(identityLoading)return;
-  if(!session||!id||!supabase){setLoading(false);return;}
+  const client=supabase;
+  if(!session||!id||!client){setLoading(false);return;}
   let alive=true;
   const load=async()=>{
    const [profile,notifications,testResult]=await Promise.all([
-    supabase.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
-    supabase.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
-    supabase.from("tests").select("id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category)").eq("id",id).maybeSingle()
+    client.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
+    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
+    client.from("tests").select("id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category)").eq("id",id).maybeSingle()
    ]);
    if(!alive)return;
    setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
