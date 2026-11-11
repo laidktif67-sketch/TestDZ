@@ -43,6 +43,7 @@ import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
 import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
 import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
 import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
+import SupportCenterPage from "./modules/tester/pages/SupportCenterPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
 import AuthGuard from "./shared/guards/AuthGuard";
@@ -82,7 +83,9 @@ export default function App() {
           <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
           <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
-          <Route path="/help-support" element={<HelpSupportPage />} />
+          <Route path="/help" element={<HelpSupportPage />} />
+          <Route path="/support" element={<SupportCenterPage />} />
+          <Route path="/help-support" element={<Navigate to="/help" replace />} />
           <Route path="/settings" element={<SettingsSecurityPage />} />
           <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
           <Route path="/active-sessions" element={<ActiveSessionsPage />} />
