@@ -77,7 +77,7 @@ export default function DiscoverTestsPage(){
      <div className="discover-hero-art" aria-hidden="true"><HeroIllustration/></div>
     </section>
     <div className="discover-section-heading">
-     <h2><Icon name="grid" size={19}/> Available Tests ({visible.length})</h2>
+     <h2><Icon name="tests" size={19}/> Available Tests ({visible.length})</h2>
      <label>Sort by: <select value={sort} onChange={event=>setSort(event.target.value)}><option value="newest">Most Recent</option><option value="closing">Closing Soon</option><option value="title">A – Z</option></select></label>
     </div>
     {error&&<div className="discover-empty" role="status">{error}</div>}
@@ -93,7 +93,7 @@ export default function DiscoverTestsPage(){
         </div>
         <h3>{test.title}</h3>
         <p>{test.short_summary||test.description||"Explore this testing opportunity and review its requirements."}</p>
-        <div className="discover-tags"><span><Icon name="globe" size={13}/> {test.app?.category||"App"}</span><span>✦ Testing</span></div>
+        <div className="discover-tags"><span><Icon name="code" size={13}/> {test.app?.category||"App"}</span><span>✦ Testing</span></div>
         <div className="discover-meta"><span><Icon name="users" size={14}/> {test.min_testers} testers</span><span><Icon name="clock" size={14}/> {left===null?"Schedule pending":left===0?"Closing today":left+" days left"}</span></div>
         <div className="discover-card-bottom"><strong>Reward details in test brief</strong><Link to={"/tests/"+test.id}>View Details <Icon name="arrow" size={14}/></Link></div>
        </article>;
@@ -101,7 +101,7 @@ export default function DiscoverTestsPage(){
      </section>
      <aside className="discover-right-rail">
       <section className="discover-reward-card"><div>🏆</div><h3>Your Rewards</h3><strong>{loading? "—":points.toLocaleString("en-US")}</strong><span>Earned points</span><Link to="/wallet-rewards">View Wallet <Icon name="arrow" size={14}/></Link></section>
-      <section className="discover-stats"><h3><Icon name="grid" size={18}/> Quick Stats</h3><div>
+      <section className="discover-stats"><h3><Icon name="tests" size={18}/> Quick Stats</h3><div>
        <article><b className="stat-check">✓</b><strong>{completed}</strong><span>Completed Tests</span></article>
        <article><b className="stat-star">★</b><strong>{points.toLocaleString("en-US")}</strong><span>Earned Points</span></article>
        <article><b className="stat-gift">♔</b><strong>{tests.length}</strong><span>Open Tests</span></article>
