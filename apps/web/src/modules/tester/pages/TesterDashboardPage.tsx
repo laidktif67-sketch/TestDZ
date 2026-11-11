@@ -15,8 +15,8 @@ type TestItem = {
   min_testers: number;
   app?: { name?: string; icon_url?: string | null } | null;
 };
-type DashboardStats = { available: number; completed: number; assignments: number; points: number; checkins: number };
-const initialStats: DashboardStats = { available: 0, completed: 0, assignments: 0, points: 0, checkins: 0 };
+type DashboardStats = { available: number; active: number; completed: number; assignments: number; points: number; checkins: number };
+const initialStats: DashboardStats = { available: 0, active: 0, completed: 0, assignments: 0, points: 0, checkins: 0 };
 
 
 function Mascot() {
@@ -68,7 +68,7 @@ export default function TesterDashboardPage() {
   useEffect(() => {
     if (previewMode) {
       setName("John Doe");
-      setStats({ available: 12, completed: 8, assignments: 10, points: 450, checkins: 0 });
+      setStats({ available: 12, active: 2, completed: 8, assignments: 10, points: 450, checkins: 18 });
       setChartPoints([40, 48, 55, 61, 68, 72, 75]);
       setChartLabels(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]);
       setNotifications(3);
@@ -99,7 +99,7 @@ export default function TesterDashboardPage() {
       const checkins = assignments.reduce((total: number, assignment: { checkins?: { id: string }[] | null }) => total + (assignment.checkins?.length ?? 0), 0);
       setName(profileRes.data?.display_name?.trim() || userEmail?.split("@")[0] || "there");
       setAvatar(profileRes.data?.avatar_url || "");
-      setStats({ available: testRes.count ?? testRes.data?.length ?? 0, completed, assignments: assignments.length, points: Number(walletRes.data?.earned_points ?? 0), checkins });
+      setStats({ available: testRes.count ?? testRes.data?.length ?? 0, active: assignments.filter((a: { status: string }) => a.status === "active").length, completed, assignments: assignments.length, points: Number(walletRes.data?.earned_points ?? 0), checkins });
       const completedAssignments = assignments.filter((a: { status: string; completed_at?: string | null }) => a.status === "completed" && a.completed_at);
       const now = new Date();
       const bucketCount = range === "1W" ? 7 : range === "1M" ? 5 : 12;
@@ -205,7 +205,7 @@ export default function TesterDashboardPage() {
       </header>
 
       <section className="td-welcome-banner">
-        <div className="td-banner-copy"><h1><span>👋</span> Welcome back, {firstName}!</h1><p>Keep going! Discover new tests and track your progress.</p><Link to="#my-tests">Explore Tests <Icon name="arrow" size={17}/></Link></div>
+        <div className="td-banner-copy"><h1><span>👋</span> Welcome back, {firstName}!</h1><p>Keep going! Discover new tests and track your progress.</p><Link to="/discover-tests">Discover Tests <Icon name="arrow" size={17}/></Link></div>
         <div className="td-banner-art"><Mascot/></div>
       </section>
 
@@ -214,28 +214,38 @@ export default function TesterDashboardPage() {
       <section className="td-stat-grid" aria-label="Your statistics">
         <article className="td-stat-card lavender"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{animatedStats.available}</strong><b>Available Tests</b><small>Explore and start testing</small></div><Link to="#my-tests" aria-label="Explore tests"><Icon name="arrow"/></Link></article>
         <article className="td-stat-card mint"><span className="td-stat-icon"><Icon name="tests" size={34}/></span><div><strong>{animatedStats.completed}</strong><b>Completed</b><small>Great job · {stats.checkins} check-ins</small></div><a href="#my-tests" aria-label="View completed"><Icon name="arrow"/></a></article>
-        <article className="td-stat-card sky"><span className="td-stat-icon"><Icon name="chart" size={34}/></span><div><strong>{animatedStats.success}%</strong><b>Success Rate</b><small>Keep it up!</small></div><a href="#progress" aria-label="View progress"><Icon name="arrow"/></a></article>
+        <article className="td-stat-card sky"><span className="td-stat-icon"><Icon name="play" size={34}/></span><div><strong>{stats.active}</strong><b>Active Assignments</b><small>Continue your current tests</small></div><Link to="/my-tests" aria-label="View active tests"><Icon name="arrow"/></Link></article>
         <article className="td-stat-card gold"><span className="td-stat-icon"><Icon name="star" size={34}/></span><div><strong>{animatedStats.points.toLocaleString()}</strong><b>Points</b><small>Earn more points</small></div><a href="#rewards" aria-label="View rewards"><Icon name="arrow"/></a></article>
+      </section>
+
+      <section className="td-active-summary" aria-label="Active testing assignments">
+        <div className="td-active-summary-icon"><Icon name="calendar" size={22}/></div>
+        <div className="td-active-summary-copy">
+          <strong>Your testing journey</strong>
+          <p>{stats.active ? `You have ${stats.active} active assignment${stats.active === 1 ? "" : "s"}. Keep up with each required daily check-in and submit useful feedback.` : "You don’t have an active assignment yet. Discover a test cycle and join when you’re ready."}</p>
+          <small>TestDZ completion is based on the required consecutive daily check-ins and feedback for each assignment.</small>
+        </div>
+        <Link to={stats.active ? "/my-tests" : "/discover-tests"}>{stats.active ? "Continue testing" : "Find a test"} <Icon name="arrow" size={15}/></Link>
       </section>
 
       <section className="td-middle-grid">
         <article className="td-panel td-progress-panel" id="progress">
-          <div className="td-panel-heading"><h2><Icon name="chart" size={22}/>Your Progress</h2><div className="td-range">{["1W","1M","3M","1Y"].map((item) => <button key={item} onClick={() => setRange(item)} className={range === item ? "selected" : ""}>{item}</button>)}</div></div>
+          <div className="td-panel-heading"><h2><Icon name="chart" size={22}/>Completion Progress</h2><div className="td-range">{["1W","1M","3M","1Y"].map((item) => <button key={item} onClick={() => setRange(item)} className={range === item ? "selected" : ""}>{item}</button>)}</div></div>
           <div className="td-progress-content"><div className="td-progress-ring" style={{ "--progress": `${progress * 3.6}deg` } as CSSProperties & { "--progress": string }}><div><strong>{animatedStats.success}%</strong><b>Overall<br/>Progress</b></div></div><div className="td-chart-area"><div className="td-chart-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><svg viewBox="0 0 560 180" preserveAspectRatio="none" className="td-line-chart" aria-label="Progress chart"><defs><linearGradient id="td-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#1764ef" stopOpacity=".22"/><stop offset="100%" stopColor="#1764ef" stopOpacity=".02"/></linearGradient></defs>{[10,48,86,124,162].map(y=><line key={y} x1="0" y1={y} x2="560" y2={y} stroke="#dce6f5" strokeWidth="1"/>) }<path d={chartArea} fill="url(#td-chart-fill)"/><path d={chartLine} fill="none" stroke="#1764ef" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>{chartPoints.map((point,index)=><circle key={index} cx={index*93.33} cy={162-point*1.35} r="5" fill="#1764ef"/>)}</svg><div className="td-chart-days">{chartLabels.map(d=><span key={d}>{d}</span>)}</div><b className="td-chart-bubble">{progress}%</b></div></div>
           <div className="td-track-pill"><span>🏆</span><div><strong>{stats.assignments ? "On track!" : "Your journey starts here"}</strong><small>{stats.assignments ? `${stats.completed} of ${stats.assignments} tests completed` : "Join a test to start building progress"}</small></div></div>
         </article>
 
         <article className="td-panel td-quick-panel"><div className="td-panel-heading"><h2><Icon name="bolt" size={22}/>Quick Actions</h2></div><div className="td-quick-grid">
           <Link to={isDeveloper || isAdmin ? "/apps" : "/my-tests"} className="td-quick-action blue"><span><Icon name="play" size={23}/></span><div><strong>{isDeveloper ? "Create an App" : "Start a Test"}</strong><small>{isDeveloper ? "Publish your next app" : "Begin a new test"}</small></div><Icon name="arrow" size={18}/></Link>
-          <Link to={isDeveloper || isAdmin ? "/apps" : "#my-tests"} className="td-quick-action violet"><span><Icon name="search" size={25}/></span><div><strong>Discover Tests</strong><small>Find best topics</small></div><Icon name="arrow" size={18}/></Link>
+          <Link to={isDeveloper || isAdmin ? "/apps" : "/discover-tests"} className="td-quick-action violet"><span><Icon name="search" size={25}/></span><div><strong>Discover Tests</strong><small>Find best topics</small></div><Icon name="arrow" size={18}/></Link>
           <a href="#my-tests" className="td-quick-action green"><span><Icon name="chart" size={23}/></span><div><strong>View My Tests</strong><small>Track your results</small></div><Icon name="arrow" size={18}/></a>
           <Link to="/profile" className="td-quick-action amber"><span><Icon name="wallet" size={23}/></span><div><strong>Manage Account</strong><small>Update your profile</small></div><Icon name="arrow" size={18}/></Link>
         </div></article>
       </section>
 
       <section className="td-bottom-grid">
-        <article className="td-panel td-discover-panel" id="my-tests"><div className="td-panel-heading"><h2><Icon name="star" size={22}/>Discover New Tests</h2><Link to="/my-tests">View All <Icon name="arrow" size={15}/></Link></div>
-          {filteredTests.length ? <div className="td-test-grid">{filteredTests.slice(0,4).map((test,index)=><article className="td-test-card" key={test.id}><div className={`td-test-art art-${index}`}>{test.app?.icon_url ? <img src={test.app.icon_url} alt=""/> : index===0 ? <Icon name="code" size={35}/> : index===1 ? <b>Py</b> : index===2 ? <b>⚛</b> : <b>▤</b>}</div><strong>{test.title}</strong><small>{test.app?.name ?? "TestDZ community"} · {test.min_testers} testers</small><div className="td-test-meta"><span>● {test.status.replace("_"," ")}</span><span><Icon name="clock" size={13}/> Open</span></div><Link to="/my-tests">View Test <Icon name="arrow" size={14}/></Link></article>)}</div> : <div className="td-empty-tests"><span><Icon name="flask" size={28}/></span><strong>{search ? "No tests match your search" : "New tests are on the way"}</strong><p>{search ? "Try another topic or skill." : "Explore the app directory and check back as developers publish new test cycles."}</p><Link to="/my-tests">Explore Tests <Icon name="arrow" size={15}/></Link></div>}
+        <article className="td-panel td-discover-panel" id="my-tests"><div className="td-panel-heading"><h2><Icon name="star" size={22}/>Available Test Cycles</h2><Link to="/discover-tests">View All <Icon name="arrow" size={15}/></Link></div>
+          {filteredTests.length ? <div className="td-test-grid">{filteredTests.slice(0,4).map((test,index)=><article className="td-test-card" key={test.id}><div className={`td-test-art art-${index}`}>{test.app?.icon_url ? <img src={test.app.icon_url} alt=""/> : index===0 ? <Icon name="code" size={35}/> : index===1 ? <b>Py</b> : index===2 ? <b>⚛</b> : <b>▤</b>}</div><strong>{test.title}</strong><small>{test.app?.name ?? "TestDZ community"} · {test.min_testers} testers</small><div className="td-test-meta"><span>● {test.status.replace("_"," ")}</span><span><Icon name="clock" size={13}/> Open</span></div><Link to="/my-tests">My Tests <Icon name="arrow" size={14}/></Link></article>)}</div> : <div className="td-empty-tests"><span><Icon name="flask" size={28}/></span><strong>{search ? "No tests match your search" : "New tests are on the way"}</strong><p>{search ? "Try another topic or skill." : "Explore the app directory and check back as developers publish new test cycles."}</p><Link to="/discover-tests">Discover Tests <Icon name="arrow" size={15}/></Link></div>}
         </article>
         <article className="td-panel td-rewards-panel" id="rewards"><div className="td-panel-heading"><h2><span className="td-gift"><Icon name="gift" size={20}/></span>Your Rewards</h2><a href="#rewards">View All <Icon name="arrow" size={15}/></a></div><div className="td-reward-content"><div className="td-trophy-visual"><Icon name="trophy" size={76}/><span>✦</span></div><div><strong>You've earned<br/>{animatedStats.points.toLocaleString()} points!</strong><p>Keep going to unlock more rewards and badges.</p><Link to="/profile">View Profile <Icon name="arrow" size={14}/></Link></div></div></article>
       </section>
