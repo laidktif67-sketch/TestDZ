@@ -71,3 +71,39 @@
 @media(max-width:760px){.dt-preview-content{padding:18px 14px 28px}.dt-preview-hero{padding:23px 20px}.dt-preview-panel{padding:21px 18px}.dt-preview-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.dt-preview-facts{grid-template-columns:1fr}.dt-preview-hero h1{font-size:25px}}
 @media(prefers-reduced-motion:reduce){.dt-preview-loading{animation:none}}
+
+
+/* Refined Discover Tests category filters */
+.discover-categories{align-items:center;gap:9px;margin-top:16px;flex-wrap:wrap}
+.discover-categories button{
+ position:relative;height:43px;min-width:142px;padding:0 13px 0 10px;
+ display:inline-flex;align-items:center;justify-content:flex-start;gap:9px;
+ border:1px solid #cbd9ed;border-radius:12px;background:rgba(255,255,255,.82);
+ color:#345071;font-size:11px;font-weight:750;letter-spacing:.05px;
+ box-shadow:0 2px 5px #173e7709;transition:background .18s,border-color .18s,color .18s,box-shadow .18s,transform .18s;
+ cursor:pointer
+}
+.discover-categories button:hover{border-color:#82afea;background:#fff;transform:translateY(-1px);box-shadow:0 5px 12px #1357a515}
+.discover-categories button .discover-filter-icon{
+ width:27px;height:27px;flex:none;display:grid;place-items:center;
+ border:1px solid #dce8f8;border-radius:8px;background:#f0f5fd;color:#4774ad;
+ transition:background .18s,border-color .18s,color .18s
+}
+.discover-categories button .discover-filter-icon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.discover-categories button .discover-filter-label{white-space:nowrap}
+.discover-categories button.active{
+ color:#fff;background:linear-gradient(135deg,#116fe9,#0753c7);
+ border-color:#075bd8;box-shadow:0 5px 13px #075bd833
+}
+.discover-categories button.active .discover-filter-icon{background:#ffffff20;border-color:#ffffff38;color:#fff}
+.discover-categories button .discover-filter-selected{margin-left:auto;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#ffffff20;color:#fff}
+.discover-categories button:focus-visible{outline:3px solid #68a8ff;outline-offset:3px}
+@media(max-width:1250px){.discover-categories{gap:7px}.discover-categories button{min-width:130px;height:40px}}
+@media(max-width:600px){
+ .discover-categories{gap:7px;margin-top:13px}
+ .discover-categories button{height:38px;min-width:0;padding:0 10px 0 8px;gap:7px;border-radius:10px;font-size:10px}
+ .discover-categories button .discover-filter-icon{width:24px;height:24px;border-radius:7px}
+ .discover-categories button .discover-filter-icon svg{width:14px;height:14px}
+ .discover-categories button .discover-filter-selected{width:15px;height:15px}
+}
+@media(prefers-reduced-motion:reduce){.discover-categories button{transition:none}.discover-categories button:hover{transform:none}}
