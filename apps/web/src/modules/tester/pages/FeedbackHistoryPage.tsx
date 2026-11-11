@@ -183,7 +183,7 @@ export default function FeedbackHistoryPage() {
               {isExpanded && <div className="fh-details">
                 <section className="fh-app-detail"><AppMark name={appName} iconUrl={test?.app?.icon_url}/><strong>{appName}</strong><small>{test?.title ?? "Feedback submission"}</small><span className="fh-category">{formatCategory(row.category)}</span></section>
                 <section className="fh-rating-detail"><h3>Your Rating</h3><div><RatingStars value={row.rating}/><strong>{row.rating === null ? "—" : row.rating.toFixed(1) + " / 5"}</strong></div><small>Overall rating recorded for this feedback</small></section>
-                <section className="fh-comment-detail"><h3>Your Comment</h3><blockquote>{row.body}</blockquote><span className="fh-category">{row.category.replace("_", " ")}</span></section>
+                <section className="fh-comment-detail"><h3>Your Comment</h3><blockquote>{row.body}</blockquote><span className="fh-category">{formatCategory(row.category)}</span></section>
                 <section className="fh-review-detail"><h3>Review Status</h3><span className={"fh-status " + row.quality_status}>{statusText[row.quality_status]}</span><small>{row.reviewed_at ? "Reviewed on " + formatDate(row.reviewed_at) : "Awaiting QA review"}</small><div className="fh-reward-box"><Icon name="gift" size={25}/><span>Reward Earned<strong>+{reward} pts</strong></span></div></section>
               </div>}
             </article>;
