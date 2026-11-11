@@ -128,6 +128,7 @@ export default function FeedbackHistoryPage() {
     { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
     { label: "Discover Tests", icon: "search", href: "/discover-tests" },
     { label: "My Tests", icon: "tests", href: "/my-tests" },
+    { label: "Activity & History", icon: "chart", href: "/activity-history" },
     { label: "Check-in History", icon: "calendar", href: "/check-in-history" },
     { label: "Feedback History", icon: "star", href: "/feedback-history", active: true },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
