@@ -88,7 +88,6 @@ export default function PrivacyDataManagementPage() {
     return () => { alive = false; };
   }, [user?.id]);
 
-  const roleLabel = roles.includes("tester") ? "Tester" : "Member";
   const sortedRequests = useMemo(() => [...requests].sort((a,b) => b.createdAt.localeCompare(a.createdAt)), [requests]);
 
   async function savePrivacy(next: PrivacyPreferences) {
