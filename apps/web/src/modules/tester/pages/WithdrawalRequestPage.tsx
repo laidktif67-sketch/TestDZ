@@ -132,7 +132,8 @@ export default function WithdrawalRequestPage() {
           <div className="twr-input-shell"><FieldIcon name="account"/><input className="twr-input" id="twr-account-number" required value={accountNumber} onChange={(event) => { setAccountNumber(event.target.value); setSubmitted(false); }} type={method === "paypal" ? "email" : "text"} placeholder={method === "binance_bep20" ? "Paste your BEP20 (BSC) wallet address" : method === "paypal" ? "name@example.com" : "Enter your BaridiMob phone / CCP number"} /></div>
 
           {method === "binance_bep20" && <p className="twr-network-note"><FieldIcon name="note" size={14}/> Send only via <strong>BNB Smart Chain (BEP20)</strong>. Using another network may result in permanent loss of funds.</p>}
-          {method === "paypal" && <p className="twr-paypal-note"><FieldIcon name="note" size={14}/> Enter a verified PayPal email that can receive payments. PayPal availability, account verification and withdrawal options depend on your country and account.</p>}\n          <label className="twr-field-label" htmlFor="twr-note"><FieldIcon name="note"/>Additional note <span>(optional)</span></label>
+          {method === "paypal" && <p className="twr-paypal-note"><FieldIcon name="note" size={14}/> Enter a verified PayPal email that can receive payments. PayPal availability, account verification and withdrawal options depend on your country and account.</p>}
+          <label className="twr-field-label" htmlFor="twr-note"><FieldIcon name="note"/>Additional note <span>(optional)</span></label>
           <textarea className="twr-input twr-textarea" id="twr-note" rows={3} value={note} onChange={(event) => { setNote(event.target.value); setSubmitted(false); }} placeholder="Anything we should know?" />
 
           <button className="twr-submit" type="submit">Preview Withdrawal Request <span className="twr-submit-icon"><FieldIcon name="arrow" size={17}/></span></button>
