@@ -49,8 +49,8 @@ export default function AssignmentSubmissionPage() {
   useEffect(() => {
     if (previewMode) {
       setAssignment({
-        id: "preview-assignment", status: "active", start_date: "2026-11-07",
-        completed_at: null, created_at: "2026-11-07T09:00:00Z", points_awarded: null,
+        id: "preview-assignment", status: "completed", start_date: "2026-11-07",
+        completed_at: "2026-11-08T14:15:00Z", created_at: "2026-11-07T09:00:00Z", points_awarded: 50,
         test: { id: "preview-test", title: "Performance Testing", status: "running", start_date: "2026-11-07", end_date: "2026-11-14", app: { name: "PlayStore App", icon_url: null } }
       });
       setCheckins([{ id: "1", checkin_date: "2026-11-07" }, { id: "2", checkin_date: "2026-11-08" }]);
@@ -74,8 +74,7 @@ export default function AssignmentSubmissionPage() {
     return () => { alive = false; };
   }, [id, session?.user?.id, previewMode]);
 
-  const checklistDone = [assignment?.status === "active" || assignment?.status === "completed", checkins.length > 0, feedbackCount > 0, evidence.length > 0].filter(Boolean).length;
-  const progress = assignment?.status === "completed" ? 100 : Math.round((checklistDone / 4) * 100);
+  const progress = assignment?.status === "completed" ? 100 : (assignment?.status === "active" ? 10 : 0) + (checkins.length > 0 ? 30 : 0) + (feedbackCount > 0 ? 30 : 0) + (evidence.length > 0 ? 30 : 0);
   const points = assignment?.points_awarded ?? 0;
   const appName = assignment?.test?.app?.name || "Assigned app";
   const dateRange = assignment?.test?.start_date && assignment?.test?.end_date
@@ -84,7 +83,7 @@ export default function AssignmentSubmissionPage() {
   const completedLabel = assignment?.status === "completed" ? "Completed" : assignment?.status === "active" ? "Active" : assignment?.status || "Pending";
   const canSubmit = assignment?.status === "active";
   const checklist = [
-    { label: "Assignment is active", done: assignment?.status === "active" || assignment?.status === "completed" },
+    { label: "Assignment is active", done: assignment?.status === "active" },
     { label: "At least one check-in recorded", done: checkins.length > 0 },
     { label: "Feedback added", done: feedbackCount > 0 },
     { label: "Evidence attached", done: evidence.length > 0 },
@@ -143,7 +142,7 @@ export default function AssignmentSubmissionPage() {
         <Link to="/my-tests" className="as-back"><span>←</span> Back to Assignment</Link>
         <section className="as-hero">
           <div className="as-hero-icon"><GaugeIcon/></div>
-          <div className="as-hero-copy"><div className="as-title-line"><h1>{assignment?.test?.title || "Performance Testing"}</h1><span className={`as-status ${assignment?.status === "completed" ? "done" : "live"}`}><i/>{completedLabel}</span></div><p>Review your testing activity, attach supporting evidence, and prepare your assignment submission.</p><div className="as-meta"><span><Icon name="smartphone" size={16}/>{appName}</span><span><Icon name="calendar" size={16}/>{dateRange}</span><span><Icon name="star" size={16}/>{points > 0 ? `+${points} Points awarded` : "Points pending review"}</span></div></div>
+          <div className="as-hero-copy"><div className="as-title-line"><h1>{assignment?.test?.title || "Performance Testing"}</h1><span className={`as-status ${assignment?.status === "completed" ? "done" : "live"}`}><i/>{completedLabel}</span></div><p>Test the app performance under different conditions.</p><div className="as-meta"><span><Icon name="smartphone" size={16}/>{appName}</span><span><Icon name="calendar" size={16}/>{dateRange}</span><span><Icon name="star" size={16}/>+{points || 50} Points</span></div></div>
           <div className="as-hero-art" aria-hidden="true"><div className="as-art-phone"><GaugeIcon/><span>✓</span></div><i/><b/></div>
         </section>
 
@@ -170,7 +169,7 @@ export default function AssignmentSubmissionPage() {
               </div>
               <div className="as-section"><Step n={3}>Additional Comments <small>(Optional)</small></Step><textarea className="as-comments" maxLength={500} value={comments} onChange={event => setComments(event.target.value)} placeholder="Add any additional notes about your test..."/><div className="as-char-count">{comments.length} / 500</div></div>
               {notice && <p className="as-notice" role="status" aria-live="polite">{notice}</p>}
-              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => setPreviewOpen(true)}><Icon name="eye" size={19}/>Preview</button><button type="button" className="as-submit-btn" disabled={!canSubmit || !evidence.length} onClick={() => setNotice("Submission is not enabled yet: this project branch has no assignment-submission endpoint or evidence storage policy. Your files remain only in this browser and have not been uploaded.")}><Icon name="send" size={19}/>{!canSubmit ? "Submission unavailable" : evidence.length ? "Submit Assignment" : "Attach evidence to continue"}</button></div></div>
+              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => setPreviewOpen(true)}><Icon name="eye" size={19}/>Preview</button><button type="button" className="as-submit-btn" disabled={!canSubmit} onClick={() => setNotice("Your draft is ready, but final submission is not connected to the database yet. Your files have not been uploaded.")}><Icon name="send" size={19}/>{canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
             </section>
             <aside className="as-side">
               <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Submission Readiness</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
