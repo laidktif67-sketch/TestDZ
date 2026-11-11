@@ -23,7 +23,8 @@ export default function LoginActivitySecurityPage() {
   const device = useMemo(getDevice, []);
   useEffect(() => {
     let alive = true;
-    async function loadActivity() {\n      if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }
+    async function loadActivity() {
+      if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }
       setLoadingActivity(true);
       const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
       if (!alive) return;
