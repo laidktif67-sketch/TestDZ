@@ -31,7 +31,7 @@ export default function LiveChatPage() {
         <div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/><span className="lc-notification-count">3</span></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div>
       </header>
       <div className="lc-content">
-        <Link to="/support" className="lc-back"><Icon name="arrow-left" size={17}/> Back to Support</Link>
+        <Link to="/support" className="lc-back"><Icon name="arrow" size={17}/> Back to Support</Link>
         <section className="lc-hero">
           <div className="lc-hero-icon"><Icon name="message" size={38}/></div>
           <div className="lc-hero-copy"><h1>Live Chat</h1><p>Chat instantly with our support team</p></div>
@@ -48,9 +48,9 @@ export default function LiveChatPage() {
               <Link to="/support?new=1" className="lc-primary-link"><Icon name="receipt" size={17}/> Create a Support Ticket</Link>
             </div>
             <form className="lc-composer" onSubmit={e => e.preventDefault()}>
-              <button type="button" aria-label="Attachments" disabled title="Available when live chat is connected"><Icon name="paperclip" size={22}/></button>
+              <button type="button" aria-label="Attachments" disabled title="Available when live chat is connected"><Icon name="file" size={22}/></button>
               <input aria-label="Your message" placeholder="Live chat is not available yet…" disabled/>
-              <button type="button" className="lc-emoji" aria-label="Emoji" disabled><Icon name="smile" size={21}/></button>
+              <button type="button" className="lc-emoji" aria-label="Emoji" disabled><Icon name="message" size={21}/></button>
               <button type="submit" className="lc-send" disabled><Icon name="send" size={17}/> Send</button>
             </form>
           </section>
