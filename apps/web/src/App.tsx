@@ -22,6 +22,7 @@ import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
+import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
@@ -76,6 +77,7 @@ export default function App() {
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
             <Route path="/my-tests" element={<MyTestsPage />} />
+            <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
             <Route path="/check-in-history" element={<CheckInHistoryPage />} />
             <Route path="/activity-history" element={<ActivityHistoryPage />} />
             <Route path="/discover-tests" element={<DiscoverTestsPage />} />
