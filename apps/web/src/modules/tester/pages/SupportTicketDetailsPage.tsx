@@ -38,7 +38,7 @@ export default function SupportTicketDetailsPage(){
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
  const canReply=!!ticket&&ticket.status!=="closed"&&(ticket.user_id===user?.id||roles.includes("support")||roles.includes("admin"));
- const ownMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===user?.id).map(m=>m.id)),[messages,user?.id]);
+ const customerMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===ticket?.user_id).map(m=>m.id)),[messages,ticket?.user_id]);
  async function sendReply(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(!supabase||!user||!ticket||!reply.trim())return;
   setSending(true);setError("");setNotice("");
@@ -75,8 +75,8 @@ export default function SupportTicketDetailsPage(){
      {notice&&<p className="std-notice" role="status">{notice}</p>}{error&&<p className="std-error" role="alert">{error}</p>}
      <div className="std-layout"><div className="std-main-column">
       <section className="std-card std-conversation"><div className="std-card-title"><Icon name="message" size={22}/><h2>Conversation ({messages.length+1} messages)</h2></div>
-       <article className="std-message"><div className="std-avatar">{firstName.slice(0,2).toUpperCase()}</div><div className="std-message-content"><div className="std-message-meta"><strong>You</strong><span>{dateTime(ticket.created_at)}</span></div><div className="std-bubble own">{ticket.description}</div></div></article>
-       {messages.map(message=><article className="std-message" key={message.id}><div className={"std-avatar "+(!ownMessages.has(message.id)?"support":"")}>{ownMessages.has(message.id)?firstName.slice(0,2).toUpperCase():"S"}</div><div className="std-message-content"><div className="std-message-meta"><strong>{ownMessages.has(message.id)?"You":"TestDZ Support"}</strong><span>{dateTime(message.created_at)}</span></div><div className={"std-bubble "+(ownMessages.has(message.id)?"own":"")}>{message.body}</div></div></article>)}
+       <article className="std-message"><div className="std-avatar">{ticket.user_id===user?.id?firstName.slice(0,2).toUpperCase():"T"}</div><div className="std-message-content"><div className="std-message-meta"><strong>{ticket.user_id===user?.id?"You":"Tester"}</strong><span>{dateTime(ticket.created_at)}</span></div><div className={"std-bubble "+(ticket.user_id===user?.id?"own":"")}>{ticket.description}</div></div></article>
+       {messages.map(message=>{const fromCustomer=customerMessages.has(message.id),isCurrentSender=message.sender_id===user?.id;return <article className="std-message" key={message.id}><div className={"std-avatar "+(!fromCustomer?"support":"")}>{fromCustomer?(ticket.user_id===user?.id?firstName.slice(0,2).toUpperCase():"T"):isCurrentSender?firstName.slice(0,2).toUpperCase():"S"}</div><div className="std-message-content"><div className="std-message-meta"><strong>{fromCustomer?(ticket.user_id===user?.id?"You":"Tester"):isCurrentSender?"You":"TestDZ Support"}</strong><span>{dateTime(message.created_at)}</span></div><div className={"std-bubble "+(fromCustomer?"own":"")}>{message.body}</div></div></article>})}
        {attachments.length>0&&<div className="std-attachments"><h3><Icon name="file" size={18}/> Attachments ({attachments.length})</h3>{attachments.map(item=><div className="std-attachment" key={item.id}><span className="std-file-icon"><Icon name="file" size={23}/></span><div className="std-file-name"><strong>{item.original_filename}</strong><small>{sizeLabel(item.size_bytes)} · {dateTime(item.created_at)}</small></div><button type="button" onClick={()=>void openAttachment(item)}><Icon name="eye" size={17}/> View / Download</button></div>)}</div>}
        {!messages.length&&<p className="std-empty-note">No replies yet. Your support team can respond here.</p>}
       </section>
