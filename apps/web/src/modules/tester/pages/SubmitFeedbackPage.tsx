@@ -93,8 +93,8 @@ export default function SubmitFeedbackPage() {
       </header>
 
       <div className="sf-content">
-        <Link to="/tester-dashboard" className="sf-back"><span aria-hidden="true">←</span> Back to Dashboard</Link>
         <section className="sf-hero">
+          <Link to="/tester-dashboard" className="sf-back"><span aria-hidden="true">←</span> Back to Dashboard</Link>
           <div className="sf-hero-icon"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8C17.6 8 6 18 6 30.4c0 8.1 4.8 15.2 12.1 19.1L16 59l13.2-5.5c1 .1 1.9.2 2.8.2 14.4 0 26-10 26-23.3S46.4 8 32 8Z" fill="white"/><g fill="#0877ed"><circle cx="20" cy="31" r="3.8"/><circle cx="32" cy="31" r="3.8"/><circle cx="44" cy="31" r="3.8"/></g></svg></div>
           <div className="sf-hero-copy"><h1>Submit Feedback</h1><p>Share your experience, report issues, or suggest improvements.</p></div>
           <FeedbackBannerArt/>
