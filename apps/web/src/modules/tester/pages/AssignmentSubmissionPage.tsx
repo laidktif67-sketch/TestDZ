@@ -38,6 +38,7 @@ export default function AssignmentSubmissionPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
   const name = session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Tester";
@@ -72,24 +73,36 @@ export default function AssignmentSubmissionPage() {
     return () => { alive = false; };
   }, [id, session?.user?.id, previewMode]);
 
-  const progress = assignment?.status === "completed" ? 100 : Math.min(99, Math.round((checkins.length / 12) * 100));
+  const progress = assignment?.status === "completed" ? 100 : Math.min(90, (checkins.length > 0 ? 30 : 0) + (feedbackCount > 0 ? 30 : 0) + (evidence.length > 0 ? 30 : 0));
   const points = assignment?.points_awarded ?? 0;
   const appName = assignment?.test?.app?.name || "Assigned app";
   const dateRange = assignment?.test?.start_date && assignment?.test?.end_date
     ? `${new Date(assignment.test.start_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "2-digit" })} – ${new Date(assignment.test.end_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" })}`
     : "Dates not set";
   const completedLabel = assignment?.status === "completed" ? "Completed" : assignment?.status === "active" ? "Active" : assignment?.status || "Pending";
-  const canSubmit = assignment?.status === "active" || assignment?.status === "completed";
+  const canSubmit = assignment?.status === "active";
+  const checklist = [
+    { label: "Assignment is active", done: assignment?.status === "active" },
+    { label: "At least one check-in recorded", done: checkins.length > 0 },
+    { label: "Feedback added", done: feedbackCount > 0 },
+    { label: "Evidence attached", done: evidence.length > 0 },
+  ];
   const totalSize = useMemo(() => evidence.reduce((sum, item) => sum + item.file.size, 0), [evidence]);
 
   const addFiles = (files: FileList | File[]) => {
-    const accepted = Array.from(files).filter(file => /^(image\/(png|jpeg|webp)|application\/pdf)$/.test(file.type) && file.size <= 10 * 1024 * 1024);
-    const rejected = files.length - accepted.length;
+    const incoming = Array.from(files);
+    let skipped = 0;
     setEvidence(current => {
-      const available = Math.max(0, 5 - current.length);
-      return [...current, ...accepted.slice(0, available).map(file => ({ file, url: URL.createObjectURL(file) }))];
+      const next = [...current];
+      for (const file of incoming) {
+        const supported = /^(image\/(png|jpeg|webp)|application\/pdf)$/.test(file.type);
+        const duplicate = next.some(item => item.file.name === file.name && item.file.size === file.size);
+        if (!supported || file.size > 10 * 1024 * 1024 || duplicate || next.length >= 5) { skipped++; continue; }
+        next.push({ file, url: URL.createObjectURL(file) });
+      }
+      setNotice(skipped ? "Some files were skipped: use up to 5 unique PNG, JPG, WebP or PDF files (10 MB max each)." : "");
+      return next;
     });
-    setNotice(rejected ? "Some files were skipped. Use PNG, JPG, WebP or PDF files up to 10 MB each." : "");
   };
   const removeFile = (index: number) => setEvidence(current => {
     const removed = current[index]; if (removed) URL.revokeObjectURL(removed.url);
@@ -99,7 +112,10 @@ export default function AssignmentSubmissionPage() {
     if (event.target.files) addFiles(event.target.files);
     event.target.value = "";
   };
-  const onDrop = (event: DragEvent<HTMLDivElement>) => { event.preventDefault(); if (event.dataTransfer.files) addFiles(event.dataTransfer.files); };
+  const onDrop = (event: DragEvent<HTMLDivElement>) => { event.preventDefault(); setIsDragging(false); if (event.dataTransfer.files) addFiles(event.dataTransfer.files); };
+
+  useEffect(() => () => { evidence.forEach(item => URL.revokeObjectURL(item.url)); }, []);
+  useEffect(() => { if (!previewOpen) return; const close = (event: KeyboardEvent) => { if (event.key === "Escape") setPreviewOpen(false); }; window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [previewOpen]);
 
   if (!previewMode && !session) return <Navigate to="/auth" replace />;
   if (!previewMode && !roles.includes("tester") && !loading) return <Navigate to="/dashboard" replace />;
@@ -141,9 +157,9 @@ export default function AssignmentSubmissionPage() {
               </div></div>
               <div className="as-section"><Step n={2}>Upload Evidence</Step>
                 <div className="as-upload-row">
-                  <div className="as-dropzone" onDragOver={event => event.preventDefault()} onDrop={onDrop} onClick={() => fileRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") fileRef.current?.click(); }}>
+                  <div className={`as-dropzone ${isDragging ? "is-dragging" : ""}`} onDragOver={event => { event.preventDefault(); setIsDragging(true); }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDragging(false); }} onDrop={onDrop} onClick={() => fileRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") fileRef.current?.click(); }}>
                     <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 32V8m0 0L14 18M24 8l10 10M8 29v8a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4v-8" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    <strong>Drag &amp; drop screenshots or files here</strong><span>or click to browse (PNG, JPG, WebP, PDF up to 10 MB)</span>
+                    <strong>{isDragging ? "Drop your evidence here" : "Drag &amp; drop screenshots or files here"}</strong><span>PNG, JPG, WebP or PDF · up to 10 MB each · maximum 5 files</span>
                     <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden onChange={onFileChange}/>
                   </div>
                   {evidence.length > 0 && <div className="as-evidence-list">{evidence.map((item, index) => <div className="as-evidence-item" key={item.file.name + index}>{item.file.type.startsWith("image/") ? <img src={item.url} alt={item.file.name}/> : <div className="as-pdf">PDF</div>}<span title={item.file.name}>{item.file.name}</span><button type="button" aria-label={`Remove ${item.file.name}`} onClick={() => removeFile(index)}>×</button></div>)}</div>}
@@ -151,11 +167,11 @@ export default function AssignmentSubmissionPage() {
                 <small className="as-upload-note">{evidence.length}/5 files · {(totalSize / (1024 * 1024)).toFixed(1)} MB selected</small>
               </div>
               <div className="as-section"><Step n={3}>Additional Comments <small>(Optional)</small></Step><textarea className="as-comments" maxLength={500} value={comments} onChange={event => setComments(event.target.value)} placeholder="Add any additional notes about your test..."/><div className="as-char-count">{comments.length} / 500</div></div>
-              {notice && <p className="as-notice" role="status">{notice}</p>}
-              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => setPreviewOpen(true)}><Icon name="eye" size={19}/>Preview</button><button type="button" className="as-submit-btn" disabled={!canSubmit} onClick={() => setNotice("The submission form is ready. Saving a final assignment submission is not enabled in the current database workflow yet.")}><Icon name="send" size={19}/>Submit Assignment</button></div></div>
+              {notice && <p className="as-notice" role="status" aria-live="polite">{notice}</p>}
+              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => setPreviewOpen(true)}><Icon name="eye" size={19}/>Preview</button><button type="button" className="as-submit-btn" disabled={!canSubmit} onClick={() => setNotice("Your draft is ready, but final submission is not connected to the database yet. Your files have not been uploaded.")}><Icon name="send" size={19}/>{canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
             </section>
             <aside className="as-side">
-              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Assignment Progress</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist"><span><i>✓</i> {progress === 100 ? "Completed" : "In progress"}</span><span><i>✓</i> {feedbackCount ? "Feedback submitted" : "Feedback pending"}</span><span><i>✓</i> {checkins.length} check-ins logged</span><b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
+              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Assignment Progress</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
               <section className="as-side-card as-details-card"><h2><Icon name="receipt" size={22}/>Submission Details</h2><div><Icon name="calendar" size={20}/><span>Assignment Started<strong>{dateTime(assignment.start_date)}</strong></span></div><div><Icon name="calendar" size={20}/><span>Last Updated<strong>{dateTime(assignment.completed_at || assignment.created_at)}</strong></span></div><div><Icon name="clock" size={20}/><span>Status<strong className="as-detail-status">{completedLabel}</strong></span></div><div><Icon name="info" size={20}/><span>Assignment ID<strong className="as-id">{assignment.id.slice(0, 13)}…</strong></span></div></section>
               <section className="as-success-card"><span>✓</span><div><strong>{assignment.status === "completed" ? "Assignment completed" : "You're making progress!"}</strong><p>{assignment.status === "completed" ? "Your assignment is marked as completed." : "Keep your evidence and comments ready before final submission."}</p></div></section>
             </aside>
@@ -163,6 +179,6 @@ export default function AssignmentSubmissionPage() {
         </> : null}
       </div>
     </main>
-    {previewOpen && <div className="as-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setPreviewOpen(false); }}><section className="as-preview-modal" role="dialog" aria-modal="true" aria-labelledby="as-preview-title"><header><h2 id="as-preview-title">Submission Preview</h2><button type="button" onClick={() => setPreviewOpen(false)} aria-label="Close preview">×</button></header><p><strong>Assignment:</strong> {assignment?.test?.title}</p><p><strong>App:</strong> {appName}</p><p><strong>Evidence:</strong> {evidence.length ? evidence.map(item => item.file.name).join(", ") : "No files attached"}</p><p><strong>Comments:</strong></p><div className="as-preview-comments">{comments || "No additional comments."}</div><footer><button type="button" onClick={() => setPreviewOpen(false)}>Back to form</button></footer></section></div>}
+    {previewOpen && <div className="as-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setPreviewOpen(false); }}><section className="as-preview-modal" role="dialog" aria-modal="true" aria-labelledby="as-preview-title"><header><h2 id="as-preview-title">Submission Preview</h2><button type="button" onClick={() => setPreviewOpen(false)} aria-label="Close preview">×</button></header><p><strong>Assignment:</strong> {assignment?.test?.title}</p><p><strong>App:</strong> {appName}</p><p><strong>Assignment ID:</strong> {assignment?.id}</p><p><strong>Check-ins:</strong> {checkins.length} · <strong>Feedback:</strong> {feedbackCount}</p><p><strong>Evidence:</strong> {evidence.length ? evidence.map(item => item.file.name).join(", ") : "No files attached"}</p><p><strong>Comments:</strong></p><div className="as-preview-comments">{comments || "No additional comments."}</div><footer><button type="button" onClick={() => setPreviewOpen(false)}>Back to form</button></footer></section></div>}
   </div>;
 }
