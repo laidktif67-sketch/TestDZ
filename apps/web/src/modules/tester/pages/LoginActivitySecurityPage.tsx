@@ -36,6 +36,10 @@ export default function LoginActivitySecurityPage() {
     return () => { alive = false; };
   }, [user?.id]);
   const firstName = user?.email?.split("@")[0] || "Tester";
+  const lastLogin = user?.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
+  const formattedLogin = lastLogin && !Number.isNaN(lastLogin.getTime())
+    ? lastLogin.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    : "Not available";
   const verified = Boolean(user?.email_confirmed_at);
   const nav = [
     { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
@@ -71,7 +75,7 @@ export default function LoginActivitySecurityPage() {
         <section className="las-hero"><div className="las-hero-icon"><Icon name="shield" size={55}/></div><div className="las-hero-copy"><h1>Login Activity &amp; Security History</h1><p>Review your login activity and keep your account secure.</p></div><div className="las-hero-art"><Icon name="monitor" size={105}/><span><Icon name="check" size={47}/></span></div></section>
         <section className="las-stats">
           <article><span className="las-stat-icon blue"><Icon name="calendar" size={32}/></span><div><strong>{activity.length || "0"}</strong><b>Recorded Login Events</b><small>Supabase Auth audit history</small></div></article>
-          <article><span className="las-stat-icon green"><Icon name="smartphone" size={32}/></span><div><strong>{user ? "1" : "—"}</strong><b>Current Device</b><small>{device.label}</small></div></article>
+          <article><span className="las-stat-icon green"><Icon name="smartphone" size={32}/></span><div><strong>{user ? "1" : "—"}</strong><b>Current Device</b><small>{device.label} · Last sign-in: {formattedLogin}</small></div></article>
           <article><span className="las-stat-icon purple"><Icon name="globe" size={32}/></span><div><strong>—</strong><b>Login Locations</b><small>Location data not provided</small></div></article>
           <article><span className="las-stat-icon teal"><Icon name="shield" size={32}/></span><div><strong>{verified ? "Verified" : "Review"}</strong><b>Account Verification</b><small>{verified ? "Email confirmed" : "Email not confirmed"}</small></div></article>
         </section>
