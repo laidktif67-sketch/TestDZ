@@ -4,6 +4,7 @@ import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-rou
 import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
 import TesterDashboard from "./components/TesterDashboard";
+import FeedbackHistoryPage from "./components/FeedbackHistory";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
 function Brand() {
@@ -162,6 +163,22 @@ function DashboardPage() {
   return <TesterDashboard session={session} />;
 }
 
+
+
+function FeedbackHistoryRoute() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const client = supabase;
+    if (!client) { setLoading(false); return; }
+    client.auth.getSession().then(({ data }) => { setSession(data.session); setLoading(false); });
+    const { data } = client.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  if (loading) return <div className="loading-screen">جارٍ تحميل سجل الملاحظات...</div>;
+  if (!session) return <Navigate to="/auth" replace />;
+  return <FeedbackHistoryPage session={session} />;
+}
 
 function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -352,5 +369,5 @@ function AppDetailPage(){
 }
 
 export default function App() {
-  return <Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/dashboard" element={<DashboardPage />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+  return <Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/dashboard" element={<DashboardPage />} /><Route path="/feedback-history" element={<FeedbackHistoryRoute />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
 }
