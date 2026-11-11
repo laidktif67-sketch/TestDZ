@@ -14,7 +14,7 @@ import LegalPage from "./pages/LegalPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
-import MyTestsPage from "./modules/tester/pages/MyTestsPage";
+import MyTestsPage from "./modules/tester/pages/MyTestsPage";\nimport DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
@@ -62,7 +62,7 @@ export default function App() {
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
-            <Route path="/my-tests" element={<MyTestsPage />} />
+            <Route path="/my-tests" element={<MyTestsPage />} />\n            <Route path="/discover-tests" element={<DiscoverTestsPage />} />
           </Route>
           <Route element={<RoleGuard requiredRole="developer" />}>
             <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
