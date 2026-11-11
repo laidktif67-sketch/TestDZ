@@ -74,7 +74,7 @@ export default function AssignmentSubmissionPage() {
     return () => { alive = false; };
   }, [id, session?.user?.id, previewMode]);
 
-  const progress = assignment?.status === "completed" ? 100 : Math.min(90, (checkins.length > 0 ? 30 : 0) + (feedbackCount > 0 ? 30 : 0) + (evidence.length > 0 ? 30 : 0));
+  const progress = assignment?.status === "completed" ? 100 : (assignment?.status === "active" ? 10 : 0) + (checkins.length > 0 ? 30 : 0) + (feedbackCount > 0 ? 30 : 0) + (evidence.length > 0 ? 30 : 0);
   const points = assignment?.points_awarded ?? 0;
   const appName = assignment?.test?.app?.name || "Assigned app";
   const dateRange = assignment?.test?.start_date && assignment?.test?.end_date
