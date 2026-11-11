@@ -302,3 +302,25 @@
 @media(max-width:920px){.td-nav-emoji{width:18px;min-width:18px;height:18px;flex-basis:18px;font-size:17px}}
 @media(max-width:560px){.td-nav-emoji{width:16px;min-width:16px;height:16px;flex-basis:16px;font-size:15px}}
 @media(prefers-reduced-motion:reduce){.td-nav-link .td-nav-emoji{transition:none}}
+
+
+/* Dashboard usability pass — active assignment focus and responsive polish */
+.td-active-summary{display:flex;align-items:center;gap:14px;margin-top:13px;padding:15px 18px;border:1px solid #dce9fb;border-radius:16px;background:linear-gradient(105deg,#fff 0%,#f0f6ff 100%);box-shadow:0 5px 18px #1d4e8b08;min-width:0}
+.td-active-summary-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none;color:#075cf5;background:#e1edff}
+.td-active-summary-copy{min-width:0;flex:1}
+.td-active-summary-copy strong{display:block;color:#102b55;font-size:13px;font-weight:850}
+.td-active-summary-copy p{margin:4px 0 3px;color:#425b7e;font-size:11px;line-height:1.5}
+.td-active-summary-copy small{display:block;color:#8191a9;font-size:9px;line-height:1.45}
+.td-active-summary>a{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 14px;border-radius:10px;background:#075cf5;color:#fff;font-size:10px;font-weight:800;white-space:nowrap;flex:none;transition:transform .18s,box-shadow .18s}
+.td-active-summary>a:hover{transform:translateY(-1px);box-shadow:0 6px 15px #075cf533}
+.td-stat-card.sky>div b{color:#172b4d}
+@media(max-width:560px){
+ .td-active-summary{align-items:flex-start;gap:9px;margin-top:9px;padding:11px;border-radius:13px;flex-wrap:wrap}
+ .td-active-summary-icon{width:35px;height:35px;border-radius:10px}
+ .td-active-summary-icon .td-icon{width:18px;height:18px}
+ .td-active-summary-copy{flex:1 1 calc(100% - 45px)}
+ .td-active-summary-copy strong{font-size:11px}
+ .td-active-summary-copy p{font-size:9px;margin:3px 0}
+ .td-active-summary-copy small{font-size:8px}
+ .td-active-summary>a{margin-left:44px;min-height:31px;padding:0 11px;font-size:9px}
+}
