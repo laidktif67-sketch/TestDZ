@@ -185,6 +185,7 @@ export default function TesterDashboardPage() {
     { label: "Activity & History", icon: "chart", href: "/activity-history" },
     { label: "Check-in History", icon: "calendar", href: "/check-in-history" },
     { label: "Feedback History", icon: "star", href: "/feedback-history" },
+    { label: "Notifications", icon: "bell", href: "/notifications" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
   ];
@@ -199,7 +200,7 @@ export default function TesterDashboardPage() {
       <header className="td-topbar">
         <label className="td-search"><Icon name="search" size={21}/><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tests, topics, or skills…"/></label>
         <div className="td-top-actions"><button className="td-notification" onClick={() => setNoticeOpen(!noticeOpen)} aria-label="Notifications"><Icon name="bell" size={22}/>{notifications > 0 && <i>{notifications > 9 ? "9+" : notifications}</i>}</button><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><b>⌄</b></Link></div>
-        {noticeOpen && <div className="td-notice-pop"><strong>{notifications ? `${notifications} unread notifications` : "You're all caught up"}</strong><p>{notifications ? "Open your profile to review account activity." : "New updates will appear here."}</p></div>}
+        {noticeOpen && <div className="td-notice-pop"><strong>{notifications ? `${notifications} unread notifications` : "You're all caught up"}</strong><p>{notifications ? "Open your notifications center to review updates." : "New updates will appear here."}</p><Link to="/notifications">View all notifications <Icon name="arrow" size={14}/></Link></div>}
       </header>
 
       <section className="td-welcome-banner">
