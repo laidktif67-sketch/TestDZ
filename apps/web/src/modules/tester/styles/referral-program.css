@@ -65,3 +65,5 @@
  .rp-bottom-cta button,.rp-help-cta{margin-left:0;width:100%;justify-content:center}
  .rp-readiness-grid em{font-size:8px;padding:4px 6px}
 }
+
+.rp-page-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}.rp-history-link{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border:1px solid #cbdcf8;border-radius:999px;background:#fff;color:#0757d9;text-decoration:none;font-size:12px;font-weight:800;margin-bottom:15px}.rp-history-link:hover{background:#f0f6ff}@media(max-width:480px){.rp-page-actions{align-items:flex-start;flex-wrap:wrap}.rp-history-link{margin-top:-8px}}
