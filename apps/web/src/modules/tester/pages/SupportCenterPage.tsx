@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -13,6 +13,7 @@ const categories = [{value:"technical",label:"Technical"},{value:"account",label
 const statusLabel: Record<string,string> = {open:"Open",in_progress:"In Progress",waiting_for_user:"Waiting for You",resolved:"Resolved",closed:"Closed"};
 export default function SupportCenterPage() {
   const { user, roles = [] } = useIdentity();
+  const [searchParams] = useSearchParams();
   const [menuOpen,setMenuOpen]=useState(false),[tickets,setTickets]=useState<Ticket[]>([]),[loading,setLoading]=useState(true);
   const [subject,setSubject]=useState(""),[category,setCategory]=useState("technical"),[priority,setPriority]=useState("normal"),[description,setDescription]=useState("");
   const [showForm,setShowForm]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
@@ -21,6 +22,7 @@ export default function SupportCenterPage() {
   const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
   async function loadTickets(){if(!supabase||!user){setLoading(false);return;}setLoading(true);const {data,error}=await supabase.from("support_tickets").select("id,ticket_number,subject,category,priority,status,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(error)setError("Could not load your support tickets. Please refresh.");else setTickets((data||[]) as Ticket[]);setLoading(false);}
   useEffect(()=>{void loadTickets();},[user?.id]);
+  useEffect(()=>{if(searchParams.get("new")==="1")setShowForm(true);},[searchParams]);
   async function createTicket(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!supabase||!user)return;setBusy(true);setError("");setNotice("");const {data,error}=await supabase.from("support_tickets").insert({user_id:user.id,subject:subject.trim(),category,priority,description:description.trim()}).select("id,ticket_number,subject,category,priority,status,created_at").single();setBusy(false);if(error){setError("Your ticket could not be created. Please check the details and try again.");return;}setTickets(current=>[data as Ticket,...current]);setSubject("");setDescription("");setPriority("normal");setCategory("technical");setShowForm(false);setNotice("Your support ticket was created successfully.");}
   return <div className="td-dashboard sc-dashboard"><TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/><main className="td-main sc-main"><header className="td-topbar sc-topbar"><label className="td-search sc-search"><Icon name="search" size={20}/><input placeholder="Search support tickets…" aria-label="Search support tickets"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
   <div className="sc-content"><Link to="/help" className="sc-back">← Back to Help Center</Link>
