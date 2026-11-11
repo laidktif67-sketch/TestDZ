@@ -18,3 +18,42 @@
 @media(max-width:1100px){.as-hero-art{opacity:.35}.as-layout{grid-template-columns:minmax(0,1fr) 290px}.as-form-footer{align-items:stretch;flex-direction:column}.as-guidance{max-width:none}.as-actions{justify-content:flex-end}}
 @media(max-width:760px){.as-content{padding:0 12px 22px}.as-topbar .td-search{max-width:none;min-width:0}.as-hero{padding:16px;min-height:0;gap:13px;border-radius:16px}.as-hero-icon{width:66px;height:66px;flex-basis:66px;border-radius:17px}.as-hero-icon svg{width:43px;height:43px}.as-title-line h1{font-size:21px}.as-hero-copy>p{font-size:13px;line-height:1.45}.as-hero-art{display:none}.as-meta{gap:6px}.as-meta span{font-size:11px;padding:6px 8px}.as-layout{grid-template-columns:minmax(0,1fr);gap:12px}.as-form-card{padding:14px;border-radius:16px}.as-card-heading{font-size:20px}.as-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:0;padding:8px}.as-summary>div{padding:12px 5px;border-right:1px solid #b9ccec;border-bottom:1px solid #b9ccec}.as-summary>div:nth-child(2){border-right:0}.as-summary>div:nth-child(n+3){border-bottom:0}.as-summary span{font-size:12px}.as-summary strong{font-size:22px}.as-upload-row{grid-template-columns:minmax(0,1fr)}.as-evidence-list{max-width:none}.as-evidence-item{width:calc(33.333% - 7px);min-width:82px}.as-evidence-item img,.as-pdf{width:100%;height:76px}.as-form-footer{gap:12px}.as-actions{display:grid;grid-template-columns:1fr 1.35fr}.as-actions button{padding:0 9px;font-size:13px;min-height:46px}.as-side{grid-template-columns:minmax(0,1fr)}.as-progress-content{justify-content:flex-start;gap:24px}.as-back{font-size:14px;margin:8px 0}.as-details-card>div{padding:8px 0}}
 @media(max-width:390px){.as-hero{align-items:flex-start}.as-hero-icon{width:54px;height:54px;flex-basis:54px}.as-hero-icon svg{width:36px;height:36px}.as-title-line h1{font-size:18px}.as-status{padding:6px 9px;font-size:11px}.as-actions{grid-template-columns:1fr}.as-progress-ring{width:112px;height:112px;flex-basis:112px}.as-checklist{font-size:12px}}
+
+/* Submission UX refinement */
+.as-dropzone{transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.as-dropzone:hover,.as-dropzone.is-dragging{border-color:#0757e8;background:#eaf3ff}
+.as-dropzone.is-dragging{transform:scale(1.006);box-shadow:0 0 0 4px #0757e817}
+.as-checklist span{line-height:1.35}
+.as-checklist span.is-pending{color:#7583a0}
+.as-checklist span.is-pending i{background:#e8eef8;color:#7383a1}
+.as-checklist span.is-done i{background:#0ba35d;color:#fff}
+.as-success-card.is-draft{border-color:#cbdcf8;background:linear-gradient(110deg,#edf5ff,#e3efff);color:#1451b6}
+.as-success-card.is-draft>span{background:#d8e8ff;color:#0757d9}
+.as-success-card.is-draft p{color:#49658f}
+.as-submit-btn:disabled{filter:saturate(.55);opacity:.58}
+.as-notice{display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.as-preview-modal{overscroll-behavior:contain}
+.as-evidence-item:focus-within{outline:2px solid #0757e8;outline-offset:2px}
+@media(max-width:760px){
+ .as-content{padding-left:10px;padding-right:10px}
+ .as-hero-copy{width:100%}
+ .as-title-line{gap:8px}
+ .as-meta{display:flex;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;scrollbar-width:thin}
+ .as-meta span{flex:0 0 auto;white-space:nowrap}
+ .as-step-title{font-size:15px;gap:9px}
+ .as-upload-note{line-height:1.5}
+ .as-progress-content{justify-content:space-between;gap:12px}
+ .as-checklist{gap:9px;min-width:0}
+ .as-checklist span{font-size:12px}
+ .as-form-footer{min-width:0}
+ .as-actions{width:100%;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+ .as-actions button{min-width:0;white-space:normal;line-height:1.2}
+}
+@media(max-width:390px){
+ .as-actions{grid-template-columns:1fr}
+ .as-progress-content{align-items:center}
+ .as-checklist{flex:1}
+ .as-evidence-list{gap:7px}
+ .as-evidence-item{width:calc(50% - 4px)}
+}
+@media(prefers-reduced-motion:reduce){.as-dropzone{transition:none}}
