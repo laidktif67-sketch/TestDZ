@@ -18,6 +18,8 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
   };
   const paths: Record<string, ReactNode> = {
     info: <><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></>,
+    link: <><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21.1l1.7-1.7"/></>,
+    copy: <><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></>,
     send: <><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></>,
     receipt: <><path d="M5 3h14v18l-3-2-4 2-4-2-3 2z"/><path d="M8 8h8M8 12h8M8 16h4"/></>,
     user: <><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
@@ -41,6 +43,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     bolt: <path d="m13.2 2.5-8 11h6l-.5 8 8.1-11h-6.1l.5-8Z"/>,
     menu: <><path d="M4 6.5h16M4 12h16M4 17.5h16"/></>,
     mail: <><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></>,
+    send: <><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></>,
     message: <><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2v-6.5A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></>,
     lock: <><rect x="4.5" y="10" width="15" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></>,
     settings: <><circle cx="12" cy="12" r="3.1"/><path d="m19.2 13.8 1.1.9-1.7 2.9-1.4-.6a7.8 7.8 0 0 1-1.7 1l-.2 1.5h-3.4l-.2-1.5a7.8 7.8 0 0 1-1.7-1l-1.4.6-1.7-2.9 1.1-.9a7.2 7.2 0 0 1 0-2l-1.1-.9 1.7-2.9 1.4.6a7.8 7.8 0 0 1 1.7-1l.2-1.5h3.4l.2 1.5a7.8 7.8 0 0 1 1.7 1l1.4-.6 1.7 2.9-1.1.9a7.2 7.2 0 0 1 0 2Z"/></>,
