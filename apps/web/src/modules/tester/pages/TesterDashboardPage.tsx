@@ -180,7 +180,7 @@ export default function TesterDashboardPage() {
     ...(isDeveloper || isAdmin ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : []),
     ...(isDeveloper || isAdmin
       ? [{ label: "Discover Apps", icon: "search", href: "/apps" }]
-      : [{ label: "Discover Tests", icon: "search", href: "/tester-dashboard#my-tests" }]),
+      : [{ label: "Discover Tests", icon: "search", href: "/discover-tests" }]),
     { label: "My Tests", icon: "tests", href: "/my-tests" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
