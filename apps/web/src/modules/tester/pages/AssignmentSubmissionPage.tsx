@@ -93,22 +93,21 @@ export default function AssignmentSubmissionPage() {
   const addFiles = (files: FileList | File[]) => {
     const incoming = Array.from(files);
     let skipped = 0;
-    setEvidence(current => {
-      const next = [...current];
-      for (const file of incoming) {
-        const supported = /^(image\/(png|jpeg|webp)|application\/pdf)$/.test(file.type);
-        const duplicate = next.some(item => item.file.name === file.name && item.file.size === file.size);
-        if (!supported || file.size > 10 * 1024 * 1024 || duplicate || next.length >= 5) { skipped++; continue; }
-        next.push({ file, url: URL.createObjectURL(file) });
-      }
-      setNotice(skipped ? "Some files were skipped: use up to 5 unique PNG, JPG, WebP or PDF files (10 MB max each)." : "");
-      return next;
-    });
+    const next = [...evidence];
+    for (const file of incoming) {
+      const supported = /^(image\/(png|jpeg|webp)|application\/pdf)$/.test(file.type);
+      const duplicate = next.some(item => item.file.name === file.name && item.file.size === file.size);
+      if (!supported || file.size > 10 * 1024 * 1024 || duplicate || next.length >= 5) { skipped++; continue; }
+      next.push({ file, url: URL.createObjectURL(file) });
+    }
+    setEvidence(next);
+    setNotice(skipped ? "Some files were skipped: use up to 5 unique PNG, JPG, WebP or PDF files (10 MB max each)." : "");
   };
-  const removeFile = (index: number) => setEvidence(current => {
-    const removed = current[index]; if (removed) URL.revokeObjectURL(removed.url);
-    return current.filter((_, i) => i !== index);
-  });
+  const removeFile = (index: number) => {
+    const removed = evidence[index];
+    if (removed) URL.revokeObjectURL(removed.url);
+    setEvidence(evidence.filter((_, i) => i !== index));
+  };
   const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) addFiles(event.target.files);
     event.target.value = "";
