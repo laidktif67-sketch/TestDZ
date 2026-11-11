@@ -1,19 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/active-sessions.css";
-
-function getDeviceInfo() {
-  const ua = navigator.userAgent || "";
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
-  const os = /Android/i.test(ua) ? "Android" : /iPhone|iPad|iPod/i.test(ua) ? "iOS" : /Windows/i.test(ua) ? "Windows" : /Mac OS/i.test(ua) ? "macOS" : /Linux/i.test(ua) ? "Linux" : "Unknown OS";
-  const browser = /Edg\//i.test(ua) ? "Microsoft Edge" : /Firefox\//i.test(ua) ? "Firefox" : /Chrome\//i.test(ua) ? "Chrome" : /Safari\//i.test(ua) ? "Safari" : "Browser";
-  const version = ua.match(/(?:Chrome|Firefox|Edg|Version)\/([\d.]+)/i)?.[1];
-  return { isMobile, os, browser: version ? browser + " " + version : browser, label: isMobile ? "Mobile Device" : "Desktop Browser" };
-}
 
 export default function ActiveSessionsPage() {
   const { user, roles = [] } = useIdentity();
@@ -24,7 +15,6 @@ export default function ActiveSessionsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const device = useMemo(() => typeof navigator === "undefined" ? { isMobile: false, os: "Unknown OS", browser: "Unknown browser", label: "Current device" } : getDeviceInfo(), []);
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
   const firstName = user?.email?.split("@")[0] || "Tester";
