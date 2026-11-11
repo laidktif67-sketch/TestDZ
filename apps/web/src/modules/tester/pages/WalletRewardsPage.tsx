@@ -24,7 +24,6 @@ export default function WalletRewardsPage(){
  const periodStart=useMemo(()=>{if(period==="all")return null;const months=Number(period);const start=new Date();start.setDate(1);start.setHours(0,0,0,0);start.setMonth(start.getMonth()-(months-1));return start;},[period]);
  const periodLedger=useMemo(()=>ledger.filter(e=>!periodStart||new Date(e.created_at)>=periodStart),[ledger,periodStart]);
  const filteredLedger=useMemo(()=>periodLedger.filter(entry=>{const kind=kindOf(entry);const match=filter==="all"||(filter==="earned"&&kind==="earned")||(filter==="redeemed"&&kind==="redeemed")||(filter==="bonus"&&kind==="bonus");const query=(entry.reason+" "+(entry.reference_type??"")).toLowerCase();return match&&query.includes(search.toLowerCase());}),[periodLedger,filter,search]);
- const lifetimeEarned=ledger.filter(e=>e.wallet_type==="earned_points"&&e.amount>0).reduce((sum,e)=>sum+e.amount,0);
  const redeemedEntries=ledger.filter(e=>e.amount<0).slice(0,6);
  const monthly=useMemo(()=>{const now=new Date();return Array.from({length:6},(_,i)=>{const date=new Date(now.getFullYear(),now.getMonth()-(5-i),1);const total=ledger.filter(e=>e.wallet_type==="earned_points"&&e.amount>0&&monthKey(new Date(e.created_at))===monthKey(date)).reduce((sum,e)=>sum+e.amount,0);return{label:date.toLocaleString(undefined,{month:"short"}),total};});},[ledger]);
  const maxMonth=Math.max(1,...monthly.map(m=>m.total));
