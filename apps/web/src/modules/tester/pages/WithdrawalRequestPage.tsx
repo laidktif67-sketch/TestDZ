@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
@@ -7,7 +7,7 @@ import "../styles/withdrawal-request.css";
 
 type Wallet = { earned_points: number; purchased_credits: number };
 function FieldIcon({ name, size = 16 }: { name: string; size?: number }) {
-  const paths: Record<string, React.ReactNode> = {
+  const paths: Record<string, ReactNode> = {
     amount: <><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M7 15h3"/></>,
     phone: <><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10 18h4"/></>,
     postal: <><path d="M3 8.5 12 3l9 5.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z"/><path d="M3 9h18M8 13h8"/></>,
@@ -113,7 +113,7 @@ export default function WithdrawalRequestPage() {
           <div className="twr-demo-notice"><span className="twr-notice-icon"><FieldIcon name="note" size={17}/></span><p><strong>Temporary preview</strong>This form is for interface testing only. No real withdrawal request will be sent or saved.</p></div>
 
           <label className="twr-field-label" htmlFor="twr-amount"><FieldIcon name="amount"/>Withdrawal amount <span>(DA)</span></label>
-          <div className="twr-input-wrap twr-amount-wrap"><input id="twr-amount" type="number" min="1" step="1" required value={amount} onChange={(event) => { setAmount(event.target.value); setSubmitted(false); }} placeholder="e.g. 1000" /><b>DA</b></div>
+          <div className="twr-input-wrap twr-amount-wrap"><FieldIcon name="amount" size={16}/><input id="twr-amount" type="number" min="1" step="1" required value={amount} onChange={(event) => { setAmount(event.target.value); setSubmitted(false); }} placeholder="e.g. 1000" /><b>DA</b></div>
           <small className="twr-field-hint">The points-to-DA exchange rate and minimum withdrawal are not set yet.</small>
 
           <label className="twr-field-label" htmlFor="twr-method"><FieldIcon name="bank"/>Payment method</label>
