@@ -324,3 +324,61 @@
  .td-active-summary-copy small{font-size:8px}
  .td-active-summary>a{margin-left:44px;min-height:31px;padding:0 11px;font-size:9px}
 }
+
+
+/* Active assignments + tester milestone journey */
+.td-assignment-journey-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.9fr);gap:13px;margin-top:13px}
+.td-assignments-panel,.td-journey-panel{padding:16px 18px;min-width:0}
+.td-assignment-list{display:grid;gap:0}
+.td-assignment-row{display:flex;align-items:center;gap:13px;padding:12px 2px;border-top:1px solid #edf2f9;min-width:0}
+.td-assignment-row:first-child{border-top:0;padding-top:3px}
+.td-assignment-app{width:54px;height:54px;display:grid;place-items:center;flex:none;border-radius:13px;color:#075cf5;background:linear-gradient(145deg,#e6edff,#d8e5ff)}
+.td-assignment-info{display:grid;gap:5px;min-width:0;flex:1}
+.td-assignment-info>strong{font-size:13px;color:#12284e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.td-assignment-info>small,.td-assignment-percent small{font-size:10px;color:#647895}
+.td-assignment-progress{height:7px;width:min(100%,260px);border-radius:10px;background:#e8eef9;overflow:hidden}
+.td-assignment-progress i{height:100%;display:block;border-radius:10px;background:linear-gradient(90deg,#0875ed,#13b889)}
+.td-assignment-percent{display:grid;gap:5px;text-align:right;flex:none}
+.td-assignment-percent b{font-size:13px;color:#102d5d}
+.td-empty-assignment{min-height:135px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:15px}
+.td-empty-assignment strong{font-size:13px;color:#16366b}
+.td-empty-assignment p{font-size:10px;color:#687e9d;max-width:330px;line-height:1.5}
+.td-empty-assignment a,.td-milestone-cta{display:inline-flex;align-items:center;gap:6px;color:#075cf5;font-size:10px;font-weight:750}
+.td-milestone-progress{display:flex;align-items:center;gap:15px;min-height:135px}
+.td-milestone-ring{width:112px;height:112px;flex:none;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#075cf5 var(--milestone-progress),#e3ecfa 0);position:relative}
+.td-milestone-ring:before{content:"";position:absolute;inset:9px;border-radius:50%;background:#fff}
+.td-milestone-ring strong{z-index:1;font-size:24px;color:#102b59}
+.td-milestone-list{display:grid;gap:11px;min-width:0}
+.td-milestone-list>div{display:flex;align-items:center;gap:8px;min-width:0}
+.td-milestone-list>div>span{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:#edf2fb;color:#8ba0bd;flex:none}
+.td-milestone-list>div.current>span{background:#e5efff;color:#075cf5}
+.td-milestone-list>div.done>span{background:#dff7eb;color:#0b9b60}
+.td-milestone-list p{display:grid;gap:2px;margin:0;min-width:0}
+.td-milestone-list b{font-size:10px;color:#18345f;line-height:1.35}
+.td-milestone-list small{font-size:9px;color:#7486a0}
+.td-milestone-cta{padding-top:10px;border-top:1px solid #edf2f9;width:100%}
+@media(max-width:920px){.td-assignment-journey-grid{grid-template-columns:1fr}}
+@media(max-width:560px){
+ .td-assignment-journey-grid{gap:9px;margin-top:9px}
+ .td-assignments-panel,.td-journey-panel{padding:11px;border-radius:14px}
+ .td-assignment-row{gap:8px;padding:10px 0}
+ .td-assignment-app{width:40px;height:40px;border-radius:10px}
+ .td-assignment-app .td-icon{width:18px;height:18px}
+ .td-assignment-info>strong{font-size:10px}
+ .td-assignment-info>small,.td-assignment-percent small{font-size:8px}
+ .td-assignment-progress{height:6px}
+ .td-assignment-percent b{font-size:10px}
+ .td-milestone-progress{gap:10px;min-height:110px}
+ .td-milestone-ring{width:86px;height:86px}
+ .td-milestone-ring:before{inset:7px}
+ .td-milestone-ring strong{font-size:19px}
+ .td-milestone-list{gap:8px}
+ .td-milestone-list b{font-size:8px}
+ .td-milestone-list small{font-size:7px}
+}
+@media(max-width:360px){
+ .td-milestone-progress{align-items:flex-start;flex-direction:column;padding:8px 0}
+ .td-milestone-ring{width:74px;height:74px}
+ .td-milestone-list{width:100%}
+ .td-assignment-percent{max-width:58px}
+}
