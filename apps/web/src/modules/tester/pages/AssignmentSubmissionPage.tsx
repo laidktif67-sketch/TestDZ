@@ -49,8 +49,8 @@ export default function AssignmentSubmissionPage() {
   useEffect(() => {
     if (previewMode) {
       setAssignment({
-        id: "preview-assignment", status: "completed", start_date: "2026-11-07",
-        completed_at: "2026-11-08T14:15:00Z", created_at: "2026-11-07T09:00:00Z", points_awarded: 50,
+        id: "preview-assignment", status: "active", start_date: "2026-11-07",
+        completed_at: null, created_at: "2026-11-07T09:00:00Z", points_awarded: null,
         test: { id: "preview-test", title: "Performance Testing", status: "running", start_date: "2026-11-07", end_date: "2026-11-14", app: { name: "PlayStore App", icon_url: null } }
       });
       setCheckins([{ id: "1", checkin_date: "2026-11-07" }, { id: "2", checkin_date: "2026-11-08" }]);
