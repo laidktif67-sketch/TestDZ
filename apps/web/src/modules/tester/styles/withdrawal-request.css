@@ -96,3 +96,10 @@
 .twr-secure-note svg{color:#4b9b7c}
 .twr-submit-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#ffffff24}
 .twr-submit-icon svg{display:block}
+
+/* Binance BEP20 payment option */
+.twr-method-binance .twr-method-logo{color:#b88608;background:#fff8df;border-color:#f4df9d}
+.twr-method-binance.selected .twr-method-logo{color:#a87900;background:#fff0bd;border-color:#e8c45c}
+.twr-network-note{display:flex;align-items:flex-start;gap:7px;margin:12px 0 2px;padding:10px 12px;border:1px solid #f2dfad;border-radius:10px;background:#fff9e9;color:#805c16;font-size:10px;line-height:1.55}
+.twr-network-note>svg{flex:none;margin-top:1px;color:#b98716}
+.twr-network-note strong{font-weight:850}
