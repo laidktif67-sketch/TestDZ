@@ -56,7 +56,6 @@ export default function App() {
           </Route>
           <Route path="/profile" element={<TesterProfilePage />} />
           <Route path="/feedback-history" element={<FeedbackHistoryPage />} />
-          <Route path="/check-in-history" element={<CheckInHistoryPage />} />
           <Route path="/submit-feedback" element={<SubmitFeedbackPage />} />
           <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
           <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
@@ -70,6 +69,7 @@ export default function App() {
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
             <Route path="/my-tests" element={<MyTestsPage />} />
+            <Route path="/check-in-history" element={<CheckInHistoryPage />} />
             <Route path="/discover-tests" element={<DiscoverTestsPage />} />
             <Route path="/tests/:id" element={<TestPreviewPage />} />
           </Route>
