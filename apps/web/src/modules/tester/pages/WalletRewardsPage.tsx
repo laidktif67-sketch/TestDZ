@@ -135,6 +135,7 @@ export default function WalletRewardsPage() {
     { label: "My Tests", icon: "tests", href: "/my-tests" },
     { label: "Feedback History", icon: "star", href: "/feedback-history" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards", active: true },
+    { label: "Referral Program", icon: "users", href: "/referral-program" },
     { label: "Profile", icon: "user", href: "/profile" },
     { label: "Help & Support", icon: "bell", href: "/help-support" },
     { label: "Settings", icon: "settings", href: "/settings" },
