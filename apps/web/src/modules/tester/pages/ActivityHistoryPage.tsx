@@ -35,21 +35,33 @@ function ActivityChart({ events }: { events: ActivityEvent[] }) {
   const days = useMemo(() => Array.from({ length: 15 }, (_, index) => {
     const date = new Date(); date.setHours(0,0,0,0); date.setDate(date.getDate() - (14-index));
     const key = dayKey(date.toISOString());
-    return { key, label: date.toLocaleDateString(undefined,{month:"short",day:"2-digit"}), count: events.filter(event => dayKey(event.date) === key).length };
+    return { key, label: date.toLocaleDateString(undefined,{month:"short",day:"2-digit"}), tests: events.filter(event => event.kind === "completed" && dayKey(event.date) === key).length, engagement: events.filter(event => event.kind !== "completed" && dayKey(event.date) === key).length };
   }), [events]);
-  const max = Math.max(4, ...days.map(day => day.count));
-  const points = days.map((day,index) => ({ x: 18 + index * 47, y: 116 - day.count / max * 88, ...day }));
-  const line = points.map((point,index) => (index ? "L" : "M") + point.x + " " + point.y).join(" ");
-  const area = line + " L" + points[points.length-1].x + " 126 L18 126 Z";
+  const max = Math.max(4, ...days.map(day => Math.max(day.tests,day.engagement)));
+  const makeLine=(key:"tests"|"engagement")=>days.map((day,index)=>({x:18+index*47,y:116-day[key]/max*88,...day})).map((point,index)=>(index?"L":"M")+point.x+" "+point.y).join(" ");
+  const tests=makeLine("tests"),engagement=makeLine("engagement");
   return <div className="ah-chart-wrap">
     <div className="ah-chart-y"><span>{max}</span><span>{Math.ceil(max*.66)}</span><span>{Math.ceil(max*.33)}</span><span>0</span></div>
-    <svg viewBox="0 0 690 132" preserveAspectRatio="none" role="img" aria-label="Daily tester activity over the last 15 days" className="ah-chart">
-      <defs><linearGradient id="ah-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1764ef" stopOpacity=".2"/><stop offset="100%" stopColor="#1764ef" stopOpacity=".015"/></linearGradient></defs>
+    <svg viewBox="0 0 690 132" preserveAspectRatio="none" role="img" aria-label="Completed tests and engagement activities over the last 15 days" className="ah-chart">
       {[28,58,88,118].map(y=><line key={y} x1="18" y1={y} x2="678" y2={y} stroke="#e5edf8" strokeDasharray="3 4"/>)}
-      <path d={area} fill="url(#ah-chart-fill)"/><path d={line} fill="none" stroke="#075cf5" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
-      {points.map(point=><circle key={point.key} cx={point.x} cy={point.y} r="4.2" fill="#075cf5" stroke="#fff" strokeWidth="2"><title>{point.label}: {point.count} activities</title></circle>)}
+      <path d={tests+" L"+(18+14*47)+" 126 L18 126 Z"} fill="#1764ef" fillOpacity=".08"/>
+      <path d={engagement+" L"+(18+14*47)+" 126 L18 126 Z"} fill="#10aeb2" fillOpacity=".08"/>
+      <path d={tests} fill="none" stroke="#075cf5" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={engagement} fill="none" stroke="#10aeb2" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+      {days.map((day,index)=><g key={day.key}><circle cx={18+index*47} cy={116-day.tests/max*88} r="3.5" fill="#075cf5" stroke="#fff" strokeWidth="1.5"><title>{day.label}: {day.tests} completed tests</title></circle><circle cx={18+index*47} cy={116-day.engagement/max*88} r="3.5" fill="#10aeb2" stroke="#fff" strokeWidth="1.5"><title>{day.label}: {day.engagement} check-ins and feedback</title></circle></g>)}
     </svg>
-    <div className="ah-chart-x">{[0,3,6,9,12,14].map(index=><span key={index}>{points[index].label}</span>)}</div>
+    <div className="ah-chart-x">{[0,3,6,9,12,14].map(index=><span key={index}>{days[index].label}</span>)}</div>
+  </div>;
+}
+
+function ActivityBreakdown({ events }: { events: ActivityEvent[] }) {
+  const parts=[{label:"Tests Completed",value:events.filter(item=>item.kind==="completed").length,color:"#075be8"},{label:"Check-ins",value:events.filter(item=>item.kind==="checkin").length,color:"#10aeb2"},{label:"Feedback",value:events.filter(item=>item.kind==="feedback").length,color:"#8b4de8"}];
+  const total=parts.reduce((sum,item)=>sum+item.value,0);
+  let offset=0;
+  const gradient=total?parts.map(item=>{const start=offset;offset+=item.value/total*100;return item.color+" "+start+"% "+offset+"%";}).join(", "):"#e8eef8 0% 100%";
+  return <div className="ah-breakdown">
+    <div className="ah-donut" style={{background:"conic-gradient("+gradient+")"}}><span><strong>{total}</strong><small>Activities</small></span></div>
+    <div className="ah-breakdown-legend">{parts.map(item=><div key={item.label}><i style={{background:item.color}}/><span>{item.label}</span><strong>{item.value}</strong><small>{total?Math.round(item.value/total*100):0}%</small></div>)}</div>
   </div>;
 }
 
@@ -167,16 +179,16 @@ export default function ActivityHistoryPage() {
         <section className="ah-hero"><div className="ah-hero-icon"><Icon name="chart" size={43}/></div><div className="ah-hero-copy"><h1>Tester Activity &amp; Test History</h1><p>Track your activity, view your test history and achievements.</p></div><div className="ah-hero-art"><Icon name="trophy" size={100}/><span>★</span></div></section>
         {error&&<div className="ah-error" role="status">{error}</div>}
         <section className="ah-stats">
-          <article className="ah-stat blue"><span><Icon name="tests" size={30}/></span><div><strong>{assignments.length}</strong><b>Total Tests</b></div><i aria-hidden="true"/></article>
+          <article className="ah-stat blue"><span><Icon name="tests" size={30}/></span><div><strong>{events.length}</strong><b>Total Activities</b></div><small>Recorded</small><i aria-hidden="true"/></article>
           <article className="ah-stat green"><span><Icon name="check" size={30}/></span><div><strong>{completed}</strong><b>Completed</b></div><small>{assignments.length?Math.round(completed/assignments.length*100):0}%</small><i aria-hidden="true"/></article>
           <article className="ah-stat gold"><span><Icon name="star" size={30}/></span><div><strong>{totalPoints.toLocaleString()}</strong><b>Total Points</b></div><small>Earned</small><i aria-hidden="true"/></article>
           <article className="ah-stat teal"><span><Icon name="calendar" size={30}/></span><div><strong>{activeDays}</strong><b>Active Days</b></div><i aria-hidden="true"/></article>
         </section>
         <section className="ah-overview-grid">
           <article className="ah-panel ah-activity-panel"><div className="ah-panel-heading"><h2><Icon name="clock" size={21}/>Activity Overview</h2><span>Last 15 days · {events.length} events</span></div><ActivityChart events={events}/></article>
-          <article className="ah-panel ah-achievements"><div className="ah-panel-heading"><h2><Icon name="trophy" size={23}/>Your Achievements</h2><span>{achievements.filter(item=>item.earned).length}/{achievements.length} unlocked</span></div><div className="ah-achievement-list">{achievements.map(item=><div className={`ah-achievement ${item.tone} ${item.earned?"earned":"locked"}`} key={item.title}><span><Icon name={item.icon} size={37}/></span><strong>{item.title}</strong><small>{item.earned?"Achievement unlocked":item.description}</small></div>)}</div></article>
+          <article className="ah-panel ah-achievements"><div className="ah-panel-heading"><h2><Icon name="pie" size={23}/>Activity Breakdown</h2><span>{events.length} recorded activities</span></div><ActivityBreakdown events={events}/></article>
         </section>
-        <section className="ah-panel ah-recent-panel"><div className="ah-panel-heading"><h2><Icon name="clock" size={21}/>Recent Activity</h2><span>Latest updates from your tester journey</span></div>{events.length?<div className="ah-timeline">{events.slice(0,5).map(event=><article className="ah-timeline-item" key={event.id}><span className={`ah-timeline-icon ${event.kind}`}><Icon name={event.kind==="completed"?"check":event.kind==="checkin"?"calendar":"star"} size={17}/></span><div className="ah-timeline-copy"><strong>{event.title}</strong><small>{event.detail}</small></div><time dateTime={event.date}>{dateTimeLabel(event.date)}</time></article>)}</div>:<p className="ah-timeline-empty">Your recent activity will appear here as you participate in tests.</p>}</section>
+        <section className="ah-panel ah-recent-panel"><div className="ah-panel-heading"><h2><Icon name="trophy" size={21}/>Your Achievements</h2><span>{achievements.filter(item=>item.earned).length} of {achievements.length} unlocked</span></div><div className="ah-achievement-list">{achievements.map(item=><div className={`ah-achievement ${item.tone} ${item.earned?"earned":"locked"}`} key={item.title}><span><Icon name={item.icon} size={37}/></span><strong>{item.title}</strong><small>{item.earned?"Achievement unlocked":item.description}</small></div>)}</div><div className="ah-panel-heading ah-recent-subheading"><h2><Icon name="clock" size={19}/>Recent Activity</h2><span>Latest updates from your tester journey</span></div>{events.length?<div className="ah-timeline">{events.slice(0,5).map(event=><article className="ah-timeline-item" key={event.id}><span className={`ah-timeline-icon ${event.kind}`}><Icon name={event.kind==="completed"?"check":event.kind==="checkin"?"calendar":"star"} size={17}/></span><div className="ah-timeline-copy"><strong>{event.title}</strong><small>{event.detail}</small></div><time dateTime={event.date}>{dateTimeLabel(event.date)}</time></article>)}</div>:<p className="ah-timeline-empty">Your recent activity will appear here as you participate in tests.</p>}</section>
         <section className="ah-panel ah-history-panel">
           <div className="ah-history-heading"><h2><Icon name="tests" size={22}/>Test History</h2><div className="ah-controls"><div className="ah-filter-tabs">{(["all","completed","pending","rejected"] as Filter[]).map(value=><button type="button" key={value} className={filter===value?"selected":""} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{value==="all"?"All":value[0].toUpperCase()+value.slice(1)}<span>{filterCounts[value]}</span></button>)}</div><label className="ah-range"><Icon name="calendar" size={16}/><select value={range} onChange={event=>setRange(event.target.value)}><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select></label>{(filter!=="all"||range!=="30"||search.trim())&&<button type="button" className="ah-export" onClick={clearFilters}>Clear</button>}<button type="button" className="ah-export" onClick={exportCsv}><Icon name="download" size={16}/>Export</button></div></div>
           <div className="ah-table-wrap"><table className="ah-table"><thead><tr><th>#</th><th>Test Name</th><th>App</th><th>Date</th><th>Duration</th><th>Score</th><th>Points</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pageRows.map((row,index)=>{
