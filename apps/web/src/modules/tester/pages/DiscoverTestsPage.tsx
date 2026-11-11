@@ -58,7 +58,7 @@ export default function DiscoverTestsPage(){
  return <div className="td-dashboard dt-page">
   <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={previewMode}/>
   <main className="td-main dt-main">
-   <header className="td-topbar"><div className="td-search" aria-label="Tester workspace"><Icon name="search" size={20}/><span>Explore testing opportunities</span></div><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><b>⌄</b></Link></div></header>
+   <header className="td-topbar"><div className="td-search" role="search" aria-label="Tester workspace"><Icon name="search" size={20}/><span>Explore testing opportunities</span></div><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><b>⌄</b></Link></div></header>
    <div className="discover-content">
     <section className="discover-hero">
      <div className="discover-hero-copy">
