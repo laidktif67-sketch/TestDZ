@@ -53,7 +53,7 @@ export default function SupportTicketDetailsPage(){
    const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
    const {error:metadataError}=await supabase.from("support_ticket_attachments").insert({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
-   if(metadataError){setSending(false);setReply("");setSelectedFile(null);setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");await load();return;}
+   if(metadataError){setSending(false);setReply("");setSelectedFile(null);await load();setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");return;}
   }
   setSending(false);setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
  }
