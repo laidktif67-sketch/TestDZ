@@ -36,7 +36,6 @@ export default function LoginActivitySecurityPage() {
     return () => { alive = false; };
   }, [user?.id]);
   const firstName = user?.email?.split("@")[0] || "Tester";
-  const lastLogin = user?.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
   const verified = Boolean(user?.email_confirmed_at);
   const nav = [
     { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
