@@ -30,7 +30,11 @@ const statusText: Record<FeedbackStatus, string> = {
   accepted: "Approved",
   rejected: "Rejected"
 };
-const formatDate = (value: string) => new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
+const formatCategory = (value: string) => (value || "general").replace(/[_-]+/g, " ").replace(/\b\w/g, letter => letter.toUpperCase());
 
 function RatingStars({ value }: { value: number | null }) {
   return <span className="fh-stars" aria-label={value === null ? "Not rated" : value + " out of 5"}>
@@ -106,6 +110,14 @@ export default function FeedbackHistoryPage() {
     const matchesSearch = (appName + " " + testName + " " + row.body + " " + row.category).toLowerCase().includes(search.trim().toLowerCase());
     return matchesStatus && matchesSearch;
   }), [rangedRows, filter, search]);
+  const statusCounts = useMemo(() => ({
+    all: rangedRows.length,
+    pending: rangedRows.filter(row => row.quality_status === "pending").length,
+    accepted: rangedRows.filter(row => row.quality_status === "accepted").length,
+    rejected: rangedRows.filter(row => row.quality_status === "rejected").length
+  }), [rangedRows]);
+  const hasActiveFilters = filter !== "all" || range !== "30" || search.trim().length > 0;
+  const clearFilters = () => { setFilter("all"); setRange("30"); setSearch(""); };
   const ratedRows = rangedRows.filter(row => row.rating !== null);
   const average = ratedRows.length ? ratedRows.reduce((sum, row) => sum + (row.rating ?? 0), 0) / ratedRows.length : null;
   const feedbackIds = new Set(rangedRows.map(row => row.id));
@@ -146,10 +158,11 @@ export default function FeedbackHistoryPage() {
         {error && <div className="fh-error" role="alert">{error}<button type="button" onClick={() => window.location.reload()}>Retry</button></div>}
         <section className="fh-toolbar" aria-label="Feedback filters">
           <div className="fh-tabs">
-            {(["all", "pending", "accepted", "rejected"] as const).map(value => <button type="button" key={value} className={filter === value ? "selected" : ""} onClick={() => setFilter(value)}>{value === "all" ? "▦  All" : value === "pending" ? "◷  Pending" : value === "accepted" ? "●  Approved" : "✕  Rejected"}</button>)}
+            {(["all", "pending", "accepted", "rejected"] as const).map(value => <button type="button" key={value} className={filter === value ? "selected" : ""} aria-pressed={filter === value} onClick={() => setFilter(value)}><span>{value === "all" ? "▦  All" : value === "pending" ? "◷  Pending" : value === "accepted" ? "●  Approved" : "✕  Rejected"}</span><b>{statusCounts[value]}</b></button>)}
           </div>
-          <label className="fh-range"><Icon name="calendar" size={17}/><select value={range} onChange={event => setRange(event.target.value as RangeKey)}><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select></label>
+          <label className="fh-range"><Icon name="calendar" size={17}/><select aria-label="Filter by date range" value={range} onChange={event => setRange(event.target.value as RangeKey)}><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select></label>
         </section>
+        <div className="fh-results-meta"><span>Showing <strong>{visibleRows.length}</strong> of <strong>{rangedRows.length}</strong> feedback entries</span>{hasActiveFilters && <button type="button" onClick={clearFilters}>Clear filters <span aria-hidden="true">×</span></button>}</div>
         <section className="fh-list" aria-label="Submitted feedback">
           {visibleRows.length ? visibleRows.map(row => {
             const test = row.assignment?.test;
@@ -168,13 +181,13 @@ export default function FeedbackHistoryPage() {
                 <span className="fh-row-chevron">{isExpanded ? "⌃" : "›"}</span>
               </button>
               {isExpanded && <div className="fh-details">
-                <section className="fh-app-detail"><AppMark name={appName} iconUrl={test?.app?.icon_url}/><strong>{appName}</strong><small>{test?.title ?? "Feedback submission"}</small><span className="fh-category">{row.category.replace("_", " ")}</span></section>
+                <section className="fh-app-detail"><AppMark name={appName} iconUrl={test?.app?.icon_url}/><strong>{appName}</strong><small>{test?.title ?? "Feedback submission"}</small><span className="fh-category">{formatCategory(row.category)}</span></section>
                 <section className="fh-rating-detail"><h3>Your Rating</h3><div><RatingStars value={row.rating}/><strong>{row.rating === null ? "—" : row.rating.toFixed(1) + " / 5"}</strong></div><small>Overall rating recorded for this feedback</small></section>
                 <section className="fh-comment-detail"><h3>Your Comment</h3><blockquote>{row.body}</blockquote><span className="fh-category">{row.category.replace("_", " ")}</span></section>
                 <section className="fh-review-detail"><h3>Review Status</h3><span className={"fh-status " + row.quality_status}>{statusText[row.quality_status]}</span><small>{row.reviewed_at ? "Reviewed on " + formatDate(row.reviewed_at) : "Awaiting QA review"}</small><div className="fh-reward-box"><Icon name="gift" size={25}/><span>Reward Earned<strong>+{reward} pts</strong></span></div></section>
               </div>}
             </article>;
-          }) : <div className="fh-empty"><span>★</span><strong>No feedback found</strong><p>{rows.length ? "Try changing your filters or search term." : "Your submitted feedback will appear here after you send your first report."}</p></div>}
+          }) : <div className="fh-empty"><span>★</span><strong>{rows.length ? "No matching feedback" : "Your feedback journey starts here"}</strong><p>{rows.length ? "There are no entries for these filters. Clear them to see your full history." : "Feedback you submit after completing a test will appear here, together with its review status and earned points."}</p>{hasActiveFilters && <button type="button" onClick={clearFilters}>Clear all filters</button>}</div>}
         </section>
         <footer className="fh-footer">TestDZ · Test · Review · Earn</footer>
       </div>
