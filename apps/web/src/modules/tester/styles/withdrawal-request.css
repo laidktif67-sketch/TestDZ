@@ -80,3 +80,47 @@
 .twr-header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .twr-status-link{padding:11px 13px;border:1px solid #dce7fb;border-radius:12px;background:#edf4ff;color:#075bdc;text-decoration:none;font-size:11px;font-weight:850}
 @media(max-width:700px){.twr-header-actions{width:100%}.twr-status-link,.twr-back{font-size:10px;padding:9px 11px}}
+
+/* Consistent outline icon system for withdrawal form fields and payment choices. */
+.twr-field-label{display:flex;align-items:center;gap:8px}
+.twr-field-label>svg{width:15px;height:15px;flex:none;color:#4d7fce;stroke-width:1.9}
+.twr-method-logo{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid #dce8fb;border-radius:11px;background:#f1f6ff;color:#286bd0}
+.twr-method.selected .twr-method-logo{border-color:#c5dafa;background:#e5efff;color:#075bdc}
+.twr-method-logo svg{display:block}
+.twr-input-shell{display:flex;align-items:center;gap:10px;padding:0 12px;border:1px solid #dce6f5;border-radius:11px;background:#fbfcff;color:#6f8fc2;transition:border-color .2s,box-shadow .2s}
+.twr-input-shell:focus-within{border-color:#4389f2;box-shadow:0 0 0 3px #4389f21a}
+.twr-input-shell>svg{width:16px;height:16px;flex:none}
+.twr-input-shell .twr-input{min-width:0;flex:1;border:0;background:transparent;padding:12px 0;box-shadow:none}
+.twr-notice-icon{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:9px;background:#ffedc9;color:#a56b13}
+.twr-secure-note{display:flex;align-items:center;justify-content:center;gap:6px}
+.twr-secure-note svg{color:#4b9b7c}
+.twr-submit-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#ffffff24}
+.twr-submit-icon svg{display:block}
+
+/* Binance BEP20 payment option */
+.twr-method-binance .twr-method-logo{color:#b88608;background:#fff8df;border-color:#f4df9d}
+.twr-method-binance.selected .twr-method-logo{color:#a87900;background:#fff0bd;border-color:#e8c45c}
+.twr-network-note{display:flex;align-items:flex-start;gap:7px;margin:12px 0 2px;padding:10px 12px;border:1px solid #f2dfad;border-radius:10px;background:#fff9e9;color:#805c16;font-size:10px;line-height:1.55}
+.twr-network-note>svg{flex:none;margin-top:1px;color:#b98716}
+.twr-network-note strong{font-weight:850}
+
+
+/* PayPal payout option */
+.twr-method-paypal .twr-method-logo{color:#0756a5;background:#edf5ff;border-color:#cfe0f7}
+.twr-method-paypal.selected .twr-method-logo{color:#063b80;background:#e0edff;border-color:#8bb8ef}
+.twr-paypal-note{display:flex;align-items:flex-start;gap:7px;margin:12px 0 2px;padding:10px 12px;border:1px solid #cfe0f7;border-radius:10px;background:#f1f7ff;color:#31577f;font-size:10px;line-height:1.55}
+.twr-paypal-note>svg{flex:none;margin-top:1px;color:#2767ac}
+
+/* Refined withdrawal page heading and top navigation actions */
+.twr-topbar h1{display:flex;align-items:center;gap:10px}
+.twr-title-icon{display:inline-grid;place-items:center;width:37px;height:37px;border:1px solid #d7e6ff;border-radius:12px;background:linear-gradient(145deg,#edf5ff,#e2edff);color:#1765cf;box-shadow:0 4px 10px #174b8c0d}
+.twr-title-icon svg{display:block}
+.twr-header-actions{gap:9px}
+.twr-status-link,.twr-back{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:41px;box-sizing:border-box;border-radius:12px;padding:10px 14px;font-size:11px;font-weight:800;line-height:1.2;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease}
+.twr-status-link{border:1px solid #cfe0fa;background:linear-gradient(135deg,#edf5ff,#e7f0ff);color:#075bdc;box-shadow:0 4px 12px #1456a00d}
+.twr-back{border:1px solid #dce6f5;background:#fff;color:#35547f;text-decoration:none;box-shadow:0 4px 12px #173d7509}
+.twr-status-link svg,.twr-back svg{flex:none;stroke-width:2}
+.twr-status-link:hover,.twr-back:hover{transform:translateY(-1px);box-shadow:0 7px 16px #174b8c16}
+.twr-status-link:hover{border-color:#a9c9f5;background:#e4efff}
+.twr-back:hover{border-color:#b9cbea;background:#f8fbff;color:#075bdc}
+@media(max-width:700px){.twr-title-icon{width:32px;height:32px;border-radius:10px}.twr-header-actions{gap:7px}.twr-status-link,.twr-back{min-height:38px;padding:9px 11px;font-size:10px}}

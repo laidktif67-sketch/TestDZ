@@ -14,13 +14,26 @@ import LegalPage from "./pages/LegalPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
-import MyTestsPage from "./modules/tester/pages/MyTestsPage";\nimport DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
+import MyTestsPage from "./modules/tester/pages/MyTestsPage";
+import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
+import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
+import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
+import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
+import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
+import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
+import SubmitFeedbackPage from "./modules/tester/pages/SubmitFeedbackPage";
+import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
+import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
+import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
+import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
+import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
+import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
 import AuthGuard from "./shared/guards/AuthGuard";
@@ -50,19 +63,29 @@ export default function App() {
             <Route path="/complete-profile" element={<ProfileCompletionPage />} />
           </Route>
           <Route path="/profile" element={<TesterProfilePage />} />
-          <Route path="/feedback-history" element={<TesterSectionPage />} />
+          <Route path="/feedback-history" element={<FeedbackHistoryPage />} />
+          <Route path="/submit-feedback" element={<SubmitFeedbackPage />} />
           <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
           <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
-          <Route path="/help-support" element={<TesterSectionPage />} />
-          <Route path="/settings" element={<TesterSectionPage />} />
+          <Route path="/help-support" element={<HelpSupportPage />} />
+          <Route path="/settings" element={<SettingsSecurityPage />} />
+          <Route path="/active-sessions" element={<ActiveSessionsPage />} />
+          <Route path="/notifications" element={<NotificationsCenterPage />} />
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
           </Route>
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
-            <Route path="/my-tests" element={<MyTestsPage />} />\n            <Route path="/discover-tests" element={<DiscoverTestsPage />} />
+            <Route path="/my-tests" element={<MyTestsPage />} />
+            <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
+            <Route path="/check-in-history" element={<CheckInHistoryPage />} />
+            <Route path="/activity-history" element={<ActivityHistoryPage />} />
+            <Route path="/referral-program" element={<ReferralProgramPage />} />
+            <Route path="/referral-history" element={<ReferralHistoryPage />} />
+            <Route path="/discover-tests" element={<DiscoverTestsPage />} />
+            <Route path="/tests/:id" element={<TestPreviewPage />} />
           </Route>
           <Route element={<RoleGuard requiredRole="developer" />}>
             <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
