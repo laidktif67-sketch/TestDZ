@@ -46,8 +46,7 @@ export default function ActiveSessionsPage() {
       setSessionReady(true);
     }
     void loadSessions();
-    const subscription = supabase?.auth.onAuthStateChange(() => { void loadSessions(); });
-    return () => { alive = false; subscription?.data.subscription.unsubscribe(); };
+    return () => { alive = false; };
   }, []);
 
   async function signOutOtherSessions() {
@@ -56,9 +55,11 @@ export default function ActiveSessionsPage() {
     if (!confirmed) return;
     setBusy(true); setMessage(""); setError("");
     const result = await supabase.auth.signOut({ scope: "others" });
+    if (result.error) { setBusy(false); setError("Could not sign out other sessions. Please try again."); return; }
+    const refreshed = await supabase.rpc("get_my_active_sessions");
     setBusy(false);
-    if (result.error) setError("Could not sign out other sessions. Please try again.");
-    else setMessage("Other sessions have been signed out. This device remains connected.");
+    if (refreshed.error) setError("Other sessions were signed out, but the session list could not be refreshed.");
+    else { setSessions((refreshed.data || []) as typeof sessions); setMessage("Other sessions have been signed out. This device remains connected."); }
   }
 
   const formattedLogin = lastLogin ? lastLogin.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not available";
