@@ -108,7 +108,7 @@ export default function DiscoverTestsPage(){
        <article><b className="stat-gift">♔</b><strong>{tests.length}</strong><span>Open Tests</span></article>
        <article><b className="stat-time">◷</b><strong>{visible.length}</strong><span>Matching Tests</span></article>
       </div></section>
-      <section className="discover-help"><b><Icon name="help" size={18}/> Need Help?</b><p>Our support team is here to help with joining tests and submitting feedback.</p><Link to="/help-support">Visit Tester Support <Icon name="arrow" size={13}/></Link></section>
+      <section className="discover-help"><b><Icon name="headset" size={20}/> Need Help?</b><p>Our support team is here to help with joining tests and submitting feedback.</p><Link to="/help-support">Visit Tester Support <Icon name="arrow" size={13}/></Link></section>
      </aside>
     </div>
    </div>
