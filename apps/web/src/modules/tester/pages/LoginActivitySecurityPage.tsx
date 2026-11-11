@@ -38,7 +38,6 @@ export default function LoginActivitySecurityPage() {
   const firstName = user?.email?.split("@")[0] || "Tester";
   const lastLogin = user?.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
   const verified = Boolean(user?.email_confirmed_at);
-  const formattedLogin = lastLogin ? lastLogin.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not available";
   const nav = [
     { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
     { label: "Discover Tests", icon: "search", href: "/discover-tests" },
