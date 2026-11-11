@@ -399,3 +399,101 @@
   .discover-categories button{padding:0 7px!important;gap:6px!important}
   .discover-categories button .discover-filter-label{font-size:10px!important}
 }
+
+
+/* Mobile search field alignment and input sizing fix. */
+.discover-search{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:0;
+  min-width:0;
+  overflow:hidden;
+}
+.discover-search>span{
+  box-sizing:border-box;
+  flex:0 0 44px;
+  width:44px;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0!important;
+}
+.discover-search>span svg{display:block;flex:none}
+.discover-search input{
+  box-sizing:border-box;
+  display:block;
+  flex:1 1 0%;
+  min-width:0!important;
+  width:0;
+  height:100%;
+  margin:0;
+  padding:0 8px!important;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#12366f;
+  font-family:inherit;
+  font-size:14px!important;
+  font-weight:600;
+  line-height:normal;
+  text-align:left;
+  appearance:none;
+  -webkit-appearance:none;
+}
+.discover-search input::placeholder{
+  color:#8294b1;
+  opacity:1;
+  font-size:inherit;
+  line-height:normal;
+  text-align:left;
+}
+.discover-search input::-webkit-search-decoration,
+.discover-search input::-webkit-search-cancel-button,
+.discover-search input::-webkit-search-results-button,
+.discover-search input::-webkit-search-results-decoration{-webkit-appearance:none}
+.discover-search button{
+  box-sizing:border-box;
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  align-self:stretch;
+  margin:0;
+  line-height:1;
+  white-space:nowrap;
+}
+@media(max-width:600px){
+  .discover-search{
+    width:100%!important;
+    height:48px!important;
+    min-height:48px;
+    border-radius:12px;
+  }
+  .discover-search>span{
+    flex:0 0 38px;
+    width:38px;
+  }
+  .discover-search input{
+    font-size:12px!important;
+    padding:0 5px!important;
+  }
+  .discover-search input::placeholder{font-size:11px}
+  .discover-search button{
+    flex:0 0 auto;
+    min-width:76px!important;
+    height:100%!important;
+    padding:0 9px!important;
+    gap:5px!important;
+    font-size:10px!important;
+  }
+  .discover-search button svg{width:14px;height:14px;flex:none}
+}
+@media(max-width:360px){
+  .discover-search{height:45px!important;min-height:45px}
+  .discover-search>span{flex-basis:33px;width:33px}
+  .discover-search input{font-size:11px!important;padding:0 3px!important}
+  .discover-search input::placeholder{font-size:10px}
+  .discover-search button{min-width:66px!important;padding:0 7px!important;font-size:9px!important}
+}
