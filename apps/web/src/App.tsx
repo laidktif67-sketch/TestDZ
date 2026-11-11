@@ -20,6 +20,7 @@ import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
+import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
 import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
           <Route path="/help-support" element={<HelpSupportPage />} />
           <Route path="/settings" element={<SettingsSecurityPage />} />
+          <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
           <Route path="/active-sessions" element={<ActiveSessionsPage />} />
           <Route path="/notifications" element={<NotificationsCenterPage />} />
           <Route element={<RoleGuard requiredRole="admin" />}>
