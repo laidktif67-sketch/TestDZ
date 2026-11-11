@@ -16,6 +16,7 @@ type TestItem = {
   app?: { name?: string; icon_url?: string | null } | null;
 };
 type DashboardStats = { available: number; active: number; completed: number; assignments: number; points: number; checkins: number };
+type ActiveAssignment = { id: string; status: string; start_date: string | null; test?: { title?: string; end_date?: string | null; app?: { name?: string } | null } | null; checkins?: { id: string; checkin_date?: string }[] | null };
 const initialStats: DashboardStats = { available: 0, active: 0, completed: 0, assignments: 0, points: 0, checkins: 0 };
 
 
@@ -54,6 +55,7 @@ export default function TesterDashboardPage() {
   const [chartPoints, setChartPoints] = useState<number[]>([0,0,0,0,0,0,0]);
   const [chartLabels, setChartLabels] = useState<string[]>(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]);
   const [tests, setTests] = useState<TestItem[]>([]);
+  const [activeAssignments, setActiveAssignments] = useState<ActiveAssignment[]>([]);
   const [search, setSearch] = useState("");
   const [notifications, setNotifications] = useState(0);
   const [noticeOpen, setNoticeOpen] = useState(false);
@@ -72,6 +74,10 @@ export default function TesterDashboardPage() {
       setChartPoints([40, 48, 55, 61, 68, 72, 75]);
       setChartLabels(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]);
       setNotifications(3);
+      setActiveAssignments([
+        { id: "preview-a1", status: "active", start_date: new Date(Date.now() - 8 * 86400000).toISOString().slice(0,10), test: { title: "Mobile App Usability Test", end_date: new Date(Date.now() + 6 * 86400000).toISOString().slice(0,10), app: { name: "TestDZ Demo" } }, checkins: Array.from({ length: 8 }, (_, i) => ({ id: `preview-c${i}`, checkin_date: new Date(Date.now() - (7-i) * 86400000).toISOString().slice(0,10) })) },
+        { id: "preview-a2", status: "active", start_date: new Date(Date.now() - 4 * 86400000).toISOString().slice(0,10), test: { title: "Website Performance Review", end_date: new Date(Date.now() + 10 * 86400000).toISOString().slice(0,10), app: { name: "TestDZ Demo" } }, checkins: Array.from({ length: 4 }, (_, i) => ({ id: `preview-d${i}`, checkin_date: new Date(Date.now() - (3-i) * 86400000).toISOString().slice(0,10) })) }
+      ]);
       setTests([
         { id: "preview-js", title: "JavaScript Basics", status: "recruiting", min_testers: 5, app: { name: "JavaScript", icon_url: null } },
         { id: "preview-python", title: "Python Fundamentals", status: "recruiting", min_testers: 5, app: { name: "Python", icon_url: null } },
@@ -89,12 +95,13 @@ export default function TesterDashboardPage() {
         const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
         client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
-        client.from("assignments").select("id,status,created_at,completed_at,checkins(id)").eq("tester_id", userId),
+        client.from("assignments").select("id,status,start_date,created_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id", userId),
         client.from("tests").select("id,title,status,min_testers,app:apps(name,icon_url)", { count: "exact" }).in("status", ["recruiting","ready","running"]).order("created_at", { ascending: false }).limit(4),
         client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
       ]);
       if (!alive) return;
       const assignments = assignmentRes.data ?? [];
+      setActiveAssignments((assignments.filter((a: { status: string }) => a.status === "active") as unknown as ActiveAssignment[]).slice(0, 4));
       const completed = assignments.filter((a: { status: string }) => a.status === "completed").length;
       const checkins = assignments.reduce((total: number, assignment: { checkins?: { id: string }[] | null }) => total + (assignment.checkins?.length ?? 0), 0);
       setName(profileRes.data?.display_name?.trim() || userEmail?.split("@")[0] || "there");
@@ -218,7 +225,7 @@ export default function TesterDashboardPage() {
         <article className="td-stat-card gold"><span className="td-stat-icon"><Icon name="star" size={34}/></span><div><strong>{animatedStats.points.toLocaleString()}</strong><b>Points</b><small>Earn more points</small></div><a href="#rewards" aria-label="View rewards"><Icon name="arrow"/></a></article>
       </section>
 
-      <section className="td-active-summary" aria-label="Active testing assignments">
+      <section className="td-active-summary" aria-label="Your testing journey">
         <div className="td-active-summary-icon"><Icon name="calendar" size={22}/></div>
         <div className="td-active-summary-copy">
           <strong>Your testing journey</strong>
@@ -226,6 +233,14 @@ export default function TesterDashboardPage() {
           <small>TestDZ completion is based on the required consecutive daily check-ins and feedback for each assignment.</small>
         </div>
         <Link to={stats.active ? "/my-tests" : "/discover-tests"}>{stats.active ? "Continue testing" : "Find a test"} <Icon name="arrow" size={15}/></Link>
+      </section>
+
+      <section className="td-assignment-journey-grid" aria-label="Active testing assignments and check-in progress">
+        <article className="td-panel td-assignments-panel">
+          <div className="td-panel-heading"><h2><Icon name="tests" size={22}/>Active Testing Assignments</h2><Link to="/my-tests">View All <Icon name="arrow" size={15}/></Link></div>
+          {activeAssignments.length ? <div className="td-assignment-list">{activeAssignments.map((assignment) => { const count = assignment.checkins?.length ?? 0; const pct = Math.min(100, Math.round(count / 14 * 100)); return <div className="td-assignment-row" key={assignment.id}><span className="td-assignment-app"><Icon name="play" size={22}/></span><div className="td-assignment-info"><strong>{assignment.test?.title || "Active test assignment"}</strong><small>{assignment.test?.app?.name || "TestDZ"} · {count}/14 daily check-ins</small><div className="td-assignment-progress"><i style={{ width: `${pct}%` }}/></div></div><div className="td-assignment-percent"><b>{pct}%</b><small>{assignment.test?.end_date ? `${Math.max(0, Math.ceil((new Date(`${assignment.test.end_date}T23:59:59`).getTime()-Date.now())/86400000))} days left` : "In progress"}</small></div></div>; })}</div> : <div className="td-empty-assignment"><strong>No active assignments yet</strong><p>Join a test cycle to see your tasks and daily check-in progress here.</p><Link to="/discover-tests">Discover Tests <Icon name="arrow" size={14}/></Link></div>}
+        </article>
+        <article className="td-panel td-journey-panel"><div className="td-panel-heading"><h2><Icon name="trophy" size={22}/>Testing Milestones</h2></div><div className="td-milestone-progress"><div className="td-milestone-ring" style={{ "--milestone-progress": `${Math.min(100, Math.round(stats.checkins / 14 * 100)) * 3.6}deg` } as CSSProperties & { "--milestone-progress": string }}><strong>{Math.min(100, Math.round(stats.checkins / 14 * 100))}%</strong></div><div className="td-milestone-list"><div className={stats.checkins >= 14 ? "done" : "current"}><span><Icon name={stats.checkins >= 14 ? "check" : "calendar"} size={16}/></span><p><b>Complete 14 daily check-ins</b><small>{Math.min(stats.checkins,14)} of 14 recorded</small></p></div><div className={stats.completed >= 10 ? "done" : ""}><span><Icon name="tests" size={16}/></span><p><b>Finish 10 tests</b><small>{stats.completed} completed</small></p></div><div className={stats.points >= 1000 ? "done" : ""}><span><Icon name="star" size={16}/></span><p><b>Reach 1,000 points</b><small>{stats.points.toLocaleString()} points earned</small></p></div></div></div><Link className="td-milestone-cta" to="/check-in-history">View Check-in History <Icon name="arrow" size={14}/></Link></article>
       </section>
 
       <section className="td-middle-grid">
