@@ -17,6 +17,8 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     "aria-hidden": true as const
   };
   const paths: Record<string, ReactNode> = {
+    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
+    folder: <><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H11l2 2h5.5A2.5 2.5 0 0 1 21 9.5v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-10Z"/><path d="M3 10h18"/></>,
     home: <><path d="m3.5 10.5 8.5-7 8.5 7"/><path d="M5.5 9.5v10.8h13V9.5M9.3 21v-6.5h5.4V21"/></>,
     search: <><circle cx="10.8" cy="10.8" r="7.1"/><path d="m16 16 4.5 4.5"/></>,
     tests: <><rect x="5" y="3.5" width="14" height="17" rx="2.2"/><path d="M9 3.5V2.8h6v.7M8.5 10h7M8.5 13.5h4.2M8.5 17h2.2"/></>,
