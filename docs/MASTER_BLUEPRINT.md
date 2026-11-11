@@ -45,7 +45,7 @@ Out of V1: iOS/web app testing, public API, standalone marketplace, browser exte
 
 The current product rule is 14 consecutive calendar days and one valid TestDZ check-in on each required day (14/14), plus feedback and developer confirmation or controlled auto-validation after the configured waiting period. An interruption fails the assignment.
 
-**Open conflict requiring founder confirmation before implementing the completion engine:** earlier accepted requirements allowed a documented medical exception approved by an administrator with day-by-day extension; this v2.0 blueprint says “no exceptions”. Do not silently choose between these two policies. Current schema retains medical-exception audit fields but does not yet implement completion transitions.
+**Founder decision (2026-11-11): medical exceptions are allowed only after explicit Admin approval.** A tester may submit a request with one or more specific dates, a reason, and optional supporting evidence. A pending request does not pause the assignment or extend its schedule. An Admin decision is recorded with reviewer identity, timestamp, decision note, and before/after audit data. Approval adds exactly one extension day per approved requested date; excused dates do not count as check-ins and cannot overlap an existing check-in or another approved exception. Rejection does not extend the assignment. Both outcomes notify the tester. The workflow is implemented through the auditable `review_medical_exception` database RPC and `medical_exception_requests` table. The 14 valid check-ins and feedback/developer-confirmation requirements remain unchanged; medical extensions pause the calendar without awarding check-in credit.
 
 ## 3. Architecture and stack
 
