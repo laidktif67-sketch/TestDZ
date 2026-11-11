@@ -27,6 +27,7 @@ import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
 import SubmitFeedbackPage from "./modules/tester/pages/SubmitFeedbackPage";
 import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
 import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
+import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
 import AuthGuard from "./shared/guards/AuthGuard";
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
             <Route path="/my-tests" element={<MyTestsPage />} />
             <Route path="/check-in-history" element={<CheckInHistoryPage />} />
+            <Route path="/activity-history" element={<ActivityHistoryPage />} />
             <Route path="/discover-tests" element={<DiscoverTestsPage />} />
             <Route path="/tests/:id" element={<TestPreviewPage />} />
           </Route>
