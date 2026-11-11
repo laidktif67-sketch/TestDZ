@@ -1,0 +1,52 @@
+import { useEffect,useMemo,useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "../../../lib/supabase";
+import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import TesterSidebar,{Icon} from "../components/TesterSidebar";
+import "../styles/tester-dashboard.css";
+import "../styles/leaderboard.css";
+type Filter="all"|"month"|"week"|"top100";
+type Profile={id:string;display_name:string|null;avatar_url:string|null};
+type Score={user_id:string;amount:number;created_at:string;wallet_type:string;reason:string};
+type Rank={id:string;name:string;avatar:string|null;points:number;referrals:number;completed:number};
+const startOf=(filter:Filter)=>{const d=new Date();if(filter==="week"){d.setDate(d.getDate()-7);return d.toISOString();}if(filter==="month"){d.setDate(1);d.setHours(0,0,0,0);return d.toISOString();}return null;};
+export default function TesterLeaderboardPage(){
+ const {session,roles=[]}=useIdentity();const [name,setName]=useState("Tester"),[avatar,setAvatar]=useState(""),[unread,setUnread]=useState(0),[menuOpen,setMenuOpen]=useState(false);
+ const [filter,setFilter]=useState<Filter>("all"),[rows,setRows]=useState<Rank[]>([]),[totalTesters,setTotalTesters]=useState<number|null>(null),[totalAwarded,setTotalAwarded]=useState<number|null>(null),[loading,setLoading]=useState(true),[dataNotice,setDataNotice]=useState("");
+ const [page,setPage]=useState(1);const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
+ useEffect(()=>{if(!session?.user?.id||!supabase){setLoading(false);return;}let alive=true;const uid=session.user.id;(async()=>{
+ const [profile,notifications,roleCount,roleRows]=await Promise.all([
+ supabase.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
+ supabase.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
+ supabase.from("user_roles").select("user_id",{count:"exact",head:true}).eq("role","tester"),
+ supabase.from("user_roles").select("user_id").eq("role","tester").limit(5000)
+ ]);
+ if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notifications.count??0);setTotalTesters(roleCount.count);
+ const ids=(roleRows.data??[]).map(x=>x.user_id);if(!ids.length){setRows([]);setTotalAwarded(0);setLoading(false);return;}
+ const [profiles,ledger,assignments]=await Promise.all([
+ supabase.from("profiles").select("id,display_name,avatar_url").in("id",ids),
+ supabase.from("points_ledger").select("user_id,amount,created_at,wallet_type,reason").eq("wallet_type","earned_points").in("user_id",ids).order("created_at",{ascending:false}).limit(20000),
+ supabase.from("assignments").select("tester_id,status").eq("status","completed").in("tester_id",ids)
+ ]);
+ if(!alive)return;
+ if(ledger.error||profiles.error){setDataNotice("The public leaderboard data is not available with the current database read permissions. No sample rankings are shown.");setLoading(false);return;}
+ const profileMap=new Map<string,Profile>((profiles.data??[]).map(x=>[x.id,x as Profile]));const sums=new Map<string,number>();
+ for(const item of ledger.data??[])sums.set(item.user_id,(sums.get(item.user_id)||0)+Number(item.amount));
+ const completions=new Map<string,number>();for(const item of assignments.data??[])completions.set(item.tester_id,(completions.get(item.tester_id)||0)+1);
+ const ranking=ids.map(id=>{const p=profileMap.get(id);return{id,name:p?.display_name?.trim()||"TestDZ Tester",avatar:p?.avatar_url||null,points:sums.get(id)||0,referrals:0,completed:completions.get(id)||0};}).sort((a,b)=>b.points-a.points);
+ setRows(ranking);setTotalAwarded([...sums.values()].reduce((a,b)=>a+b,0));setLoading(false);
+ })().catch(()=>{if(alive){setDataNotice("Unable to load leaderboard data right now.");setLoading(false);}});return()=>{alive=false;};},[session?.user?.id]);
+ const visible=useMemo(()=>{const from=startOf(filter);if(!from)return rows;return rows.map(r=>({...r,points:0}));},[rows,filter]);
+ const pageSize=5;const maxPage=Math.max(1,Math.ceil(visible.length/pageSize));const current=Math.min(page,maxPage);const paged=visible.slice((current-1)*pageSize,current*pageSize);const podium=visible.slice(0,3);const topScore=visible[0]?.points??null;
+ const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Leaderboard",icon:"trophy",href:"/leaderboard",active:true},{label:"Activity & History",icon:"chart",href:"/activity-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Referral Program",icon:"users",href:"/referral-program"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help & Support",icon:"help",href:"/help-support"},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
+ return <div className="td-dashboard lb-dashboard"><TesterSidebar nav={nav} name={name} firstName={name.split(/\\s+/)[0]||"Tester"} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/><main className="td-main lb-main"><header className="td-topbar"><label className="td-search"><Icon name="search" size={20}/><input placeholder="Search in TestDZ…"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={22}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:name.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
+ <div className="lb-content"><Link to="/tester-dashboard" className="lb-back"><Icon name="arrow" size={17}/>Back to Dashboard</Link>
+ <section className="lb-hero"><div className="lb-hero-cup">🏆</div><div><span>TESTDZ COMMUNITY</span><h1>Tester Leaderboard</h1><p>Top contributors. Recognition earned through real testing.</p></div><div className="lb-hero-art"><strong>Test More…</strong><b>Rank Higher!</b><div>↗ ▂ ▄ ▆ █</div></div></section>
+ {dataNotice&&<div className="lb-notice"><Icon name="info" size={18}/>{dataNotice}</div>}
+ <div className="lb-layout"><div className="lb-main-column"><section className="lb-podium" aria-label="Top three testers">{podium.length?podium.map((p,i)=><article className={"lb-podium-card place-"+(i+1)} key={p.id}><span className="lb-crown">{i===0?"👑":i===1?"🥈":"🥉"}</span><div className="lb-avatar">{p.avatar?<img src={p.avatar} alt=""/>:p.name.slice(0,1).toUpperCase()}</div><span className="lb-place">{i+1}</span><strong>{p.name}</strong><b>{p.points.toLocaleString()} pts</b></article>):<div className="lb-empty">Rankings will appear when verified leaderboard data is available.</div>}</section>
+ <div className="lb-filters">{([{id:"all",label:"All Testers",icon:"users"},{id:"month",label:"This Month",icon:"calendar"},{id:"week",label:"This Week",icon:"calendar"},{id:"top100",label:"Top 100",icon:"trophy"}] as const).map(x=><button key={x.id} className={filter===x.id?"active":""} onClick={()=>{setFilter(x.id);setPage(1);}}><Icon name={x.icon} size={17}/>{x.label}</button>)}</div>
+ <section className="lb-table-wrap"><div className="lb-table-scroll"><table className="lb-table"><thead><tr><th>#</th><th>Tester</th><th>Total Points</th><th>Successful Referrals</th><th>Tests Completed</th><th>Rank Badge</th><th>Actions</th></tr></thead><tbody>{loading?<tr><td colSpan={7}>Loading verified rankings…</td></tr>:paged.length?paged.map((p,i)=><tr key={p.id}><td><span className={"lb-rank rank-"+((current-1)*pageSize+i+1)}>{(current-1)*pageSize+i+1}</span></td><td><div className="lb-person"><span className="lb-avatar small">{p.avatar?<img src={p.avatar} alt=""/>:p.name.slice(0,1).toUpperCase()}</span><strong>{p.name}</strong></div></td><td><b>{p.points.toLocaleString()} pts</b></td><td>—</td><td>{p.completed.toLocaleString()}</td><td><span className="lb-badge"><Icon name="award" size={16}/>{p.points>=10000?"Gold Contributor":p.points>=5000?"Silver Contributor":"Tester"}</span></td><td><Link to={p.id===session?.user?.id?"/profile":"/leaderboard"} className="lb-view">{p.id===session?.user?.id?"My Profile":"View Profile"}</Link></td></tr>):<tr><td colSpan={7}>No verified leaderboard entries yet.</td></tr>}</tbody></table></div><footer className="lb-pagination"><div><button disabled={current<=1} onClick={()=>setPage(x=>Math.max(1,x-1))}>‹</button><span>{current}</span><button disabled={current>=maxPage} onClick={()=>setPage(x=>Math.min(maxPage,x+1))}>›</button></div><small>Showing {visible.length?((current-1)*pageSize+1):0}–{Math.min(current*pageSize,visible.length)} of {visible.length.toLocaleString()} testers</small></footer></section></div>
+ <aside className="lb-aside"><section className="lb-side-card"><h2><Icon name="chart" size={20}/>Leaderboard Stats</h2><div><span><Icon name="users" size={28}/></span><p>Total Testers<strong>{totalTesters===null?"—":totalTesters.toLocaleString()}</strong></p></div><div><span className="gold"><Icon name="star" size={28}/></span><p>Total Points Awarded<strong>{totalAwarded===null?"—":totalAwarded.toLocaleString()}</strong></p></div><div><span className="gold"><Icon name="trophy" size={28}/></span><p>Top Score<strong>{topScore===null?"—":topScore.toLocaleString()+" pts"}</strong></p></div></section>
+ <section className="lb-side-card"><h2><Icon name="gift" size={21}/>Top Rewards</h2><div className="lb-reward-row"><span>💎</span><p>1st Place<strong>Reward rules not configured</strong></p></div><div className="lb-reward-row"><span>🥈</span><p>2nd Place<strong>Reward rules not configured</strong></p></div><div className="lb-reward-row"><span>🥉</span><p>3rd Place<strong>Reward rules not configured</strong></p></div></section>
+ <Link className="lb-invite" to="/referral-program"><Icon name="users" size={20}/>Invite Friends</Link><div className="lb-community"><Icon name="info" size={19}/>Your testing helps build a better TestDZ community.</div></aside></div></div></main></div>;
+}
