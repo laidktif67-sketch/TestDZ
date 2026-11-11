@@ -60,7 +60,8 @@ select ok(
       and tablename = 'support_ticket_attachments'
       and policyname = 'support_ticket_attachments_insert_message_author'
       and qual is null
-      and with_check like '%storage_path like%'
+      and with_check like '%ticket_id%'
+      and with_check like '%auth.uid%'
   ),
   'attachment metadata insert policy binds paths to the authenticated uploader'
 );
