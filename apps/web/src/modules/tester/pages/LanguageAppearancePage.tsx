@@ -82,7 +82,7 @@ export default function LanguageAppearancePage() {
     root.dir = language === "ar-DZ" ? "rtl" : "ltr";
     return () => { delete root.dataset.theme; root.dir = "ltr"; };
   }, [prefs.theme, language]);
-  const update = <K extends keyof Preferences>(key: K, value: Preferences[K]) => setPrefs(current => ({ ...current, [key]: value }));
+  const update = <K extends keyof Preferences,>(key: K, value: Preferences[K]) => setPrefs(current => ({ ...current, [key]: value }));
   async function save() {
     if (!supabase || !user) { setError("Sign in to save your language and appearance preferences."); return; }
     setBusy(true); setMessage(""); setError("");
@@ -99,7 +99,6 @@ export default function LanguageAppearancePage() {
     setLanguage("en-DZ"); setPrefs(defaults); setMessage("Default preferences restored. Select Save Changes to apply them."); setError("");
   }
   const displayName = name || firstName;
-  const date = new Date(2026, 10, 7);
   const datePreview = prefs.dateFormat === "DD/MM/YYYY" ? "07/11/2026" : prefs.dateFormat === "YYYY-MM-DD" ? "2026-11-07" : "Nov 07, 2026";
   const timePreview = prefs.timeFormat === "24h" ? "14:30" : "02:30 PM";
   return <div className={`td-dashboard la-dashboard ${prefs.compactMode ? "compact" : ""} ${!prefs.animations ? "no-motion" : ""}`}>
