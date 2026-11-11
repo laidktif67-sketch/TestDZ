@@ -49,8 +49,8 @@ export default function AssignmentSubmissionPage() {
   useEffect(() => {
     if (previewMode) {
       setAssignment({
-        id: "preview-assignment", status: "completed", start_date: "2026-11-07",
-        completed_at: "2026-11-08T14:15:00Z", created_at: "2026-11-07T09:00:00Z", points_awarded: 50,
+        id: "preview-assignment", status: "active", start_date: "2026-11-07",
+        completed_at: null, created_at: "2026-11-07T09:00:00Z", points_awarded: 75,
         test: { id: "preview-test", title: "Performance Testing", status: "running", start_date: "2026-11-07", end_date: "2026-11-14", app: { name: "PlayStore App", icon_url: null } }
       });
       setCheckins([{ id: "1", checkin_date: "2026-11-07" }, { id: "2", checkin_date: "2026-11-08" }]);
@@ -74,7 +74,7 @@ export default function AssignmentSubmissionPage() {
     return () => { alive = false; };
   }, [id, session?.user?.id, previewMode]);
 
-  const progress = assignment?.status === "completed" ? 100 : (assignment?.status === "active" ? 10 : 0) + (checkins.length > 0 ? 30 : 0) + (feedbackCount > 0 ? 30 : 0) + (evidence.length > 0 ? 30 : 0);
+  const progress = assignment?.status === "completed" ? 100 : Math.min(100, Math.round(((Math.min(checkins.length, 14) / 14) * 70) + (feedbackCount > 0 ? 15 : 0) + (evidence.length > 0 ? 15 : 0)));
   const points = assignment?.points_awarded ?? 0;
   const appName = assignment?.test?.app?.name || "Assigned app";
   const dateRange = assignment?.test?.start_date && assignment?.test?.end_date
@@ -83,10 +83,10 @@ export default function AssignmentSubmissionPage() {
   const completedLabel = assignment?.status === "completed" ? "Completed" : assignment?.status === "active" ? "Active" : assignment?.status || "Pending";
   const canSubmit = assignment?.status === "active";
   const checklist = [
-    { label: "Assignment is active", done: assignment?.status === "active" },
-    { label: "At least one check-in recorded", done: checkins.length > 0 },
-    { label: "Feedback added", done: feedbackCount > 0 },
+    { label: "14 daily check-ins", done: checkins.length >= 14 },
+    { label: "Feedback submitted", done: feedbackCount > 0 },
     { label: "Evidence attached", done: evidence.length > 0 },
+    { label: "Assignment ready for review", done: assignment?.status === "completed" },
   ];
   const totalSize = useMemo(() => evidence.reduce((sum, item) => sum + item.file.size, 0), [evidence]);
 
@@ -151,16 +151,16 @@ export default function AssignmentSubmissionPage() {
             <section className="as-form-card">
               <h2 className="as-card-heading"><Icon name="check" size={24}/>Submission Form</h2>
               <div className="as-section"><Step n={1}>Your Results Summary</Step><div className="as-summary">
-                <div><Icon name="chart" size={28}/><span>Check-ins Completed</span><strong>{checkins.length}</strong></div>
+                <div><Icon name="chart" size={28}/><span>Check-ins Completed</span><strong>{checkins.length}<small> / 14</small></strong></div>
                 <div><Icon name="receipt" size={28}/><span>Feedback Submitted</span><strong>{feedbackCount}</strong></div>
                 <div><Icon name="clock" size={28}/><span>Assignment Status</span><strong className="as-status-text">{completedLabel}</strong></div>
-                <div><Icon name="star" size={28}/><span>Points Earned</span><strong className="as-points">+{points}</strong></div>
+                <div><Icon name="star" size={28}/><span>Points Awarded</span><strong className="as-points">+{points}</strong></div>
               </div></div>
               <div className="as-section"><Step n={2}>Upload Evidence</Step>
                 <div className="as-upload-row">
                   <div className={`as-dropzone ${isDragging ? "is-dragging" : ""}`} onDragOver={event => { event.preventDefault(); setIsDragging(true); }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDragging(false); }} onDrop={onDrop} onClick={() => fileRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") fileRef.current?.click(); }}>
                     <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 32V8m0 0L14 18M24 8l10 10M8 29v8a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4v-8" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    <strong>{isDragging ? "Drop your evidence here" : "Drag &amp; drop screenshots or files here"}</strong><span>PNG, JPG, WebP or PDF · up to 10 MB each · maximum 5 files</span>
+                    <strong>{isDragging ? "Drop your evidence here" : "Drag & drop screenshots or files here"}</strong><span>PNG, JPG, WebP or PDF · up to 10 MB each · maximum 5 files</span>
                     <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple hidden onChange={onFileChange}/>
                   </div>
                   {evidence.length > 0 && <div className="as-evidence-list">{evidence.map((item, index) => <div className="as-evidence-item" key={item.file.name + index}>{item.file.type.startsWith("image/") ? <img src={item.url} alt={item.file.name}/> : <div className="as-pdf">PDF</div>}<span title={item.file.name}>{item.file.name}</span><button type="button" aria-label={`Remove ${item.file.name}`} onClick={() => removeFile(index)}>×</button></div>)}</div>}
