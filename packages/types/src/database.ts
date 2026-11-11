@@ -1519,6 +1519,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_active_sessions: {
+        Args: never
+        Returns: {
+          id: string
+          created_at: string
+          last_active_at: string
+          user_agent: string | null
+          ip_address: string | null
+          assurance_level: string | null
+          is_current: boolean
+        }[]
+      }
+      get_my_security_activity: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: string
+          event: string
+          occurred_at: string
+          ip_address: string | null
+        }[]
+      }
       add_cohort_test: {
         Args: { p_cohort_id: string; p_test_id: string }
         Returns: number
