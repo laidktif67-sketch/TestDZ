@@ -28,6 +28,7 @@ import LoginActivitySecurityPage from "./modules/tester/pages/LoginActivitySecur
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
 import AssignmentDetailsPage from "./modules/tester/pages/AssignmentDetailsPage";
+import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmentProgressPage";
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="/password-reset-success" element={<PasswordResetSuccessPage />} />
         <Route path="/invalid-otp" element={<InvalidOtpPage />} />
         <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
+        <Route path="/assignments/:id/progress" element={<ActiveAssignmentProgressPage />} />
         <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
         <Route path="/assignments/:id/summary" element={<TestCompletionSummaryPage />} />
 
