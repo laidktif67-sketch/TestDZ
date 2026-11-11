@@ -37,16 +37,25 @@ export default function SupportTicketDetailsPage(){
   setLoading(false);
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
- const canReply=!!ticket&&ticket.status!=="closed"&&ticket.user_id===user?.id;
+ const canReply=!!ticket&&ticket.status!=="closed"&&(ticket.user_id===user?.id||roles.includes("support")||roles.includes("admin"));
  const ownMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===user?.id).map(m=>m.id)),[messages,user?.id]);
  async function sendReply(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(!supabase||!user||!ticket||!reply.trim())return;
-  if(selectedFile){setError("File upload will be enabled after the reviewed private-storage migration is applied. You can send a text reply now.");return;}
   setSending(true);setError("");setNotice("");
-  const {error:insertError}=await supabase.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()});
-  setSending(false);
-  if(insertError){setError("Your reply could not be sent. Please try again after support messaging is enabled.");return;}
-  setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
+  if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
+   setSending(false);setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
+  }
+  const {data:messageData,error:insertError}=await supabase.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()}).select("id").single();
+  if(insertError||!messageData){setSending(false);setError("Your reply could not be sent. Please try again after support messaging is enabled.");return;}
+  if(selectedFile){
+   const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
+   const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
+   const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
+   if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
+   const {error:metadataError}=await supabase.from("support_ticket_attachments").insert({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
+   if(metadataError){setSending(false);setReply("");setSelectedFile(null);setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");await load();return;}
+  }
+  setSending(false);setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
  }
  async function openAttachment(item:Attachment){
   if(!supabase){return;}setError("");
