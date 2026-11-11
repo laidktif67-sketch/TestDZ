@@ -21,10 +21,10 @@ export default function WithdrawalStatusPage() {
     let alive = true;
     async function load() {
       try {
-        const { data: sessionData } = await client.auth.getSession();
+        const { data: sessionData } = await client!.auth.getSession();
         const user = sessionData.session?.user;
         if (!user) return;
-        const { data: profile } = await client.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
+        const { data: profile } = await client!.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
         if (alive) {
           setName(profile?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
           setAvatar(profile?.avatar_url || "");
