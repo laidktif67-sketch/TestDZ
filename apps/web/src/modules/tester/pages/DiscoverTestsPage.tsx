@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import type { ReactNode } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
@@ -12,24 +11,14 @@ import "../styles/discover-tests.css";
 type AppInfo={name:string;icon_url:string|null;category?:string|null};
 type TestRow={id:string;title:string;description:string|null;short_summary?:string|null;status:string;min_testers:number;start_date:string|null;end_date:string|null;app?:AppInfo|null};
 type Category="all"|"mobile"|"web"|"desktop"|"other";
-type FilterIconName="all"|"mobile"|"web"|"desktop"|"other";
+type FilterIconName="grid"|"smartphone"|"globe"|"monitor"|"layers";
 const filters:{id:Category;label:string;icon:FilterIconName}[]=[
- {id:"all",label:"All opportunities",icon:"all"},
- {id:"mobile",label:"Mobile apps",icon:"mobile"},
- {id:"web",label:"Web apps",icon:"web"},
- {id:"desktop",label:"Desktop",icon:"desktop"},
- {id:"other",label:"Other",icon:"other"}
+ {id:"all",label:"All opportunities",icon:"grid"},
+ {id:"mobile",label:"Mobile apps",icon:"smartphone"},
+ {id:"web",label:"Web apps",icon:"globe"},
+ {id:"desktop",label:"Desktop",icon:"monitor"},
+ {id:"other",label:"Other",icon:"layers"}
 ];
-function FilterIcon({name}:{name:FilterIconName}){
- const paths:Record<FilterIconName,ReactNode>={
-  all:<><path d="M4 7.5h6v6H4zM14 4h6v6h-6zM14 14h6v6h-6zM4 17h6v3H4z"/></>,
-  mobile:<><rect x="7" y="2.8" width="10" height="18.4" rx="2.1"/><path d="M10 5.8h4M11 18.2h2"/></>,
-  web:<><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3c2.2 2.4 3.2 5.4 3.2 9s-1 6.6-3.2 9c-2.2-2.4-3.2-5.4-3.2-9S9.8 5.4 12 3Z"/></>,
-  desktop:<><rect x="3" y="4" width="18" height="13" rx="1.8"/><path d="M8 21h8M12 17v4"/></>,
-  other:<><path d="m12 3 2.4 5.1L20 9l-4 3.9.9 5.6-4.9-2.6-4.9 2.6.9-5.6L4 9l5.6-.9L12 3Z"/></>
- };
- return <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">{paths[name]}</svg>;
-}
 function categoryOf(value?:string|null):Category{const v=(value||"").toLowerCase();if(/android|ios|mobile|game|health|education/.test(v))return"mobile";if(/web|saas|website/.test(v))return"web";if(/desktop|windows|mac|linux/.test(v))return"desktop";return"other";}
 function initials(value:string){return value.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase()||"T";}
 function daysLeft(value:string|null){if(!value)return null;return Math.max(0,Math.ceil((new Date(value+"T23:59:59").getTime()-Date.now())/86400000));}
@@ -83,7 +72,7 @@ export default function DiscoverTestsPage(){
        <button type="submit"><Icon name="search" size={16}/> Search</button>
       </form>
       <div className="discover-categories">
-       {filters.map(filter=><button type="button" key={filter.id} onClick={()=>setCategory(filter.id)} className={category===filter.id?"active":""} aria-pressed={category===filter.id}><span className="discover-filter-icon"><FilterIcon name={filter.icon}/></span><span className="discover-filter-label">{filter.label}</span>{category===filter.id&&<span className="discover-filter-selected" aria-hidden="true"><Icon name="check" size={12}/></span>}</button>)}
+       {filters.map(filter=><button type="button" key={filter.id} onClick={()=>setCategory(filter.id)} className={category===filter.id?"active":""} aria-pressed={category===filter.id}><span className="discover-filter-icon"><Icon name={filter.icon} size={16}/></span><span className="discover-filter-label">{filter.label}</span>{category===filter.id&&<span className="discover-filter-selected" aria-hidden="true"><Icon name="check" size={12}/></span>}</button>)}
       </div>
      </div>
      <div className="discover-hero-art" aria-hidden="true"><HeroIllustration/></div>
