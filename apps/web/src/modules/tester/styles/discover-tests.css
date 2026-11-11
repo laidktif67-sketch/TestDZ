@@ -107,3 +107,9 @@
  .discover-categories button .discover-filter-selected{width:15px;height:15px}
 }
 @media(prefers-reduced-motion:reduce){.discover-categories button{transition:none}.discover-categories button:hover{transform:none}}
+
+/* Ensure the shared icon component is visible inside category controls */
+.discover-categories button .discover-filter-icon{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 27px;width:27px;height:27px;margin:0!important;visibility:visible!important;opacity:1!important}
+.discover-categories button .discover-filter-icon svg{display:block!important;visibility:visible!important;opacity:1!important;width:16px!important;height:16px!important;min-width:16px;stroke:currentColor!important;fill:none!important;flex:none}
+.discover-categories button .discover-filter-icon .td-icon{color:inherit}
+.discover-categories button .discover-filter-label{margin:0!important}
