@@ -12,6 +12,7 @@ function FieldIcon({ name, size = 16 }: { name: string; size?: number }) {
     phone: <><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10 18h4"/></>,
     postal: <><path d="M3 8.5 12 3l9 5.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z"/><path d="M3 9h18M8 13h8"/></>,
     bank: <><path d="m3 9 9-6 9 6M5 10v8m4-8v8m6-8v8m4-8v8M3 21h18M2 18h20"/></>,
+    binance: <><path d="m12 2.8 3.2 3.2L12 9.2 8.8 6zM6.5 8.8l3.2 3.2-3.2 3.2-3.2-3.2zM17.5 8.8l3.2 3.2-3.2 3.2-3.2-3.2zM12 14.8l3.2 3.2-3.2 3.2-3.2-3.2zM12 10.7l1.3 1.3-1.3 1.3-1.3-1.3z"/></>,
     user: <><circle cx="12" cy="8" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></>,
     account: <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></>,
     note: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></>,
@@ -120,20 +121,20 @@ export default function WithdrawalRequestPage() {
           <div className="twr-methods">
             <label className={method === "baridimob" ? "twr-method selected" : "twr-method"}><input type="radio" name="method" value="baridimob" checked={method === "baridimob"} onChange={() => { setMethod("baridimob"); setSubmitted(false); }} /><span className="twr-method-logo"><FieldIcon name="phone" size={22}/></span><span><strong>BaridiMob</strong><small>CCP / Postal account</small></span><i>✓</i></label>
             <label className={method === "ccp" ? "twr-method selected" : "twr-method"}><input type="radio" name="method" value="ccp" checked={method === "ccp"} onChange={() => { setMethod("ccp"); setSubmitted(false); }} /><span className="twr-method-logo"><FieldIcon name="postal" size={22}/></span><span><strong>CCP</strong><small>Postal transfer</small></span><i>✓</i></label>
-            <label className={method === "bank" ? "twr-method selected" : "twr-method"}><input type="radio" name="method" value="bank" checked={method === "bank"} onChange={() => { setMethod("bank"); setSubmitted(false); }} /><span className="twr-method-logo"><FieldIcon name="bank" size={22}/></span><span><strong>Bank Transfer</strong><small>Bank account</small></span><i>✓</i></label>
+            <label className={method === "binance_bep20" ? "twr-method selected twr-method-binance" : "twr-method twr-method-binance"}><input type="radio" name="method" value="binance_bep20" checked={method === "binance_bep20"} onChange={() => { setMethod("binance_bep20"); setSubmitted(false); }} /><span className="twr-method-logo"><FieldIcon name="binance" size={22}/></span><span><strong>Binance</strong><small>USDT · BEP20 Network</small></span><i>✓</i></label>
           </div>
 
-          <label className="twr-field-label" htmlFor="twr-account-name"><FieldIcon name="user"/>Account holder name</label>
+          <label className="twr-field-label" htmlFor="twr-account-name"><FieldIcon name="user"/>{method === "binance_bep20" ? "Binance account holder name" : "Account holder name"}</label>
           <div className="twr-input-shell"><FieldIcon name="user"/><input className="twr-input" id="twr-account-name" required value={accountName} onChange={(event) => { setAccountName(event.target.value); setSubmitted(false); }} placeholder="Full name as registered" /></div>
 
-          <label className="twr-field-label" htmlFor="twr-account-number"><FieldIcon name="account"/>{method === "bank" ? "RIB / Account number" : "CCP account / RIP number"}</label>
-          <div className="twr-input-shell"><FieldIcon name="account"/><input className="twr-input" id="twr-account-number" required value={accountNumber} onChange={(event) => { setAccountNumber(event.target.value); setSubmitted(false); }} placeholder="Enter your payment account details" /></div>
+          <label className="twr-field-label" htmlFor="twr-account-number"><FieldIcon name="account"/>{method === "binance_bep20" ? "BEP20 wallet address" : "CCP account / RIP number"}</label>
+          <div className="twr-input-shell"><FieldIcon name="account"/><input className="twr-input" id="twr-account-number" required value={accountNumber} onChange={(event) => { setAccountNumber(event.target.value); setSubmitted(false); }} placeholder={method === "binance_bep20" ? "Paste your BEP20 (BSC) wallet address" : "Enter your CCP / RIP account details"} /></div>
 
-          <label className="twr-field-label" htmlFor="twr-note"><FieldIcon name="note"/>Additional note <span>(optional)</span></label>
+          {method === "binance_bep20" && <p className="twr-network-note"><FieldIcon name="note" size={14}/> Send only via <strong>BNB Smart Chain (BEP20)</strong>. Using another network may result in permanent loss of funds.</p>}\n          <label className="twr-field-label" htmlFor="twr-note"><FieldIcon name="note"/>Additional note <span>(optional)</span></label>
           <textarea className="twr-input twr-textarea" id="twr-note" rows={3} value={note} onChange={(event) => { setNote(event.target.value); setSubmitted(false); }} placeholder="Anything we should know?" />
 
           <button className="twr-submit" type="submit">Preview Withdrawal Request <span className="twr-submit-icon"><FieldIcon name="arrow" size={17}/></span></button>
-          {submitted && <div className="twr-alert twr-alert-success" role="status"><strong>✅ Preview created!</strong><span>Your {Number(amount).toLocaleString()} DA {method === "baridimob" ? "BaridiMob" : method === "ccp" ? "CCP" : "bank transfer"} request is only a local preview. It has not been submitted or saved.</span></div>}
+          {submitted && <div className="twr-alert twr-alert-success" role="status"><strong>✅ Preview created!</strong><span>Your {Number(amount).toLocaleString()} DA {method === "baridimob" ? "BaridiMob" : method === "ccp" ? "CCP" : "Binance BEP20"} request is only a local preview. It has not been submitted or saved.</span></div>}
           <p className="twr-secure-note"><FieldIcon name="lock" size={13}/> Your payment details are not stored by this temporary page.</p>
         </form>
 
