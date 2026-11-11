@@ -28,6 +28,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     wallet: <><rect x="3" y="6" width="18" height="15" rx="2.3"/><path d="M3 9.5h18M16 14h2.5"/></>,
     shield: <><path d="M12 21.5s8-3.8 8-9.6V5.2L12 2.5 4 5.2v6.7c0 5.8 8 9.6 8 9.6Z"/><path d="m8.7 12 2.1 2.1 4.6-4.7"/></>,
     chart: <><path d="M4 19.5V5M4 19.5h16"/><path d="m7.5 15 3.2-3.4 3 1.8 5.2-6"/></>,
+    pie: <><path d="M11 3.2a8.8 8.8 0 1 0 9.8 9.8H11V3.2Z"/><path d="M14 3.5v6.5h6.5A8.8 8.8 0 0 0 14 3.5Z"/></>,
     grid: <><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></>,
     smartphone: <><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 5.5h4M11 18.5h2"/></>,
     globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></>,
