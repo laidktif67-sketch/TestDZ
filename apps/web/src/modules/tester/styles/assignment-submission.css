@@ -84,3 +84,9 @@
  .as-checklist span{font-size:11px}
  .as-actions button{min-height:48px}
 }
+
+/* Approved Assignment Submission mockup: dedicated report field and draft action. */
+.as-report{min-height:150px;resize:vertical;background:#fbfdff}
+.as-report::placeholder{color:#7183a8}
+.as-report:focus{border-color:#1264e9;box-shadow:0 0 0 3px #1264e91a}
+@media(max-width:760px){.as-report{min-height:130px}}
