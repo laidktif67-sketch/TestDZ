@@ -57,3 +57,32 @@
  .as-evidence-item{width:calc(50% - 4px)}
 }
 @media(prefers-reduced-motion:reduce){.as-dropzone{transition:none}}
+
+
+/* Assignment Submission — final responsive polish */
+.as-hero-copy>p{max-width:760px;line-height:1.55}
+.as-title-line h1{overflow-wrap:anywhere}
+.as-form-card,.as-side-card{min-width:0}
+.as-summary>div{min-width:0}
+.as-summary span{line-height:1.35}
+.as-dropzone{width:100%;box-sizing:border-box}
+.as-submit-btn:disabled{cursor:not-allowed}
+.as-submit-btn:not(:disabled):hover{background:#0649c8;box-shadow:0 7px 16px #0757e82b;transform:translateY(-1px)}
+.as-submit-btn{transition:background .18s ease,box-shadow .18s ease,transform .18s ease}
+.as-notice{overflow-wrap:anywhere}
+.as-details-card .as-id{font-variant-numeric:tabular-nums}
+@media(max-width:760px){
+ .as-layout,.as-form-card,.as-side-card{min-width:0}
+ .as-summary>div{overflow-wrap:anywhere}
+ .as-dropzone{min-height:128px}
+ .as-form-footer{align-items:stretch}
+ .as-actions button{min-height:48px}
+ .as-progress-ring{max-width:112px;max-height:112px}
+ .as-preview-modal{padding:16px}
+}
+@media(max-width:360px){
+ .as-meta span{font-size:10px;padding:6px 7px}
+ .as-summary span{font-size:11px}
+ .as-summary strong{font-size:20px}
+ .as-checklist span{font-size:11px}
+}
