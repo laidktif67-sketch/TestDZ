@@ -40,6 +40,7 @@ export default function AssignmentSubmissionPage() {
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const evidenceRef = useRef<EvidenceFile[]>([]);
   const previewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get("preview") === "1";
   const name = session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Tester";
   const firstName = name.split(/\s+/)[0];
@@ -114,7 +115,8 @@ export default function AssignmentSubmissionPage() {
   };
   const onDrop = (event: DragEvent<HTMLDivElement>) => { event.preventDefault(); setIsDragging(false); if (event.dataTransfer.files) addFiles(event.dataTransfer.files); };
 
-  useEffect(() => () => { evidence.forEach(item => URL.revokeObjectURL(item.url)); }, []);
+  useEffect(() => { evidenceRef.current = evidence; }, [evidence]);
+  useEffect(() => () => { evidenceRef.current.forEach(item => URL.revokeObjectURL(item.url)); }, []);
   useEffect(() => { if (!previewOpen) return; const close = (event: KeyboardEvent) => { if (event.key === "Escape") setPreviewOpen(false); }; window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [previewOpen]);
 
   if (!previewMode && !session) return <Navigate to="/auth" replace />;
@@ -171,7 +173,7 @@ export default function AssignmentSubmissionPage() {
               <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => setPreviewOpen(true)}><Icon name="eye" size={19}/>Preview</button><button type="button" className="as-submit-btn" disabled={!canSubmit} onClick={() => setNotice("Your draft is ready, but final submission is not connected to the database yet. Your files have not been uploaded.")}><Icon name="send" size={19}/>{canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
             </section>
             <aside className="as-side">
-              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Assignment Progress</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
+              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Submission Readiness</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
               <section className="as-side-card as-details-card"><h2><Icon name="receipt" size={22}/>Submission Details</h2><div><Icon name="calendar" size={20}/><span>Assignment Started<strong>{dateTime(assignment.start_date)}</strong></span></div><div><Icon name="calendar" size={20}/><span>Last Updated<strong>{dateTime(assignment.completed_at || assignment.created_at)}</strong></span></div><div><Icon name="clock" size={20}/><span>Status<strong className="as-detail-status">{completedLabel}</strong></span></div><div><Icon name="info" size={20}/><span>Assignment ID<strong className="as-id">{assignment.id.slice(0, 13)}…</strong></span></div></section>
               <section className="as-success-card"><span>✓</span><div><strong>{assignment.status === "completed" ? "Assignment completed" : "You're making progress!"}</strong><p>{assignment.status === "completed" ? "Your assignment is marked as completed." : "Keep your evidence and comments ready before final submission."}</p></div></section>
             </aside>
