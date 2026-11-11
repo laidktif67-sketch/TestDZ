@@ -16,6 +16,7 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
 import MyTestsPage from "./modules/tester/pages/MyTestsPage";
 import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
+import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
             <Route path="/my-tests" element={<MyTestsPage />} />
             <Route path="/discover-tests" element={<DiscoverTestsPage />} />
+            <Route path="/tests/:id" element={<TestPreviewPage />} />
           </Route>
           <Route element={<RoleGuard requiredRole="developer" />}>
             <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
