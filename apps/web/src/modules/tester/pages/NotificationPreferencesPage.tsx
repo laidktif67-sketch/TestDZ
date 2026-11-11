@@ -30,7 +30,7 @@ const items: { key: NoticeKey; title: string; description: string; icon: string;
   { key: "assignmentUpdates", title: "Assignment Updates", description: "Receive updates about your assignments.", icon: "check", color: "violet" },
   { key: "achievements", title: "Achievements", description: "Get notified when you earn badges and achievements.", icon: "trophy", color: "orange" },
   { key: "supportMessages", title: "Support Messages", description: "Receive replies about your support requests.", icon: "message", color: "teal" },
-  { key: "systemUpdates", title: "System Updates", description: "Important platform updates and announcements.", icon: "megaphone", color: "red" }
+  { key: "systemUpdates", title: "System Updates", description: "Important platform updates and announcements.", icon: "bell", color: "red" }
 ];
 const channelNames: Record<Channel, string> = { push: "Push", email: "Email", inApp: "In-App" };
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
