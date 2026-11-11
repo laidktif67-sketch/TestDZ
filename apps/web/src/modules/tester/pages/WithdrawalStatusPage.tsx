@@ -17,14 +17,16 @@ export default function WithdrawalStatusPage() {
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
+    const client = supabase;
+    if (!client) { setLoading(false); return; }
     let alive = true;
     async function load() {
       try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await client.auth.getSession();
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
-        const { data: profile, error } = await supabase.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
+        const { data: profile, error } = await client.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
         if (error) throw error;
         if (alive) {
           setName(profile?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
