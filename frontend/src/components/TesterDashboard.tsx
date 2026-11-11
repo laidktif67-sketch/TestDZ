@@ -102,6 +102,7 @@ export default function TesterDashboard({ session }: { session: Session }) {
           <a className="active" href="#top"><Icon>⌂</Icon>Dashboard</a>
           <a href="#discover-tests"><Icon>⌕</Icon>Discover</a>
           <a href="#my-tests"><Icon>▣</Icon>My Tests</a>
+          <Link to="/feedback-history"><Icon>★</Icon>Feedback History</Link>
           <a href="#rewards"><Icon>▤</Icon>Billing & Rewards</a>
         </nav>
         <div className="td-sidebar-promo"><div className="td-rocket">🚀</div><h3>Build Better Together</h3><p>Create tests, help the community, and grow with TestDZ!</p><a href="#discover-tests">Explore More <span>→</span></a></div>
