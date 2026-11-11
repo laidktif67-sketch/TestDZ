@@ -62,6 +62,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     users: <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8a3 3 0 0 1-2 2.8M20 21v-2a4 4 0 0 0-3-3.9"/></>,
     lightbulb: <><path d="M9 18h6m-5 3h4M8.5 14.5A7 7 0 1 1 15.5 14.5c-.8.6-1.2 1.3-1.4 2.5h-4.2c-.2-1.2-.6-1.9-1.4-2.5Z"/></>,
     help: <><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1.2.8-1.5 1.2-1.5 2.5M12 17h.01"/></>,
+    book: <><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22V5.5Z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20M8 7h8M8 10h8"/></>,
     headset: <><path d="M3.5 13v-1a8.5 8.5 0 0 1 17 0v1"/><rect x="3" y="12" width="4" height="7" rx="1.5"/><rect x="17" y="12" width="4" height="7" rx="1.5"/><path d="M17 19a5 5 0 0 1-5 3h-1"/></>,
     chevron: <path d="m7 10 5 5 5-5"/>,
   };
