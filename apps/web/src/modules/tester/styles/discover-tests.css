@@ -142,3 +142,47 @@
  .discover-categories button .discover-filter-selected{width:15px;height:15px;flex:0 0 15px}
 }
 
+
+
+/* Support card CTA: balanced text and a dedicated arrow affordance. */
+.discover-help a.discover-help-cta{
+ box-sizing:border-box;
+ display:flex;
+ width:100%;
+ min-height:46px;
+ align-items:center;
+ justify-content:space-between;
+ gap:14px;
+ padding:7px 10px 7px 16px;
+ border:1px solid #c8d8ee;
+ border-radius:12px;
+ background:linear-gradient(180deg,#fff 0%,#f7faff 100%);
+ color:#1458b8;
+ font-size:12px;
+ font-weight:700;
+ line-height:1.25;
+ text-align:left;
+ text-decoration:none;
+ box-shadow:0 2px 5px rgba(24,65,120,.06);
+ transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.discover-help a.discover-help-cta>span:first-child{min-width:0}
+.discover-help a.discover-help-cta .discover-help-cta-icon{
+ display:inline-flex;
+ flex:0 0 30px;
+ width:30px;
+ height:30px;
+ align-items:center;
+ justify-content:center;
+ border-radius:9px;
+ background:#e8f1ff;
+ color:#075de5;
+}
+.discover-help a.discover-help-cta .discover-help-cta-icon svg{display:block;width:16px;height:16px;flex:none}
+.discover-help a.discover-help-cta:hover{
+ background:#f2f7ff;
+ border-color:#9bbbe8;
+ box-shadow:0 4px 10px rgba(24,65,120,.1);
+ transform:translateY(-1px);
+}
+.discover-help a.discover-help-cta:focus-visible{outline:3px solid rgba(7,93,229,.25);outline-offset:2px}
