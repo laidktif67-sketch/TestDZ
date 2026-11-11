@@ -44,6 +44,7 @@ import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
 import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
 import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import SupportCenterPage from "./modules/tester/pages/SupportCenterPage";
+import SupportTicketDetailsPage from "./modules/tester/pages/SupportTicketDetailsPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
 import AuthGuard from "./shared/guards/AuthGuard";
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
           <Route path="/help" element={<HelpSupportPage />} />
           <Route path="/support" element={<SupportCenterPage />} />
+          <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
           <Route path="/help-support" element={<Navigate to="/help" replace />} />
           <Route path="/settings" element={<SettingsSecurityPage />} />
           <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
