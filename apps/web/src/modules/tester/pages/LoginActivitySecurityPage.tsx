@@ -42,15 +42,12 @@ export default function LoginActivitySecurityPage() {
     ...(roles.includes("developer") ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : [])
   ];
   async function refreshActivity() {
+    if (!supabase || !user) { setNotice("Sign in to load your account security history."); return; }
     setRefreshing(true); setNotice("");
-    if (supabase) {
-      const result = await supabase.auth.getUser();
-      setRefreshing(false);
-      setNotice(result.error ? "Could not refresh account security details. Please try again." : "Account security details refreshed.");
-    } else {
-      setRefreshing(false);
-      setNotice("Preview mode: sign in to load your account security details.");
-    }
+    const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
+    setRefreshing(false);
+    if (result.error) setNotice("Could not refresh login history. Please try again.");
+    else { setActivity((result.data || []) as typeof activity); setNotice("Login history refreshed."); }
   }
   const rows = activity.map(item => ({ id: item.id, date: new Date(item.occurred_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }), device: "Not recorded", browser: "Not recorded", location: "Not provided", ip: item.ip_address || "Not available", status: item.event }));
   return <div className="td-dashboard las-dashboard">
