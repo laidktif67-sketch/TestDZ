@@ -21,6 +21,7 @@ import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboard
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
+import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/help-support" element={<HelpSupportPage />} />
           <Route path="/settings" element={<SettingsSecurityPage />} />
           <Route path="/active-sessions" element={<ActiveSessionsPage />} />
+          <Route path="/notifications" element={<NotificationsCenterPage />} />
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
           </Route>
