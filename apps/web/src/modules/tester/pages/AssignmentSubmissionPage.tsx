@@ -139,7 +139,7 @@ export default function AssignmentSubmissionPage() {
         <div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={22}/><i>3</i></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0, 2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div>
       </header>
       <div className="as-content">
-        <Link to="/my-tests" className="as-back"><span>←</span> Back to Assignment</Link>
+        <Link to={`/assignments/${id}`} className="as-back"><span>←</span> Back to Assignment Details</Link>
         <section className="as-hero">
           <div className="as-hero-icon"><GaugeIcon/></div>
           <div className="as-hero-copy"><div className="as-title-line"><h1>{assignment?.test?.title || "Performance Testing"}</h1><span className={`as-status ${assignment?.status === "completed" ? "done" : "live"}`}><i/>{completedLabel}</span></div><p>Test the app performance under different conditions.</p><div className="as-meta"><span><Icon name="smartphone" size={16}/>{appName}</span><span><Icon name="calendar" size={16}/>{dateRange}</span><span><Icon name="star" size={16}/>+{points || 50} Points</span></div></div>
