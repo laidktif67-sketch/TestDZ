@@ -57,3 +57,30 @@
  .as-evidence-item{width:calc(50% - 4px)}
 }
 @media(prefers-reduced-motion:reduce){.as-dropzone{transition:none}}
+
+/* Submission page refinement */
+.as-summary>div{transition:background .18s ease}
+.as-summary>div:hover{background:#f6f9ff;border-radius:10px}
+.as-summary strong small{font-size:13px;color:#5c76a8;font-weight:700}
+.as-dropzone{min-height:155px}
+.as-evidence-item{transition:transform .18s ease,box-shadow .18s ease}
+.as-evidence-item:hover{transform:translateY(-2px);box-shadow:0 6px 16px #123b7a14}
+.as-progress-card{overflow:hidden}
+.as-progress-ring{box-shadow:inset 0 0 0 1px #dce8f6}
+.as-progress-ring:after{content:"";position:absolute;inset:5px;border-radius:50%;border:1px solid #e8eef7}
+.as-checklist span{font-size:12px}
+.as-checklist b{font-size:13px}
+.as-success-card{line-height:1.4}
+.as-preview-btn,.as-submit-btn{transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.as-preview-btn:hover,.as-submit-btn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 6px 15px #0757e824}
+.as-comments{line-height:1.55}
+@media(max-width:760px){
+ .as-form-card,.as-side-card{box-shadow:0 3px 13px #174b9c0a}
+ .as-dropzone{min-height:140px}
+ .as-summary>div{min-height:82px}
+ .as-summary strong{line-height:1.1}
+ .as-progress-ring{width:108px;height:108px;flex-basis:108px}
+ .as-progress-ring strong{font-size:25px}
+ .as-checklist span{font-size:11px}
+ .as-actions button{min-height:48px}
+}
