@@ -27,6 +27,7 @@ import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
 import LoginActivitySecurityPage from "./modules/tester/pages/LoginActivitySecurityPage";
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
+import AssignmentDetailsPage from "./modules/tester/pages/AssignmentDetailsPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/my-tests" element={<MyTestsPage />} />
             <Route path="/tester/language-appearance" element={<LanguageAppearancePage />} />
             <Route path="/tester/privacy" element={<PrivacyDataManagementPage />} />
+            <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
             <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
             <Route path="/check-in-history" element={<CheckInHistoryPage />} />
             <Route path="/activity-history" element={<ActivityHistoryPage />} />
