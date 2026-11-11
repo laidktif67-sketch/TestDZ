@@ -28,6 +28,7 @@ import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
 import SubmitFeedbackPage from "./modules/tester/pages/SubmitFeedbackPage";
+import ReportProblemPage from "./modules/tester/pages/ReportProblemPage";
 import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
 import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
 import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/profile" element={<TesterProfilePage />} />
           <Route path="/feedback-history" element={<FeedbackHistoryPage />} />
           <Route path="/submit-feedback" element={<SubmitFeedbackPage />} />
+          <Route path="/report-problem" element={<ReportProblemPage />} />
           <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
           <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
