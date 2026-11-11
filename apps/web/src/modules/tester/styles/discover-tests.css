@@ -141,3 +141,22 @@
  .discover-categories button .discover-filter-label{font-size:10px;white-space:nowrap}
  .discover-categories button .discover-filter-selected{width:15px;height:15px;flex:0 0 15px}
 }
+
+
+/* Desktop polish: improve filter readability and the support card controls. */
+@media(min-width:851px){
+ .discover-hero-copy{width:82%;max-width:none}
+ .discover-categories{gap:9px}
+ .discover-categories button{height:45px;padding:0 11px;gap:8px}
+ .discover-categories button .discover-filter-icon{width:27px;height:27px;flex-basis:27px}
+ .discover-categories button .discover-filter-icon svg{width:17px!important;height:17px!important}
+ .discover-categories button .discover-filter-label{font-size:11px;font-weight:750}
+ .discover-categories button .discover-filter-selected{width:17px;height:17px;flex-basis:17px}
+ .discover-help{padding:17px}
+ .discover-help b{gap:10px;font-size:15px}
+ .discover-help b svg{box-sizing:content-box;width:20px;height:20px;padding:8px;border-radius:10px;background:#e8f1ff;color:#075de5;flex:none}
+ .discover-help p{font-size:12px;line-height:1.65;margin:11px 0 15px}
+ .discover-help a{min-height:43px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 12px;border-radius:11px;font-size:12px;line-height:1.2;transition:background .18s,border-color .18s,transform .18s}
+ .discover-help a svg{width:16px;height:16px;flex:none}
+ .discover-help a:hover{background:#edf5ff;border-color:#9bbce9;transform:translateY(-1px)}
+}
