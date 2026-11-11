@@ -21,6 +21,7 @@ import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboard
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
+import LanguageAppearancePage from "./modules/tester/pages/LanguageAppearancePage";
 import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
@@ -83,6 +84,7 @@ export default function App() {
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
             <Route path="/my-tests" element={<MyTestsPage />} />
+            <Route path="/tester/language-appearance" element={<LanguageAppearancePage />} />
             <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
             <Route path="/check-in-history" element={<CheckInHistoryPage />} />
             <Route path="/activity-history" element={<ActivityHistoryPage />} />
