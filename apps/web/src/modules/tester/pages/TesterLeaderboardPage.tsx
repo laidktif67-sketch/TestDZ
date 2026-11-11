@@ -30,6 +30,7 @@ export default function TesterLeaderboardPage(){
  ]);
  if(!alive)return;
  if(ledger.error||profiles.error){setDataNotice("The public leaderboard data is not available with the current database read permissions. No sample rankings are shown.");setLoading(false);return;}
+ setLedgerRows((ledger.data ?? []) as Score[]);
  const profileMap=new Map<string,Profile>((profiles.data??[]).map(x=>[x.id,x as Profile]));const sums=new Map<string,number>();
  for(const item of ledger.data??[])sums.set(item.user_id,(sums.get(item.user_id)||0)+Number(item.amount));
  const completions=new Map<string,number>();for(const item of assignments.data??[])completions.set(item.tester_id,(completions.get(item.tester_id)||0)+1);
