@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import type { ReactNode } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
@@ -20,7 +21,7 @@ const filters:{id:Category;label:string;icon:FilterIconName}[]=[
  {id:"other",label:"Other",icon:"other"}
 ];
 function FilterIcon({name}:{name:FilterIconName}){
- const paths:Record<FilterIconName,React.ReactNode>={
+ const paths:Record<FilterIconName,ReactNode>={
   all:<><path d="M4 7.5h6v6H4zM14 4h6v6h-6zM14 14h6v6h-6zM4 17h6v3H4z"/></>,
   mobile:<><rect x="7" y="2.8" width="10" height="18.4" rx="2.1"/><path d="M10 5.8h4M11 18.2h2"/></>,
   web:<><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3c2.2 2.4 3.2 5.4 3.2 9s-1 6.6-3.2 9c-2.2-2.4-3.2-5.4-3.2-9S9.8 5.4 12 3Z"/></>,
