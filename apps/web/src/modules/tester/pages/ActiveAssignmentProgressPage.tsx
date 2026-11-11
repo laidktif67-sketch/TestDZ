@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
@@ -48,7 +48,7 @@ export default function ActiveAssignmentProgressPage(){
  const elapsed=start?Math.max(1,Math.floor((new Date(today+"T12:00:00").getTime()-new Date(start+"T12:00:00").getTime())/86400000)+1):1;
  const currentDay=Math.min(days,elapsed),progress=Math.min(100,Math.round(checkins.length/days*100)),checkinSet=new Set(checkins.map(x=>x.checkin_date));
  const evidenceCount=checkins.filter(x=>x.evidence_url).length,endDate=start?dateOnly(new Date(new Date(start+"T12:00:00").getTime()+(days-1)*86400000)):null;
- const done=assignment?.status==="completed",leadersSorted=useMemo(()=>[...leaders].sort((a,b)=>b.points-a.points),[leaders]),myRank=leadersSorted.findIndex(x=>x.id===session?.user?.id)+1;
+ const done=assignment?.status==="completed",leadersSorted=[...leaders].sort((a,b)=>b.points-a.points),myRank=leadersSorted.findIndex(x=>x.id===session?.user?.id)+1;
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests",active:true},{label:"Leaderboard",icon:"trophy",href:"/leaderboard"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help & Support",icon:"help",href:"/help-support"},{label:"Settings",icon:"settings",href:"/settings"}];
  return <div className="td-dashboard aap-page"><TesterSidebar nav={nav} name={name} firstName={name.split(/\s+/)[0]||"Tester"} avatar={avatar} roles={preview?["tester",...roles]:roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={preview}/>
  <main className="td-main aap-main"><header className="td-topbar"><label className="td-search"><Icon name="search" size={21}/><input placeholder="Search tests..." aria-label="Search tests"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={22}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
