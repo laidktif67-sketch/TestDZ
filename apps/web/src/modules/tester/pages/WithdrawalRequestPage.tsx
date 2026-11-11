@@ -98,8 +98,8 @@ export default function WithdrawalRequestPage() {
     <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={workspaceMenuOpen} setWorkspaceMenuOpen={setWorkspaceMenuOpen} previewMode={false} />
     <main className="td-main twr-main">
       <header className="twr-topbar">
-        <div><span className="twr-eyebrow">WALLET · PAYOUTS</span><h1>Withdrawal Request <span>💸</span></h1><p>Request a payout of your TestDZ rewards.</p></div>
-        <div className="twr-header-actions"><Link to="/withdrawal-status" className="twr-status-link">📦 View Details & Status</Link><Link to="/wallet-rewards" className="twr-back">← Back to Wallet</Link></div>
+        <div><span className="twr-eyebrow">WALLET · PAYOUTS</span><h1>Withdrawal Request <span className="twr-title-icon"><FieldIcon name="amount" size={21}/></span></h1><p>Request a payout of your TestDZ rewards.</p></div>
+        <div className="twr-header-actions"><Link to="/withdrawal-status" className="twr-status-link"><FieldIcon name="receipt" size={16}/> <span>View Details &amp; Status</span></Link><Link to="/wallet-rewards" className="twr-back"><FieldIcon name="arrow" size={16}/> <span>Back to Wallet</span></Link></div>
       </header>
 
       {loadError && <div className="twr-alert twr-alert-warning" role="alert">{loadError}</div>}
