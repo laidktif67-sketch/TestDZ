@@ -61,6 +61,8 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccessPage />} />
         <Route path="/invalid-otp" element={<InvalidOtpPage />} />
+        <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
+        <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
 
         <Route element={<AuthGuard />}>
           <Route element={<OnboardingGuard />}>
@@ -92,8 +94,6 @@ export default function App() {
             <Route path="/my-tests" element={<MyTestsPage />} />
             <Route path="/tester/language-appearance" element={<LanguageAppearancePage />} />
             <Route path="/tester/privacy" element={<PrivacyDataManagementPage />} />
-            <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
-            <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
             <Route path="/check-in-history" element={<CheckInHistoryPage />} />
             <Route path="/activity-history" element={<ActivityHistoryPage />} />
             <Route path="/referral-program" element={<ReferralProgramPage />} />
