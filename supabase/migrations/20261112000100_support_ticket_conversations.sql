@@ -102,6 +102,7 @@ create policy support_ticket_attachments_insert_message_author
 on public.support_ticket_attachments for insert to authenticated
 with check (
   uploaded_by = (select auth.uid())
+  and storage_path like support_ticket_attachments.ticket_id::text || '/' || (select auth.uid())::text || '/%'
   and exists (
     select 1 from public.support_ticket_messages m
     join public.support_tickets t on t.id = m.ticket_id
@@ -179,7 +180,7 @@ revoke all on function private.audit_support_ticket_changes() from public, anon,
 
 drop trigger if exists support_tickets_audit_insert on public.support_tickets;
 create trigger support_tickets_audit_insert
-before insert on public.support_tickets
+after insert on public.support_tickets
 for each row execute function private.audit_support_ticket_changes();
 
 drop trigger if exists support_tickets_audit_status_update on public.support_tickets;
