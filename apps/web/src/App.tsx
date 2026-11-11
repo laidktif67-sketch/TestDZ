@@ -28,6 +28,7 @@ import LoginActivitySecurityPage from "./modules/tester/pages/LoginActivitySecur
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
 import AssignmentDetailsPage from "./modules/tester/pages/AssignmentDetailsPage";
+import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="/invalid-otp" element={<InvalidOtpPage />} />
         <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
         <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
+        <Route path="/assignments/:id/summary" element={<TestCompletionSummaryPage />} />
 
         <Route element={<AuthGuard />}>
           <Route element={<OnboardingGuard />}>
