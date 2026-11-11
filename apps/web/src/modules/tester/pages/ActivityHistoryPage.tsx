@@ -103,7 +103,6 @@ export default function ActivityHistoryPage() {
     return()=>{alive=false;};
   },[session?.user?.id,previewMode]);
 
-  const assignmentIds=new Set(assignments.map(item=>item.id));
   const feedbackByAssignment=useMemo(()=>feedback.reduce((map,row)=>{if(!map[row.assignment_id])map[row.assignment_id]=[];map[row.assignment_id].push(row);return map;},{} as Record<string,Feedback[]>),[feedback]);
   const pointsByAssignment=useMemo(()=>ledger.reduce((map,row)=>{if(row.reference_id)map[row.reference_id]=(map[row.reference_id]||0)+Number(row.amount||0);return map;},{} as Record<string,number>),[ledger]);
   const completed=assignments.filter(row=>row.status==="completed").length;
