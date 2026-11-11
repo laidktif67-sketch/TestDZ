@@ -33,6 +33,7 @@ export default function AssignmentSubmissionPage() {
   const [feedbackCount, setFeedbackCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [report, setReport] = useState("");
   const [comments, setComments] = useState("");
   const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -76,6 +77,7 @@ export default function AssignmentSubmissionPage() {
 
   const progress = assignment?.status === "completed" ? 100 : Math.min(100, Math.round(((Math.min(checkins.length, 14) / 14) * 70) + (feedbackCount > 0 ? 15 : 0) + (evidence.length > 0 ? 15 : 0)));
   const points = assignment?.points_awarded ?? 0;
+  const draftKey = `testdz:assignment-submission:${session?.user?.id || "preview"}:${id}`;
   const appName = assignment?.test?.app?.name || "Assigned app";
   const dateRange = assignment?.test?.start_date && assignment?.test?.end_date
     ? `${new Date(assignment.test.start_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "2-digit" })} – ${new Date(assignment.test.end_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" })}`
@@ -115,6 +117,18 @@ export default function AssignmentSubmissionPage() {
   const onDrop = (event: DragEvent<HTMLDivElement>) => { event.preventDefault(); setIsDragging(false); if (event.dataTransfer.files) addFiles(event.dataTransfer.files); };
 
   useEffect(() => { evidenceRef.current = evidence; }, [evidence]);
+  useEffect(() => {
+    if (previewMode || !id || !session?.user?.id) return;
+    try {
+      const raw = window.localStorage.getItem(draftKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as { report?: unknown; comments?: unknown };
+      if (typeof draft.report === "string") setReport(draft.report);
+      if (typeof draft.comments === "string") setComments(draft.comments);
+    } catch {
+      setNotice("A saved draft could not be restored. You can continue and save a new draft.");
+    }
+  }, [draftKey, id, previewMode, session?.user?.id]);
   useEffect(() => () => { evidenceRef.current.forEach(item => URL.revokeObjectURL(item.url)); }, []);
   useEffect(() => { if (!previewOpen) return; const close = (event: KeyboardEvent) => { if (event.key === "Escape") setPreviewOpen(false); }; window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [previewOpen]);
 
@@ -156,7 +170,8 @@ export default function AssignmentSubmissionPage() {
                 <div><Icon name="clock" size={28}/><span>Assignment Status</span><strong className="as-status-text">{completedLabel}</strong></div>
                 <div><Icon name="star" size={28}/><span>Points Awarded</span><strong className="as-points">+{points}</strong></div>
               </div></div>
-              <div className="as-section"><Step n={2}>Upload Evidence</Step>
+              <div className="as-section"><Step n={2}>Test Results Report</Step><textarea className="as-comments as-report" maxLength={2000} value={report} onChange={event => setReport(event.target.value)} placeholder="Summarize what you tested, the results, issues found, and the overall outcome..." aria-label="Test results report"/><div className="as-char-count">{report.length} / 2000</div></div>
+              <div className="as-section"><Step n={3}>Upload Evidence</Step>
                 <div className="as-upload-row">
                   <div className={`as-dropzone ${isDragging ? "is-dragging" : ""}`} onDragOver={event => { event.preventDefault(); setIsDragging(true); }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setIsDragging(false); }} onDrop={onDrop} onClick={() => fileRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") fileRef.current?.click(); }}>
                     <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 32V8m0 0L14 18M24 8l10 10M8 29v8a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4v-8" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -167,9 +182,9 @@ export default function AssignmentSubmissionPage() {
                 </div>
                 <small className="as-upload-note">{evidence.length}/5 files · {(totalSize / (1024 * 1024)).toFixed(1)} MB selected</small>
               </div>
-              <div className="as-section"><Step n={3}>Additional Comments <small>(Optional)</small></Step><textarea className="as-comments" maxLength={500} value={comments} onChange={event => setComments(event.target.value)} placeholder="Add any additional notes about your test..."/><div className="as-char-count">{comments.length} / 500</div></div>
+              <div className="as-section"><Step n={4}>Additional Comments <small>(Optional)</small></Step><textarea className="as-comments" maxLength={500} value={comments} onChange={event => setComments(event.target.value)} placeholder="Add any additional notes about your test..."/><div className="as-char-count">{comments.length} / 500</div></div>
               {notice && <p className="as-notice" role="status" aria-live="polite">{notice}</p>}
-              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => setPreviewOpen(true)}><Icon name="eye" size={19}/>Preview</button><button type="button" className="as-submit-btn" disabled={!canSubmit} onClick={() => setNotice("Your draft is ready, but final submission is not connected to the database yet. Your files have not been uploaded.")}><Icon name="send" size={19}/>{canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
+              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => { if (previewMode || !session?.user?.id) { setNotice("Draft saving is unavailable in preview mode."); return; } try { window.localStorage.setItem(draftKey, JSON.stringify({ report, comments, savedAt: new Date().toISOString() })); setNotice("Draft saved on this device. Attached files are not saved and must be selected again."); } catch { setNotice("Could not save the draft on this device. Check available browser storage."); } }}><Icon name="save" size={19}/>Save as Draft</button><button type="button" className="as-submit-btn" disabled={!canSubmit || !report.trim()} onClick={() => setNotice("Your report is ready, but final submission is not connected to the database yet. No report or files have been sent.")}><Icon name="send" size={19}/>{canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
             </section>
             <aside className="as-side">
               <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Submission Readiness</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
@@ -180,6 +195,6 @@ export default function AssignmentSubmissionPage() {
         </> : null}
       </div>
     </main>
-    {previewOpen && <div className="as-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setPreviewOpen(false); }}><section className="as-preview-modal" role="dialog" aria-modal="true" aria-labelledby="as-preview-title"><header><h2 id="as-preview-title">Submission Preview</h2><button type="button" onClick={() => setPreviewOpen(false)} aria-label="Close preview">×</button></header><p><strong>Assignment:</strong> {assignment?.test?.title}</p><p><strong>App:</strong> {appName}</p><p><strong>Assignment ID:</strong> {assignment?.id}</p><p><strong>Check-ins:</strong> {checkins.length} · <strong>Feedback:</strong> {feedbackCount}</p><p><strong>Evidence:</strong> {evidence.length ? evidence.map(item => item.file.name).join(", ") : "No files attached"}</p><p><strong>Comments:</strong></p><div className="as-preview-comments">{comments || "No additional comments."}</div><footer><button type="button" onClick={() => setPreviewOpen(false)}>Back to form</button></footer></section></div>}
+    {previewOpen && <div className="as-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setPreviewOpen(false); }}><section className="as-preview-modal" role="dialog" aria-modal="true" aria-labelledby="as-preview-title"><header><h2 id="as-preview-title">Submission Preview</h2><button type="button" onClick={() => setPreviewOpen(false)} aria-label="Close preview">×</button></header><p><strong>Assignment:</strong> {assignment?.test?.title}</p><p><strong>App:</strong> {appName}</p><p><strong>Assignment ID:</strong> {assignment?.id}</p><p><strong>Check-ins:</strong> {checkins.length} · <strong>Feedback:</strong> {feedbackCount}</p><p><strong>Test Results Report:</strong></p><div className="as-preview-comments">{report || "No report written yet."}</div><p><strong>Evidence:</strong> {evidence.length ? evidence.map(item => item.file.name).join(", ") : "No files attached"}</p><p><strong>Comments:</strong></p><div className="as-preview-comments">{comments || "No additional comments."}</div><footer><button type="button" onClick={() => setPreviewOpen(false)}>Back to form</button></footer></section></div>}
   </div>;
 }
