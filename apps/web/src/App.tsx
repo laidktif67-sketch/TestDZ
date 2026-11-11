@@ -24,6 +24,7 @@ import NotificationPreferencesPage from "./modules/tester/pages/NotificationPref
 import LanguageAppearancePage from "./modules/tester/pages/LanguageAppearancePage";
 import PrivacyDataManagementPage from "./modules/tester/pages/PrivacyDataManagementPage";
 import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
+import LoginActivitySecurityPage from "./modules/tester/pages/LoginActivitySecurityPage";
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
@@ -77,6 +78,9 @@ export default function App() {
           <Route path="/settings" element={<SettingsSecurityPage />} />
           <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
           <Route path="/active-sessions" element={<ActiveSessionsPage />} />
+          <Route element={<RoleGuard requiredRole="tester" />}>
+            <Route path="/tester/security-history" element={<LoginActivitySecurityPage />} />
+          </Route>
           <Route path="/notifications" element={<NotificationsCenterPage />} />
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
