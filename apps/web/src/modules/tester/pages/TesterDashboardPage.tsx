@@ -182,6 +182,7 @@ export default function TesterDashboardPage() {
       ? [{ label: "Discover Apps", icon: "search", href: "/apps" }]
       : [{ label: "Discover Tests", icon: "search", href: "/discover-tests" }]),
     { label: "My Tests", icon: "tests", href: "/my-tests" },
+    { label: "Activity & History", icon: "chart", href: "/activity-history" },
     { label: "Check-in History", icon: "calendar", href: "/check-in-history" },
     { label: "Feedback History", icon: "star", href: "/feedback-history" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
