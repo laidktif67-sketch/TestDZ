@@ -19,14 +19,15 @@ export default function WithdrawalStatusPage() {
   useEffect(() => {
     const client = supabase;
     if (!client) { setLoading(false); return; }
+    const db = client;
     let alive = true;
     async function load() {
       try {
-        const { data: sessionData, error: sessionError } = await client.auth.getSession();
+        const { data: sessionData, error: sessionError } = await db.auth.getSession();
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
-        const { data: profile, error } = await client.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
+        const { data: profile, error } = await db.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
         if (error) throw error;
         if (alive) {
           setName(profile?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
