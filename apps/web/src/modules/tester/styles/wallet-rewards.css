@@ -160,3 +160,96 @@
 .tw-withdraw-link:hover{transform:translateY(-2px);background:#ffffff2c}
 .tw-withdraw-link span{font-size:16px}
 @media(max-width:600px){.tw-withdraw-link{margin-top:8px;padding:7px 10px;font-size:9px}}
+
+
+/* Wallet hero: keep the withdrawal action fully visible at desktop widths. */
+.tw-hero{
+  height:auto!important;
+  min-height:218px!important;
+  padding:24px 34px!important;
+  box-sizing:border-box;
+}
+.tw-hero-copy{
+  width:min(68%,760px);
+  max-width:760px!important;
+  padding:2px 0;
+}
+.tw-hero-copy h1{
+  max-width:690px;
+  font-size:clamp(22px,2vw,30px)!important;
+  line-height:1.13!important;
+  letter-spacing:-.65px!important;
+}
+.tw-hero-copy p{
+  max-width:560px;
+  font-size:12px!important;
+  line-height:1.5;
+  margin-top:8px!important;
+}
+.tw-hero-tag{
+  font-size:11px!important;
+  padding:6px 12px!important;
+  margin-bottom:8px!important;
+}
+.tw-hero-art{width:34%;right:5%}
+.tw-wallet-emoji{font-size:clamp(82px,8vw,118px)}
+.tw-withdraw-link{
+  min-height:40px;
+  height:40px;
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-top:12px;
+  padding:0 16px;
+  border:1px solid #ffffff65;
+  border-radius:12px;
+  background:linear-gradient(110deg,#ffffff26,#ffffff12);
+  color:#fff;
+  font-size:11px!important;
+  line-height:1;
+  font-weight:800;
+  white-space:nowrap;
+  text-decoration:none;
+  box-shadow:0 5px 14px #001d6b2b,inset 0 1px #ffffff25;
+  transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.tw-withdraw-link:hover{
+  transform:translateY(-2px);
+  background:linear-gradient(110deg,#ffffff38,#ffffff20);
+  box-shadow:0 8px 18px #001d6b38,inset 0 1px #ffffff35;
+}
+.tw-withdraw-icon,.tw-withdraw-arrow{
+  display:grid;
+  place-items:center;
+  flex:0 0 27px;
+  width:27px;
+  height:27px;
+  border-radius:8px;
+}
+.tw-withdraw-icon{background:#ffffff20;color:#fff}
+.tw-withdraw-arrow{background:#fff;color:#0758d8}
+.tw-withdraw-icon svg,.tw-withdraw-arrow svg{display:block}
+.tw-withdraw-label{display:block;font-size:11px;letter-spacing:.05px}
+@media(min-width:921px) and (max-width:1200px){
+  .tw-hero{min-height:226px!important;padding:22px 26px!important}
+  .tw-hero-copy{width:70%}
+  .tw-hero-copy h1{font-size:clamp(21px,2.2vw,27px)!important}
+  .tw-hero-art{right:2%;width:31%}
+}
+@media(max-width:920px){
+  .tw-hero{min-height:190px!important;height:auto!important;padding:20px 24px!important}
+  .tw-hero-copy{width:70%;max-width:70%!important}
+  .tw-hero-art{width:34%;right:1%}
+}
+@media(max-width:600px){
+  .tw-hero{min-height:155px!important;height:auto!important;padding:15px 14px!important}
+  .tw-hero-copy{width:70%;max-width:70%!important}
+  .tw-hero-copy h1{font-size:clamp(15px,4.2vw,21px)!important}
+  .tw-hero-copy p{font-size:9px!important;line-height:1.4;margin-top:7px!important}
+  .tw-withdraw-link{height:34px;min-height:34px;margin-top:8px;padding:0 9px;gap:6px;border-radius:10px}
+  .tw-withdraw-icon,.tw-withdraw-arrow{width:22px;height:22px;flex-basis:22px;border-radius:7px}
+  .tw-withdraw-icon svg,.tw-withdraw-arrow svg{width:14px;height:14px}
+  .tw-withdraw-label{font-size:9px}
+}
