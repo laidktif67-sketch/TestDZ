@@ -20,6 +20,7 @@ import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
+import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
           <Route path="/help-support" element={<HelpSupportPage />} />
           <Route path="/settings" element={<SettingsSecurityPage />} />
+          <Route path="/active-sessions" element={<ActiveSessionsPage />} />
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
           </Route>
