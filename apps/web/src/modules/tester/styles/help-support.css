@@ -202,3 +202,5 @@
   .hs-category-meta{font-size:6.5px}
   .hs-category-arrow{width:22px;height:22px}
 }
+
+.hs-category-icon{grid-row:auto!important}
