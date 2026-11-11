@@ -16,10 +16,6 @@ type Ledger = { amount: number; reference_id: string | null; wallet_type: string
 type ActivityEvent = { id: string; kind: "completed" | "checkin" | "feedback"; title: string; detail: string; date: string };
 type Filter = "all" | "completed" | "pending" | "rejected";
 
-const dateLabel = (value: string) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" });
-};
 const dateTimeLabel = (value: string) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString(undefined, { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -79,7 +75,7 @@ export default function ActivityHistoryPage() {
       setLedger([{amount:50,reference_id:"demo-1",wallet_type:"earned_points"},{amount:45,reference_id:"demo-2",wallet_type:"earned_points"},{amount:45,reference_id:"demo-3",wallet_type:"earned_points"}]);setNotifications(3);setLoading(false);return;
     }
     if(!session?.user?.id||!supabase){setLoading(false);return;}
-    let alive=true;const client=supabase;const userId=session.user.id;
+    let alive=true;const client=supabase;const userId=session.user.id;const userEmail=session.user.email;
     async function load(){
       setLoading(true);setError("");
       const [profile,assignmentResult,feedbackResult,ledgerResult,notice]=await Promise.all([
@@ -90,7 +86,7 @@ export default function ActivityHistoryPage() {
         client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
       ]);
       if(!alive)return;
-      setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");
+      setName(profile.data?.display_name?.trim()||userEmail?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");
       if(assignmentResult.error){setError("We couldn't load your test activity. Please refresh and try again.");setAssignments([]);}
       else setAssignments((assignmentResult.data??[]) as unknown as Assignment[]);
       if(!feedbackResult.error)setFeedback((feedbackResult.data??[]) as Feedback[]);
@@ -106,8 +102,6 @@ export default function ActivityHistoryPage() {
   const feedbackByAssignment=useMemo(()=>feedback.reduce((map,row)=>{if(!map[row.assignment_id])map[row.assignment_id]=[];map[row.assignment_id].push(row);return map;},{} as Record<string,Feedback[]>),[feedback]);
   const pointsByAssignment=useMemo(()=>ledger.reduce((map,row)=>{if(row.reference_id)map[row.reference_id]=(map[row.reference_id]||0)+Number(row.amount||0);return map;},{} as Record<string,number>),[ledger]);
   const completed=assignments.filter(row=>row.status==="completed").length;
-  const pending=assignments.filter(row=>row.status==="pending").length;
-  const rejected=assignments.filter(row=>["rejected","failed","withdrawn"].includes(row.status)).length;
   const activeDays=new Set(assignments.flatMap(row=>(row.checkins??[]).map(item=>dayKey(item.checkin_date||item.created_at)).filter(Boolean))).size;
   const totalPoints=ledger.reduce((sum,row)=>sum+Math.max(0,Number(row.amount||0)),0);
   const events=useMemo(()=>{
@@ -180,7 +174,7 @@ export default function ActivityHistoryPage() {
           <article className="ah-panel ah-achievements"><div className="ah-panel-heading"><h2><Icon name="trophy" size={23}/>Your Achievements</h2><Link to="/my-tests">View All <Icon name="arrow" size={14}/></Link></div><div className="ah-achievement-list">{achievements.map(item=><div className={`ah-achievement ${item.tone} ${item.earned?"earned":"locked"}`} key={item.title}><span><Icon name={item.icon} size={37}/></span><strong>{item.title}</strong><small>{item.earned?"Achievement unlocked":item.description}</small></div>)}</div></article>
         </section>
         <section className="ah-panel ah-history-panel">
-          <div className="ah-history-heading"><h2><Icon name="tests" size={22}/>Test History</h2><div className="ah-controls"><div className="ah-filter-tabs">{(["all","completed","pending","rejected"] as Filter[]).map(value=><button type="button" key={value} className={filter===value?"selected":""} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{value==="all"?"All":value[0].toUpperCase()+value.slice(1)}{value==="all"&&<span>{ranged.length}</span>}</button>)}</div><label className="ah-range"><Icon name="calendar" size={16}/><select value={range} onChange={event=>setRange(event.target.value)}><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select></label><button type="button" className="ah-export" onClick={exportCsv}><Icon name="download" size={16}/>Export</button></div></div>
+          <div className="ah-history-heading"><h2><Icon name="tests" size={22}/>Test History</h2><div className="ah-controls"><div className="ah-filter-tabs">{(["all","completed","pending","rejected"] as Filter[]).map(value=><button type="button" key={value} className={filter===value?"selected":""} aria-pressed={filter===value} onClick={()=>setFilter(value)}>{value==="all"?"All":value[0].toUpperCase()+value.slice(1)}{value==="all"&&<span>{ranged.length}</span>}</button>)}</div><label className="ah-range"><Icon name="calendar" size={16}/><select value={range} onChange={event=>setRange(event.target.value)}><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select></label>{(filter!=="all"||range!=="30"||search.trim())&&<button type="button" className="ah-export" onClick={clearFilters}>Clear</button>}<button type="button" className="ah-export" onClick={exportCsv}><Icon name="download" size={16}/>Export</button></div></div>
           <div className="ah-table-wrap"><table className="ah-table"><thead><tr><th>#</th><th>Test Name</th><th>App</th><th>Date</th><th>Duration</th><th>Score</th><th>Points</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pageRows.map((row,index)=>{
             const ratings=(feedbackByAssignment[row.id]||[]).filter(item=>item.rating!==null).map(item=>Number(item.rating));
             const score=ratings.length?ratings.reduce((sum,value)=>sum+value,0)/ratings.length:null;
