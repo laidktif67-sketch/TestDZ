@@ -38,6 +38,8 @@ export default function SettingsSecurityPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [twoFactor, setTwoFactor] = useState(false);
   const [mfaQr, setMfaQr] = useState("");
@@ -94,6 +96,7 @@ export default function SettingsSecurityPage() {
   const alert = (text: string, isError = false) => { setMessage(isError ? "" : text); setError(isError ? text : ""); };
   async function saveProfile() {
     if (!supabase || !user) return;
+    if (!name.trim()) { alert("Your display name cannot be empty.", true); return; }
     setBusy(true); alert("");
     const result = await supabase.from("profiles").update({ display_name: name.trim(), locale }).eq("id", user.id);
     setBusy(false);
@@ -101,26 +104,29 @@ export default function SettingsSecurityPage() {
     else alert("Account settings saved successfully.");
   }
   async function savePreferences(next: Preferences) {
+    const previous = preferences;
     setPreferences(next);
     if (!supabase) return;
     const result = await supabase.auth.updateUser({ data: { testdz_notification_preferences: next } });
-    if (result.error) alert("Preferences could not be saved.", true);
+    if (result.error) { setPreferences(previous); alert("Preferences could not be saved. Your previous choices were restored.", true); }
     else alert("Notification preferences saved.");
   }
   async function saveTheme(next: string) {
+    const previous = theme;
     setTheme(next);
     if (!supabase) return;
     const result = await supabase.auth.updateUser({ data: { testdz_theme: next } });
-    if (result.error) alert("Appearance preference could not be saved.", true);
+    if (result.error) { setTheme(previous); alert("Appearance preference could not be saved. Your previous choice was restored.", true); }
     else alert("Appearance preference saved.");
   }
   async function changePassword() {
     if (!supabase || password.length < 8) { alert("Use a password with at least 8 characters.", true); return; }
+    if (password !== confirmPassword) { alert("The password confirmation does not match.", true); return; }
     setBusy(true);
     const result = await supabase.auth.updateUser({ password });
     setBusy(false);
     if (result.error) alert(result.error.message, true);
-    else { setPassword(""); alert("Password updated successfully."); }
+    else { setPassword(""); setConfirmPassword(""); alert("Password updated successfully."); }
   }
   async function changeEmail() {
     if (!supabase || !newEmail.includes("@")) { alert("Enter a valid email address.", true); return; }
@@ -175,7 +181,7 @@ export default function SettingsSecurityPage() {
     const payload = { exported_at: new Date().toISOString(), account: { id: user.id, email: user.email }, profile: profile.data, notifications: notices.data || [], checkins: checkins.data || [], feedback: feedback.data || [], points_ledger: ledger.data || [] };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob); const anchor = document.createElement("a");
-    anchor.href = url; anchor.download = "testdz-account-data.json"; anchor.click(); URL.revokeObjectURL(url);
+    anchor.href = url; anchor.download = "testdz-account-data.json"; anchor.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     alert("Your account data export has been prepared.");
   }
   async function logout() { await signOut(); navigate("/auth", { replace: true }); }
@@ -187,12 +193,13 @@ export default function SettingsSecurityPage() {
     { key: "system", title: "System Updates", icon: "settings" },
     { key: "promotions", title: "Promotions & News", icon: "bell" }
   ];
-  const tabsView = <div className="ss-tabs" role="tablist">{tabs.map(item => <button type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? "active" : ""} key={item.id} onClick={() => setTab(item.id)}><Icon name={item.icon} size={19}/>{item.label}</button>)}</div>;
+  const matchingTabs = tabs.filter(item => `${item.label} ${item.id}`.toLowerCase().includes(searchTerm.trim().toLowerCase()));
+  const tabsView = <div className="ss-tabs-wrap"><div className="ss-tabs" role="tablist">{matchingTabs.map(item => <button type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? "active" : ""} key={item.id} onClick={() => { setTab(item.id); setSearchTerm(""); }}><Icon name={item.icon} size={19}/>{item.label}</button>)}</div>{searchTerm.trim() && matchingTabs.length === 0 && <p className="ss-search-empty">No settings section matches “{searchTerm}”. Try account, security, privacy or notifications.</p>}</div>;
 
   return <div className="td-dashboard ss-dashboard">
     <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
     <main className="td-main ss-main">
-      <header className="ss-topbar"><label className="ss-global-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label><div className="ss-top-user"><button type="button" aria-label="Notifications" onClick={() => setTab("notifications")}><Icon name="bell" size={23}/></button><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div></header>
+      <header className="ss-topbar"><label className="ss-global-search"><Icon name="search" size={21}/><input value={searchTerm} onChange={event => setSearchTerm(event.target.value)} placeholder="Search settings..." aria-label="Search settings"/></label><div className="ss-top-user"><button type="button" aria-label="Notifications" onClick={() => setTab("notifications")}><Icon name="bell" size={23}/></button><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div></header>
       <div className="ss-content">
         <Link to="/tester-dashboard" className="ss-back"><Icon name="arrow" size={17}/>Back to Dashboard</Link>
         <section className="ss-hero"><div className="ss-hero-icon"><Icon name="settings" size={57}/></div><div><h1>Settings &amp; Security</h1><p>Manage your account settings, security and preferences.</p></div><div className="ss-hero-art"><Icon name="shield" size={110}/><span>✓</span><i/><b/></div></section>
@@ -214,7 +221,7 @@ export default function SettingsSecurityPage() {
             <section className="ss-card"><h2><Icon name="shield" size={25}/>Security</h2>
               <SettingRow icon="smartphone" title="Two-Factor Authentication (2FA)" description="Add an extra layer of security to your account." action={<><Toggle checked={twoFactor} onChange={value => value ? void setupMfa() : void disableMfa()} label="Two-factor authentication"/><span className={`ss-verified ${twoFactor ? "" : "pending"}`}>{twoFactor ? "✓ Active" : "Not active"}</span></>}/>
               <SettingRow icon="clock" title="Login Activity" description="Review your current authenticated session." action={<button className="ss-outline" onClick={() => setTab("privacy")}>View Activity <Icon name="arrow" size={14}/></button>}/>
-              <SettingRow icon="monitor" title="Active Sessions" description="This device · signed in {createdLabel}." action={<span className="ss-current-session">Current session</span>}/>
+              <SettingRow icon="monitor" title="Active Sessions" description={`This device · last sign-in ${user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "time unavailable"}.`} action={<span className="ss-current-session">Current session</span>}/>
             </section>
             <section className="ss-card ss-notification-card"><h2><Icon name="bell" size={25}/>Notification Preferences</h2><p>Choose what notifications you want to receive.</p><div className="ss-pref-grid">{notificationItems.map(item => <label key={item.key}><input type="checkbox" checked={preferences[item.key]} onChange={event => void savePreferences({ ...preferences, [item.key]: event.target.checked })}/><span>{item.title}</span></label>)}</div></section>
             <section className="ss-success-card"><span><Icon name="check" size={30}/></span><div><strong>Account security overview</strong><b>{emailVerified ? "Email verified" : "Email verification pending"} · {twoFactor ? "2FA enabled" : "2FA not enabled"}</b><small>Your account security status is based on the current Supabase account.</small></div><Icon name="shield" size={45}/></section>
@@ -222,7 +229,7 @@ export default function SettingsSecurityPage() {
         </div>}
         {tab === "security" && <div className="ss-single-column">
           <section className="ss-card ss-form-card"><h2><Icon name="shield" size={25}/>Security &amp; Sign-in</h2><p>Manage the credentials used to access your TestDZ account.</p>
-            <div className="ss-form-block"><h3>Change Password</h3><label>New password<input type="password" minLength={8} autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="At least 8 characters"/></label><button className="ss-primary" disabled={busy || password.length < 8} onClick={() => void changePassword()}>{busy ? "Updating..." : "Update Password"}</button></div>
+            <div className="ss-form-block"><h3>Change Password</h3><p>Use at least 8 characters. A mix of letters, numbers and symbols makes your password stronger.</p><label>New password<input type="password" minLength={8} autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="At least 8 characters"/></label><div className="ss-password-meter" aria-label={`Password strength ${password.length ? Math.min(5, [password.length >= 8, /[A-Z]/.test(password), /[a-z]/.test(password), /\\d/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length) : 0} of 5`}><div className="ss-password-bars">{[1,2,3,4,5].map(level => <i key={level} className={password.length && level <= [password.length >= 8, /[A-Z]/.test(password), /[a-z]/.test(password), /\\d/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length ? "filled" : ""}/>)}</div><small>{!password ? "Password strength" : password.length < 8 ? "Too short" : [password.length >= 8, /[A-Z]/.test(password), /[a-z]/.test(password), /\\d/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length >= 4 ? "Strong password" : "Could be stronger"}</small></div><label>Confirm new password<input type="password" autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} placeholder="Enter the password again"/></label>{confirmPassword && <small className={password === confirmPassword ? "ss-match-ok" : "ss-match-error"}>{password === confirmPassword ? "Passwords match" : "Passwords do not match"}</small>}<button className="ss-primary" disabled={busy || password.length < 8 || password !== confirmPassword} onClick={() => void changePassword()}>{busy ? "Updating..." : "Update Password"}</button></div>
             <div className="ss-form-block"><h3>Change Email Address</h3><p>Supabase will send a confirmation link before the new email address is applied.</p><label>New email address<input type="email" autoComplete="email" value={newEmail} onChange={event => setNewEmail(event.target.value)} placeholder="name@example.com"/></label><button className="ss-primary" disabled={busy || !newEmail.includes("@")} onClick={() => void changeEmail()}>Send confirmation</button></div>
             <div className="ss-form-block"><h3>Two-Factor Authentication</h3><p>{twoFactor ? "An authenticator factor is verified on your account." : "Use an authenticator app to add a second verification step."}</p>{!twoFactor && !mfaQr && <button className="ss-outline" disabled={mfaBusy} onClick={() => void setupMfa()}>{mfaBusy ? "Preparing..." : "Set up authenticator"}</button>}{mfaQr && <div className="ss-mfa-setup"><img src={mfaQr} alt="Authenticator QR code"/><label>Enter the 6-digit code from your authenticator<input inputMode="numeric" autoComplete="one-time-code" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g,"").slice(0,6))}/></label><button className="ss-primary" disabled={mfaBusy || mfaCode.length !== 6} onClick={() => void verifyMfa()}>Verify and enable</button></div>}{twoFactor && <button className="ss-danger-button" disabled={mfaBusy} onClick={() => void disableMfa()}>Turn off 2FA</button>}</div>
           </section>
