@@ -38,7 +38,7 @@
 .sf-type-field h2 span,.sf-field>span b{margin-right:5px}
 .sf-type-field em,.sf-field em{font-style:normal;color:#ed294d}
 .sf-type-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px;margin:0 3px 22px}
-.sf-type-option{height:57px;border:1.5px solid #d6e1f2;background:#fff;border-radius:17px;display:flex;align-items:center;justify-content:center;gap:22px;color:#102b70;font:600 17px inherit;cursor:pointer;position:relative;box-shadow:0 1px 2px #0d36700a}
+.sf-type-option{height:57px;border:1.5px solid #d6e1f2;background:#fff;border-radius:17px;display:flex;align-items:center;justify-content:center;gap:22px;color:#102b70;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;position:relative;box-shadow:0 1px 2px #0d36700a}
 .sf-type-option svg{width:34px;height:34px;color:#607cbd}
 .sf-type-option>i{position:absolute;right:15px;width:25px;height:25px;border:2px solid #b4c9e9;border-radius:50%;font-style:normal;display:grid;place-items:center;color:white;font-size:16px}
 .sf-type-option.selected{color:white;background:linear-gradient(105deg,#0873ed,#08a5e9);border-color:transparent;box-shadow:0 5px 12px #0875e51b}
@@ -47,7 +47,7 @@
 .sf-two-columns{display:grid;grid-template-columns:1.2fr 1fr;gap:37px}
 .sf-field{display:flex;flex-direction:column;min-width:0;position:relative;color:#091f58}
 .sf-field>span{font-size:17px;font-weight:800;margin-bottom:7px}
-.sf-field input,.sf-field textarea,.sf-select-wrap{width:100%;border:1.5px solid #cbdaf0;border-radius:14px;background:#fff;color:#17346e;font:500 16px inherit;outline:none;box-shadow:inset 0 1px 2px #102c5a08;transition:border-color .18s,box-shadow .18s}
+.sf-field input,.sf-field textarea,.sf-select-wrap{width:100%;border:1.5px solid #cbdaf0;border-radius:14px;background:#fff;color:#17346e;font-family:inherit;font-size:16px;font-weight:500;outline:none;box-shadow:inset 0 1px 2px #102c5a08;transition:border-color .18s,box-shadow .18s}
 .sf-field input{height:50px;padding:0 20px}
 .sf-field textarea{height:88px;padding:13px 21px;resize:vertical;line-height:1.5}
 .sf-field input:focus,.sf-field textarea:focus,.sf-select-wrap:focus-within{border-color:#1682ed;box-shadow:0 0 0 3px #1682ed19}
@@ -56,7 +56,7 @@
 .sf-title-field{margin-bottom:5px}
 .sf-severity-field .sf-select-wrap{height:51px;display:flex;align-items:center;position:relative}
 .sf-warning-icon{margin:0 15px 0 22px;width:21px;height:21px;display:grid;place-items:center;background:#ee3150;color:#fff;font-weight:900;font-size:15px;clip-path:polygon(50% 0,100% 100%,0 100%);padding-top:5px}
-.sf-select-wrap select{appearance:none;border:0;outline:0;background:transparent;color:#12275c;font:500 16px inherit;flex:1;height:100%;min-width:0}
+.sf-select-wrap select{appearance:none;border:0;outline:0;background:transparent;color:#12275c;font-family:inherit;font-size:16px;font-weight:500;flex:1;height:100%;min-width:0}
 .sf-select-wrap select:invalid{color:#12275c}
 .sf-select-chevron{font-size:27px;color:#08245f;margin:0 19px 5px}
 .sf-description-field{margin-top:4px}
