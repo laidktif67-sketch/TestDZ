@@ -187,6 +187,7 @@ export default function TesterDashboardPage() {
     { label: "Feedback History", icon: "star", href: "/feedback-history" },
     { label: "Notifications", icon: "bell", href: "/notifications" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
+    { label: "Referral Program", icon: "users", href: "/referral-program" },
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
   ];
 
