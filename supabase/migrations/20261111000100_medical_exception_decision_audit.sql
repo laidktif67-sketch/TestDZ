@@ -76,7 +76,7 @@ begin
 
     if exists (
       select 1
-      from unnest(v_request.requested_dates) as requested_date
+      from unnest(v_request.requested_dates) as requested_dates(requested_date)
       where requested_date < v_assignment.start_date
          or requested_date > (now() at time zone 'UTC')::date
     ) then
@@ -95,7 +95,7 @@ begin
     if exists (
       select 1
       from public.medical_exception_requests other_request
-      cross join lateral unnest(other_request.requested_dates) as approved_date
+      cross join lateral unnest(other_request.requested_dates) as approved_dates(approved_date)
       where other_request.assignment_id = v_request.assignment_id
         and other_request.id <> v_request.id
         and other_request.status = 'approved'
