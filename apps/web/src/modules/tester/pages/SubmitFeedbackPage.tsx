@@ -49,6 +49,7 @@ export default function SubmitFeedbackPage() {
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("Bug");
   const [title, setTitle] = useState("");
   const [severity, setSeverity] = useState<Severity | "">("");
+  const [severityOpen, setSeverityOpen] = useState(false);
   const [description, setDescription] = useState("");
   const [steps, setSteps] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -113,7 +114,27 @@ export default function SubmitFeedbackPage() {
 
           <div className="sf-two-columns">
             <label className="sf-field sf-title-field"><span><b>2.</b> Issue Title <em>*</em></span><input required maxLength={100} value={title} onChange={event => setTitle(event.target.value)} placeholder="Enter a short title for your feedback..."/><small className="sf-counter">{title.length} / 100</small></label>
-            <label className="sf-field sf-severity-field"><span><b>3.</b> Severity <em>*</em></span><div className="sf-select-wrap"><span className="sf-warning-icon">!</span><select required value={severity} onChange={event => setSeverity(event.target.value as Severity | "")}><option value="" disabled>Select severity level</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select><span className="sf-select-chevron">⌄</span></div></label>
+            <div className="sf-field sf-severity-field">
+              <span><b>3.</b> Severity <em>*</em></span>
+              <div className="sf-severity-picker" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setSeverityOpen(false); }}>
+                <button type="button" className={`sf-severity-trigger ${severity ? "has-value" : ""} ${severityOpen ? "is-open" : ""}`} aria-haspopup="listbox" aria-expanded={severityOpen} onClick={() => setSeverityOpen(open => !open)}>
+                  <span className={`sf-severity-symbol ${severity ? `severity-${severity.toLowerCase()}` : ""}`}>{severity ? "!" : "!"}</span>
+                  <span className="sf-severity-value">{severity || "Select severity level"}{severity && <small>{severity === "Critical" ? "Blocks the test or causes data loss" : severity === "High" ? "Major feature is not working" : severity === "Medium" ? "Feature issue with a workaround" : "Minor issue or visual detail"}</small>}</span>
+                  <svg className="sf-severity-arrow" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                {severityOpen && <div className="sf-severity-menu" role="listbox" aria-label="Select severity level">
+                  {([
+                    ["Critical","Blocks the test or causes data loss"],
+                    ["High","Major feature is not working"],
+                    ["Medium","Feature issue with a workaround"],
+                    ["Low","Minor issue or visual detail"]
+                  ] as [Severity,string][]).map(([value,detail]) => <button type="button" role="option" aria-selected={severity === value} key={value} className={`sf-severity-option severity-${value.toLowerCase()} ${severity === value ? "selected" : ""}`} onClick={() => { setSeverity(value); setSeverityOpen(false); }}>
+                    <i aria-hidden="true"/><span><strong>{value}</strong><small>{detail}</small></span><b>{severity === value ? "✓" : ""}</b>
+                  </button>)}
+                </div>}
+              </div>
+              <input className="sf-severity-required" tabIndex={-1} aria-hidden="true" required value={severity} onChange={() => {}}/>
+            </div>
           </div>
 
           <label className="sf-field sf-description-field"><span><b>4.</b> Detailed Description <em>*</em></span><textarea required maxLength={1000} value={description} onChange={event => setDescription(event.target.value)} placeholder="Please describe the issue in detail..."/><small className="sf-counter">{description.length} / 1000</small></label>
