@@ -58,15 +58,58 @@ export default function DiscoverTestsPage(){
  return <div className="td-dashboard dt-page">
   <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={previewMode}/>
   <main className="td-main dt-main">
-   <header className="td-topbar"><label className="td-search"><Icon name="search" size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tests, apps or skills…"/></label><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><b>⌄</b></Link></div></header>
-   <div className="dt-content">
-    <section className="dt-hero"><div className="dt-hero-copy"><span className="dt-kicker"><i/> TESTDZ OPPORTUNITIES</span><h1>Discover your next<br/><em>testing opportunity.</em></h1><p>Explore real apps, share useful feedback, and build your tester journey one test at a time.</p><div className="dt-hero-actions"><a href="#dt-results">Explore opportunities <Icon name="arrow" size={16}/></a><span><Icon name="shield" size={15}/> Verified opportunities</span></div></div><div className="dt-hero-art"><HeroIllustration/></div><div className="dt-hero-orbit orbit-one"/><div className="dt-hero-orbit orbit-two"/></section>
-    <section className="dt-welcome-row"><div><span className="dt-overline">YOUR TESTER SPACE</span><h2>Find a test that fits you, {firstName}.</h2><p>New opportunities are added as developers open recruitment.</p></div><div className="dt-mini-stats"><article><span><Icon name="tests" size={17}/></span><b>{tests.length}</b><small>Open tests</small></article><article><span><Icon name="check" size={17}/></span><b>{completed}</b><small>Completed</small></article><article><span><Icon name="star" size={17}/></span><b>{points.toLocaleString()}</b><small>Earned points</small></article></div></section>
-    <section className="dt-toolbar" id="dt-results"><div className="dt-toolbar-title"><div><span className="dt-overline">FIND YOUR NEXT TEST</span><h2>Available tests <span>{visible.length}</span></h2></div><label className="dt-sort">Sort by <select value={sort} onChange={e=>setSort(e.target.value)}><option value="newest">Recently added</option><option value="closing">Closing soon</option><option value="title">Name A–Z</option></select></label></div><div className="dt-filter-row"><div className="dt-filter-pills">{filters.map(f=><button key={f.id} type="button" className={category===f.id?"active":""} onClick={()=>setCategory(f.id)}><span>{f.symbol}</span>{f.label}</button>)}</div><label className="dt-search"><Icon name="search" size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by app or test name"/></label></div></section>
-    {error&&<div className="dt-error" role="status">{error}</div>}
-    <div className="dt-results-layout"><section className="dt-results" aria-live="polite">{loading?<div className="dt-skeleton-grid">{[1,2,3].map(n=><div className="dt-skeleton" key={n}><i/><b/><span/><span/></div>)}</div>:visible.length?visible.map(test=>{const left=daysLeft(test.end_date);const type=categoryOf(test.app?.category);return <article className="dt-card" key={test.id}><div className="dt-card-top"><div className={"dt-app-icon "+type}>{test.app?.icon_url?<img src={test.app.icon_url} alt=""/>:<span>{type==="mobile"?"▯":type==="web"?"◎":type==="desktop"?"▣":"✦"}</span>}</div><span className={"dt-status "+(test.status==="ready"?"upcoming":"recruiting")}><i/>{test.status==="ready"?"Coming soon":"Recruiting"}</span></div><div className="dt-card-heading"><span>{test.app?.name||"TestDZ application"}</span><h3>{test.title}</h3></div><p className="dt-description">{test.short_summary||test.description||"Open this opportunity to review its details and tester requirements."}</p><div className="dt-card-meta"><span><Icon name="users" size={15}/>{test.min_testers} testers needed</span><span><Icon name="clock" size={15}/>{left===null?"Dates to be announced":left===0?"Closing today":left+" days left"}</span></div><div className="dt-card-footer"><span className="dt-reward-note"><Icon name="shield" size={14}/> Reward details in test brief</span><Link to={"/tests/"+test.id}>View test details <Icon name="arrow" size={15}/></Link></div></article>; }):<div className="dt-empty"><span><Icon name="search" size={28}/></span><h3>{query||category!=="all"?"No matching tests":"No open tests just yet"}</h3><p>{query||category!=="all"?"Try another search or category to find an opportunity.":"There are no tests currently open for recruitment. Check back soon for new opportunities."}</p>{(query||category!=="all")&&<button onClick={()=>{setQuery("");setCategory("all");}}>Clear search and filters</button>}</div>}</section>
-    <aside className="dt-rail"><article className="dt-points-card"><div className="dt-points-orb"><Icon name="trophy" size={28}/></div><span>YOUR REWARDS</span><strong>{points.toLocaleString()}</strong><small>Available earned points</small><Link to="/wallet-rewards">Open wallet <Icon name="arrow" size={14}/></Link></article><article className="dt-tip-card"><span><Icon name="lightbulb" size={19}/></span><div><b>Make every test count</b><p>Read the requirements carefully and provide clear, reproducible feedback.</p></div></article><article className="dt-help-card"><div><Icon name="help" size={20}/><b>Need a hand?</b></div><p>Questions about joining a test or submitting feedback?</p><Link to="/help-support">Visit tester support <Icon name="arrow" size={14}/></Link></article></aside></div>
-    <footer className="dt-footer">TestDZ <span>·</span> Test with purpose. Grow with every experience.</footer>
+   <header className="td-topbar"><div className="td-search" aria-label="Tester workspace"><Icon name="search" size={20}/><span>Explore testing opportunities</span></div><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><b>⌄</b></Link></div></header>
+   <div className="discover-content">
+    <section className="discover-hero">
+     <div className="discover-hero-copy">
+      <span className="discover-eyebrow">🚀 Explore Opportunities</span>
+      <h1>Discover Available Tests</h1>
+      <p>Find exciting testing opportunities, share useful feedback, and grow your tester journey.</p>
+      <form className="discover-search" onSubmit={event=>event.preventDefault()}>
+       <span><Icon name="search" size={18}/></span>
+       <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search for tests, applications or developers..." aria-label="Search tests"/>
+       <button type="submit"><Icon name="search" size={16}/> Search</button>
+      </form>
+      <div className="discover-categories">
+       {filters.map(filter=><button type="button" key={filter.id} onClick={()=>setCategory(filter.id)} className={category===filter.id?"active":""}><span>{filter.symbol}</span>{filter.label}</button>)}
+      </div>
+     </div>
+     <div className="discover-hero-art" aria-hidden="true"><HeroIllustration/></div>
+    </section>
+    <div className="discover-section-heading">
+     <h2><Icon name="grid" size={19}/> Available Tests ({visible.length})</h2>
+     <label>Sort by: <select value={sort} onChange={event=>setSort(event.target.value)}><option value="newest">Most Recent</option><option value="closing">Closing Soon</option><option value="title">A – Z</option></select></label>
+    </div>
+    {error&&<div className="discover-empty" role="status">{error}</div>}
+    <div className="discover-workspace">
+     <section className="discover-grid" aria-live="polite">
+      {loading?<div className="discover-empty">Loading available tests…</div>:visible.length?visible.map(test=>{
+       const left=daysLeft(test.end_date);
+       const type=categoryOf(test.app?.category);
+       return <article className="discover-test-card" key={test.id}>
+        <div className="discover-card-top">
+         <div className={"discover-app-icon app-"+type}>{test.app?.icon_url?<img src={test.app.icon_url} alt=""/>:<span>{type==="mobile"?"▣":type==="web"?"▥":type==="desktop"?"▱":"✦"}</span>}</div>
+         <span className="discover-status"><i/>{test.status==="ready"?"Upcoming":"Recruiting"}</span>
+        </div>
+        <h3>{test.title}</h3>
+        <p>{test.short_summary||test.description||"Explore this testing opportunity and review its requirements."}</p>
+        <div className="discover-tags"><span><Icon name="globe" size={13}/> {test.app?.category||"App"}</span><span>✦ Testing</span></div>
+        <div className="discover-meta"><span><Icon name="users" size={14}/> {test.min_testers} testers</span><span><Icon name="clock" size={14}/> {left===null?"Schedule pending":left===0?"Closing today":left+" days left"}</span></div>
+        <div className="discover-card-bottom"><strong>Reward details in test brief</strong><Link to={"/tests/"+test.id}>View Details <Icon name="arrow" size={14}/></Link></div>
+       </article>;
+      }):<div className="discover-empty"><strong>{query||category!=="all"?"No matching tests":"No available tests right now"}</strong><p>{query||category!=="all"?"Try another search or category to find an opportunity.":"New opportunities will appear here when developers publish recruiting tests."}</p>{(query||category!=="all")&&<button type="button" onClick={()=>{setQuery("");setCategory("all");}}>Clear search and filters</button>}</div>}
+     </section>
+     <aside className="discover-right-rail">
+      <section className="discover-reward-card"><div>🏆</div><h3>Your Rewards</h3><strong>{loading? "—":points.toLocaleString("en-US")}</strong><span>Earned points</span><Link to="/wallet-rewards">View Wallet <Icon name="arrow" size={14}/></Link></section>
+      <section className="discover-stats"><h3><Icon name="grid" size={18}/> Quick Stats</h3><div>
+       <article><b className="stat-check">✓</b><strong>{completed}</strong><span>Completed Tests</span></article>
+       <article><b className="stat-star">★</b><strong>{points.toLocaleString("en-US")}</strong><span>Earned Points</span></article>
+       <article><b className="stat-gift">♔</b><strong>{tests.length}</strong><span>Open Tests</span></article>
+       <article><b className="stat-time">◷</b><strong>{visible.length}</strong><span>Matching Tests</span></article>
+      </div></section>
+      <section className="discover-help"><b><Icon name="help" size={18}/> Need Help?</b><p>Our support team is here to help with joining tests and submitting feedback.</p><Link to="/help-support">Visit Tester Support <Icon name="arrow" size={13}/></Link></section>
+     </aside>
+    </div>
    </div>
   </main>
  </div>;
