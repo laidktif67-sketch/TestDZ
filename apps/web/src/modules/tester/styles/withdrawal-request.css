@@ -103,3 +103,10 @@
 .twr-network-note{display:flex;align-items:flex-start;gap:7px;margin:12px 0 2px;padding:10px 12px;border:1px solid #f2dfad;border-radius:10px;background:#fff9e9;color:#805c16;font-size:10px;line-height:1.55}
 .twr-network-note>svg{flex:none;margin-top:1px;color:#b98716}
 .twr-network-note strong{font-weight:850}
+
+
+/* PayPal payout option */
+.twr-method-paypal .twr-method-logo{color:#0756a5;background:#edf5ff;border-color:#cfe0f7}
+.twr-method-paypal.selected .twr-method-logo{color:#063b80;background:#e0edff;border-color:#8bb8ef}
+.twr-paypal-note{display:flex;align-items:flex-start;gap:7px;margin:12px 0 2px;padding:10px 12px;border:1px solid #cfe0f7;border-radius:10px;background:#f1f7ff;color:#31577f;font-size:10px;line-height:1.55}
+.twr-paypal-note>svg{flex:none;margin-top:1px;color:#2767ac}
