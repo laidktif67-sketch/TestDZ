@@ -158,7 +158,7 @@ export default function FeedbackHistoryPage() {
         {error && <div className="fh-error" role="alert">{error}<button type="button" onClick={() => window.location.reload()}>Retry</button></div>}
         <section className="fh-toolbar" aria-label="Feedback filters">
           <div className="fh-tabs">
-            {(["all", "pending", "accepted", "rejected"] as const).map(value => <button type="button" key={value} className={filter === value ? "selected" : ""} aria-pressed={filter === value} onClick={() => setFilter(value)}><span>{value === "all" ? "▦  All" : value === "pending" ? "◷  Pending" : value === "accepted" ? "●  Approved" : "✕  Rejected"}</span><b>{statusCounts[value]}</b></button>)}
+            {(["all", "pending", "accepted", "rejected"] as const).map(value => <button type="button" key={value} className={filter === value ? "selected" : ""} aria-pressed={filter === value} onClick={() => setFilter(value)}><span className="fh-tab-label"><Icon name={value === "all" ? "grid" : value === "pending" ? "clock" : value === "accepted" ? "check" : "close"} size={16}/><span>{value === "all" ? "All" : value === "pending" ? "Pending" : value === "accepted" ? "Approved" : "Rejected"}</span></span><b>{statusCounts[value]}</b></button>)}
           </div>
           <label className="fh-range"><Icon name="calendar" size={17}/><select aria-label="Filter by date range" value={range} onChange={event => setRange(event.target.value as RangeKey)}><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select></label>
         </section>
