@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -75,7 +76,7 @@ export default function SubmitFeedbackPage() {
     setFiles(current => [...current, ...accepted].slice(0, 5));
   };
 
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+  const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage("Your feedback form is ready, but submission is not connected to the feedback service yet.");
   };
