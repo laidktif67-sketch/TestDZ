@@ -77,7 +77,7 @@ export default function TestPreviewPage(){
        <article className="to-panel to-feedback-banner"><div className="to-trophy" aria-hidden="true">🏆</div><div><h2>Your Feedback Matters!</h2><p>Help us build a better app and earn rewards.</p></div></article>
       </aside>
      </div>
-     <footer className="to-bottom-actions"><Link className="to-question" to="/help"><Icon name="info" size={25}/>Ask a Question</Link>{alreadyAssigned?<Link className="to-accept is-assigned" to="/my-tests"><Icon name="check" size={26}/>View My Tests<Icon name="arrow" size={24}/></Link>:<button className="to-accept" type="button" disabled={!canJoin} title="Test enrollment is not yet connected to the secure assignment workflow"><Icon name="check" size={27}/><span>Accept Test</span><Icon name="arrow" size={25}/></button>}</footer>
+     <footer className="to-bottom-actions"><Link className="to-question" to="/help"><Icon name="info" size={25}/>Ask a Question</Link>{alreadyAssigned?<Link className="to-accept is-assigned" to="/my-tests"><Icon name="check" size={26}/>View My Tests<Icon name="arrow" size={24}/></Link>:<button className="to-accept" type="button" disabled title="Test enrollment is not yet connected to the secure assignment workflow"><Icon name="check" size={27}/><span>Accept Test</span><Icon name="arrow" size={25}/></button>}</footer>
      {test.app?.play_store_url&&<p className="to-store-link"><a href={test.app.play_store_url} target="_blank" rel="noreferrer"><Icon name="link" size={15}/> View app on Google Play</a></p>}
     </>}
    </div>
