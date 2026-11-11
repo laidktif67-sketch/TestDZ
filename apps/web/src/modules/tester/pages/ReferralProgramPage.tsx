@@ -63,7 +63,7 @@ export default function ReferralProgramPage() {
         </div>
       </header>
       <div className="rp-content">
-        <Link to="/tester-dashboard" className="rp-back"><Icon name="arrow" size={17} />Back to Dashboard</Link>
+        <div className="rp-page-actions"><Link to="/tester-dashboard" className="rp-back"><Icon name="arrow" size={17} />Back to Dashboard</Link><Link to="/referral-history" className="rp-history-link"><Icon name="receipt" size={17}/>Referral History &amp; Details</Link></div>
         <section className="rp-hero">
           <div className="rp-hero-art" aria-hidden="true"><span className="rp-person">🧑🏻‍💻</span><span className="rp-person rp-person-two">👩🏻‍💻</span><span className="rp-gift">🎁</span></div>
           <div className="rp-hero-copy"><span className="rp-eyebrow">GROW WITH TESTDZ</span><h1>Referral Program</h1><p>Invite your friends to TestDZ and grow the testing community together.</p></div>
