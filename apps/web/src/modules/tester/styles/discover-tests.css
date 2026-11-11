@@ -113,3 +113,20 @@
 .discover-categories button .discover-filter-icon svg{display:block!important;visibility:visible!important;opacity:1!important;width:16px!important;height:16px!important;min-width:16px;stroke:currentColor!important;fill:none!important;flex:none}
 .discover-categories button .discover-filter-icon .td-icon{color:inherit}
 .discover-categories button .discover-filter-label{margin:0!important}
+
+
+/* Responsive category filters: never clip categories inside the hero. */
+.discover-hero{height:auto;min-height:307px}
+.discover-hero-copy{min-width:0}
+.discover-categories{display:flex;flex-wrap:wrap;align-items:center;max-width:100%;row-gap:8px}
+.discover-categories button{flex:0 1 auto;min-width:0}
+@media(max-width:850px){
+ .discover-hero{min-height:0}
+ .discover-hero-copy{width:100%;max-width:100%}
+ .discover-hero-art{opacity:.12;right:-8%;width:55%;pointer-events:none}
+ .discover-categories{position:relative;z-index:2}
+}
+@media(max-width:600px){
+ .discover-hero-copy{width:100%}
+ .discover-categories{flex-wrap:wrap}
+}
