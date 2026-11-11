@@ -11,8 +11,6 @@ export default function ReferralProgramPage() {
   const [avatar, setAvatar] = useState("");
   const [notifications, setNotifications] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
@@ -53,11 +51,6 @@ export default function ReferralProgramPage() {
 
   if (loading) return <div className="td-loading"><span className="td-spinner" />Loading referral program…</div>;
 
-  const copyLink = async () => {
-    setNotice("Your personal referral link will appear here when referral tracking is enabled.");
-    setCopied(false);
-  };
-
   return <div className="td-dashboard rp-dashboard">
     <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false} />
     <main className="td-main rp-main">
@@ -90,14 +83,13 @@ export default function ReferralProgramPage() {
           <div className="rp-left-column">
             <section className="rp-panel rp-link-panel">
               <div className="rp-panel-heading"><div className="rp-heading-icon"><Icon name="link" size={25} /></div><div><h2>Your Referral Link</h2><p>Share your personal invitation with friends. Referral links will be generated when the program is activated.</p></div></div>
-              <div className="rp-link-field"><Icon name="link" size={19} /><span>Referral link not available yet</span><button type="button" onClick={copyLink} disabled><Icon name="copy" size={18} />Copy Link</button></div>
+              <div className="rp-link-field"><Icon name="link" size={19} /><span>Referral link not available yet</span><button type="button" disabled title="Available when referral tracking is activated"><Icon name="copy" size={18} />Coming soon</button></div>
               <div className="rp-share-row">
                 <button type="button" disabled><span>◉</span>Share on WhatsApp</button>
                 <button type="button" disabled><span>➤</span>Share on Telegram</button>
                 <button type="button" disabled><Icon name="mail" size={18} />Share via Email</button>
                 <button type="button" disabled aria-label="More sharing options">•••</button>
               </div>
-              {notice && <p className="rp-inline-note">{notice}</p>}
             </section>
 
             <section className="rp-panel rp-steps-panel">
@@ -118,7 +110,25 @@ export default function ReferralProgramPage() {
           </aside>
         </div>
 
-        <section className="rp-bottom-cta"><div className="rp-cta-icon"><Icon name="send" size={30} /></div><div><h2>Invite more friends and grow with TestDZ!</h2><p>Help more testers discover opportunities and build better apps.</p></div><button type="button" disabled>Start Sharing <Icon name="arrow" size={17} /></button></section>
+        <section className="rp-panel rp-readiness">
+          <div className="rp-section-title"><Icon name="shield" size={23} /><h2>Referral program readiness</h2></div>
+          <p className="rp-readiness-copy">A transparent referral experience starts with verified tracking. These features will become available when the referral system is connected.</p>
+          <div className="rp-readiness-grid">
+            <article><span className="rp-readiness-icon"><Icon name="link" size={19} /></span><div><strong>Personal invitation link</strong><small>Generated securely for your account</small></div><em>Pending</em></article>
+            <article><span className="rp-readiness-icon"><Icon name="chart" size={19} /></span><div><strong>Referral activity tracking</strong><small>Verified sign-ups and eligible actions</small></div><em>Pending</em></article>
+            <article><span className="rp-readiness-icon"><Icon name="gift" size={19} /></span><div><strong>Reward credits</strong><small>Clear rules and wallet transaction history</small></div><em>Pending</em></article>
+          </div>
+        </section>
+
+        <section className="rp-panel rp-faq">
+          <div className="rp-section-title"><Icon name="help" size={23} /><h2>Frequently asked questions</h2></div>
+          <details><summary>When will my referral link be available?</summary><p>Your personal link will appear here after referral tracking is enabled and linked to your TestDZ account.</p></details>
+          <details><summary>When does a referral count as successful?</summary><p>The final eligibility rule will be published before the program launches. A sign-up alone should not be treated as a verified referral until the required activity is confirmed.</p></details>
+          <details><summary>Where can I see my rewards?</summary><p>Once rewards are enabled, verified credits and their transaction history will be available in your Wallet &amp; Rewards page.</p></details>
+          <details><summary>Can I invite myself or create multiple accounts?</summary><p>Self-referrals and attempts to manipulate referral activity should not qualify. The final anti-abuse policy will be shown with the program rules.</p></details>
+        </section>
+
+        <section className="rp-bottom-cta"><div className="rp-cta-icon"><Icon name="send" size={30} /></div><div><h2>Be ready to grow with TestDZ!</h2><p>Your invitation tools will be available here when the referral program launches.</p></div><Link to="/help-support" className="rp-help-cta">Contact Support <Icon name="arrow" size={17} /></Link></section>
         <footer className="rp-footer">TestDZ · Test · Learn · Grow</footer>
       </div>
     </main>
