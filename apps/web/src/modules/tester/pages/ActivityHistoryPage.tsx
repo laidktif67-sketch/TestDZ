@@ -21,6 +21,7 @@ const dateTimeLabel = (value: string) => {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString(undefined, { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 };
 const dayKey = (value: string) => {
+  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return value;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "" : date.getFullYear() + "-" + String(date.getMonth()+1).padStart(2,"0") + "-" + String(date.getDate()).padStart(2,"0");
 };
@@ -103,7 +104,7 @@ export default function ActivityHistoryPage() {
   const pointsByAssignment=useMemo(()=>ledger.reduce((map,row)=>{if(row.reference_id)map[row.reference_id]=(map[row.reference_id]||0)+Number(row.amount||0);return map;},{} as Record<string,number>),[ledger]);
   const completed=assignments.filter(row=>row.status==="completed").length;
   const activeDays=new Set(assignments.flatMap(row=>(row.checkins??[]).map(item=>dayKey(item.checkin_date||item.created_at)).filter(Boolean))).size;
-  const totalPoints=ledger.reduce((sum,row)=>sum+Math.max(0,Number(row.amount||0)),0);
+  const totalPoints=Math.max(0,ledger.reduce((sum,row)=>sum+Number(row.amount||0),0));
   const events=useMemo(()=>{
     const list:ActivityEvent[]=[];
     assignments.forEach(row=>{
