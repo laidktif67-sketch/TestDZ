@@ -60,7 +60,7 @@ export default function SettingsSecurityPage() {
     { label: "Help & Support", icon: "help", href: "/help-support" },
     { label: "Feedback", icon: "star", href: "/feedback-history" },
     { label: "Activity & History", icon: "chart", href: "/check-in-history" },
-    { label: "Notifications", icon: "bell", href: "/settings?tab=notifications" },
+    { label: "Notifications", icon: "bell", href: "/notification-preferences" },
     { label: "Settings", icon: "settings", href: "/settings", active: true },
     ...(isDeveloper ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : [])
   ];
