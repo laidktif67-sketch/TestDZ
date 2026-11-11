@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
@@ -19,11 +20,11 @@ const tabs: { id: Tab; label: string; icon: string }[] = [
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
   return <button type="button" role="switch" aria-checked={checked} aria-label={label} className={`ss-toggle ${checked ? "on" : ""}`} onClick={() => onChange(!checked)}><i/></button>;
 }
-function SettingRow({ icon, title, description, action }: { icon: string; title: string; description: string; action?: React.ReactNode }) {
+function SettingRow({ icon, title, description, action }: { icon: string; title: string; description: string; action?: ReactNode }) {
   return <div className="ss-setting-row"><span className="ss-row-icon"><Icon name={icon} size={23}/></span><div className="ss-row-copy"><strong>{title}</strong><small>{description}</small></div>{action && <div className="ss-row-action">{action}</div>}</div>;
 }
 export default function SettingsSecurityPage() {
-  const { session, user, roles = [], signOut } = useIdentity();
+  const { user, roles = [], signOut } = useIdentity();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("account");
   const [name, setName] = useState("");
@@ -42,9 +43,7 @@ export default function SettingsSecurityPage() {
   const [mfaQr, setMfaQr] = useState("");
   const [mfaFactorId, setMfaFactorId] = useState("");
   const [mfaCode, setMfaCode] = useState("");
-  const [mfaChallenge, setMfaChallenge] = useState("");
   const [mfaBusy, setMfaBusy] = useState(false);
-  const [sessionCreated, setSessionCreated] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
@@ -71,8 +70,7 @@ export default function SettingsSecurityPage() {
     Promise.all([
       client.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle(),
       client.auth.mfa.listFactors(),
-      client.auth.getSession()
-    ]).then(([profile, factors, currentSession]) => {
+    ]).then(([profile, factors]) => {
       if (!alive) return;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
@@ -84,8 +82,6 @@ export default function SettingsSecurityPage() {
       if (savedPrefs) setPreferences({ ...defaultPreferences, ...savedPrefs });
       setTheme(typeof metadata.testdz_theme === "string" ? metadata.testdz_theme : "light");
       setTwoFactor(Boolean(factors.data?.totp?.some(factor => factor.status === "verified")));
-      const created = currentSession.data.session?.user?.created_at || user.created_at;
-      setSessionCreated(created || "");
     }).catch(() => { if (alive) setError("Some account settings could not be loaded."); });
     return () => { alive = false; };
   }, [user?.id]);
@@ -149,11 +145,10 @@ export default function SettingsSecurityPage() {
     setMfaBusy(true);
     const challenge = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
     if (challenge.error) { setMfaBusy(false); alert(challenge.error.message, true); return; }
-    setMfaChallenge(challenge.data.id);
     const verified = await supabase.auth.mfa.verify({ factorId: mfaFactorId, challengeId: challenge.data.id, code: mfaCode.trim() });
     setMfaBusy(false);
     if (verified.error) { alert(verified.error.message, true); return; }
-    setTwoFactor(true); setMfaQr(""); setMfaCode(""); setMfaChallenge(""); alert("Two-factor authentication enabled.");
+    setTwoFactor(true); setMfaQr(""); setMfaCode(""); alert("Two-factor authentication enabled.");
   }
   async function disableMfa() {
     if (!supabase) return;
@@ -192,7 +187,7 @@ export default function SettingsSecurityPage() {
     { key: "system", title: "System Updates", icon: "settings" },
     { key: "promotions", title: "Promotions & News", icon: "bell" }
   ];
-  const createdLabel = sessionCreated ? new Date(sessionCreated).toLocaleString(undefined, { month: "short", day: "2-digit", year: "numeric" }) : "Current authenticated session";
+  const createdLabel = "the current device";
   const tabsView = <div className="ss-tabs" role="tablist">{tabs.map(item => <button type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? "active" : ""} key={item.id} onClick={() => setTab(item.id)}><Icon name={item.icon} size={19}/>{item.label}</button>)}</div>;
 
   return <div className="td-dashboard ss-dashboard">
