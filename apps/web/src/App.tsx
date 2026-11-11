@@ -45,6 +45,7 @@ import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
 import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import SupportCenterPage from "./modules/tester/pages/SupportCenterPage";
 import SupportTicketDetailsPage from "./modules/tester/pages/SupportTicketDetailsPage";
+import LiveChatPage from "./modules/tester/pages/LiveChatPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
 import AuthGuard from "./shared/guards/AuthGuard";
@@ -87,6 +88,7 @@ export default function App() {
           <Route path="/help" element={<HelpSupportPage />} />
           <Route path="/support" element={<SupportCenterPage />} />
           <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
+          <Route path="/live-chat" element={<LiveChatPage />} />
           <Route path="/help-support" element={<Navigate to="/help" replace />} />
           <Route path="/settings" element={<SettingsSecurityPage />} />
           <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
