@@ -32,6 +32,7 @@ import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
 import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
 import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
 import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
+import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
 import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="/check-in-history" element={<CheckInHistoryPage />} />
             <Route path="/activity-history" element={<ActivityHistoryPage />} />
             <Route path="/referral-program" element={<ReferralProgramPage />} />
+            <Route path="/referral-history" element={<ReferralHistoryPage />} />
             <Route path="/discover-tests" element={<DiscoverTestsPage />} />
             <Route path="/tests/:id" element={<TestPreviewPage />} />
           </Route>
