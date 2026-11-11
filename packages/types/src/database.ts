@@ -79,6 +79,8 @@ export type Database = {
           status: string
           created_at: string
           updated_at: string
+          resolved_at: string | null
+          resolved_by: string | null
         }
         Insert: {
           id?: string
@@ -91,6 +93,8 @@ export type Database = {
           status?: string
           created_at?: string
           updated_at?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
         }
         Update: {
           id?: string
@@ -103,6 +107,8 @@ export type Database = {
           status?: string
           created_at?: string
           updated_at?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
         }
         Relationships: [
           {
@@ -112,6 +118,34 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      support_ticket_messages: {
+        Row: { id: string; ticket_id: string; sender_id: string; body: string; created_at: string }
+        Insert: { id?: string; ticket_id: string; sender_id: string; body: string; created_at?: string }
+        Update: { id?: string; ticket_id?: string; sender_id?: string; body?: string; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "support_ticket_messages_ticket_id_fkey"; columns: ["ticket_id"]; isOneToOne: false; referencedRelation: "support_tickets"; referencedColumns: ["id"] },
+          { foreignKeyName: "support_ticket_messages_sender_id_fkey"; columns: ["sender_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
+        ]
+      }
+      support_ticket_attachments: {
+        Row: { id: string; ticket_id: string; message_id: string; uploaded_by: string; storage_path: string; original_filename: string; mime_type: string; size_bytes: number; created_at: string }
+        Insert: { id?: string; ticket_id: string; message_id: string; uploaded_by: string; storage_path: string; original_filename: string; mime_type: string; size_bytes: number; created_at?: string }
+        Update: { id?: string; ticket_id?: string; message_id?: string; uploaded_by?: string; storage_path?: string; original_filename?: string; mime_type?: string; size_bytes?: number; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "support_ticket_attachments_ticket_id_fkey"; columns: ["ticket_id"]; isOneToOne: false; referencedRelation: "support_tickets"; referencedColumns: ["id"] },
+          { foreignKeyName: "support_ticket_attachments_message_fk"; columns: ["message_id"]; isOneToOne: false; referencedRelation: "support_ticket_messages"; referencedColumns: ["id"] },
+          { foreignKeyName: "support_ticket_attachments_uploaded_by_fkey"; columns: ["uploaded_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
+        ]
+      }
+      support_ticket_events: {
+        Row: { id: string; ticket_id: string; actor_id: string | null; event_type: string; old_status: string | null; new_status: string | null; created_at: string }
+        Insert: { id?: string; ticket_id: string; actor_id?: string | null; event_type: string; old_status?: string | null; new_status?: string | null; created_at?: string }
+        Update: { id?: string; ticket_id?: string; actor_id?: string | null; event_type?: string; old_status?: string | null; new_status?: string | null; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "support_ticket_events_ticket_id_fkey"; columns: ["ticket_id"]; isOneToOne: false; referencedRelation: "support_tickets"; referencedColumns: ["id"] },
+          { foreignKeyName: "support_ticket_events_actor_id_fkey"; columns: ["actor_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
         ]
       }
       assignments: {
