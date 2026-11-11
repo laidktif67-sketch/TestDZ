@@ -45,7 +45,7 @@ export default function HelpSupportPage() {
     { label: "Feedback History", icon: "star", href: "/feedback-history" },
     { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
     { label: "Profile", icon: "user", href: "/profile" },
-    { label: "Help & Support", icon: "headset", href: "/help-support", active: true },
+    { label: "Help Center", icon: "headset", href: "/help", active: true },
     { label: "Settings", icon: "settings", href: "/settings" },
     ...(isDeveloper ? [{ label: "Developer Dashboard", icon: "code", href: "/developer-dashboard" }] : []),
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
@@ -65,9 +65,9 @@ export default function HelpSupportPage() {
       <div className="hs-content">
         <section className="hs-hero">
           <div className="hs-hero-copy">
-            <span className="hs-kicker"><Icon name="headset" size={15}/> TESTDZ SUPPORT CENTER</span>
-            <h1>Need Help?<br/>We’re <em>Here</em> for You!</h1>
-            <p>Find answers, get support, and solve your issues quickly.</p>
+            <span className="hs-kicker"><Icon name="headset" size={15}/> TESTDZ HELP CENTER</span>
+            <h1>Help Center<br/><em>Answers</em> made easy</h1>
+            <p>Find answers, browse guides, and learn how to get the most from TestDZ.</p>
             <form className="hs-hero-search" onSubmit={event => { event.preventDefault(); document.getElementById("hs-faq")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
               <Icon name="search" size={20}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search in FAQs or type your question…" aria-label="Search frequently asked questions"/><button type="submit">Search</button>
             </form>
@@ -80,16 +80,16 @@ export default function HelpSupportPage() {
         </section>
         <div className="hs-lower-grid">
           <section className="hs-tickets-panel" id="hs-faq">
-            <div className="hs-section-heading hs-ticket-heading"><div><h2><Icon name="receipt" size={22}/> Frequently Asked Questions</h2><p>Browse answers from the TestDZ help center</p></div><span className="hs-count">{filtered.length} articles</span></div>
+            <div className="hs-section-heading hs-ticket-heading"><div><h2><Icon name="receipt" size={22}/> Frequently Asked Questions (FAQ)</h2><p>Browse answers from the TestDZ help center</p></div><span className="hs-count">{filtered.length} articles</span></div>
             <div className="hs-faq-tools"><label><Icon name="search" size={17}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search questions…"/></label><button type="button" className={category === "all" ? "active" : ""} onClick={() => { setCategory("all"); setExpanded(null); }}>All topics <span>{helpItems.length}</span></button></div>
             <div className="hs-faq-list">{filtered.length ? filtered.map(item => <article className={expanded === item.id ? "open" : ""} key={item.id}><button type="button" onClick={() => setExpanded(expanded === item.id ? null : item.id)} aria-expanded={expanded === item.id}><span>{item.question}</span><Icon name="chevron" size={18}/></button>{expanded === item.id && <p>{item.answer}</p>}</article>) : <div className="hs-no-results"><Icon name="search" size={25}/><strong>No matching help articles</strong><p>Try a different keyword or select another topic.</p><button type="button" onClick={() => { setQuery(""); setCategory("all"); }}>Clear search</button></div>}</div>
           </section>
           <aside className="hs-side-column">
-            <section className="hs-contact-panel"><div className="hs-section-heading"><div><h2><Icon name="send" size={21}/> Contact & Support</h2><p>Choose an available support path</p></div></div><Link to="/report-problem" className="hs-contact-row"><span><Icon name="alert-circle" size={20}/></span><div><strong>Report a Problem</strong><small>Submit a detailed issue report</small></div><Icon name="arrow" size={17}/></Link><Link to="/submit-feedback" className="hs-contact-row"><span><Icon name="mail" size={20}/></span><div><strong>Send Feedback</strong><small>Share suggestions and feedback</small></div><Icon name="arrow" size={17}/></Link><Link to="/feedback-history" className="hs-contact-row"><span><Icon name="receipt" size={20}/></span><div><strong>Feedback History</strong><small>Review your previous submissions</small></div><Icon name="arrow" size={17}/></Link><div className="hs-support-note"><Icon name="info" size={17}/><p>Live chat and phone support are not connected in this version. Use the feedback form to reach the project workflow.</p></div></section>
+            <section className="hs-contact-panel"><div className="hs-section-heading"><div><h2><Icon name="send" size={21}/> Need More Help?</h2><p>Couldn’t find your answer? Contact our support team.</p></div></div><Link to="/support" className="hs-contact-row"><span><Icon name="alert-circle" size={20}/></span><div><strong>Open Support Center</strong><small>Create and track a support request</small></div><Icon name="arrow" size={17}/></Link><Link to="/support" className="hs-contact-row"><span><Icon name="mail" size={20}/></span><div><strong>Support Tickets</strong><small>Follow replies and ticket status</small></div><Icon name="arrow" size={17}/></Link><Link to="/support" className="hs-contact-row"><span><Icon name="receipt" size={20}/></span><div><strong>Contact Support</strong><small>Get help with an account issue</small></div><Icon name="arrow" size={17}/></Link><div className="hs-support-note"><Icon name="info" size={17}/><p>Support requests are handled through your ticket history. Live chat is not enabled yet.</p></div></section>
             <section className="hs-resource-panel"><div><Icon name="book" size={25}/><div><h3>Helpful Resources</h3><p>Explore the main tester tools and guides.</p></div></div><Link to="/my-tests">My Tests <Icon name="arrow" size={15}/></Link><Link to="/wallet-rewards">Wallet & Rewards <Icon name="arrow" size={15}/></Link><Link to="/settings">Account Settings <Icon name="arrow" size={15}/></Link></section>
           </aside>
         </div>
-        <section className="hs-bottom-banner"><div className="hs-bottom-support"><span><Icon name="headset" size={35}/></span><div><h3>Need a hand?</h3><p>Send us feedback and include the test or page where you need help.</p><Link to="/submit-feedback">Send a Message <Icon name="arrow" size={15}/></Link></div></div><div className="hs-bottom-report"><span><Icon name="help" size={34}/></span><div><h3>Report a Problem</h3><p>Found a bug or something not working as expected?</p><Link to="/report-problem">Report an Issue <Icon name="arrow" size={15}/></Link></div></div></section>
+        <section className="hs-bottom-banner"><div className="hs-bottom-support"><span><Icon name="headset" size={35}/></span><div><h3>Still need help?</h3><p>Create a support ticket and include the details of your issue.</p><Link to="/support">Open Support Center <Icon name="arrow" size={15}/></Link></div></div><div className="hs-bottom-report"><span><Icon name="help" size={34}/></span><div><h3>Support Tickets</h3><p>Track the progress of requests you have already sent.</p><Link to="/support">View My Tickets <Icon name="arrow" size={15}/></Link></div></div></section>
       </div>
     </main>
   </div>;
