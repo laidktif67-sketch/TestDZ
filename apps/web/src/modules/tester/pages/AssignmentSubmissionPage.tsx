@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, DragEvent } from "react";
+import type { ChangeEvent, DragEvent, CSSProperties, ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
@@ -9,7 +9,7 @@ import "../styles/assignment-submission.css";
 
 type AssignmentRow = {
   id: string; status: string; start_date: string | null; completed_at: string | null;
-  created_at: string; points_awarded: number | null;
+  created_at: string; points_awarded?: number | null;
   test: { id: string; title: string; status: string; start_date: string | null; end_date: string | null; app: { name: string; icon_url: string | null } | null } | null;
 };
 type EvidenceFile = { file: File; url: string };
@@ -18,7 +18,7 @@ function dateTime(value: string | null) {
   if (!value) return "Not submitted";
   return new Date(value).toLocaleString(undefined, { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
-function Step({ n, children }: { n: number; children: React.ReactNode }) {
+function Step({ n, children }: { n: number; children: ReactNode }) {
   return <h3 className="as-step-title"><span>{n}</span>{children}</h3>;
 }
 function GaugeIcon() {
@@ -60,7 +60,7 @@ export default function AssignmentSubmissionPage() {
       const client = supabase;
       if (!client) { if (alive) { setLoadError("The database connection is unavailable."); setLoading(false); } return; }
       const [a, c, f] = await Promise.all([
-        client.from("assignments").select("id,status,start_date,completed_at,created_at,points_awarded,test:tests(id,title,status,start_date,end_date,app:apps(name,icon_url))").eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
+        client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,start_date,end_date,app:apps(name,icon_url))").eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
         client.from("checkins").select("id,checkin_date").eq("assignment_id", id).eq("tester_id", session.user.id).order("checkin_date", { ascending: true }),
         client.from("feedback").select("id", { count: "exact", head: true }).eq("assignment_id", id).eq("tester_id", session.user.id)
       ]);
@@ -86,8 +86,8 @@ export default function AssignmentSubmissionPage() {
     const accepted = Array.from(files).filter(file => /^(image\/(png|jpeg|webp)|application\/pdf)$/.test(file.type) && file.size <= 10 * 1024 * 1024);
     const rejected = files.length - accepted.length;
     setEvidence(current => {
-      const next = [...current, ...accepted].slice(0, 5);
-      return next.map(file => ({ file, url: URL.createObjectURL(file) }));
+      const available = Math.max(0, 5 - current.length);
+      return [...current, ...accepted.slice(0, available).map(file => ({ file, url: URL.createObjectURL(file) }))];
     });
     setNotice(rejected ? "Some files were skipped. Use PNG, JPG, WebP or PDF files up to 10 MB each." : "");
   };
@@ -155,7 +155,7 @@ export default function AssignmentSubmissionPage() {
               <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => setPreviewOpen(true)}><Icon name="eye" size={19}/>Preview</button><button type="button" className="as-submit-btn" disabled={!canSubmit} onClick={() => setNotice("The submission form is ready. Saving a final assignment submission is not enabled in the current database workflow yet.")}><Icon name="send" size={19}/>Submit Assignment</button></div></div>
             </section>
             <aside className="as-side">
-              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Assignment Progress</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as React.CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist"><span><i>✓</i> {progress === 100 ? "Completed" : "In progress"}</span><span><i>✓</i> {feedbackCount ? "Feedback submitted" : "Feedback pending"}</span><span><i>✓</i> {checkins.length} check-ins logged</span><b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
+              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Assignment Progress</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist"><span><i>✓</i> {progress === 100 ? "Completed" : "In progress"}</span><span><i>✓</i> {feedbackCount ? "Feedback submitted" : "Feedback pending"}</span><span><i>✓</i> {checkins.length} check-ins logged</span><b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
               <section className="as-side-card as-details-card"><h2><Icon name="receipt" size={22}/>Submission Details</h2><div><Icon name="calendar" size={20}/><span>Assignment Started<strong>{dateTime(assignment.start_date)}</strong></span></div><div><Icon name="calendar" size={20}/><span>Last Updated<strong>{dateTime(assignment.completed_at || assignment.created_at)}</strong></span></div><div><Icon name="clock" size={20}/><span>Status<strong className="as-detail-status">{completedLabel}</strong></span></div><div><Icon name="info" size={20}/><span>Assignment ID<strong className="as-id">{assignment.id.slice(0, 13)}…</strong></span></div></section>
               <section className="as-success-card"><span>✓</span><div><strong>{assignment.status === "completed" ? "Assignment completed" : "You're making progress!"}</strong><p>{assignment.status === "completed" ? "Your assignment is marked as completed." : "Keep your evidence and comments ready before final submission."}</p></div></section>
             </aside>
