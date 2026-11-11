@@ -160,6 +160,7 @@ export default function ActivityHistoryPage() {
     {label:"Check-in History",icon:"calendar",href:"/check-in-history"},
     {label:"Feedback History",icon:"star",href:"/feedback-history"},
     {label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},
+    {label:"Referral Program",icon:"users",href:"/referral-program"},
     {label:"Profile",icon:"user",href:"/profile"},
     {label:"Help & Support",icon:"help",href:"/help-support"},
     {label:"Settings",icon:"settings",href:"/settings"},
