@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
@@ -18,8 +18,10 @@ export default function LoginActivitySecurityPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [notice, setNotice] = useState("");
+  const [activity, setActivity] = useState<Array<{id:string;event:string;occurred_at:string;ip_address:string|null}>>([]);
+  const [loadingActivity, setLoadingActivity] = useState(true);
   const device = useMemo(getDevice, []);
-  const firstName = user?.email?.split("@")[0] || "Tester";
+  useEffect(() => {\n    let alive = true;\n    async function loadActivity() {\n      if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }\n      setLoadingActivity(true);\n      const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });\n      if (!alive) return;\n      if (result.error) setNotice("Login history is temporarily unavailable. Please try again.");\n      else setActivity((result.data || []) as typeof activity);\n      setLoadingActivity(false);\n    }\n    void loadActivity();\n    return () => { alive = false; };\n  }, [user?.id]);\n  const firstName = user?.email?.split("@")[0] || "Tester";
   const lastLogin = user?.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
   const verified = Boolean(user?.email_confirmed_at);
   const formattedLogin = lastLogin ? lastLogin.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not available";
@@ -50,7 +52,7 @@ export default function LoginActivitySecurityPage() {
       setNotice("Preview mode: sign in to load your account security details.");
     }
   }
-  const rows = lastLogin ? [{ id: "last-login", date: formattedLogin, device: device.os, browser: device.browser, location: "Not available", ip: "Not exposed", status: "Last sign-in" }] : [];
+  const rows = activity.map(item => ({ id: item.id, date: new Date(item.occurred_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }), device: "Not recorded", browser: "Not recorded", location: "Not provided", ip: item.ip_address || "Not available", status: item.event }));
   return <div className="td-dashboard las-dashboard">
     <TesterSidebar nav={nav} name={firstName} firstName={firstName} avatar="" roles={roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
     <main className="td-main las-main">
@@ -59,7 +61,7 @@ export default function LoginActivitySecurityPage() {
         <Link to="/settings" className="las-back"><Icon name="arrow" size={17}/>Back to Settings</Link>
         <section className="las-hero"><div className="las-hero-icon"><Icon name="shield" size={55}/></div><div className="las-hero-copy"><h1>Login Activity &amp; Security History</h1><p>Review your login activity and keep your account secure.</p></div><div className="las-hero-art"><Icon name="monitor" size={105}/><span><Icon name="check" size={47}/></span></div></section>
         <section className="las-stats">
-          <article><span className="las-stat-icon blue"><Icon name="calendar" size={32}/></span><div><strong>{lastLogin ? "1" : "—"}</strong><b>Available Sign-in Record</b><small>From account session metadata</small></div></article>
+          <article><span className="las-stat-icon blue"><Icon name="calendar" size={32}/></span><div><strong>{activity.length || "0"}</strong><b>Recorded Login Events</b><small>Supabase Auth audit history</small></div></article>
           <article><span className="las-stat-icon green"><Icon name="smartphone" size={32}/></span><div><strong>{user ? "1" : "—"}</strong><b>Current Device</b><small>{device.label}</small></div></article>
           <article><span className="las-stat-icon purple"><Icon name="globe" size={32}/></span><div><strong>—</strong><b>Login Locations</b><small>Location data not provided</small></div></article>
           <article><span className="las-stat-icon teal"><Icon name="shield" size={32}/></span><div><strong>{verified ? "Verified" : "Review"}</strong><b>Account Verification</b><small>{verified ? "Email confirmed" : "Email not confirmed"}</small></div></article>
@@ -69,9 +71,9 @@ export default function LoginActivitySecurityPage() {
           <section className="las-card las-activity">
             <div className="las-card-heading"><h2><Icon name="clock" size={25}/>Recent Login Activity</h2><span>Account record</span></div>
             <div className="las-table-wrap"><table><thead><tr><th>Date &amp; Time</th><th>Device</th><th>Browser</th><th>Location</th><th>IP Address</th><th>Status</th></tr></thead><tbody>
-              {rows.length ? rows.map(row => <tr key={row.id}><td>{row.date}</td><td><Icon name={device.mobile ? "smartphone" : "monitor"} size={18}/>{row.device}</td><td>{row.browser}</td><td>{row.location}</td><td>{row.ip}</td><td><span className="las-status"><Icon name="check" size={13}/>{row.status}</span></td></tr>) : <tr><td colSpan={6} className="las-empty">No sign-in timestamp is available for this account.</td></tr>}
+              {loadingActivity ? <tr><td colSpan={6} className="las-empty">Loading your login history…</td></tr> : rows.length ? rows.map(row => <tr key={row.id}><td>{row.date}</td><td><Icon name={device.mobile ? "smartphone" : "monitor"} size={18}/>{row.device}</td><td>{row.browser}</td><td>{row.location}</td><td>{row.ip}</td><td><span className="las-status"><Icon name="check" size={13}/>{row.status}</span></td></tr>) : <tr><td colSpan={6} className="las-empty">No login audit events are available for this account yet.</td></tr>}
             </tbody></table></div>
-            <div className="las-data-note"><Icon name="info" size={20}/><p>Supabase provides the account's last sign-in timestamp to this client. It does not expose a full login audit trail, historical IP addresses or precise locations here.</p></div>
+            <div className="las-data-note"><Icon name="info" size={20}/><p>Only events recorded by Supabase Auth are shown. Device, browser and location are not inferred when the audit record does not contain them.</p></div>
           </section>
           <aside className="las-side">
             <section className="las-card las-overview"><h2><Icon name="shield" size={24}/>Security Overview</h2><div className={verified ? "las-secure-mark" : "las-review-mark"}><Icon name={verified ? "check" : "alert"} size={42}/></div><h3>{verified ? "Email Address Verified" : "Email Verification Needed"}</h3><p>{verified ? "Your email address is confirmed on this account." : "Confirm your email address to strengthen account security."}</p><div className="las-check"><Icon name={verified ? "check" : "alert"} size={17}/><span>{verified ? "Email verification confirmed" : "Email verification pending"}</span></div><Link to="/settings?tab=security">Review Security Settings <Icon name="arrow" size={15}/></Link></section>
