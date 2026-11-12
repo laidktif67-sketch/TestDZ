@@ -1,6 +1,6 @@
 begin;
 
-select plan(10);
+select plan(11);
 
 select ok(
   to_regclass('public.support_ticket_messages') is not null,
@@ -77,6 +77,18 @@ select ok(
       and conname = 'support_tickets_requester_role_check'
   ),
   'support tickets record a constrained requester role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_tickets'
+      and policyname = 'support_tickets_insert_owner'
+      and with_check like '%user_roles%'
+      and with_check like '%developer%'
+      and with_check like '%tester%'
+  ),
+  'ticket requester role must match an authorized account role'
 );
 
 select * from finish();
