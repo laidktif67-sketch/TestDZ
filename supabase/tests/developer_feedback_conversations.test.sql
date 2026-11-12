@@ -1,6 +1,6 @@
 begin;
 
-select plan(10);
+select plan(12);
 
 select ok(
   to_regclass('public.developer_feedback_messages') is not null
@@ -98,6 +98,31 @@ select ok(
   not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'feedback_id', 'UPDATE')
   and not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'developer_id', 'UPDATE'),
   'feedback ownership and developer identity remain immutable to clients'
+);
+
+select ok(
+  exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.developer_feedback_reviews'::regclass
+      and tgname = 'developer_feedback_review_audit_update'
+      and not tgisinternal
+      and (tgtype & 16) = 16
+  ),
+  'review status and priority changes are audited by a database trigger'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'developer_feedback_events'
+      and policyname = 'developer_feedback_events_insert_participants'
+      and with_check like '%message_sent%'
+      and with_check like '%attachment_added%'
+      and with_check not like '%status_changed%'
+      and with_check not like '%priority_changed%'
+  ),
+  'clients cannot directly forge review status or priority audit events'
 );
 
 select * from finish();
