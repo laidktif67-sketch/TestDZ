@@ -78,10 +78,10 @@ export default function NotificationPreferencesPage() {
         rewards: legacy.rewards ?? defaults.types.rewards,
         supportMessages: legacy.support ?? defaults.types.supportMessages,
         systemUpdates: legacy.system ?? defaults.types.systemUpdates,
-        marketing: legacy.promotions ?? defaults.types.marketing
       } : {};
       if (saved || legacy) setPrefs({
         ...defaults, ...(saved || {}),
+        marketing: saved?.marketing ?? legacy?.promotions ?? defaults.marketing,
         types: { ...defaults.types, ...legacyTypes, ...(saved?.types || {}) },
         delivery: { ...defaults.delivery, ...(saved?.delivery || {}) },
         quiet: { ...defaults.quiet, ...(saved?.quiet || {}) },
