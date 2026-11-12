@@ -90,6 +90,7 @@ export default function DeveloperNotificationsPage() {
       const result = await supabase.from("notifications")
         .select("id,user_id,type,title,body,data,read_at,archived_at,created_at")
         .eq("user_id", user.id)
+        .eq("recipient_role", "developer")
         .order("created_at", { ascending: false })
         .limit(500);
       if (!alive) return;
