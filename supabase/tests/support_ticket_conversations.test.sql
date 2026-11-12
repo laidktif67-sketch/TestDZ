@@ -1,6 +1,6 @@
 begin;
 
-select plan(9);
+select plan(10);
 
 select ok(
   to_regclass('public.support_ticket_messages') is not null,
@@ -64,6 +64,19 @@ select ok(
       and with_check like '%auth.uid%'
   ),
   'attachment metadata insert policy binds paths to the authenticated uploader'
+);
+
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'support_tickets'
+      and column_name = 'requester_role' and is_nullable = 'NO'
+  ) and exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.support_tickets'::regclass
+      and conname = 'support_tickets_requester_role_check'
+  ),
+  'support tickets record a constrained requester role'
 );
 
 select * from finish();
