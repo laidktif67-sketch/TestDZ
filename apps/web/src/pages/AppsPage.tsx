@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import type { AppLimit, AppRecord } from "@testdz/types";
@@ -12,10 +12,10 @@ type Filter = "all" | "published" | "draft" | "paused" | "archived";
 type Sort = "latest" | "oldest" | "name";
 
 function Glyph({ name, size = 20 }: { name: string; size?: number }) {
-  const paths: Record<string, React.ReactNode> = {
+  const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
     apps: <><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 7 9 5 9-5M3 7v10l9 5 9-5V7M12 12v10"/></>,
-    tests: <><path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 3 4h8a3 3 0 0 0 3-4l-5-9V3"/><path d="M8 14h8"/></>,
+    tests: <><path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 3 4h8a3 3 0 0 0 3-4l-5-9V3"/><path d="M8 14h8"/></>,\n    code: <><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-11-4 14"/></>,\n    check: <path d="m5 12 4 4L19 6"/>,
     users: <><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v1"/></>,
     chart: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></>,
     feedback: <><path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 9h8M8 13h5"/></>,
@@ -59,7 +59,7 @@ function AppsPage() {
   const [apps, setApps] = useState<AppRecord[]>([]);
   const [limit, setLimit] = useState<AppLimit | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");\n  const [globalSearch, setGlobalSearch] = useState("");
   const [sort, setSort] = useState<Sort>("latest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -161,7 +161,7 @@ function AppsPage() {
 
     <section className="dmy-content">
       <header className="dmy-topbar">
-        <label className="dmy-global-search"><Glyph name="search"/><input placeholder="Search your apps..." value={search} onChange={e => setSearch(e.target.value)}/></label>
+        <label className="dmy-global-search"><Glyph name="search"/><input placeholder="Search your apps..." value={globalSearch} onChange={e => setGlobalSearch(e.target.value)}/></label>
         <div className="dmy-user"><button type="button" className="dmy-bell" aria-label="Notifications">♧<i>3</i></button><span className="dmy-avatar">D</span><strong>Developer</strong><span>⌄</span></div>
       </header>
 
