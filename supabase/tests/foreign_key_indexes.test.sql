@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(9);
 
 select ok(
   exists (
@@ -80,6 +80,16 @@ select ok(
       and pg_get_indexdef(i.indexrelid) like '%(resolved_by)%'
   ),
   'support ticket resolver foreign key is indexed'
+);
+
+select ok(
+  exists (
+    select 1 from pg_index i
+    where i.indexrelid = to_regclass('public.developer_feedback_attachments_message_idx')
+      and i.indisvalid and i.indisready
+      and pg_get_indexdef(i.indexrelid) like '%(message_id)%'
+  ),
+  'developer feedback attachment message foreign key is indexed'
 );
 
 select * from finish();
