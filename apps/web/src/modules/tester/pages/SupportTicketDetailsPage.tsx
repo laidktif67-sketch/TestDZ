@@ -27,13 +27,13 @@ export default function SupportTicketDetailsPage(){
   setLoading(true);setError("");
   const {data:ticketData,error:ticketError}=await supabase.from("support_tickets").select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by").eq("id",id).maybeSingle();
   if(ticketError||!ticketData){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setLoading(false);return;}
-  setTicket(ticketData as Ticket);
+  setTicket(ticketData);
   const [messageResult,attachmentResult]=await Promise.all([
    supabase.from("support_ticket_messages").select("id,ticket_id,sender_id,body,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
    supabase.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at").eq("ticket_id",id).order("created_at",{ascending:true})
   ]);
   if(messageResult.error||attachmentResult.error){setError("Ticket details are available, but conversation or attachment storage is not ready yet. The database migration must be applied after review.");setMessages([]);setAttachments([]);}
-  else {setMessages((messageResult.data||[]) as Message[]);setAttachments((attachmentResult.data||[]) as Attachment[]);}
+  else {setMessages(messageResult.data ?? []);setAttachments(attachmentResult.data ?? []);}
   setLoading(false);
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
