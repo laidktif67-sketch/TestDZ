@@ -38,7 +38,6 @@ export default function TestPreviewPage(){
  },[id,identityLoading,session]);
  if(!identityLoading&&!session&&!previewMode)return <Navigate to="/auth" replace/>;
  const nav=[{label:"Dashboard",icon:"flask",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
- const canJoin=!!test&&test.status==="recruiting"&&!alreadyAssigned;
  const statusLabel=test?.status==="recruiting"?"Available Now":test?.status==="ready"?"Coming Soon":(test?.status||"Unavailable").replaceAll("_"," ");
  const appName=test?.app?.name||"TestDZ";
  const description=test?.short_summary||test?.description||test?.app?.description||"Help us improve our mobile app! Explore the latest version, check key features, and share your feedback about your experience.";
