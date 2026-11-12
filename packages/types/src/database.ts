@@ -67,87 +67,6 @@ export type Database = {
           },
         ]
       }
-      support_tickets: {
-        Row: {
-          id: string
-          user_id: string
-          ticket_number: number
-          subject: string
-          category: string
-          priority: string
-          description: string
-          status: string
-          created_at: string
-          updated_at: string
-          resolved_at: string | null
-          resolved_by: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          ticket_number?: never
-          subject: string
-          category: string
-          priority?: string
-          description: string
-          status?: string
-          created_at?: string
-          updated_at?: string
-          resolved_at?: string | null
-          resolved_by?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          ticket_number?: never
-          subject?: string
-          category?: string
-          priority?: string
-          description?: string
-          status?: string
-          created_at?: string
-          updated_at?: string
-          resolved_at?: string | null
-          resolved_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "support_tickets_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      support_ticket_messages: {
-        Row: { id: string; ticket_id: string; sender_id: string; body: string; created_at: string }
-        Insert: { id?: string; ticket_id: string; sender_id: string; body: string; created_at?: string }
-        Update: { id?: string; ticket_id?: string; sender_id?: string; body?: string; created_at?: string }
-        Relationships: [
-          { foreignKeyName: "support_ticket_messages_ticket_id_fkey"; columns: ["ticket_id"]; isOneToOne: false; referencedRelation: "support_tickets"; referencedColumns: ["id"] },
-          { foreignKeyName: "support_ticket_messages_sender_id_fkey"; columns: ["sender_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
-        ]
-      }
-      support_ticket_attachments: {
-        Row: { id: string; ticket_id: string; message_id: string; uploaded_by: string; storage_path: string; original_filename: string; mime_type: string; size_bytes: number; created_at: string }
-        Insert: { id?: string; ticket_id: string; message_id: string; uploaded_by: string; storage_path: string; original_filename: string; mime_type: string; size_bytes: number; created_at?: string }
-        Update: { id?: string; ticket_id?: string; message_id?: string; uploaded_by?: string; storage_path?: string; original_filename?: string; mime_type?: string; size_bytes?: number; created_at?: string }
-        Relationships: [
-          { foreignKeyName: "support_ticket_attachments_ticket_id_fkey"; columns: ["ticket_id"]; isOneToOne: false; referencedRelation: "support_tickets"; referencedColumns: ["id"] },
-          { foreignKeyName: "support_ticket_attachments_message_fk"; columns: ["message_id"]; isOneToOne: false; referencedRelation: "support_ticket_messages"; referencedColumns: ["id"] },
-          { foreignKeyName: "support_ticket_attachments_uploaded_by_fkey"; columns: ["uploaded_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
-        ]
-      }
-      support_ticket_events: {
-        Row: { id: string; ticket_id: string; actor_id: string | null; event_type: string; old_status: string | null; new_status: string | null; created_at: string }
-        Insert: { id?: string; ticket_id: string; actor_id?: string | null; event_type: string; old_status?: string | null; new_status?: string | null; created_at?: string }
-        Update: { id?: string; ticket_id?: string; actor_id?: string | null; event_type?: string; old_status?: string | null; new_status?: string | null; created_at?: string }
-        Relationships: [
-          { foreignKeyName: "support_ticket_events_ticket_id_fkey"; columns: ["ticket_id"]; isOneToOne: false; referencedRelation: "support_tickets"; referencedColumns: ["id"] },
-          { foreignKeyName: "support_ticket_events_actor_id_fkey"; columns: ["actor_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
-        ]
-      }
       assignments: {
         Row: {
           auto_validation_at: string | null
@@ -505,6 +424,54 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_feedback_reviews: {
+        Row: {
+          created_at: string
+          developer_id: string
+          feedback_id: string
+          id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          developer_id: string
+          feedback_id: string
+          id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          developer_id?: string
+          feedback_id?: string
+          id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_feedback_reviews_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "developer_feedback_reviews_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: true
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           app_version: string | null
@@ -844,6 +811,70 @@ export type Database = {
           {
             foreignKeyName: "fraud_reviews_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_exception_requests: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          evidence_storage_path: string | null
+          id: string
+          reason: string
+          requested_dates: string[]
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tester_id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          evidence_storage_path?: string | null
+          id?: string
+          reason: string
+          requested_dates: string[]
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tester_id: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          evidence_storage_path?: string | null
+          id?: string
+          reason?: string
+          requested_dates?: string[]
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tester_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_exception_requests_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_exception_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_exception_requests_tester_id_fkey"
+            columns: ["tester_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1473,43 +1504,231 @@ export type Database = {
           },
         ]
       }
-      tests: {
+      support_tickets: {
         Row: {
-          app_id: string
+          category: string
           created_at: string
-          description: string | null
-          developer_id: string
-          end_date: string | null
+          description: string
           id: string
-          min_testers: number
-          start_date: string | null
+          priority: string
           status: string
+          subject: string
+          ticket_number: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          priority?: string
+          status?: string
+          subject: string
+          ticket_number?: never
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: string
+          status?: string
+          subject?: string
+          ticket_number?: never
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_media: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          id: string
+          media_type: string
+          sort_order: number
+          storage_path: string
+          test_id: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          media_type: string
+          sort_order?: number
+          storage_path: string
+          test_id: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string
+          sort_order?: number
+          storage_path?: string
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_media_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_requirements: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_mandatory: boolean
+          requirement_type: string
+          sort_order: number
+          test_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_mandatory?: boolean
+          requirement_type?: string
+          sort_order?: number
+          test_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_mandatory?: boolean
+          requirement_type?: string
+          sort_order?: number
+          test_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_requirements_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_steps: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_required: boolean
+          step_order: number
+          test_id: string
           title: string
           updated_at: string
         }
         Insert: {
-          app_id: string
           created_at?: string
-          description?: string | null
-          developer_id: string
-          end_date?: string | null
+          description: string
           id?: string
-          min_testers?: number
-          start_date?: string | null
-          status?: string
+          is_required?: boolean
+          step_order: number
+          test_id: string
           title: string
           updated_at?: string
         }
         Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_required?: boolean
+          step_order?: number
+          test_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_steps_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tests: {
+        Row: {
+          android_max_api: number | null
+          android_min_api: number | null
+          app_id: string
+          created_at: string
+          description: string | null
+          developer_id: string
+          device_requirements: Json
+          eligibility_criteria: Json
+          end_date: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          min_testers: number
+          short_summary: string | null
+          start_date: string | null
+          status: string
+          tester_instructions: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          android_max_api?: number | null
+          android_min_api?: number | null
+          app_id: string
+          created_at?: string
+          description?: string | null
+          developer_id: string
+          device_requirements?: Json
+          eligibility_criteria?: Json
+          end_date?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          min_testers?: number
+          short_summary?: string | null
+          start_date?: string | null
+          status?: string
+          tester_instructions?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          android_max_api?: number | null
+          android_min_api?: number | null
           app_id?: string
           created_at?: string
           description?: string | null
           developer_id?: string
+          device_requirements?: Json
+          eligibility_criteria?: Json
           end_date?: string | null
+          estimated_duration_minutes?: number | null
           id?: string
           min_testers?: number
+          short_summary?: string | null
           start_date?: string | null
           status?: string
+          tester_instructions?: string | null
           title?: string
           updated_at?: string
         }
@@ -1600,27 +1819,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_my_active_sessions: {
-        Args: never
-        Returns: {
-          id: string
-          created_at: string
-          last_active_at: string
-          user_agent: string | null
-          ip_address: string | null
-          assurance_level: string | null
-          is_current: boolean
-        }[]
-      }
-      get_my_security_activity: {
-        Args: { p_limit?: number }
-        Returns: {
-          id: string
-          event: string
-          occurred_at: string
-          ip_address: string | null
-        }[]
-      }
       add_cohort_test: {
         Args: { p_cohort_id: string; p_test_id: string }
         Returns: number
@@ -1661,11 +1859,58 @@ export type Database = {
           plan_code: string
         }[]
       }
+      get_my_active_sessions: {
+        Args: never
+        Returns: {
+          assurance_level: string
+          created_at: string
+          id: string
+          ip_address: string
+          is_current: boolean
+          last_active_at: string
+          user_agent: string
+        }[]
+      }
+      get_my_security_activity: {
+        Args: { p_limit?: number }
+        Returns: {
+          event: string
+          id: string
+          ip_address: string
+          occurred_at: string
+        }[]
+      }
       remove_cohort_test: {
         Args: { p_cohort_id: string; p_test_id: string }
         Returns: number
       }
       restore_app: { Args: { p_app_id: string }; Returns: undefined }
+      review_medical_exception: {
+        Args: {
+          p_decision: string
+          p_request_id: string
+          p_review_note?: string
+        }
+        Returns: {
+          assignment_id: string
+          created_at: string
+          evidence_storage_path: string | null
+          id: string
+          reason: string
+          requested_dates: string[]
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tester_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "medical_exception_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_app: {
         Args: {
           p_app_id: string
