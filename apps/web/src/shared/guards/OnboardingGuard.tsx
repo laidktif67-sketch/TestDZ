@@ -10,6 +10,17 @@ type GuardState =
   | { userId: string; status: "ready"; completed: boolean }
   | { userId: string; status: "error" };
 
+const ONBOARDING_PATHS = new Set(["/onboarding", "/interests"]);
+
+function GuardLoading({ message }: { message: string }) {
+  return (
+    <main className="route-guard-screen" aria-live="polite" aria-busy="true">
+      <span className="route-guard-spinner" aria-hidden="true" />
+      <p>{message}</p>
+    </main>
+  );
+}
+
 export default function OnboardingGuard() {
   const { user, roles, rolesLoading, rolesError, refreshRoles } = useIdentity();
   const location = useLocation();
@@ -49,7 +60,7 @@ export default function OnboardingGuard() {
     return () => {
       active = false;
     };
-  }, [userId, attempt, location.pathname]);
+  }, [userId, attempt]);
 
   const retry = useCallback(() => {
     setAttempt((current) => current + 1);
@@ -58,12 +69,7 @@ export default function OnboardingGuard() {
   if (!userId) return <Navigate to="/auth" replace />;
 
   if (state.userId !== userId || state.status === "loading") {
-    return (
-      <main className="route-guard-screen" aria-live="polite" aria-busy="true">
-        <span className="route-guard-spinner" aria-hidden="true" />
-        <p>Checking your onboarding progress…</p>
-      </main>
-    );
+    return <GuardLoading message="Checking your onboarding progress…" />;
   }
 
   if (state.status === "error") {
@@ -71,30 +77,26 @@ export default function OnboardingGuard() {
       <main className="route-guard-screen" role="alert">
         <div className="route-guard-message">
           <strong>We couldn’t load your onboarding progress.</strong>
-          <p>Check your connection and try again.</p>
+          <p>Access is paused until your account setup can be verified. Check your connection and retry.</p>
           <button type="button" onClick={retry}>Retry</button>
         </div>
       </main>
     );
   }
 
+  const isOnboardingRoute = ONBOARDING_PATHS.has(location.pathname);
   const isProfileCompletion = location.pathname === "/complete-profile";
 
-  // The completion timestamp is written by complete_onboarding after interests are saved.
-  // Profile completion remains optional, so this guard never forces users to fill it in.
-  if (isProfileCompletion && !state.completed) {
-    return <Navigate to="/onboarding" replace />;
+  // New accounts may visit only the onboarding steps until the server confirms completion.
+  if (!state.completed) {
+    if (isOnboardingRoute) return <Outlet />;
+    return <Navigate to="/onboarding" replace state={{ from: location.pathname }} />;
   }
 
-  if (!isProfileCompletion && state.completed) {
-    if (rolesLoading) {
-      return (
-        <main className="route-guard-screen" aria-live="polite" aria-busy="true">
-          <span className="route-guard-spinner" aria-hidden="true" />
-          <p>Preparing your workspace…</p>
-        </main>
-      );
-    }
+  // Onboarding is complete. Keep the optional profile-details page available,
+  // but send attempts to restart onboarding to the account's correct workspace.
+  if (isOnboardingRoute) {
+    if (rolesLoading) return <GuardLoading message="Preparing your workspace…" />;
 
     if (rolesError) {
       return (
@@ -110,6 +112,8 @@ export default function OnboardingGuard() {
 
     return <Navigate to={getHomePath(roles)} replace />;
   }
+
+  if (isProfileCompletion) return <Outlet />;
 
   return <Outlet />;
 }

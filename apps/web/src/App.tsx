@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import AppsPage from "./pages/AppsPage";
-import AppDetailPage from "./pages/AppDetailPage";
+import AppsPage from "./modules/developer/pages/DeveloperAppsPage";
+import AppDetailPage from "./modules/developer/pages/DeveloperAppDetailPage";
 import AuthPage from "./pages/AuthPage";
 import SignupSuccessPage from "./pages/SignupSuccessPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -18,6 +18,7 @@ import MyTestsPage from "./modules/tester/pages/MyTestsPage";
 import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
 import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
+import DeveloperMyTestsPage from "./modules/developer/pages/DeveloperMyTestsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
@@ -68,58 +69,61 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccessPage />} />
         <Route path="/invalid-otp" element={<InvalidOtpPage />} />
-        <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
-        <Route path="/assignments/:id/progress" element={<ActiveAssignmentProgressPage />} />
-        <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
-        <Route path="/assignments/:id/summary" element={<TestCompletionSummaryPage />} />
 
         <Route element={<AuthGuard />}>
           <Route element={<OnboardingGuard />}>
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/interests" element={<InterestsPage />} />
             <Route path="/complete-profile" element={<ProfileCompletionPage />} />
-          </Route>
-          <Route path="/profile" element={<TesterProfilePage />} />
-          <Route path="/feedback-history" element={<FeedbackHistoryPage />} />
-          <Route path="/submit-feedback" element={<SubmitFeedbackPage />} />
-          <Route path="/report-problem" element={<ReportProblemPage />} />
-          <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
-          <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
-          <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
-          <Route path="/help" element={<HelpSupportPage />} />
-          <Route path="/support" element={<SupportCenterPage />} />
-          <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
-          <Route path="/live-chat" element={<LiveChatPage />} />
-          <Route path="/help-support" element={<Navigate to="/help" replace />} />
-          <Route path="/settings" element={<SettingsSecurityPage />} />
-          <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
-          <Route path="/active-sessions" element={<ActiveSessionsPage />} />
-          <Route element={<RoleGuard requiredRole="tester" />}>
-            <Route path="/tester/security-history" element={<LoginActivitySecurityPage />} />
-          </Route>
-          <Route path="/notifications" element={<NotificationsCenterPage />} />
-          <Route element={<RoleGuard requiredRole="admin" />}>
-            <Route path="/admin" element={<TesterSectionPage />} />
-          </Route>
-          <Route path="/dashboard" element={<RoleHomeRedirect />} />
-          <Route element={<RoleGuard requiredRole="tester" />}>
-            <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
-            <Route path="/my-tests" element={<MyTestsPage />} />
-            <Route path="/assignments/:id/reward" element={<TestCompletionRewardPage />} />
-            <Route path="/leaderboard" element={<TesterLeaderboardPage />} />
-            <Route path="/tester/language-appearance" element={<LanguageAppearancePage />} />
-            <Route path="/tester/privacy" element={<PrivacyDataManagementPage />} />
-            <Route path="/check-in-history" element={<CheckInHistoryPage />} />
-            <Route path="/activity-history" element={<ActivityHistoryPage />} />
-            <Route path="/referral-program" element={<ReferralProgramPage />} />
-            <Route path="/referral-history" element={<ReferralHistoryPage />} />
-            <Route path="/discover-tests" element={<DiscoverTestsPage />} />
-            <Route path="/tests/:id" element={<TestPreviewPage />} />
-          </Route>
-          <Route element={<RoleGuard requiredRole="developer" />}>
-            <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
-            <Route path="/apps" element={<AppsPage />} />
-            <Route path="/apps/:id" element={<AppDetailPage />} />
+
+            <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
+            <Route path="/assignments/:id/progress" element={<ActiveAssignmentProgressPage />} />
+            <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
+            <Route path="/assignments/:id/summary" element={<TestCompletionSummaryPage />} />
+
+            <Route path="/profile" element={<TesterProfilePage />} />
+            <Route path="/feedback-history" element={<FeedbackHistoryPage />} />
+            <Route path="/submit-feedback" element={<SubmitFeedbackPage />} />
+            <Route path="/report-problem" element={<ReportProblemPage />} />
+            <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
+            <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
+            <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
+            <Route path="/help" element={<HelpSupportPage />} />
+            <Route path="/support" element={<SupportCenterPage />} />
+            <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
+            <Route path="/live-chat" element={<LiveChatPage />} />
+            <Route path="/help-support" element={<Navigate to="/help" replace />} />
+            <Route path="/settings" element={<SettingsSecurityPage />} />
+            <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
+            <Route path="/active-sessions" element={<ActiveSessionsPage />} />
+            <Route element={<RoleGuard requiredRole="tester" />}>
+              <Route path="/tester/security-history" element={<LoginActivitySecurityPage />} />
+            </Route>
+            <Route path="/notifications" element={<NotificationsCenterPage />} />
+            <Route element={<RoleGuard requiredRole="admin" />}>
+              <Route path="/admin" element={<TesterSectionPage />} />
+            </Route>
+            <Route path="/dashboard" element={<RoleHomeRedirect />} />
+            <Route element={<RoleGuard requiredRole="tester" />}>
+              <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
+              <Route path="/my-tests" element={<MyTestsPage />} />
+              <Route path="/assignments/:id/reward" element={<TestCompletionRewardPage />} />
+              <Route path="/leaderboard" element={<TesterLeaderboardPage />} />
+              <Route path="/tester/language-appearance" element={<LanguageAppearancePage />} />
+              <Route path="/tester/privacy" element={<PrivacyDataManagementPage />} />
+              <Route path="/check-in-history" element={<CheckInHistoryPage />} />
+              <Route path="/activity-history" element={<ActivityHistoryPage />} />
+              <Route path="/referral-program" element={<ReferralProgramPage />} />
+              <Route path="/referral-history" element={<ReferralHistoryPage />} />
+              <Route path="/discover-tests" element={<DiscoverTestsPage />} />
+              <Route path="/tests/:id" element={<TestPreviewPage />} />
+            </Route>
+            <Route element={<RoleGuard requiredRole="developer" />}>
+              <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
+              <Route path="/developer/tests" element={<DeveloperMyTestsPage />} />
+              <Route path="/apps" element={<AppsPage />} />
+              <Route path="/apps/:id" element={<AppDetailPage />} />
+            </Route>
           </Route>
         </Route>
 
