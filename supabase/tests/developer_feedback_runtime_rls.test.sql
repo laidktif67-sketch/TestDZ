@@ -1,6 +1,6 @@
 begin;
 
-select plan(15);
+select plan(14);
 
 -- Isolated fixture graph: two developers, two testers, two tests, and one
 -- feedback record per tester. All rows are rolled back at the end of the test.
