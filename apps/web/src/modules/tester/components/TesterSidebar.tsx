@@ -117,7 +117,7 @@ function getTesterActiveHref(pathname: string): string {
   if (pathname === "/notifications") return "/notifications";
   if (pathname === "/profile" || pathname.startsWith("/profile/")) return "/profile";
   if (pathname.startsWith("/help") || pathname.startsWith("/support") || pathname === "/report-problem" || pathname === "/live-chat") return "/help-support";
-  if (pathname.startsWith("/settings") || pathname === "/language-appearance" || pathname === "/privacy-data-management" || pathname === "/login-activity-security" || pathname === "/notification-preferences") return "/settings";
+  if (pathname.startsWith("/settings") || pathname === "/language-appearance" || pathname === "/tester/language-appearance" || pathname === "/privacy-data-management" || pathname === "/login-activity-security" || pathname === "/notification-preferences" || pathname === "/active-sessions" || pathname === "/tester/security-history") return "/settings";
   if (pathname === "/apps") return "/apps";
   if (pathname === "/developer-dashboard") return "/developer-dashboard";
   if (pathname.startsWith("/admin")) return "/admin";
