@@ -59,7 +59,7 @@ with check (
   and exists (
     select 1 from public.support_tickets t
     where t.id = support_ticket_messages.ticket_id
-      and t.status not in ('closed')
+      and t.status <> 'closed'
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
   )
 );
@@ -212,6 +212,7 @@ before update of status, priority on public.support_tickets
 for each row execute function private.audit_support_ticket_changes();
 
 drop policy if exists support_tickets_select_owner_or_admin on public.support_tickets;
+drop policy if exists support_tickets_select_owner_or_support on public.support_tickets;
 create policy support_tickets_select_owner_or_support
 on public.support_tickets for select to authenticated
 using (user_id = (select auth.uid()) or (select private.is_support_staff()));
@@ -246,27 +247,7 @@ with check (
     select 1 from public.support_tickets t
     where t.id = case
       when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-      and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
-      and t.status <> 'closed'
-  )
-);
-
-drop policy if exists support_attachments_select_participants on storage.objects;
-create policy support_attachments_select_participants
-on storage.objects for select to authenticated
-using (
-  bucket_id = 'support-attachments'
-  and (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-  and exists (
-    select 1 from public.support_tickets t
-    where t.id = ((storage.foldername(name))[1])::uuid
-      and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
-  )
-);
-
-commit;
-
-        then ((storage.foldername(name))[1])::uuid
+      then ((storage.foldername(name))[1])::uuid
       else null
     end
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
@@ -284,13 +265,7 @@ using (
     select 1 from public.support_tickets t
     where t.id = case
       when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-      and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
-  )
-);
-
-commit;
-
-        then ((storage.foldername(name))[1])::uuid
+      then ((storage.foldername(name))[1])::uuid
       else null
     end
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
