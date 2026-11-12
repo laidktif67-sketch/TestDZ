@@ -87,4 +87,3 @@ create policy notifications_update_read_at on public.notifications
   );
 
 -- Allow owners to update only read/archive state; recipient_role remains immutable to clients.
-grant update (read_at, archived_at) on public.notifications to authenticated;
