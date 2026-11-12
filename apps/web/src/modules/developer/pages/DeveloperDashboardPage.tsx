@@ -247,19 +247,19 @@ export default function DeveloperDashboardPage() {
         <span className="dd-nav-label">APPS & WORKSPACE</span>
         <Link to="/apps" className="dd-nav-link"><Icon name="apps"/><span>{t.apps}</span><b>{counts.total}</b></Link>
         <Link to="/apps" className="dd-nav-link"><Icon name="plus"/><span>{t.create}</span></Link>
-        <span className="dd-nav-link dd-disabled"><Icon name="tests"/><span>{t.tests}</span><em>{t.soon}</em></span>
-        <span className="dd-nav-link dd-disabled"><Icon name="chart"/><span>{t.analytics}</span><em>{t.soon}</em></span>
+        <Link to="/developer/tests" className="dd-nav-link"><Icon name="tests"/><span>{t.tests}</span></Link>
+        <Link to="/developer/analytics" className="dd-nav-link"><Icon name="chart"/><span>{t.analytics}</span></Link>
         <span className="dd-nav-link dd-disabled"><Icon name="users"/><span>{t.developers}</span><em>{t.soon}</em></span>
         <span className="dd-nav-label">ACCOUNT</span>
         <Link to="/developer/notifications" className="dd-nav-link"><Icon name="bell"/><span>Notifications</span></Link>
         <Link to="/developer/feedback" className="dd-nav-link"><Icon name="feedback"/><span>Feedback</span></Link>
         <Link to="/developer/help" className="dd-nav-link"><Icon name="help"/><span>Help Center</span></Link>
         <Link to="/developer/support" className="dd-nav-link"><Icon name="headset"/><span>Support Tickets</span></Link>
-        <Link to="/profile" className="dd-nav-link"><Icon name="wallet"/><span>{t.billing}</span></Link>
-        <Link to="/profile" className="dd-nav-link"><Icon name="settings"/><span>{t.settings}</span></Link>
+        <Link to="/developer/subscription" className="dd-nav-link"><Icon name="wallet"/><span>{t.billing}</span></Link>
+        <Link to="/developer/settings" className="dd-nav-link"><Icon name="settings"/><span>{t.settings}</span></Link>
       </nav>
       <div className="dd-promo"><div className="dd-rocket"><Icon name="rocket" size={43}/></div><strong>{t.promoTitle}</strong><p>{t.promoBody}</p><Link to="/apps">{t.promoCta}<Icon name="arrow" size={15}/></Link></div>
-      <div className="dd-user-menu-wrap"><button type="button" className="dd-user dd-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><span className="dd-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</span><span><strong>{name}</strong><small>{t.account}</small></span><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="dd-workspace-menu"><Link to="/profile" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>{t.settings}</span></Link>{canTester&&<><span className="dd-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span></Link><Link to="/developer-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span><Icon name="check" size={14}/></Link></>}</div>}</div>
+      <div className="dd-user-menu-wrap"><button type="button" className="dd-user dd-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><span className="dd-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</span><span><strong>{name}</strong><small>{t.account}</small></span><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="dd-workspace-menu"><Link to="/developer/settings" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>{t.settings}</span></Link>{canTester&&<><span className="dd-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span></Link><Link to="/developer-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span><Icon name="check" size={14}/></Link></>}</div>}</div>
       {previewMode?<div className="dd-preview-note">{t.preview}</div>:<button className="dd-signout" onClick={async()=>{await supabase?.auth.signOut();}}><Icon name="arrow" size={17}/>Sign Out</button>}
     </aside>
 
