@@ -91,7 +91,21 @@ export default function DeveloperCreateTestPage() {
     setStep(value => Math.min(8, value + 1) as Stage);
   }
 
-  async function saveAsDraft() {\n    if (!selectedApp) { setSaveError("Select an application before saving your draft."); setStep(1); return; }\n    if (title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters before saving."); setStep(2); return; }\n    await publishDraft();\n  }\n\n  async function publishDraft() {
+  async function saveAsDraft() {
+    if (!selectedApp) {
+      setSaveError("Select an application before saving your draft.");
+      setStep(1);
+      return;
+    }
+    if (title.trim().length < 3) {
+      setSaveError("Enter a test title with at least 3 characters before saving.");
+      setStep(2);
+      return;
+    }
+    await publishDraft();
+  }
+
+  async function publishDraft() {
     if (!supabase || !selected) return;
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) { navigate("/auth", { replace: true }); return; }
