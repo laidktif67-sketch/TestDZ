@@ -141,7 +141,7 @@ export default function DeveloperCreateTestPage() {
         <Link to="/developer-dashboard"><Icon name="chart" />Analytics</Link>
         <Link to="/developer-dashboard"><Icon name="feedback" />Feedback</Link>
         <Link to="/pricing"><Icon name="crown" />Subscription</Link>
-        <Link to="/settings"><Icon name="settings" />Settings</Link>
+        <Link to="/developer/settings"><Icon name="settings" />Settings</Link>
         <Link to="/help"><Icon name="help" />Help & Support</Link>
       </nav>
       <div className="dct-promo"><span>🚀</span><strong>Reach more users<br />with TestDZ</strong><Link to="/pricing">Upgrade Plan <Icon name="arrow" size={15} /></Link></div>
