@@ -20,6 +20,7 @@ import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import DeveloperMyTestsPage from "./modules/developer/pages/DeveloperMyTestsPage";
 import DeveloperCreateTestPage from "./modules/developer/pages/DeveloperCreateTestPage";
+import DeveloperSettingsPage from "./modules/developer/pages/DeveloperSettingsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
@@ -123,6 +124,7 @@ export default function App() {
               <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
               <Route path="/developer/tests" element={<DeveloperMyTestsPage />} />
               <Route path="/developer/tests/new" element={<DeveloperCreateTestPage />} />
+              <Route path="/developer/settings" element={<DeveloperSettingsPage />} />
               <Route path="/apps" element={<AppsPage />} />
               <Route path="/apps/:id" element={<AppDetailPage />} />
             </Route>
