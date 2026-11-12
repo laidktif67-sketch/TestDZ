@@ -1567,7 +1567,9 @@ export type Database = {
           created_at: string
           event_type: string
           id: string
+          new_priority: string | null
           new_status: string | null
+          old_priority: string | null
           old_status: string | null
           ticket_id: string
         }
@@ -1576,7 +1578,9 @@ export type Database = {
           created_at?: string
           event_type: string
           id?: string
+          new_priority?: string | null
           new_status?: string | null
+          old_priority?: string | null
           old_status?: string | null
           ticket_id: string
         }
@@ -1585,7 +1589,9 @@ export type Database = {
           created_at?: string
           event_type?: string
           id?: string
+          new_priority?: string | null
           new_status?: string | null
+          old_priority?: string | null
           old_status?: string | null
           ticket_id?: string
         }
