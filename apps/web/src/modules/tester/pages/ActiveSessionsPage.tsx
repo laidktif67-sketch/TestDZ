@@ -68,9 +68,9 @@ export default function ActiveSessionsPage() {
   return <div className="td-dashboard as-dashboard">
     <TesterSidebar nav={nav} name={firstName} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
     <main className="td-main as-main">
-      <header className="as-topbar">
-        <label className="as-search"><Icon name="search" size={20}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" readOnly/></label>
-        <div className="as-user"><Link to="/profile"><b>{firstName.slice(0,2).toUpperCase()}</b><span>{firstName}</span><Icon name="chevron" size={16}/></Link></div>
+      <header className="td-topbar">
+        <label className="td-search" role="search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" readOnly/></label>
+        <div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short" aria-label="Your profile"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{firstName}</strong><Icon name="chevron" size={16}/></Link></div>
       </header>
       <div className="as-content">
         <Link to="/settings" className="as-back"><Icon name="arrow" size={17}/>Back to Settings</Link>
