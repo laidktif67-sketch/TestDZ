@@ -1,6 +1,6 @@
 begin;
 
-select plan(17);
+select plan(16);
 
 select ok(
   to_regclass('public.support_ticket_messages') is not null,
