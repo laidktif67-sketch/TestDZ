@@ -182,7 +182,7 @@ export default function DeveloperNotificationsPage() {
         <Link to="/developer/feedback"><Icon name="feedback"/>Feedback</Link>
         <Link className="active" to="/developer/notifications"><Icon name="bell"/>Notifications</Link>
         <Link to="/developer/settings"><Icon name="settings"/>Settings</Link>
-        <Link to="/help"><Icon name="users"/>Help & Support</Link>
+        <Link to="/developer/help"><Icon name="users"/>Help & Support</Link>
       </nav>
       <div className="dn-promo"><div>🚀</div><b>Get more insights with TestDZ Analytics</b><Link to="/developer/subscription">Upgrade Plan <Icon name="arrow" size={14}/></Link></div>
     </aside>
