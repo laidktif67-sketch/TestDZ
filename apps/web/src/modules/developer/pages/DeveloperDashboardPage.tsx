@@ -254,6 +254,7 @@ export default function DeveloperDashboardPage() {
         <Link to="/developer/notifications" className="dd-nav-link"><Icon name="bell"/><span>Notifications</span></Link>
         <Link to="/developer/feedback" className="dd-nav-link"><Icon name="feedback"/><span>Feedback</span></Link>
         <Link to="/developer/help" className="dd-nav-link"><Icon name="help"/><span>Help Center</span></Link>
+        <Link to="/developer/support" className="dd-nav-link"><Icon name="headset"/><span>Support Tickets</span></Link>
         <Link to="/profile" className="dd-nav-link"><Icon name="wallet"/><span>{t.billing}</span></Link>
         <Link to="/profile" className="dd-nav-link"><Icon name="settings"/><span>{t.settings}</span></Link>
       </nav>
