@@ -1,5 +1,5 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import "../styles/tester-dashboard.css";
 import "../styles/tester-sidebar.css";
@@ -104,6 +104,26 @@ type TesterSidebarProps = {
 
 
 
+
+function getTesterActiveHref(pathname: string): string {
+  if (pathname === "/discover-tests" || pathname.startsWith("/tests/")) return "/discover-tests";
+  if (pathname === "/my-tests" || pathname.startsWith("/my-tests/") || pathname === "/submit-feedback" || pathname === "/test-completion-summary") return "/my-tests";
+  if (pathname === "/feedback-history" || pathname.startsWith("/feedback/")) return "/feedback-history";
+  if (pathname === "/wallet-rewards" || pathname.startsWith("/withdrawal-") || pathname === "/test-completion-reward") return "/wallet-rewards";
+  if (pathname.startsWith("/referral")) return "/referral-program";
+  if (pathname === "/activity-history") return "/activity-history";
+  if (pathname === "/check-in-history") return "/check-in-history";
+  if (pathname === "/leaderboard") return "/leaderboard";
+  if (pathname === "/notifications") return "/notifications";
+  if (pathname === "/profile" || pathname.startsWith("/profile/")) return "/profile";
+  if (pathname.startsWith("/help") || pathname.startsWith("/support") || pathname === "/report-problem" || pathname === "/live-chat") return "/help-support";
+  if (pathname.startsWith("/settings") || pathname === "/language-appearance" || pathname === "/privacy-data-management" || pathname === "/login-activity-security" || pathname === "/notification-preferences") return "/settings";
+  if (pathname === "/apps") return "/apps";
+  if (pathname === "/developer-dashboard") return "/developer-dashboard";
+  if (pathname.startsWith("/admin")) return "/admin";
+  return "/tester-dashboard";
+}
+
 export default function TesterSidebar({
   nav, name, firstName, avatar, roles, isAdmin, isDeveloper,
   workspaceMenuOpen, setWorkspaceMenuOpen, previewMode, sidebarClassName
@@ -111,7 +131,7 @@ export default function TesterSidebar({
   return (
     <aside className={`td-sidebar ${sidebarClassName ?? ""}`.trim()}>
       <Link to="/tester-dashboard" className="td-brand"><span className="td-brand-flask"><Icon name="flask" size={31}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
-      <nav className="td-side-nav">{nav.map((item) => item.href.startsWith("#") ? <a key={item.label} href={item.href} className="td-nav-link"><Icon name={item.icon} size={20}/><span>{item.label}</span></a> : <Link key={item.label} to={item.href} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon} size={20}/><span>{item.label}</span></Link>)}</nav>
+      <nav className="td-side-nav">{sidebarNav.map((item) => <Link key={item.href} to={item.href} aria-current={item.active ? "page" : undefined} className={`td-nav-link ${item.active ? "active" : ""}`}><Icon name={item.icon} size={20}/><span>{item.label}</span></Link>)}</nav>
       <div className="td-sidebar-promo"><div className="td-rocket"><Icon name="trophy" size={40}/></div><strong>Reach Your Full Potential</strong><p>Build skills, earn points and grow with TestDZ!</p><Link to="/wallet-rewards">View Rewards <Icon name="arrow" size={14}/></Link></div>
       <div className="td-user-menu-wrap"><button type="button" className="td-user-mini td-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><div className="td-avatar">{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,1).toUpperCase()}</div><div><strong>{name}</strong><small>{isAdmin ? "Admin" : isDeveloper ? "Developer" : roles.includes("tester") ? "Tester" : "Member"}</small></div><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="td-workspace-menu"><Link to="/profile" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>Profile settings</span></Link>{((roles.includes("tester") && roles.includes("developer")) || isAdmin)&&<><span className="td-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span><Icon name="check" size={14}/></Link><Link to="/developer-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span></Link></>}</div>}</div>
       {previewMode ? <div className="td-signout td-preview-note">Preview mode · read only</div> : <button className="td-signout" onClick={async () => { await supabase?.auth.signOut(); }}><Icon name="logout"/>Sign Out</button>}
