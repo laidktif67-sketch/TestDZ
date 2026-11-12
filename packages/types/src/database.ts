@@ -433,6 +433,7 @@ export type Database = {
           resolution_note: string | null
           resolved_at: string | null
           status: string
+          priority: string
           updated_at: string
         }
         Insert: {
@@ -443,6 +444,7 @@ export type Database = {
           resolution_note?: string | null
           resolved_at?: string | null
           status?: string
+          priority?: string
           updated_at?: string
         }
         Update: {
@@ -453,6 +455,7 @@ export type Database = {
           resolution_note?: string | null
           resolved_at?: string | null
           status?: string
+          priority?: string
           updated_at?: string
         }
         Relationships: [
