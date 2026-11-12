@@ -137,7 +137,7 @@ export default function DeveloperCreateTestPage() {
         <Link to="/apps"><Icon name="apps" />My Apps</Link>
         <Link to="/developer/tests/new" className="active"><Icon name="tests" />Create Test</Link>
         <Link to="/developer/tests"><Icon name="tests" />My Tests</Link>
-        <Link to="/tester-dashboard"><Icon name="users" />Testers</Link>
+        <Link to="/developer/testers"><Icon name="users" />Testers</Link>
         <Link to="/developer-dashboard"><Icon name="chart" />Analytics</Link>
         <Link to="/developer/feedback"><Icon name="feedback" />Feedback</Link>
         <Link to="/developer/notifications"><Icon name="bell" />Notifications</Link>
