@@ -1,6 +1,6 @@
 begin;
 
-select plan(15);
+select plan(18);
 
 select ok(
   to_regclass('public.developer_feedback_messages') is not null
@@ -119,6 +119,31 @@ select ok(
   not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'feedback_id', 'UPDATE')
   and not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'developer_id', 'UPDATE'),
   'feedback ownership and developer identity remain immutable to clients'
+);
+
+select ok(
+  not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'updated_at', 'UPDATE')
+  and not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'resolved_at', 'UPDATE'),
+  'clients cannot forge feedback review update or resolution timestamps'
+);
+
+select ok(
+  not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'updated_at', 'INSERT')
+  and not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'resolved_at', 'INSERT'),
+  'clients cannot supply feedback review timestamps during insert'
+);
+
+select ok(
+  exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.developer_feedback_reviews'::regclass
+      and tgname = 'developer_feedback_review_timestamps'
+      and not tgisinternal
+      and (tgtype & 2) = 2
+      and (tgtype & 4) = 4
+      and (tgtype & 16) = 16
+  ),
+  'database trigger owns review updated_at and resolved_at timestamps'
 );
 
 select ok(
