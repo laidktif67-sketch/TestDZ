@@ -152,9 +152,9 @@ export default function DeveloperSettingsPage() {
         <Link to="/developer/notifications"><Glyph name="bell"/>Notifications</Link>
         <Link to="/developer/subscription"><Glyph name="crown"/>Subscription</Link>
         <Link to="/developer/settings" className="active"><Glyph name="settings"/>Settings</Link>
-        <Link to="/help"><Glyph name="help"/>Help &amp; Support</Link>
+        <Link to="/developer/help"><Glyph name="help"/>Help &amp; Support</Link>
       </nav>
-      <div className="dset-promo"><span>🚀</span><strong>Keep building<br/>with TestDZ</strong><Link to="/pricing">Upgrade Plan <Glyph name="arrow" size={15}/></Link></div>
+      <div className="dset-promo"><span>🚀</span><strong>Keep building<br/>with TestDZ</strong><Link to="/developer/subscription">Upgrade Plan <Glyph name="arrow" size={15}/></Link></div>
     </aside>
 
     <section className="dset-content">
