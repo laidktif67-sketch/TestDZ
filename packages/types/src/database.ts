@@ -439,7 +439,6 @@ export type Database = {
         Insert: {
           developer_id: string
           feedback_id: string
-          id?: string
           resolution_note?: string | null
           status?: string
           priority?: string
