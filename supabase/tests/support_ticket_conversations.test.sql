@@ -1,6 +1,6 @@
 begin;
 
-select plan(11);
+select plan(17);
 
 select ok(
   to_regclass('public.support_ticket_messages') is not null,
@@ -83,12 +83,78 @@ select ok(
   exists (
     select 1 from pg_policies
     where schemaname = 'public' and tablename = 'support_tickets'
-      and policyname = 'support_tickets_insert_owner'
+      and policyname = 'support_tickets_insert_owner_role'
+      and with_check like '%requester_role%'
       and with_check like '%user_roles%'
-      and with_check like '%developer%'
       and with_check like '%tester%'
   ),
   'ticket requester role must match an authorized account role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_tickets'
+      and policyname = 'support_tickets_select_owner_role_or_support'
+      and qual like '%requester_role%'
+      and qual like '%user_roles%'
+  ),
+  'ticket reads are scoped to the active requester role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_messages'
+      and policyname = 'support_ticket_messages_select_participants'
+      and qual like '%requester_role%'
+  ) and exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_messages'
+      and policyname = 'support_ticket_messages_insert_participants'
+      and with_check like '%requester_role%'
+  ),
+  'support messages enforce requester-role isolation for reads and writes'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_attachments'
+      and policyname = 'support_ticket_attachments_select_participants'
+      and qual like '%requester_role%'
+  ) and exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_attachments'
+      and policyname = 'support_ticket_attachments_insert_message_author'
+      and with_check like '%requester_role%'
+  ),
+  'support attachments enforce requester-role isolation'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_events'
+      and policyname = 'support_ticket_events_select_participants'
+      and qual like '%requester_role%'
+  ),
+  'support activity history is scoped to the ticket requester role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname = 'support_attachments_insert_participants'
+      and with_check like '%requester_role%'
+  ) and exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname = 'support_attachments_select_participants'
+      and qual like '%requester_role%'
+  ),
+  'support attachment storage access follows requester-role isolation'
 );
 
 select * from finish();
