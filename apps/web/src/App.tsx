@@ -30,6 +30,7 @@ import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissio
 import AssignmentDetailsPage from "./modules/tester/pages/AssignmentDetailsPage";
 import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmentProgressPage";
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
+import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
@@ -104,6 +105,7 @@ export default function App() {
           <Route element={<RoleGuard requiredRole="tester" />}>
             <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
             <Route path="/my-tests" element={<MyTestsPage />} />
+            <Route path="/assignments/:id/reward" element={<TestCompletionRewardPage />} />
             <Route path="/leaderboard" element={<TesterLeaderboardPage />} />
             <Route path="/tester/language-appearance" element={<LanguageAppearancePage />} />
             <Route path="/tester/privacy" element={<PrivacyDataManagementPage />} />
