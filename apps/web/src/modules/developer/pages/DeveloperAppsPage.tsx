@@ -214,7 +214,8 @@ function AppsPage() {
         <Link to="/developer/tests"><Glyph name="tests"/>My Tests</Link>
         <Link to="/tester-dashboard"><Glyph name="users"/>Testers</Link>
         <Link to="/developer-dashboard"><Glyph name="chart"/>Analytics</Link>
-        <Link to="/developer-dashboard"><Glyph name="feedback"/>Feedback</Link>
+        <Link to="/developer/feedback"><Glyph name="feedback"/>Feedback</Link>
+        <Link to="/developer/notifications"><Glyph name="bell"/>Notifications</Link>
         <Link to="/developer-dashboard"><Glyph name="crown"/>Subscription</Link>
         <Link to="/developer/settings"><Glyph name="settings"/>Settings</Link>
         <Link to="/help"><Glyph name="help"/>Help & Support</Link>
