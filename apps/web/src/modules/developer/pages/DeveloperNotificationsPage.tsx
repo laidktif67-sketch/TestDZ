@@ -135,7 +135,7 @@ export default function DeveloperNotificationsPage() {
     if (!supabase || !user?.id || row.read_at) return;
     setBusy(true); setError("");
     const readAt = new Date().toISOString();
-    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("id", row.id).eq("user_id", user.id);
+    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("id", row.id).eq("user_id", user.id).eq("recipient_role", "developer");
     if (result.error) setError("Could not mark this notification as read.");
     else setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
     setBusy(false);
@@ -144,7 +144,7 @@ export default function DeveloperNotificationsPage() {
     if (!supabase || !user?.id || unread === 0) return;
     setBusy(true); setError("");
     const readAt = new Date().toISOString();
-    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("user_id", user.id).is("read_at", null).is("archived_at", null);
+    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("user_id", user.id).eq("recipient_role", "developer").is("read_at", null).is("archived_at", null);
     if (result.error) setError("Could not mark all notifications as read.");
     else setRows(current => current.map(item => !item.archived_at && !item.read_at ? { ...item, read_at: readAt } : item));
     setBusy(false);
@@ -201,7 +201,7 @@ export default function DeveloperNotificationsPage() {
           <article className="violet"><span><Icon name="star" size={30}/></span><div><b>{importantCount}</b><small>Important</small></div><i>▂▅▇</i></article>
         </section>
         <div className="dn-toolbar">
-          <div className="dn-filters">{filters.map(value => <button key={value} className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>{labels[value]}</button>)}</div>
+          <div className="dn-filters">{filters.map(value => <button key={value} className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>{labels[value]} <small className="dn-filter-count">{counts[value]}</small></button>)}</div>
           <select value={range} onChange={event => setRange(event.target.value)} aria-label="Notification date range"><option value="7">Last 7 Days</option><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option><option value="all">All Time</option></select>
           <button className="dn-mark-all" disabled={busy || unread === 0 || showArchived} onClick={() => void markAllRead()}><Icon name="check" size={16}/>{busy ? "Saving..." : "Mark All as Read"}</button>
         </div>
