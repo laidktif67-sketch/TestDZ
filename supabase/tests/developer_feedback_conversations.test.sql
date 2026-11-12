@@ -94,6 +94,11 @@ select ok(
   'authenticated developers can update feedback priority'
 );
 
+select ok(
+  has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'priority', 'UPDATE'),
+  'authenticated developers can update feedback priority'
+);
+
 select * from finish();
 
 rollback;
