@@ -9,7 +9,24 @@ import "../styles/developer-feedback-details.css";
 
 type ReviewStatus="new"|"under_review"|"planned"|"resolved"|"wont_fix";
 type Priority="low"|"normal"|"high"|"urgent";
-type Feedback={id:string;assignment_id:string;tester_id:string;rating:number|null;body:string;category:string;quality_status:string;created_at:string;assignment:{test:{id:string;title:string;app:{id:string;name:string;icon_url:string|null;package_name:string}|null}|null}|tester:{display_name:string|null;avatar_url:string|null}|null};
+type Feedback = {
+  id: string;
+  assignment_id: string;
+  tester_id: string;
+  rating: number | null;
+  body: string;
+  category: string;
+  quality_status: string;
+  created_at: string;
+  assignment: {
+    test: {
+      id: string;
+      title: string;
+      app: { id: string; name: string; icon_url: string | null; package_name: string } | null;
+    } | null;
+  } | null;
+  tester: { display_name: string | null; avatar_url: string | null } | null;
+};
 type Message={id:string;feedback_id:string;sender_id:string;body:string;created_at:string;sender:{display_name:string|null;avatar_url:string|null}|null};
 type Attachment={id:string;message_id:string|null;storage_path:string;original_filename:string;mime_type:string;size_bytes:number;created_at:string};
 type Event={id:string;actor_id:string|null;event_type:string;old_value:string|null;new_value:string|null;created_at:string};
