@@ -1,8 +1,8 @@
 .tw-page{--tw-blue:#0758e8;--tw-navy:#071f66;--tw-ink:#091b54;--tw-muted:#687b9d;--tw-line:#dce6fa;background:#f1f5ff;min-height:100vh;color:var(--tw-ink);font-family:"Plus Jakarta Sans","Inter",sans-serif;gap:0}
-.tw-page .td-rocket{font-size:76px;line-height:1;margin:0 0 16px}
-.tw-page .td-rocket .td-icon{width:74px;height:74px;stroke:#ffc52d;fill:#ffc52d22;filter:drop-shadow(0 5px 10px #001c4880)}
-.tw-page .td-user-trigger{padding:8px 5px}
-.tw-main{grid-column:2;grid-row:1;max-width:none;width:100%;padding:0 26px 22px;min-width:0}
+
+
+
+.tw-main{max-width:none;width:100%;padding:0 26px 22px;min-width:0}
 .tw-topbar{height:76px}
 .tw-topbar .td-search{width:min(540px,60%);height:47px;background:#fff;border:1px solid #d9e3f5;box-shadow:0 3px 12px #1d4c8610}
 .tw-topbar .td-search input{font-size:13px}
