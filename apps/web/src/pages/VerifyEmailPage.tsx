@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
 import { Brand } from "../shared/components/Brand";
 import { useLenis } from "../hooks/useLenis";
 import { translateAuthError } from "../lib/auth-routing";
