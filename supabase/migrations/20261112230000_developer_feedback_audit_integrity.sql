@@ -1,6 +1,54 @@
 -- Make review status and priority audit events database-authored, not client-authored.
 begin;
 
+-- Timestamps are server-owned. Clients may change the business fields but must
+-- not be able to forge updated_at or resolved_at values.
+create or replace function public.set_developer_feedback_review_timestamps()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at := now();
+
+  if tg_op = 'INSERT' then
+    if new.status = 'resolved' then
+      new.resolved_at := now();
+    else
+      new.resolved_at := null;
+    end if;
+  elsif old.status is distinct from new.status then
+    if new.status = 'resolved' then
+      new.resolved_at := now();
+    else
+      new.resolved_at := null;
+    end if;
+  else
+    new.resolved_at := old.resolved_at;
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.set_developer_feedback_review_timestamps()
+  from public, anon, authenticated;
+
+drop trigger if exists developer_feedback_review_timestamps
+  on public.developer_feedback_reviews;
+create trigger developer_feedback_review_timestamps
+before insert or update on public.developer_feedback_reviews
+for each row
+execute function public.set_developer_feedback_review_timestamps();
+
+revoke update (updated_at, resolved_at)
+  on public.developer_feedback_reviews from authenticated;
+
+-- Replace the table-level INSERT grant with the exact client-writable fields.
+revoke insert on public.developer_feedback_reviews from authenticated;
+grant insert (feedback_id, developer_id, status, resolution_note, priority)
+  on public.developer_feedback_reviews to authenticated;
+
 create or replace function public.log_developer_feedback_review_changes()
 returns trigger
 language plpgsql
@@ -44,8 +92,11 @@ begin
 end;
 $$;
 
-revoke all on function public.log_developer_feedback_review_changes() from public, anon, authenticated;
+revoke all on function public.log_developer_feedback_review_changes()
+  from public, anon, authenticated;
 
+drop trigger if exists developer_feedback_review_audit_insert
+  on public.developer_feedback_reviews;
 drop trigger if exists developer_feedback_review_audit_update
   on public.developer_feedback_reviews;
 create trigger developer_feedback_review_audit_insert
