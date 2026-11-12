@@ -24,8 +24,6 @@ alter table public.notifications
   add constraint notifications_recipient_role_check
   check (recipient_role in ('tester', 'developer'));
 
-create index if not exists notifications_user_role_archived_created_idx
-  on public.notifications (user_id, recipient_role, archived_at, created_at desc);
 
 -- A private, non-client-writable role lookup used by RLS.
 create or replace function private.has_role(p_role text)
