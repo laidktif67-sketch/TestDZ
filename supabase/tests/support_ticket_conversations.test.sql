@@ -86,7 +86,7 @@ select ok(
       and policyname = 'support_tickets_insert_owner_role'
       and with_check like '%requester_role%'
       and with_check like '%user_roles%'
-      and with_check like '%tester%'
+      and with_check like '%admin%'
   ),
   'ticket requester role must match an authorized account role'
 );
