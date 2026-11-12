@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { AppRecord } from "@testdz/types";
-import { supabase } from "../lib/supabase";
-import { Brand } from "../shared/components/Brand";
-import { APP_CATEGORIES, appError } from "../lib/app-utils";
-import { archiveApp, getAppById, restoreApp, updateApp } from "../features/apps/apps-api";
+import { supabase } from "../../../lib/supabase";
+import { Brand } from "../../../shared/components/Brand";
+import { APP_CATEGORIES, appError } from "../../../lib/app-utils";
+import { archiveApp, getAppById, restoreApp, updateApp } from "../../../features/apps/apps-api";
 
 function AppDetailPage(){
   const {id}=useParams();const [app,setApp]=useState<AppRecord|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [editing,setEditing]=useState(()=>new URLSearchParams(window.location.search).get("edit")==="1");const [name,setName]=useState("");const [description,setDescription]=useState("");const [category,setCategory]=useState("other");const [busy,setBusy]=useState(false);const [notice,setNotice]=useState("");

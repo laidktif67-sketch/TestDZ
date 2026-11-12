@@ -3,10 +3,10 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import type { AppLimit, AppRecord } from "@testdz/types";
-import { supabase } from "../lib/supabase";
-import { APP_CATEGORIES, appError } from "../lib/app-utils";
-import { createApp, getAppLimit, listApps, uploadAppIcon } from "../features/apps/apps-api";
-import "./developer-my-apps.css";
+import { supabase } from "../../../lib/supabase";
+import { APP_CATEGORIES, appError } from "../../../lib/app-utils";
+import { createApp, getAppLimit, listApps, uploadAppIcon } from "../../../features/apps/apps-api";
+import "../styles/developer-apps.css";
 
 type Filter = "all" | "published" | "draft" | "paused" | "archived";
 type Sort = "latest" | "oldest" | "name";

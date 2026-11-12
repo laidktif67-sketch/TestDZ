@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import AppsPage from "./pages/AppsPage";
-import AppDetailPage from "./pages/AppDetailPage";
+import AppsPage from "./modules/developer/pages/DeveloperAppsPage";
+import AppDetailPage from "./modules/developer/pages/DeveloperAppDetailPage";
 import AuthPage from "./pages/AuthPage";
 import SignupSuccessPage from "./pages/SignupSuccessPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
