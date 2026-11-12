@@ -1510,6 +1510,141 @@ export type Database = {
           },
         ]
       }
+      support_ticket_attachments: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          mime_type: string
+          original_filename: string
+          size_bytes: number
+          storage_path: string
+          ticket_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          mime_type: string
+          original_filename: string
+          size_bytes: number
+          storage_path: string
+          ticket_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          mime_type?: string
+          original_filename?: string
+          size_bytes?: number
+          storage_path?: string
+          ticket_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_attachments_message_fk"
+            columns: ["ticket_id", "message_id"]
+            isOneToOne: false
+            referencedRelation: "support_ticket_messages"
+            referencedColumns: ["ticket_id", "id"]
+          },
+          {
+            foreignKeyName: "support_ticket_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_ticket_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          new_status: string | null
+          old_status: string | null
+          ticket_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          ticket_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_ticket_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           category: string
@@ -1517,6 +1652,8 @@ export type Database = {
           description: string
           id: string
           priority: string
+          resolved_at: string | null
+          resolved_by: string | null
           status: string
           subject: string
           ticket_number: number
@@ -1529,6 +1666,8 @@ export type Database = {
           description: string
           id?: string
           priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           subject: string
           ticket_number?: never
@@ -1541,6 +1680,8 @@ export type Database = {
           description?: string
           id?: string
           priority?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           subject?: string
           ticket_number?: never
@@ -1548,6 +1689,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "support_tickets_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "support_tickets_user_id_fkey"
             columns: ["user_id"]
