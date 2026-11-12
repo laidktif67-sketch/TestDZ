@@ -116,7 +116,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $message_event$
 begin
   insert into public.developer_feedback_events
     (feedback_id, actor_id, event_type, old_value)
@@ -124,14 +124,14 @@ begin
     (new.feedback_id, new.sender_id, 'message_sent', new.id::text);
   return new;
 end;
-$;
+$message_event$;
 
 create or replace function public.log_developer_feedback_attachment_event()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $attachment_event$
 begin
   insert into public.developer_feedback_events
     (feedback_id, actor_id, event_type, new_value)
@@ -139,7 +139,7 @@ begin
     (new.feedback_id, new.uploaded_by, 'attachment_added', new.original_filename);
   return new;
 end;
-$;
+$attachment_event$;
 
 revoke all on function public.log_developer_feedback_message_event()
   from public, anon, authenticated;
