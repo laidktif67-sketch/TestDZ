@@ -26,7 +26,6 @@ const articles:{id:string;category:Category;question:string;answer:string}[]=[
  {id:"plan",category:"billing",question:"Where can I manage my subscription?",answer:"Open Subscription from your developer workspace to review the current plan, usage and available plan actions."},
  {id:"security",category:"account",question:"How can I protect my developer account?",answer:"Use a unique password, keep your email account secure and never share verification codes. Review your account and security settings when you change devices or team access."}
 ];
-function Glyph({children}:{children:string}){return <span className="dh-glyph" aria-hidden="true">{children}</span>;}
 export default function DeveloperHelpCenterPage(){
  const {user}=useIdentity();const [query,setQuery]=useState("");const [category,setCategory]=useState<Category|"all">("all");const [expanded,setExpanded]=useState<string|null>(null);
  const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Developer";const initial=name.slice(0,1).toUpperCase();
