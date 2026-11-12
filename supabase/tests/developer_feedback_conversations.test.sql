@@ -95,8 +95,9 @@ select ok(
 );
 
 select ok(
-  has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'priority', 'UPDATE'),
-  'authenticated developers can update feedback priority'
+  not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'feedback_id', 'UPDATE')
+  and not has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'developer_id', 'UPDATE'),
+  'feedback ownership and developer identity remain immutable to clients'
 );
 
 select * from finish();
