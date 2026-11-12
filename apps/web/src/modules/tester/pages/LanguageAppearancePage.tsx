@@ -104,10 +104,7 @@ export default function LanguageAppearancePage() {
   return <div className={`td-dashboard la-dashboard ${prefs.compactMode ? "compact" : ""} ${!prefs.animations ? "no-motion" : ""}`}>
     <TesterSidebar nav={nav} name={displayName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
     <main className="td-main la-main">
-      <header className="la-topbar">
-        <label className="la-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label>
-        <div className="la-user"><Link to="/notifications" aria-label="Open notifications"><Icon name="bell" size={25}/><i>3</i></Link><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</b>{displayName}<Icon name="chevron" size={16}/></Link></div>
-      </header>
+      <header className="td-topbar"><label className="td-search" role="search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short" aria-label="Your profile"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><strong>{displayName}</strong><Icon name="chevron" size={16}/></Link></div></header>
       <div className="la-content">
         <Link to="/settings" className="la-back"><Icon name="arrow" size={17}/>Back to Settings</Link>
         <section className="la-hero"><div className="la-hero-icon"><Icon name="settings" size={54}/></div><div className="la-hero-copy"><h1>Language &amp; Appearance Settings</h1><p>Customize your experience with your preferred language and display options.</p></div><div className="la-hero-art"><span>Aa</span><Icon name="monitor" size={58}/></div></section>
