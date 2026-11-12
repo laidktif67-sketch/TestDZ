@@ -30,6 +30,7 @@ import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPa
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
 import DeveloperHelpCenterPage from "./modules/developer/pages/DeveloperHelpCenterPage";
 import DeveloperSupportCenterPage from "./modules/developer/pages/DeveloperSupportCenterPage";
+import DeveloperSupportTicketDetailsPage from "./modules/developer/pages/DeveloperSupportTicketDetailsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
@@ -143,6 +144,7 @@ export default function App() {
               <Route path="/developer/notifications" element={<DeveloperNotificationsPage />} />
               <Route path="/developer/help" element={<DeveloperHelpCenterPage />} />
               <Route path="/developer/support" element={<DeveloperSupportCenterPage />} />
+              <Route path="/developer/support/:id" element={<DeveloperSupportTicketDetailsPage />} />
               <Route path="/apps" element={<AppsPage />} />
               <Route path="/apps/:id" element={<AppDetailPage />} />
             </Route>
