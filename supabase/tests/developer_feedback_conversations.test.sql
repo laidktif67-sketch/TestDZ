@@ -1,6 +1,6 @@
 begin;
 
-select plan(9);
+select plan(10);
 
 select ok(
   to_regclass('public.developer_feedback_messages') is not null
