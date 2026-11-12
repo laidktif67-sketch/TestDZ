@@ -139,7 +139,8 @@ export default function DeveloperCreateTestPage() {
         <Link to="/developer/tests"><Icon name="tests" />My Tests</Link>
         <Link to="/tester-dashboard"><Icon name="users" />Testers</Link>
         <Link to="/developer-dashboard"><Icon name="chart" />Analytics</Link>
-        <Link to="/developer-dashboard"><Icon name="feedback" />Feedback</Link>
+        <Link to="/developer/feedback"><Icon name="feedback" />Feedback</Link>
+        <Link to="/developer/notifications"><Icon name="bell" />Notifications</Link>
         <Link to="/pricing"><Icon name="crown" />Subscription</Link>
         <Link to="/developer/settings"><Icon name="settings" />Settings</Link>
         <Link to="/help"><Icon name="help" />Help & Support</Link>
