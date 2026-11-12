@@ -31,7 +31,7 @@ export default function DeveloperSupportTicketDetailsPage(){
   const [messageResult,attachmentResult,eventResult]=await Promise.all([
    supabase.from("support_ticket_messages").select("id,ticket_id,sender_id,body,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
    supabase.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
-   supabase.from("support_ticket_events").select("id,ticket_id,actor_id,event_type,old_status,new_status,old_priority,new_priority,created_at").eq("ticket_id",id).order("created_at",{ascending:false})
+   supabase.from("support_ticket_events").select("id,ticket_id,actor_id,event_type,old_status,new_status,created_at").eq("ticket_id",id).order("created_at",{ascending:false})
   ]);
   if(messageResult.error||attachmentResult.error||eventResult.error){setError("Some ticket activity could not be loaded. Please refresh or contact support.");}
   setMessages((messageResult.data||[]) as Message[]);setAttachments((attachmentResult.data||[]) as Attachment[]);setEvents((eventResult.data||[]) as TicketEvent[]);setLoading(false);
