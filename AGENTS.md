@@ -1,6 +1,19 @@
 # Agent Instructions — TestDZ
 
-These instructions apply to the entire repository, including `frontend/`.
+These instructions apply to the entire repository.
+
+## Mandatory project governance
+
+Before planning or editing any non-trivial task, read:
+- `docs/ENGINEERING_PLAYBOOK.md` — specialist roles, prompts, workflow, security invariants, and reporting requirements.
+- `docs/ARCHITECTURE.md` — technical architecture.
+- `docs/MASTER_BLUEPRINT.md` — product scope and binding business policies relevant to the task.
+
+If architecture/product documents conflict, do not silently choose one. Find the latest explicit owner decision; if no clear resolution exists, ask the owner before consequential implementation. Do not change canonical product rules as a side effect of unrelated work.
+
+Use the CTO role to coordinate work and invoke the relevant specialist perspectives: Product, Architecture, UI/UX, Frontend, Backend, Database, Security, QA, DevOps, and independent Code Review. These are role-based review responsibilities, not a claim that independent teams are staffed. A single agent may perform multiple roles but must keep their checks distinct and report which were actually performed.
+
+Follow the required workflow in the playbook: discovery → conflict check → plan → scoped implementation → QA → risk-based security review → diff review → PR → owner approval gate → closeout.
 
 ## UI/UX Pro Max is mandatory for UI work
 
@@ -24,7 +37,7 @@ Choose the smallest relevant search mode:
 - For Arabic/RTL interfaces, include `--rtl` in applicable `style` and `product` searches and inspect the returned RTL compatibility.
 - Keep each query focused (2–5 meaningful terms and one dominant intent). Verify that results actually match the requested page/product/platform. If results are empty or irrelevant, retry once with a narrower query; never invent or present a zero-result search as a match.
 
-Examples for this repository (React + TypeScript + Vite + Tailwind; verify package files before relying on this):
+Examples for this repository (verify package files before relying on this):
 ```bash
 python3 .agents/skills/ui-ux-pro-max/scripts/search.py "SaaS dashboard productivity" --design-system -p "TestDZ"
 python3 .agents/skills/ui-ux-pro-max/scripts/search.py "responsive layout overflow" --domain ux
