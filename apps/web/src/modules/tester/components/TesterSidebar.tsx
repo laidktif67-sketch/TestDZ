@@ -128,6 +128,29 @@ export default function TesterSidebar({
   nav, name, firstName, avatar, roles, isAdmin, isDeveloper,
   workspaceMenuOpen, setWorkspaceMenuOpen, previewMode, sidebarClassName
 }: TesterSidebarProps) {
+  const { pathname } = useLocation();
+  const activeHref = nav.find(item => item.active)?.href ?? getTesterActiveHref(pathname);
+  const sidebarNav: TesterSidebarNavItem[] = [
+    { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
+    { label: "Discover Tests", icon: "search", href: "/discover-tests" },
+    { label: "My Tests", icon: "tests", href: "/my-tests" },
+    { label: "Activity & History", icon: "chart", href: "/activity-history" },
+    { label: "Check-in History", icon: "calendar", href: "/check-in-history" },
+    { label: "Feedback History", icon: "star", href: "/feedback-history" },
+    { label: "Leaderboard", icon: "trophy", href: "/leaderboard" },
+    { label: "Notifications", icon: "bell", href: "/notifications" },
+    { label: "Wallet & Rewards", icon: "wallet", href: "/wallet-rewards" },
+    { label: "Referral Program", icon: "users", href: "/referral-program" },
+    { label: "Profile", icon: "user", href: "/profile" },
+    { label: "Help & Support", icon: "headset", href: "/help-support" },
+    { label: "Settings", icon: "settings", href: "/settings" },
+    ...(isDeveloper || isAdmin ? [
+      { label: "Discover Apps", icon: "search", href: "/apps" },
+      { label: "Developer Dashboard", icon: "code", href: "/developer-dashboard" }
+    ] : []),
+    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
+  ].map(item => ({ ...item, active: item.href === activeHref }));
+
   return (
     <aside className={`td-sidebar ${sidebarClassName ?? ""}`.trim()}>
       <Link to="/tester-dashboard" className="td-brand"><span className="td-brand-flask"><Icon name="flask" size={31}/></span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
