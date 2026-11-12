@@ -184,6 +184,12 @@ function AppsPage() {
           <article className="dmy-stat amber"><span className="dmy-stat-icon"><Glyph name="clock" size={29}/></span><div><strong>{counts.draft}</strong><b>Drafts</b></div><span className="dmy-bars"><i/><i/><i/><i/></span></article>
         </section>
 
+        {limit && <section className="dmy-usage" aria-label="Application plan usage">
+          <div className="dmy-usage-copy"><span className="dmy-usage-icon"><Glyph name="apps" size={19}/></span><div><strong>Application slots</strong><small>{limit.current_active_apps} of {limit.max_active_apps} active app slots used</small></div></div>
+          <div className="dmy-usage-track" role="progressbar" aria-label="Active app slots used" aria-valuemin={0} aria-valuemax={limit.max_active_apps} aria-valuenow={Math.min(limit.current_active_apps, limit.max_active_apps)}><span style={{width: (limit.max_active_apps > 0 ? Math.min(100, (limit.current_active_apps / limit.max_active_apps) * 100) : 0) + "%"}}/></div>
+          <span className="dmy-usage-remaining">{Math.max(0, limit.max_active_apps - limit.current_active_apps)} available</span>
+        </section>}
+
         <section className="dmy-toolbar">
           <label className="dmy-filter-search"><Glyph name="search"/><input placeholder="Search by app name or package..." value={search} onChange={e => setSearch(e.target.value)}/></label>
           <div className="dmy-filters">{(["all","published","draft","paused","archived"] as Filter[]).map(value => <button type="button" key={value} className={filter === value ? "selected" : ""} onClick={() => setFilter(value)}>{value === "all" ? "All" : value === "published" ? "Published" : value === "draft" ? "Draft" : value === "paused" ? "Paused" : "Archived"}</button>)}</div>
@@ -191,7 +197,8 @@ function AppsPage() {
           <div className="dmy-layout-toggle"><button type="button" aria-label="Grid view" className={layout === "grid" ? "selected" : ""} onClick={() => setLayout("grid")}>▦</button><button type="button" aria-label="List view" className={layout === "list" ? "selected" : ""} onClick={() => setLayout("list")}>☷</button></div>
         </section>
 
-        {loading ? <div className="dmy-empty">Loading your applications…</div> : visible.length === 0 ? <div className="dmy-empty"><span>▣</span><h2>{search ? "No matching applications" : "Your workspace is ready"}</h2><p>{search ? "Try another app name or package." : "Add your first application to start building your TestDZ workspace."}</p><button type="button" onClick={() => setShowForm(true)} disabled={!limit?.can_create}>＋ Add New App</button></div> :
+        {!loading && apps.length > 0 && <div className="dmy-results-line"><span>Showing <strong>{visible.length}</strong> of <strong>{apps.length}</strong> applications</span>{(search || globalSearch || filter !== "all") && <button type="button" onClick={() => { setSearch(""); setGlobalSearch(""); setFilter("all"); }}>Clear filters</button>}</div>}
+        {loading ? <div className="dmy-empty">Loading your applications…</div> : visible.length === 0 ? <div className="dmy-empty"><span>▣</span><h2>{apps.length > 0 ? "No matching applications" : "Your workspace is ready"}</h2><p>{apps.length > 0 ? "No apps match the current search and status filters. Clear filters to see all your apps." : "Add your first application to start building your TestDZ workspace."}</p>{apps.length > 0 ? <button type="button" onClick={() => { setSearch(""); setGlobalSearch(""); setFilter("all"); }}>Clear filters</button> : <button type="button" onClick={() => setShowForm(true)} disabled={!limit?.can_create}>＋ Add New App</button>}</div> :
           <section className={"dmy-app-grid " + (layout === "list" ? "list-view" : "")}>{visible.map(app => <article className="dmy-app-card" key={app.id}>
             <div className="dmy-card-top"><AppMark app={app}/><div className="dmy-app-title"><strong>{app.name}</strong><small dir="ltr">{app.package_name}</small></div><span className={"dmy-status " + app.status}>{app.status === "published" ? "Published" : app.status === "draft" ? "Draft" : app.status === "paused" ? "Paused" : "Archived"}</span><button type="button" className="dmy-more" aria-label={"More actions for " + app.name} onClick={() => navigate("/apps/" + app.id)}><Glyph name="menu"/></button></div>
             <p className="dmy-description">{app.description || "No description added yet."}</p>
