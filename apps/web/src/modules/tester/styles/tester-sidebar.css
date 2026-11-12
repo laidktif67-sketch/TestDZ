@@ -63,8 +63,15 @@
 
 .td-dashboard.td-dashboard .td-side-nav {
   display: grid;
+  flex: 1 1 auto;
   gap: 5px;
   min-width: 0;
+  min-height: 0;
+  align-content: start;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .td-dashboard.td-dashboard .td-nav-link {
@@ -253,6 +260,10 @@
 
   .td-dashboard.td-dashboard .td-side-nav {
     display: flex;
+    flex: 0 0 auto;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
     justify-content: flex-end;
     gap: 4px;
     overflow-x: auto;
