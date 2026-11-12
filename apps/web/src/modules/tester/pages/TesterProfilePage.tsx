@@ -153,7 +153,7 @@ export default function ProfilePage() {
         previewMode={!profilesApi.isConfigured()}
       />
 
-      <main className="td-main tester-profile-main">
+      <main className="td-main">
         <header className="td-topbar">
           <div className="td-search" aria-label="Current section"><Icon name="user" size={21}/><span>Profile &amp; account settings</span></div>
           <div className="td-top-actions"><Link to="/profile" className="td-profile-short" aria-label="Your profile"><span>{avatarUrl ? <img src={avatarUrl} alt="" /> : initials}</span><b>⌄</b></Link></div>
