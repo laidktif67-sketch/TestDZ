@@ -67,17 +67,25 @@ export default function NotificationPreferencesPage() {
     let alive = true;
     Promise.all([
       supabase.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle(),
-      Promise.resolve(user.user_metadata?.testdz_notification_center_preferences as Partial<Preferences> | undefined)
-    ]).then(([profile, saved]) => {
+      Promise.resolve(user.user_metadata?.testdz_notification_center_preferences as Partial<Preferences> | undefined),
+      Promise.resolve(user.user_metadata?.testdz_notification_preferences as { newTests?: boolean; rewards?: boolean; support?: boolean; system?: boolean; promotions?: boolean } | undefined)
+    ]).then(([profile, saved, legacy]) => {
       if (!alive) return;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
-      if (saved) setPrefs({
-        ...defaults, ...saved,
-        types: { ...defaults.types, ...(saved.types || {}) },
-        delivery: { ...defaults.delivery, ...(saved.delivery || {}) },
-        quiet: { ...defaults.quiet, ...(saved.quiet || {}) },
-        channels: Array.isArray(saved.channels) ? saved.channels : defaults.channels
+      const legacyTypes = legacy ? {
+        newTests: legacy.newTests ?? defaults.types.newTests,
+        rewards: legacy.rewards ?? defaults.types.rewards,
+        supportMessages: legacy.support ?? defaults.types.supportMessages,
+        systemUpdates: legacy.system ?? defaults.types.systemUpdates,
+      } : {};
+      if (saved || legacy) setPrefs({
+        ...defaults, ...(saved || {}),
+        marketing: saved?.marketing ?? legacy?.promotions ?? defaults.marketing,
+        types: { ...defaults.types, ...legacyTypes, ...(saved?.types || {}) },
+        delivery: { ...defaults.delivery, ...(saved?.delivery || {}) },
+        quiet: { ...defaults.quiet, ...(saved?.quiet || {}) },
+        channels: Array.isArray(saved?.channels) ? saved.channels : defaults.channels
       });
     }).catch(() => { if (alive) setError("Could not load your notification preferences."); });
     return () => { alive = false; };
@@ -101,10 +109,7 @@ export default function NotificationPreferencesPage() {
   return <div className="td-dashboard np-dashboard">
     <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase} />
     <main className="td-main np-main">
-      <header className="np-topbar">
-        <label className="np-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" /></label>
-        <div className="np-user"><Link to="/notifications" aria-label="Open notifications"><Icon name="bell" size={25}/><i>3</i></Link><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt="" /> : firstName.slice(0, 2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div>
-      </header>
+      <header className="td-topbar"><label className="td-search" role="search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short" aria-label="Your profile"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><strong>{name || firstName}</strong><Icon name="chevron" size={16}/></Link></div></header>
       <div className="np-content">
         <Link to="/settings" className="np-back"><Icon name="arrow" size={17}/>Back to Settings</Link>
         <section className="np-hero"><div className="np-hero-icon"><Icon name="bell" size={56}/></div><div className="np-hero-copy"><h1>Notification Preferences</h1><p>Choose what notifications you want to receive and how.</p></div><div className="np-hero-art"><Icon name="smartphone" size={104}/><span><Icon name="bell" size={40}/></span><i/><b/></div></section>

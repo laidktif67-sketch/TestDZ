@@ -59,18 +59,13 @@ export default function DiscoverTestsPage(){
  return <div className="td-dashboard dt-page">
   <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={previewMode}/>
   <main className="td-main dt-main">
-   <header className="td-topbar"><div className="td-search" role="search" aria-label="Tester workspace"><Icon name="search" size={20}/><span>Explore testing opportunities</span></div><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><b>⌄</b></Link></div></header>
+   <header className="td-topbar"><label className="td-search" role="search"><Icon name="search" size={21}/><input value={query} onChange={event=>setQuery(event.target.value)} type="search" placeholder="Search tests, topics, or skills…" aria-label="Search available tests"/></label><div className="td-top-actions"><Link to="/profile" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><b>⌄</b></Link></div></header>
    <div className="discover-content">
     <section className="discover-hero">
      <div className="discover-hero-copy">
       <span className="discover-eyebrow">🚀 Explore Opportunities</span>
       <h1>Discover Available Tests</h1>
       <p>Find exciting testing opportunities, share useful feedback, and grow your tester journey.</p>
-      <form className="discover-search" onSubmit={event=>event.preventDefault()}>
-       <span><Icon name="search" size={18}/></span>
-       <input value={query} onChange={event=>setQuery(event.target.value)} type="search" placeholder="Search for tests, applications or developers..." aria-label="Search tests"/>
-       <button type="submit"><Icon name="search" size={16}/> Search</button>
-      </form>
       <div className="discover-categories">
        {filters.map(filter=><button type="button" key={filter.id} onClick={()=>setCategory(filter.id)} className={category===filter.id?"active":""} aria-pressed={category===filter.id}><span className="discover-filter-icon"><Icon name={filter.icon} size={16}/></span><span className="discover-filter-label">{filter.label}</span>{category===filter.id&&<span className="discover-filter-selected" aria-hidden="true"><Icon name="check" size={12}/></span>}</button>)}
       </div>

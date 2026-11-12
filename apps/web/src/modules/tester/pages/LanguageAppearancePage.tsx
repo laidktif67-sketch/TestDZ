@@ -64,14 +64,15 @@ export default function LanguageAppearancePage() {
     let alive = true;
     Promise.all([
       supabase.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle(),
-      Promise.resolve(user.user_metadata?.testdz_language_appearance as Partial<Preferences> | undefined)
-    ]).then(([profile, saved]) => {
+      Promise.resolve(user.user_metadata?.testdz_language_appearance as Partial<Preferences> | undefined),
+      Promise.resolve(typeof user.user_metadata?.testdz_theme === "string" ? user.user_metadata.testdz_theme as Theme : undefined)
+    ]).then(([profile, saved, legacyTheme]) => {
       if (!alive) return;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
       const locale = profile.data?.locale;
       if (locale === "ar-DZ" || locale === "fr-DZ" || locale === "en-DZ") setLanguage(locale);
-      if (saved) setPrefs({ ...defaults, ...saved });
+      if (saved || legacyTheme) setPrefs({ ...defaults, ...(saved || {}), theme: saved?.theme || legacyTheme || defaults.theme });
     }).catch(() => { if (alive) setError("Some preferences could not be loaded."); });
     return () => { alive = false; };
   }, [user?.id]);
@@ -104,10 +105,7 @@ export default function LanguageAppearancePage() {
   return <div className={`td-dashboard la-dashboard ${prefs.compactMode ? "compact" : ""} ${!prefs.animations ? "no-motion" : ""}`}>
     <TesterSidebar nav={nav} name={displayName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
     <main className="td-main la-main">
-      <header className="la-topbar">
-        <label className="la-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label>
-        <div className="la-user"><Link to="/notifications" aria-label="Open notifications"><Icon name="bell" size={25}/><i>3</i></Link><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</b>{displayName}<Icon name="chevron" size={16}/></Link></div>
-      </header>
+      <header className="td-topbar"><label className="td-search" role="search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short" aria-label="Your profile"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><strong>{displayName}</strong><Icon name="chevron" size={16}/></Link></div></header>
       <div className="la-content">
         <Link to="/settings" className="la-back"><Icon name="arrow" size={17}/>Back to Settings</Link>
         <section className="la-hero"><div className="la-hero-icon"><Icon name="settings" size={54}/></div><div className="la-hero-copy"><h1>Language &amp; Appearance Settings</h1><p>Customize your experience with your preferred language and display options.</p></div><div className="la-hero-art"><span>Aa</span><Icon name="monitor" size={58}/></div></section>

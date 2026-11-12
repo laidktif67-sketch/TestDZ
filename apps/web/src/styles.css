@@ -2416,3 +2416,53 @@ html:lang(fr),
  .tester-profile-page .tester-setting-art .profile-line-icon,.tester-profile-page .tester-setting-art.security .profile-line-icon,.tester-profile-page .tester-setting-art.language .profile-line-icon,.tester-profile-page .tester-setting-art.notifications .profile-line-icon{width:36px;height:36px}
  .tester-profile-page .tester-device-art>.profile-line-icon{width:52px;height:52px}
 }
+
+
+/* Tester Profile — use the shared Tester workspace shell */
+.td-dashboard.tester-profile-page {
+  display: grid !important;
+  grid-template-columns: 194px minmax(0, 1fr) !important;
+  min-height: 100vh;
+  background: #f4f8ff;
+  color: #101c36;
+  font-family: "Plus Jakarta Sans", "Noto Sans Arabic", sans-serif;
+  direction: ltr;
+  overflow-x: clip;
+}
+.td-dashboard.tester-profile-page > .td-main {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 0 18px 20px;
+  width: 100%;
+  max-width: 1600px;
+}
+.td-dashboard.tester-profile-page .tester-profile-content {
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0 0 28px;
+}
+.td-dashboard.tester-profile-page .td-search span {
+  color: #385a8c;
+  font: 500 12px Inter, sans-serif;
+}
+@media (max-width: 920px) {
+  .td-dashboard.tester-profile-page {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .td-dashboard.tester-profile-page > .td-main {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    padding-inline: 14px;
+  }
+}
+@media (max-width: 560px) {
+  .td-dashboard.tester-profile-page > .td-main {
+    padding-inline: 10px;
+  }
+  .td-dashboard.tester-profile-page .tester-profile-content {
+    padding-inline: 0;
+  }
+}
