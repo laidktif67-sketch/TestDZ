@@ -42,7 +42,14 @@ select ok(
 
 select ok(
   (
-    select count(*) = 6
+    select count(*) = 5
+      and count(*) filter (where tablename = 'developer_feedback_messages' and cmd = 'SELECT') = 1
+      and count(*) filter (where tablename = 'developer_feedback_messages' and cmd = 'INSERT') = 1
+      and count(*) filter (where tablename = 'developer_feedback_attachments' and cmd = 'SELECT') = 1
+      and count(*) filter (where tablename = 'developer_feedback_attachments' and cmd = 'INSERT') = 1
+      and count(*) filter (where tablename = 'developer_feedback_events' and cmd = 'SELECT') = 1
+      and bool_and(roles = array['authenticated']::name[])
+      and bool_and(coalesce(qual, '') || coalesce(with_check, '') like '%auth.uid%')
     from pg_policies
     where schemaname = 'public'
       and tablename in (
@@ -50,8 +57,29 @@ select ok(
         'developer_feedback_attachments',
         'developer_feedback_events'
       )
+  )
+  and exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'developer_feedback_messages'
+      and cmd = 'INSERT'
+      and with_check like '%sender_id%'
+  )
+  and exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'developer_feedback_attachments'
+      and cmd = 'INSERT'
+      and with_check like '%uploaded_by%'
+  )
+  and not has_table_privilege('authenticated', 'public.developer_feedback_events', 'INSERT')
+  and not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'developer_feedback_events'
+      and cmd = 'INSERT'
   ),
-  'each conversation table has participant-scoped select and insert policies'
+  'exactly five authenticated participant policies exist; event writes remain trigger-only'
 );
 
 select ok(
