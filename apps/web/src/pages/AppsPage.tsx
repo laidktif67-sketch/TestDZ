@@ -105,7 +105,7 @@ function AppsPage() {
   }), [apps]);
 
   const visible = useMemo(() => apps.filter(app => {
-    const matches = (app.name + " " + app.package_name + " " + (app.description ?? "")).toLowerCase().includes(search.toLowerCase());
+    const query = (search + " " + globalSearch).trim().toLowerCase();\n    const matches = !query || (app.name + " " + app.package_name + " " + (app.description ?? "")).toLowerCase().includes(query);
     return matches && (filter === "all" || app.status === filter);
   }).sort((a, b) => sort === "name" ? a.name.localeCompare(b.name) : sort === "oldest" ? a.created_at.localeCompare(b.created_at) : b.created_at.localeCompare(a.created_at)), [apps, filter, search, sort]);
 
