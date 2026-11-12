@@ -1,82 +1,23 @@
-# TestDZ
+# TestDZ — Mockup Reference
 
-TestDZ is an Algeria-first platform that helps Android developers organize closed-testing cohorts and helps testers participate, check in, and submit useful feedback.
+This branch is reserved exclusively for TestDZ UI mockups and their documentation. It is not an application-code branch. Keep implementation changes on the project branch / pull request.
 
-## Project status
+## Organization
+Each screen has its own folder under `mockups/`. Original PNG assets are preserved unchanged; this commit only moves files and updates documentation.
 
-- Phase: database foundation + initial React/Vite frontend
-- Repository: private
-- Backend: dedicated Supabase project
-- Database region: eu-west-3 (Paris)
-- Frontend: not scaffolded yet
-- Payments: disabled by default
-- Trials and referrals: disabled by default
+## Rewards
+- [REWARDS-01 — Tester Rewards & Achievements](mockups/REWARDS-01_Tester-Rewards-Achievements/REWARDS-01_Tester-Rewards-Achievements.png)
+- [REWARDS-02 — Reward Details](mockups/REWARDS-02_Reward-Details/REWARDS-02_Reward-Details.png)
 
-## Documentation
+## Wallet and withdrawals
+- [WALLET-01 — Wallet Points & Transactions](mockups/WALLET-01_Wallet-Points-Transactions/WALLET-01_Wallet-Points-Transactions.png)
+- [WALLET-02 — Withdrawal Request](mockups/WALLET-02_Withdrawal-Request/WALLET-02_Withdrawal-Request.png)
+- [WALLET-03 — Withdrawal Details & Status](mockups/WALLET-03_Withdrawal-Details-Status/WALLET-03_Withdrawal-Details-Status.png)
+- [WALLET-04 — Wallet & Rewards](mockups/WALLET-04_Wallet-and-Rewards/WALLET-04_Wallet-and-Rewards.png)
+- [WALLET-05 — Withdrawal Rejected / Failed](mockups/WALLET-05_Withdrawal-Rejected-Failed/WALLET-05_Withdrawal-Rejected-Failed.png)
+- [WALLET-06 — Withdrawal Success](mockups/WALLET-06_Withdrawal-Success/WALLET-06_Withdrawal-Success.png)
 
-- [Master Blueprint v2.0](docs/MASTER_BLUEPRINT.md) — canonical product, architecture, data and implementation reference.
-- [Architecture notes](docs/ARCHITECTURE.md) — concise technical guardrails.
-
-## Core principles
-
-1. TestDZ check-ins do not prove Google Play's continuous opt-in requirement.
-2. Assignment completion is designed around 14 consecutive calendar days and 14/14 daily check-ins. The medical-exception rule is pending founder confirmation because the v2.0 blueprint conflicts with the earlier approved exception policy.
-3. Earned points and purchased credits are separate balances and ledgers.
-4. Subscription records are authoritative; profile tier fields are cache only.
-5. Payments activate only after a verified, signed, idempotently processed provider webhook.
-6. Fraud signals create review work; they never automatically suspend users.
-7. Every exposed table is protected with explicit grants and Row Level Security.
-8. No production mock data. Demo data must be clearly marked and isolated.
-
-## Repository layout
-
-```
-docs/
-  ARCHITECTURE.md
-  MASTER_BLUEPRINT.md
-frontend/
-  React + TypeScript + Vite application
-supabase/
-  migrations/
-```
-
-## Supabase project
-
-Use the dedicated TestDZ Supabase project only. Never point this repository at Achrili or reuse Achrili credentials.
-
-Project ref: `naqjjykcglxiobkmdllj`
-
-The frontend/.env.example file is prefilled with this project's browser-safe Supabase URL and publishable key. Copy it to frontend/.env.local for local development. The local file is ignored by Git. The publishable key is intended for browser use; secret/service_role credentials must remain server-side and must never be committed.
-
-## Week 2 progress
-
-The current Auth/Profile slice includes signup/login, email confirmation callback and resend UI, password recovery/reset, role onboarding, profile editing, and avatar upload UI. Database migrations add email-confirmation synchronization, optional phone/interests, owner-scoped avatar storage, and a restricted onboarding RPC. These flows are implemented but still require live SMTP and end-to-end browser verification before launch.
-
-## Current implementation status
-
-- Supabase foundation: 8 migrations applied; 28 public tables with RLS enabled.
-- RLS: 38 policies; latest Supabase security advisor check returned no findings.
-- Plan catalog: Free, Plus and Pro seeded with draft DZD prices.
-- Frontend: React + TypeScript + Vite baseline and initial PWA configuration.
-- Trial and payment activation remain disabled until their workflows are implemented and verified.
-
-See [the execution tracker](docs/MASTER_BLUEPRINT.md#15-execution-tracker--operational-plan) for completed work and next milestones.
-
-## Run the frontend locally
-
-```bash
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
-```
-
-Only the Supabase publishable key belongs in the browser. Never put a secret/service-role key in any `VITE_` variable.
-
-## Development workflow
-
-- Review each migration before applying it.
-- Keep migration files in chronological order.
-- Apply migrations only to the TestDZ project.
-- Run Supabase security/performance advisors after schema changes.
-- Keep all business prices, plan limits, rewards, and thresholds configurable in database configuration rather than hard-coded in application code.
+## Design-to-app audit notes
+- Screen IDs are reference identifiers, not a requirement for one route per image.
+- WALLET-01 and WALLET-04 need a content-overlap review before treating them as separate pages.
+- WALLET-05 and WALLET-06 are withdrawal outcome states; keep them in the same workflow unless implementation requirements prove otherwise.
