@@ -120,6 +120,17 @@ export default function SubmitFeedbackPage() {
     setSubmitting(true);
     setMessage("");
     const category = feedbackType === "Bug" ? "bug" : feedbackType === "UI Issue" ? "usability" : "general";
+    const existing = await supabase.from("feedback").select("id").eq("assignment_id", assignmentId).eq("tester_id", session.user.id).maybeSingle();
+    if (existing.error) {
+      setMessage("We could not verify whether feedback already exists. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+    if (existing.data) {
+      setMessage("You have already submitted feedback for this test. You can view it in Feedback History.");
+      setSubmitting(false);
+      return;
+    }
     const { error } = await supabase.from("feedback").insert({
       assignment_id: assignmentId,
       tester_id: session.user.id,
