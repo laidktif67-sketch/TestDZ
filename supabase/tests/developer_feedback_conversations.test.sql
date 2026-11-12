@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(9);
 
 select ok(
   to_regclass('public.developer_feedback_messages') is not null
@@ -87,6 +87,11 @@ select ok(
       and pg_get_constraintdef(oid) like '%attachment_added%'
   ),
   'activity events accept only the supported feedback event types'
+);
+
+select ok(
+  has_column_privilege('authenticated', 'public.developer_feedback_reviews', 'priority', 'UPDATE'),
+  'authenticated developers can update feedback priority'
 );
 
 select * from finish();
