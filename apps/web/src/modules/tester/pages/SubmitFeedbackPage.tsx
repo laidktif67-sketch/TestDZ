@@ -105,9 +105,36 @@ export default function SubmitFeedbackPage() {
     setFiles(current => [...current, ...accepted].slice(0, 5));
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setMessage("Your feedback form is ready, but submission is not connected to the feedback service yet.");
+    if (!supabase || !session?.user?.id) { setMessage("Please sign in again before submitting feedback."); return; }
+    if (!assignmentId) { setMessage("Choose the test this feedback belongs to."); return; }
+    const combined = [
+      title.trim() ? "Title: " + title.trim() : "",
+      severity ? "Severity: " + severity : "",
+      description.trim(),
+      steps.trim() ? "Steps to reproduce: " + steps.trim() : ""
+    ].filter(Boolean).join("\n\n");
+    if (combined.length < 20) { setMessage("Please provide at least 20 characters of feedback."); return; }
+    if (files.length) { setMessage("Attachments are not enabled yet. Remove the selected files before submitting; your text feedback can still be sent."); return; }
+    setSubmitting(true);
+    setMessage("");
+    const category = feedbackType === "Bug" ? "bug" : feedbackType === "UI Issue" ? "usability" : "general";
+    const { error } = await supabase.from("feedback").insert({
+      assignment_id: assignmentId,
+      tester_id: session.user.id,
+      rating: null,
+      body: combined,
+      category,
+      quality_status: "pending"
+    });
+    if (error) {
+      setMessage("We could not submit your feedback. Please verify the selected test and try again.");
+    } else {
+      setMessage("Feedback submitted successfully. You can follow its quality review in Feedback History.");
+      setTitle(""); setSeverity(""); setDescription(""); setSteps(""); setFiles([]);
+    }
+    setSubmitting(false);
   };
 
   return <div className="td-dashboard sf-dashboard">
