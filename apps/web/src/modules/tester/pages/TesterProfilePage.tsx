@@ -6,7 +6,8 @@ import type { AvatarMimeType } from "@testdz/types";
 import { profilesApi } from "../../../features/profiles/profiles-api";
 import { identityApi } from "../../../shared/auth/identity-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
-import TesterSidebar from "../components/TesterSidebar";
+import TesterSidebar, { Icon } from "../components/TesterSidebar";
+import "../styles/tester-dashboard.css";
 
 
 type ProfileIconName =
@@ -127,7 +128,7 @@ export default function ProfilePage() {
 
   const initials = displayName.trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "T";
   return (
-    <main className="tester-profile-page">
+    <div className="td-dashboard tester-profile-page">
       <TesterSidebar
         nav={[
           { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
@@ -150,13 +151,12 @@ export default function ProfilePage() {
         workspaceMenuOpen={workspaceMenuOpen}
         setWorkspaceMenuOpen={setWorkspaceMenuOpen}
         previewMode={!profilesApi.isConfigured()}
-        sidebarClassName="tester-sidebar"
       />
 
-      <section className="tester-profile-main">
-        <header className="tester-topbar">
-          <label className="tester-search"><span>⌕</span><input aria-label="Search" placeholder="Search anything..." /></label>
-          <div className="tester-top-actions"><button type="button" className="tester-notification" aria-label="Notifications">🔔</button><span className="tester-top-divider" /><span className="tester-top-avatar">{initials}</span><strong>{displayName || "Tester"}</strong><span className="tester-chevron">⌄</span></div>
+      <main className="td-main tester-profile-main">
+        <header className="td-topbar">
+          <div className="td-search" aria-label="Current section"><Icon name="user" size={21}/><span>Profile &amp; account settings</span></div>
+          <div className="td-top-actions"><Link to="/profile" className="td-profile-short" aria-label="Your profile"><span>{avatarUrl ? <img src={avatarUrl} alt="" /> : initials}</span><b>⌄</b></Link></div>
         </header>
 
         <div className="tester-profile-content">
@@ -218,7 +218,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }
