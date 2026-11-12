@@ -64,14 +64,15 @@ export default function LanguageAppearancePage() {
     let alive = true;
     Promise.all([
       supabase.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle(),
-      Promise.resolve(user.user_metadata?.testdz_language_appearance as Partial<Preferences> | undefined)
-    ]).then(([profile, saved]) => {
+      Promise.resolve(user.user_metadata?.testdz_language_appearance as Partial<Preferences> | undefined),
+      Promise.resolve(typeof user.user_metadata?.testdz_theme === "string" ? user.user_metadata.testdz_theme as Theme : undefined)
+    ]).then(([profile, saved, legacyTheme]) => {
       if (!alive) return;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
       const locale = profile.data?.locale;
       if (locale === "ar-DZ" || locale === "fr-DZ" || locale === "en-DZ") setLanguage(locale);
-      if (saved) setPrefs({ ...defaults, ...saved });
+      if (saved || legacyTheme) setPrefs({ ...defaults, ...(saved || {}), theme: saved?.theme || legacyTheme || defaults.theme });
     }).catch(() => { if (alive) setError("Some preferences could not be loaded."); });
     return () => { alive = false; };
   }, [user?.id]);
