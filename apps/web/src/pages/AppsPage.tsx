@@ -15,7 +15,9 @@ function Glyph({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
     apps: <><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 7 9 5 9-5M3 7v10l9 5 9-5V7M12 12v10"/></>,
-    tests: <><path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 3 4h8a3 3 0 0 0 3-4l-5-9V3"/><path d="M8 14h8"/></>,\n    code: <><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-11-4 14"/></>,\n    check: <path d="m5 12 4 4L19 6"/>,
+    tests: <><path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 3 4h8a3 3 0 0 0 3-4l-5-9V3"/><path d="M8 14h8"/></>,
+    code: <><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-2-11-4 14"/></>,
+    check: <path d="m5 12 4 4L19 6"/>,
     users: <><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5v1"/></>,
     chart: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></>,
     feedback: <><path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 9h8M8 13h5"/></>,
@@ -59,7 +61,8 @@ function AppsPage() {
   const [apps, setApps] = useState<AppRecord[]>([]);
   const [limit, setLimit] = useState<AppLimit | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
-  const [search, setSearch] = useState("");\n  const [globalSearch, setGlobalSearch] = useState("");
+  const [search, setSearch] = useState("");
+  const [globalSearch, setGlobalSearch] = useState("");
   const [sort, setSort] = useState<Sort>("latest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -105,7 +108,8 @@ function AppsPage() {
   }), [apps]);
 
   const visible = useMemo(() => apps.filter(app => {
-    const query = (search + " " + globalSearch).trim().toLowerCase();\n    const matches = !query || (app.name + " " + app.package_name + " " + (app.description ?? "")).toLowerCase().includes(query);
+    const query = (search + " " + globalSearch).trim().toLowerCase();
+    const matches = !query || (app.name + " " + app.package_name + " " + (app.description ?? "")).toLowerCase().includes(query);
     return matches && (filter === "all" || app.status === filter);
   }).sort((a, b) => sort === "name" ? a.name.localeCompare(b.name) : sort === "oldest" ? a.created_at.localeCompare(b.created_at) : b.created_at.localeCompare(a.created_at)), [apps, filter, search, sort]);
 
@@ -148,7 +152,7 @@ function AppsPage() {
       <nav className="dmy-nav">
         <Link to="/developer-dashboard"><Glyph name="home"/>Dashboard</Link>
         <Link to="/apps" className="active"><Glyph name="apps"/>My Apps</Link>
-        <Link to="/my-tests"><Glyph name="tests"/>My Tests</Link>
+        <Link to="/developer/tests"><Glyph name="tests"/>My Tests</Link>
         <Link to="/tester-dashboard"><Glyph name="users"/>Testers</Link>
         <Link to="/developer-dashboard"><Glyph name="chart"/>Analytics</Link>
         <Link to="/developer-dashboard"><Glyph name="feedback"/>Feedback</Link>
