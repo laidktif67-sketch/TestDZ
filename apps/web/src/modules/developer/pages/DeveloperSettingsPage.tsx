@@ -148,7 +148,8 @@ export default function DeveloperSettingsPage() {
         <Link to="/developer/tests"><Glyph name="tests"/>My Tests</Link>
         <Link to="/tester-dashboard"><Glyph name="user"/>Testers</Link>
         <Link to="/developer-dashboard"><Glyph name="chart"/>Analytics</Link>
-        <Link to="/developer-dashboard"><Glyph name="feedback"/>Feedback</Link>
+        <Link to="/developer/feedback"><Glyph name="feedback"/>Feedback</Link>
+        <Link to="/developer/notifications"><Glyph name="bell"/>Notifications</Link>
         <Link to="/developer/subscription"><Glyph name="crown"/>Subscription</Link>
         <Link to="/developer/settings" className="active"><Glyph name="settings"/>Settings</Link>
         <Link to="/help"><Glyph name="help"/>Help &amp; Support</Link>
