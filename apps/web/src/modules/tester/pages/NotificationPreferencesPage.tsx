@@ -67,17 +67,25 @@ export default function NotificationPreferencesPage() {
     let alive = true;
     Promise.all([
       supabase.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle(),
-      Promise.resolve(user.user_metadata?.testdz_notification_center_preferences as Partial<Preferences> | undefined)
-    ]).then(([profile, saved]) => {
+      Promise.resolve(user.user_metadata?.testdz_notification_center_preferences as Partial<Preferences> | undefined),
+      Promise.resolve(user.user_metadata?.testdz_notification_preferences as { newTests?: boolean; rewards?: boolean; support?: boolean; system?: boolean; promotions?: boolean } | undefined)
+    ]).then(([profile, saved, legacy]) => {
       if (!alive) return;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
-      if (saved) setPrefs({
-        ...defaults, ...saved,
-        types: { ...defaults.types, ...(saved.types || {}) },
-        delivery: { ...defaults.delivery, ...(saved.delivery || {}) },
-        quiet: { ...defaults.quiet, ...(saved.quiet || {}) },
-        channels: Array.isArray(saved.channels) ? saved.channels : defaults.channels
+      const legacyTypes = legacy ? {
+        newTests: legacy.newTests,
+        rewards: legacy.rewards,
+        supportMessages: legacy.support,
+        systemUpdates: legacy.system,
+        marketing: legacy.promotions
+      } : {};
+      if (saved || legacy) setPrefs({
+        ...defaults, ...(saved || {}),
+        types: { ...defaults.types, ...legacyTypes, ...(saved?.types || {}) },
+        delivery: { ...defaults.delivery, ...(saved?.delivery || {}) },
+        quiet: { ...defaults.quiet, ...(saved?.quiet || {}) },
+        channels: Array.isArray(saved?.channels) ? saved.channels : defaults.channels
       });
     }).catch(() => { if (alive) setError("Could not load your notification preferences."); });
     return () => { alive = false; };
