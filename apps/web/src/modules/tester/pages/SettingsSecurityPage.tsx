@@ -73,7 +73,6 @@ export default function SettingsSecurityPage() {
       setAvatar(profile.data?.avatar_url || "");
       setEmail(user.email || "");
       setEmailVerified(Boolean(user.email_confirmed_at));
-      const metadata = user.user_metadata || {};
       setTwoFactor(Boolean(factors.data?.totp?.some(factor => factor.status === "verified")));
     }).catch(() => { if (alive) setError("Some account settings could not be loaded."); });
     return () => { alive = false; };
@@ -81,8 +80,8 @@ export default function SettingsSecurityPage() {
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    if (query.get("tab") === "notifications") setTab("notifications");
-  }, []);
+    if (query.get("tab") === "notifications") navigate("/notification-preferences", { replace: true });
+  }, [navigate]);
 
   const alert = (text: string, isError = false) => { setMessage(isError ? "" : text); setError(isError ? text : ""); };
   async function saveProfile() {
