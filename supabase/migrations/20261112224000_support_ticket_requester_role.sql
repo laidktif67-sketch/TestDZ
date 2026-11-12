@@ -1,4 +1,5 @@
 -- Distinguish developer-created support tickets from tester tickets.
+-- Safe to apply when the role column and constraint already exist remotely.
 begin;
 
 alter table public.support_tickets
@@ -19,8 +20,24 @@ where t.requester_role is null;
 
 alter table public.support_tickets
   alter column requester_role set default 'tester',
-  alter column requester_role set not null,
-  add constraint support_tickets_requester_role_check
-    check (requester_role in ('tester', 'developer'));
+  alter column requester_role set not null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.support_tickets'::regclass
+      and conname = 'support_tickets_requester_role_check'
+      and contype = 'c'
+  ) then
+    alter table public.support_tickets
+      add constraint support_tickets_requester_role_check
+      check (requester_role in ('tester', 'developer'));
+  end if;
+end;
+$$;
+
+create index if not exists support_tickets_owner_role_created_idx
+  on public.support_tickets(user_id, requester_role, created_at desc);
 
 commit;
