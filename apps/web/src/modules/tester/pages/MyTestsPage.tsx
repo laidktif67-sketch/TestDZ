@@ -70,7 +70,7 @@ export default function MyTestsPage(){
     client.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
     client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id",userId).order("created_at",{ascending:false}),
     client.from("feedback").select("id,quality_status,created_at,assignment_id").eq("tester_id",userId).order("created_at",{ascending:false}),
-    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
+    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).eq("recipient_role","tester").is("read_at",null)
    ]);
    if(!alive)return;
    setRoles((roleRes.data??[]).map((r:{role:string})=>r.role));setName(profileRes.data?.display_name?.trim()||email?.split("@")[0]||"there");setAvatar(profileRes.data?.avatar_url||"");
