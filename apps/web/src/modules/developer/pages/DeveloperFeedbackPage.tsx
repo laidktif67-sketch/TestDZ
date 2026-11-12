@@ -33,9 +33,10 @@ export default function DeveloperFeedbackPage(){
  const active=rows.find(r=>r.id===selected)||filtered[0]||null;
  const counts={total:rows.length,new:rows.filter(r=>getStatus(r)==="new").length,review:rows.filter(r=>getStatus(r)==="under_review").length,resolved:rows.filter(r=>getStatus(r)==="resolved").length};
  useEffect(()=>{setNote((active?getReview(active)?.resolution_note:null)||"")},[active?.id]);
- const updateStatus=async(next:ReviewStatus)=>{if(!active||!supabase)return;setSaving(true);setError("");const {data:s}=await supabase.auth.getSession();const uid=s.session?.user?.id;if(!uid){setSaving(false);return}
+ const updateStatus=async(next:ReviewStatus)=>{if(!active||!supabase)return;setSaving(true);setError("");
+ try{const {data:s}=await supabase.auth.getSession();const uid=s.session?.user?.id;if(!uid){setError("Your session has expired. Please sign in again.");return}
  const payload={feedback_id:active.id,developer_id:uid,status:next,resolution_note:note.trim()||null};
- try{const existing=await supabase.from("developer_feedback_reviews").select("id").eq("feedback_id",active.id).maybeSingle();
+ const existing=await supabase.from("developer_feedback_reviews").select("id").eq("feedback_id",active.id).maybeSingle();
  let writeFailed=Boolean(existing.error);
  if(!writeFailed&&existing.data){const result=await supabase.from("developer_feedback_reviews").update({status:next,resolution_note:payload.resolution_note}).eq("feedback_id",active.id).select("id").maybeSingle();writeFailed=Boolean(result.error||!result.data)}
  else if(!writeFailed){const result=await supabase.from("developer_feedback_reviews").insert(payload).select("id").single();writeFailed=Boolean(result.error||!result.data)}
