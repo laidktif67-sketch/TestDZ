@@ -1,0 +1,193 @@
+begin;
+
+select plan(15);
+
+-- Isolated fixture graph: two developers, two testers, two tests, and one
+-- feedback record per tester. All rows are rolled back at the end of the test.
+insert into auth.users (
+  id, instance_id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at
+) values
+  ('10000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','rls-dev-a@example.test','',now(),'{}','{}',now(),now()),
+  ('10000000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','rls-dev-b@example.test','',now(),'{}','{}',now(),now()),
+  ('20000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','rls-tester-a@example.test','',now(),'{}','{}',now(),now()),
+  ('20000000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','rls-tester-b@example.test','',now(),'{}','{}',now(),now())
+on conflict (id) do nothing;
+
+insert into public.profiles (id, display_name)
+values
+  ('10000000-0000-4000-8000-000000000001','RLS Developer A'),
+  ('10000000-0000-4000-8000-000000000002','RLS Developer B'),
+  ('20000000-0000-4000-8000-000000000001','RLS Tester A'),
+  ('20000000-0000-4000-8000-000000000002','RLS Tester B')
+on conflict (id) do nothing;
+
+insert into public.user_roles (user_id, role)
+values
+  ('10000000-0000-4000-8000-000000000001','developer'),
+  ('10000000-0000-4000-8000-000000000002','developer'),
+  ('20000000-0000-4000-8000-000000000001','tester'),
+  ('20000000-0000-4000-8000-000000000002','tester')
+on conflict (user_id, role) do nothing;
+
+insert into public.apps (id, developer_id, name, package_name)
+values
+  ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','RLS App A','test.rls.app.a'),
+  ('30000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','RLS App B','test.rls.app.b');
+
+insert into public.tests (id, app_id, developer_id, title)
+values
+  ('40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','RLS Test A'),
+  ('40000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','RLS Test B');
+
+insert into public.cohorts (id, test_id, name, capacity)
+values
+  ('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','RLS Cohort A',5),
+  ('50000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000002','RLS Cohort B',5);
+
+insert into public.assignments (id, cohort_id, test_id, tester_id)
+values
+  ('60000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001'),
+  ('60000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002');
+
+insert into public.feedback (id, assignment_id, tester_id, body)
+values
+  ('70000000-0000-4000-8000-000000000001','60000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','Private feedback record belonging to tester A.'),
+  ('70000000-0000-4000-8000-000000000002','60000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','Private feedback record belonging to tester B.');
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
+select set_config('request.jwt.claims','{"sub":"20000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
+insert into public.developer_feedback_messages (id, feedback_id, sender_id, body)
+values (
+  '80000000-0000-4000-8000-000000000001',
+  '70000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001',
+  'Tester A private conversation message.'
+);
+
+select is(
+  (select count(*)::int from public.developer_feedback_messages where id = '80000000-0000-4000-8000-000000000001'),
+  1,
+  'tester A can read their own feedback conversation'
+);
+
+select throws_ok(
+  $$insert into public.developer_feedback_messages (feedback_id, sender_id, body)
+    values ('70000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000002','Forged sender must be rejected')$$,
+  '42501',
+  'tester A cannot forge tester B as the message sender'
+);
+
+select throws_ok(
+  $$insert into public.developer_feedback_events (feedback_id, actor_id, event_type)
+    values ('70000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','message_sent')$$,
+  '42501',
+  'authenticated clients cannot manufacture audit events'
+);
+
+select is(
+  (select count(*)::int from public.developer_feedback_events
+   where feedback_id = '70000000-0000-4000-8000-000000000001'
+     and actor_id = '20000000-0000-4000-8000-000000000001'
+     and event_type = 'message_sent'),
+  1,
+  'message insert creates exactly one database-authored audit event'
+);
+
+insert into storage.objects (bucket_id, name)
+values (
+  'developer-feedback-attachments',
+  '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'
+);
+
+select is(
+  (select count(*)::int from storage.objects
+   where bucket_id = 'developer-feedback-attachments'
+     and name = '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'),
+  1,
+  'tester A can create a storage object under their own feedback and user path'
+);
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
+select is(
+  (select count(*)::int from public.developer_feedback_messages
+   where id = '80000000-0000-4000-8000-000000000001'),
+  1,
+  'owning developer A can read the assigned tester conversation'
+);
+
+select is(
+  (select count(*)::int from public.developer_feedback_events
+   where feedback_id = '70000000-0000-4000-8000-000000000001'),
+  1,
+  'owning developer A can read the feedback audit trail'
+);
+
+select is(
+  (select count(*)::int from storage.objects
+   where bucket_id = 'developer-feedback-attachments'
+     and name = '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'),
+  1,
+  'owning developer A can read a participant feedback attachment'
+);
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+
+select is(
+  (select count(*)::int from public.developer_feedback_messages
+   where id = '80000000-0000-4000-8000-000000000001'),
+  0,
+  'unrelated developer B cannot read developer A feedback conversation'
+);
+
+select is(
+  (select count(*)::int from public.developer_feedback_events
+   where feedback_id = '70000000-0000-4000-8000-000000000001'),
+  0,
+  'unrelated developer B cannot read developer A feedback audit trail'
+);
+
+select is(
+  (select count(*)::int from storage.objects
+   where bucket_id = 'developer-feedback-attachments'
+     and name = '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'),
+  0,
+  'unrelated developer B cannot read developer A feedback attachment'
+);
+
+select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',true);
+select set_config('request.jwt.claims','{"sub":"20000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+
+select is(
+  (select count(*)::int from public.developer_feedback_messages
+   where id = '80000000-0000-4000-8000-000000000001'),
+  0,
+  'tester B cannot read tester A feedback conversation'
+);
+
+select is(
+  (select count(*)::int from storage.objects
+   where bucket_id = 'developer-feedback-attachments'
+     and name = '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'),
+  0,
+  'tester B cannot read tester A feedback attachment'
+);
+
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('developer-feedback-attachments',
+      '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002/forged.txt')$$,
+  '42501',
+  'tester B cannot upload into tester A feedback folder'
+);
+
+reset role;
+
+select * from finish();
+rollback;
