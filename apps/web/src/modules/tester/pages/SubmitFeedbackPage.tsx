@@ -2,12 +2,14 @@ import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { supabase } from "../../../lib/supabase";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/submit-feedback.css";
 
 type FeedbackType = "Bug" | "UI Issue" | "Suggestion";
 type Severity = "Critical" | "High" | "Medium" | "Low";
+type AssignmentOption = { id: string; test?: { title: string; app?: { name: string } | null } | null };
 
 const feedbackTypes: { value: FeedbackType; icon: "bug" | "palette" | "lightbulb" }[] = [
   { value: "Bug", icon: "bug" },
@@ -54,10 +56,36 @@ export default function SubmitFeedbackPage() {
   const [steps, setSteps] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [message, setMessage] = useState("");
+  const [assignments, setAssignments] = useState<AssignmentOption[]>([]);
+  const [assignmentId, setAssignmentId] = useState("");
+  const [assignmentsLoading, setAssignmentsLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const name = session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Tester";
   const firstName = name.split(/\s+/)[0];
   const isAdmin = roles.includes("admin");
+
+  useEffect(() => {
+    let alive = true;
+    const loadAssignments = async () => {
+      if (!supabase || !session?.user?.id) { setAssignmentsLoading(false); return; }
+      const { data, error } = await supabase.from("assignments")
+        .select("id,test:tests(title,app:apps(name))")
+        .eq("tester_id", session.user.id)
+        .in("status", ["active", "completed"])
+        .order("created_at", { ascending: false });
+      if (!alive) return;
+      if (error) setMessage("We could not load your assigned tests. Please refresh and try again.");
+      else {
+        const options = (data ?? []) as unknown as AssignmentOption[];
+        setAssignments(options);
+        setAssignmentId(options[0]?.id ?? "");
+      }
+      setAssignmentsLoading(false);
+    };
+    void loadAssignments();
+    return () => { alive = false; };
+  }, [session?.user?.id]);
   const isDeveloper = roles.includes("developer");
   const nav = [
     { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
@@ -103,7 +131,7 @@ export default function SubmitFeedbackPage() {
         </section>
 
         <form className="sf-form-card" onSubmit={submit}>
-          <section className="sf-type-field">
+          <section className="sf-type-field">\n            <label className="sf-field"><span><b>0.</b> Test assignment <em>*</em></span><select required value={assignmentId} onChange={event => setAssignmentId(event.target.value)} disabled={assignmentsLoading || !assignments.length}><option value="">{assignmentsLoading ? "Loading your tests…" : "Select a test"}</option>{assignments.map(item => <option key={item.id} value={item.id}>{item.test?.app?.name || "App"} · {item.test?.title || "Test"}</option>)}</select><small>{assignments.length ? "Choose the test you are reporting feedback about." : "You need an active or completed test assignment before submitting feedback."}</small></label>
             <h2><span>1.</span> Feedback Type <em>*</em></h2>
             <div className="sf-type-options">
               {feedbackTypes.map(type => <button key={type.value} type="button" className={feedbackType === type.value ? "sf-type-option selected" : "sf-type-option"} onClick={() => setFeedbackType(type.value)} aria-pressed={feedbackType === type.value}>
@@ -146,12 +174,12 @@ export default function SubmitFeedbackPage() {
               <h2>6. Attachments (Optional)</h2>
               <div className="sf-dropzone" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); addFiles(event.dataTransfer.files); }}>
                 <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 32V8m0 0L14 18M24 8l10 10M8 29v8a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4v-8" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <div className="sf-drop-copy"><strong>Drag &amp; drop images or screenshots here</strong><small>PNG, JPG, or WebP (Max 5MB)</small>{files.length > 0 && <small className="sf-file-list">{files.map(file => file.name).join(" · ")}</small>}</div>
+                <div className="sf-drop-copy"><strong>Drag &amp; drop images or screenshots here</strong><small>PNG, JPG, or WebP (Max 5MB) · Upload support coming soon</small>{files.length > 0 && <small className="sf-file-list">{files.map(file => file.name).join(" · ")}</small>}</div>
                 <button type="button" className="sf-browse" onClick={() => fileInput.current?.click()}><Icon name="folder" size={22}/> Browse Files</button>
                 <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={event => { if (event.target.files) addFiles(event.target.files); event.target.value = ""; }}/>
               </div>
             </section>
-            <div className="sf-submit-wrap"><button type="submit" className="sf-submit"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27 4 5 13l9 4 4 10 9-23ZM14 17l13-13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/></svg> Submit Feedback</button>{message && <p className="sf-submit-message" role="status">{message}</p>}</div>
+            <div className="sf-submit-wrap"><button type="submit" className="sf-submit" disabled={submitting || assignmentsLoading || !assignmentId}><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27 4 5 13l9 4 4 10 9-23ZM14 17l13-13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/></svg> {submitting ? "Submitting…" : "Submit Feedback"}</button>{message && <p className="sf-submit-message" role="status">{message}</p>}</div>
           </div>
         </form>
       </div>
