@@ -8,6 +8,24 @@ security definer
 set search_path = ''
 as $$
 begin
+  if tg_op = 'INSERT' then
+    if new.status <> 'new' then
+      insert into public.developer_feedback_events
+        (feedback_id, actor_id, event_type, old_value, new_value)
+      values
+        (new.feedback_id, (select auth.uid()), 'status_changed', null, new.status);
+    end if;
+
+    if new.priority <> 'normal' then
+      insert into public.developer_feedback_events
+        (feedback_id, actor_id, event_type, old_value, new_value)
+      values
+        (new.feedback_id, (select auth.uid()), 'priority_changed', null, new.priority);
+    end if;
+
+    return new;
+  end if;
+
   if old.status is distinct from new.status then
     insert into public.developer_feedback_events
       (feedback_id, actor_id, event_type, old_value, new_value)
@@ -30,6 +48,11 @@ revoke all on function public.log_developer_feedback_review_changes() from publi
 
 drop trigger if exists developer_feedback_review_audit_update
   on public.developer_feedback_reviews;
+create trigger developer_feedback_review_audit_insert
+after insert on public.developer_feedback_reviews
+for each row
+execute function public.log_developer_feedback_review_changes();
+
 create trigger developer_feedback_review_audit_update
 after update of status, priority on public.developer_feedback_reviews
 for each row
