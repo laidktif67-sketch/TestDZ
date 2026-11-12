@@ -22,7 +22,7 @@ export default function DeveloperSupportTicketDetailsPage(){
  const [ticket,setTicket]=useState<Ticket|null>(null),[messages,setMessages]=useState<Message[]>([]),[attachments,setAttachments]=useState<Attachment[]>([]),[events,setEvents]=useState<TicketEvent[]>([]);
  const [loading,setLoading]=useState(true),[sending,setSending]=useState(false),[reply,setReply]=useState(""),[selectedFile,setSelectedFile]=useState<File|null>(null),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const fileRef=useRef<HTMLInputElement>(null);
- const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Developer";const initials=name.split(/[\s._-]+/).slice(0,2).map(part=>part[0]).join("").toUpperCase()||"DK";
+ const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Developer";const initials=name.split(/[\s._-]+/).slice(0,2).map((part: string)=>part[0]).join("").toUpperCase()||"DK";
  const load=useCallback(async()=>{
   if(!supabase||!user||!id){setLoading(false);return;}setLoading(true);setError("");
   const {data:ticketData,error:ticketError}=await supabase.from("support_tickets").select("id,ticket_number,user_id,requester_role,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by").eq("id",id).eq("requester_role","developer").maybeSingle();
