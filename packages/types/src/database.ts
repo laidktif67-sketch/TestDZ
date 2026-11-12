@@ -889,6 +889,7 @@ export type Database = {
           data: Json
           id: string
           read_at: string | null
+          recipient_role: string
           title: string
           type: string
           user_id: string
@@ -900,6 +901,7 @@ export type Database = {
           data?: Json
           id?: string
           read_at?: string | null
+          recipient_role: string
           title: string
           type: string
           user_id: string
@@ -911,6 +913,7 @@ export type Database = {
           data?: Json
           id?: string
           read_at?: string | null
+          recipient_role?: string
           title?: string
           type?: string
           user_id?: string
