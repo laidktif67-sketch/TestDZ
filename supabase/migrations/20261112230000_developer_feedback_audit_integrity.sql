@@ -48,7 +48,7 @@ with check (
         select 1 from public.developer_feedback_messages m
         where m.feedback_id = developer_feedback_events.feedback_id
           and m.sender_id = (select auth.uid())
-          and m.created_at = developer_feedback_events.created_at
+          and m.id::text = developer_feedback_events.old_value
       )
     )
     or
