@@ -29,6 +29,7 @@ import DeveloperTestResultsPage from "./modules/developer/pages/DeveloperTestRes
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
 import DeveloperHelpCenterPage from "./modules/developer/pages/DeveloperHelpCenterPage";
+import DeveloperSupportCenterPage from "./modules/developer/pages/DeveloperSupportCenterPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
@@ -141,6 +142,7 @@ export default function App() {
               <Route path="/developer/feedback" element={<DeveloperFeedbackPage />} />
               <Route path="/developer/notifications" element={<DeveloperNotificationsPage />} />
               <Route path="/developer/help" element={<DeveloperHelpCenterPage />} />
+              <Route path="/developer/support" element={<DeveloperSupportCenterPage />} />
               <Route path="/apps" element={<AppsPage />} />
               <Route path="/apps/:id" element={<AppDetailPage />} />
             </Route>
