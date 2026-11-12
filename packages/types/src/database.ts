@@ -475,6 +475,148 @@ export type Database = {
           },
         ]
       }
+      developer_feedback_messages: {
+        Row: {
+          body: string
+          created_at: string
+          feedback_id: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          feedback_id: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_feedback_messages_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "developer_feedback_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      developer_feedback_attachments: {
+        Row: {
+          created_at: string
+          feedback_id: string
+          id: string
+          message_id: string
+          mime_type: string
+          original_filename: string
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_id: string
+          id?: string
+          message_id: string
+          mime_type: string
+          original_filename: string
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          message_id?: string
+          mime_type?: string
+          original_filename?: string
+          size_bytes?: number
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_feedback_attachments_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "developer_feedback_attachments_message_fk"
+            columns: ["feedback_id", "message_id"]
+            isOneToOne: false
+            referencedRelation: "developer_feedback_messages"
+            referencedColumns: ["feedback_id", "id"]
+          },
+          {
+            foreignKeyName: "developer_feedback_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      developer_feedback_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          feedback_id: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          feedback_id: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          feedback_id?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_feedback_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "developer_feedback_events_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedback"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       devices: {
         Row: {
           app_version: string | null
