@@ -94,22 +94,6 @@ export default function SettingsSecurityPage() {
     if (result.error) alert("Could not save account settings. Please try again.", true);
     else alert("Account settings saved successfully.");
   }
-  async function savePreferences(next: Preferences) {
-    const previous = preferences;
-    setPreferences(next);
-    if (!supabase) return;
-    const result = await supabase.auth.updateUser({ data: { testdz_notification_preferences: next } });
-    if (result.error) { setPreferences(previous); alert("Preferences could not be saved. Your previous choices were restored.", true); }
-    else alert("Notification preferences saved.");
-  }
-  async function saveTheme(next: string) {
-    const previous = theme;
-    setTheme(next);
-    if (!supabase) return;
-    const result = await supabase.auth.updateUser({ data: { testdz_theme: next } });
-    if (result.error) { setTheme(previous); alert("Appearance preference could not be saved. Your previous choice was restored.", true); }
-    else alert("Appearance preference saved.");
-  }
   async function changePassword() {
     if (!supabase || password.length < 8) { alert("Use a password with at least 8 characters.", true); return; }
     if (password !== confirmPassword) { alert("The password confirmation does not match.", true); return; }
@@ -177,13 +161,6 @@ export default function SettingsSecurityPage() {
   }
   async function logout() { await signOut(); navigate("/auth", { replace: true }); }
 
-  const notificationItems: { key: keyof Preferences; title: string; icon: string }[] = [
-    { key: "newTests", title: "New Tests & Assignments", icon: "tests" },
-    { key: "rewards", title: "Rewards & Points", icon: "gift" },
-    { key: "support", title: "Support Updates", icon: "help" },
-    { key: "system", title: "System Updates", icon: "settings" },
-    { key: "promotions", title: "Promotions & News", icon: "bell" }
-  ];
   const matchingTabs = tabs.filter(item => `${item.label} ${item.id}`.toLowerCase().includes(searchTerm.trim().toLowerCase()));
   const tabsView = <div className="ss-tabs-wrap"><div className="ss-tabs" role="tablist">{matchingTabs.map(item => <button type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? "active" : ""} key={item.id} onClick={() => { setSearchTerm(""); if (item.id === "notifications") navigate("/notification-preferences"); else if (item.id === "appearance") navigate("/tester/language-appearance"); else setTab(item.id); }}><Icon name={item.icon} size={19}/>{item.label}</button>)}</div>{searchTerm.trim() && matchingTabs.length === 0 && <p className="ss-search-empty">No settings section matches “{searchTerm}”. Try account, security, privacy or notifications.</p>}</div>;
 
@@ -214,7 +191,6 @@ export default function SettingsSecurityPage() {
               <SettingRow icon="clock" title="Login Activity" description="Review recorded sign-in events, timestamps and available IP addresses." action={<Link className="ss-outline" to="/tester/security-history">View Activity <Icon name="arrow" size={14}/></Link>}/>
               <SettingRow icon="monitor" title="Active Sessions" description="Review all active devices and sign out other sessions you no longer recognize." action={<Link className="ss-outline" to="/active-sessions">Manage Sessions <Icon name="arrow" size={14}/></Link>}/>
             </section>
-            <section className="ss-card ss-notification-card"><h2><Icon name="bell" size={25}/>Notification Preferences</h2><p>Choose what notifications you want to receive.</p><div className="ss-pref-grid">{notificationItems.map(item => <label key={item.key}><input type="checkbox" checked={preferences[item.key]} onChange={event => void savePreferences({ ...preferences, [item.key]: event.target.checked })}/><span>{item.title}</span></label>)}</div></section>
             <section className="ss-success-card"><span><Icon name="check" size={30}/></span><div><strong>Account security overview</strong><b>{emailVerified ? "Email verified" : "Email verification pending"} · {twoFactor ? "2FA enabled" : "2FA not enabled"}</b><small>Your account security status is based on the current Supabase account.</small></div><Icon name="shield" size={45}/></section>
           </div>
         </div>}
@@ -225,9 +201,8 @@ export default function SettingsSecurityPage() {
             <div className="ss-form-block"><h3>Two-Factor Authentication</h3><p>{twoFactor ? "An authenticator factor is verified on your account." : "Use an authenticator app to add a second verification step."}</p>{!twoFactor && !mfaQr && <button className="ss-outline" disabled={mfaBusy} onClick={() => void setupMfa()}>{mfaBusy ? "Preparing..." : "Set up authenticator"}</button>}{mfaQr && <div className="ss-mfa-setup"><img src={mfaQr} alt="Authenticator QR code"/><label>Enter the 6-digit code from your authenticator<input inputMode="numeric" autoComplete="one-time-code" value={mfaCode} onChange={event => setMfaCode(event.target.value.replace(/\D/g,"").slice(0,6))}/></label><button className="ss-primary" disabled={mfaBusy || mfaCode.length !== 6} onClick={() => void verifyMfa()}>Verify and enable</button></div>}{twoFactor && <button className="ss-danger-button" disabled={mfaBusy} onClick={() => void disableMfa()}>Turn off 2FA</button>}</div>
           </section>
         </div>}
-        {tab === "notifications" && <div className="ss-single-column"><section className="ss-card ss-form-card"><h2><Icon name="bell" size={25}/>Notification Preferences</h2><p>Choose the updates you want to receive. Your preferences are saved to your account.</p><div className="ss-pref-list">{notificationItems.map(item => <label key={item.key}><span className="ss-row-icon"><Icon name={item.icon} size={20}/></span><span>{item.title}</span><Toggle checked={preferences[item.key]} onChange={value => void savePreferences({ ...preferences, [item.key]: value })} label={item.title}/></label>)}</div></section></div>}
-        {tab === "privacy" && <div className="ss-single-column"><section className="ss-card ss-form-card"><h2><Icon name="lock" size={25}/>Privacy &amp; Data</h2><p>Review your account data and current sign-in session.</p><div className="ss-form-block"><h3>Download your data</h3><p>Export your profile, notifications, check-ins, feedback and points ledger as a JSON file.</p><button className="ss-primary" disabled={busy} onClick={() => void downloadData()}><Icon name="download" size={17}/> Download account data</button></div><div className="ss-form-block"><h3>Current session</h3><p>Signed in as {email || "your TestDZ account"}. Session information is managed securely by Supabase Authentication.</p><span className="ss-current-session">Current device · Active</span></div><div className="ss-form-block"><h3>Delete account</h3><p>Account deletion requires a support review so active assignments, rewards and outstanding withdrawals are handled safely.</p><Link className="ss-outline" to="/help-support">Contact TestDZ Support <Icon name="arrow" size={14}/></Link></div></section></div>}
-        {tab === "appearance" && <div className="ss-single-column"><section className="ss-card ss-form-card"><h2><Icon name="settings" size={25}/>Appearance</h2><p>Choose how TestDZ looks on this account.</p><Link className="ss-outline" to="/tester/language-appearance">Open Language &amp; Appearance Settings <Icon name="arrow" size={14}/></Link><div className="ss-theme-options"><button className={theme === "light" ? "selected" : ""} onClick={() => void saveTheme("light")}><span className="ss-theme-preview light"/>Light theme {theme === "light" && <Icon name="check" size={16}/>}</button><button className={theme === "dark" ? "selected" : ""} onClick={() => void saveTheme("dark")}><span className="ss-theme-preview dark"/>Dark theme {theme === "dark" && <Icon name="check" size={16}/>}</button><button className={theme === "system" ? "selected" : ""} onClick={() => void saveTheme("system")}><span className="ss-theme-preview system"/>System default {theme === "system" && <Icon name="check" size={16}/>}</button></div><p className="ss-note">The preference is saved to your account. Full dark-theme styling can be enabled across the workspace separately.</p></section></div>}
+        {tab === "notifications" && <div className="ss-single-column"><section className="ss-card ss-form-card"><h2><Icon name="bell" size={25}/>Notification Preferences</h2><p>Manage notification types, delivery channels and quiet hours from the dedicated preferences page.</p><Link className="ss-outline" to="/notification-preferences">Open Notification Preferences <Icon name="arrow" size={14}/></Link></section></div>}
+        {tab === "appearance" && <div className="ss-single-column"><section className="ss-card ss-form-card"><h2><Icon name="settings" size={25}/>Language &amp; Appearance</h2><p>Manage language, theme, compact mode and display preferences from the dedicated page.</p><Link className="ss-outline" to="/tester/language-appearance">Open Language &amp; Appearance Settings <Icon name="arrow" size={14}/></Link></section></div>}
       </div>
     </main>
   </div>;
