@@ -138,6 +138,46 @@
   cursor: pointer;
 }
 
+.td-dashboard.td-dashboard .td-brand-flask .td-icon {
+  width: 32px;
+  height: 32px;
+  stroke-width: 1.65;
+  filter: drop-shadow(0 3px 7px #39baff45);
+}
+
+.td-dashboard.td-dashboard .td-nav-link .td-icon {
+  width: 19px;
+  height: 19px;
+  stroke-width: 1.9;
+  opacity: .94;
+}
+
+.td-dashboard.td-dashboard .td-nav-link.active .td-icon {
+  filter: drop-shadow(0 2px 5px #ffffff45);
+  opacity: 1;
+}
+
+.td-dashboard.td-dashboard .td-nav-link:hover .td-icon {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.td-dashboard.td-dashboard .td-rocket {
+  margin: 0 0 9px;
+  text-align: center;
+  filter: drop-shadow(0 5px 8px #001c4880);
+}
+
+.td-dashboard.td-dashboard .td-rocket .td-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.td-dashboard.td-dashboard .td-sidebar-promo > a .td-icon {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+}
+
 @media (max-width: 920px) {
   .td-dashboard.td-dashboard {
     grid-template-columns: minmax(0, 1fr);
