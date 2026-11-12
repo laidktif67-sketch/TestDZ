@@ -329,3 +329,64 @@
     height: 14px;
   }
 }
+
+/* Shared Tester topbar sizing: page styles may customize content, not shell geometry. */
+.td-dashboard .td-main > .td-topbar{
+  height:72px;
+  min-height:72px;
+  margin:0;
+  padding:0;
+  gap:20px;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+.td-dashboard .td-main > .td-topbar .td-search{
+  width:min(515px,65%);
+  max-width:515px;
+  height:42px;
+  min-height:42px;
+  flex:0 1 515px;
+  border-radius:24px;
+  padding:0 17px;
+  gap:11px;
+}
+.td-dashboard .td-main > .td-topbar .td-search input{
+  min-width:0;
+  font-size:12px;
+}
+.td-dashboard .td-main > .td-topbar .td-top-actions{gap:18px}
+.td-dashboard .td-main > .td-topbar .td-profile-short{gap:13px}
+.td-dashboard .td-main > .td-topbar .td-profile-short > span{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+}
+@media(max-width:920px){
+  .td-dashboard .td-main > .td-topbar{height:62px;min-height:62px}
+}
+@media(max-width:560px){
+  .td-dashboard .td-main > .td-topbar{
+    height:56px;
+    min-height:56px;
+    gap:8px;
+  }
+  .td-dashboard .td-main > .td-topbar .td-search{
+    width:100%;
+    max-width:none;
+    height:37px;
+    min-height:37px;
+    flex:1 1 auto;
+    padding:0 11px;
+    gap:7px;
+  }
+  .td-dashboard .td-main > .td-topbar .td-search input{font-size:10px}
+  .td-dashboard .td-main > .td-topbar .td-search > .td-icon{width:17px;height:17px}
+  .td-dashboard .td-main > .td-topbar .td-top-actions{gap:7px}
+  .td-dashboard .td-main > .td-topbar .td-profile-short{gap:4px}
+  .td-dashboard .td-main > .td-topbar .td-profile-short > span{
+    width:29px;
+    height:29px;
+    flex-basis:29px;
+  }
+}
