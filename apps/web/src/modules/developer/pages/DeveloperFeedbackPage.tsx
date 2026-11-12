@@ -11,7 +11,7 @@ type FeedbackRow = {
   id: string; assignment_id: string; tester_id: string; rating: number | null; body: string;
   category: string; quality_status: "pending" | "accepted" | "rejected"; created_at: string;
   assignment?: { test?: { id: string; title: string; app?: { name: string; icon_url: string | null } | null } | null } | null;
-  developer_review?: { status: ReviewStatus; resolution_note: string | null; updated_at: string }[] | null;
+  developer_review?: { status: ReviewStatus; resolution_note: string | null; updated_at: string } | { status: ReviewStatus; resolution_note: string | null; updated_at: string }[] | null;
   tester?: { display_name: string | null; avatar_url: string | null } | null;
 };
 const statuses: ReviewStatus[] = ["new","under_review","planned","resolved","wont_fix"];
@@ -25,13 +25,14 @@ export default function DeveloperFeedbackPage(){
  const {data,error:e}=await supabase.from("feedback").select("id,assignment_id,tester_id,rating,body,category,quality_status,created_at,assignment:assignments!inner(test:tests!inner(id,title,developer_id,app:apps(name,icon_url))),developer_review:developer_feedback_reviews(status,resolution_note,updated_at)").eq("assignment.test.developer_id",user.id).order("created_at",{ascending:false}).limit(1000);
  if(e){setError("Could not load feedback. Check that the latest database migration has been applied and try again.");setRows([])}else{const list=(data??[]) as unknown as FeedbackRow[];setRows(list);setSelected(current=>list.some(x=>x.id===current)?current:list[0]?.id||"")}setLoading(false)};
  useEffect(()=>{void load()},[navigate]);
- const getStatus=(r:FeedbackRow):ReviewStatus=>r.developer_review?.[0]?.status||"new";
+ const getReview=(r:FeedbackRow)=>Array.isArray(r.developer_review)?r.developer_review[0]:r.developer_review||null;
+ const getStatus=(r:FeedbackRow):ReviewStatus=>getReview(r)?.status||"new";
  const apps=useMemo(()=>Array.from(new Set(rows.map(r=>r.assignment?.test?.app?.name||"App"))),[rows]);
  const cutoff=useMemo(()=>range==="all"?0:Date.now()-Number(range)*86400000,[range]);
  const filtered=useMemo(()=>rows.filter(r=>new Date(r.created_at).getTime()>=cutoff&&(statusFilter==="all"||getStatus(r)===statusFilter)&&(appFilter==="all"||(r.assignment?.test?.app?.name||"App")===appFilter)&&((r.body+" "+r.category+" "+(r.assignment?.test?.title||"")+" "+(r.tester?.display_name||"")).toLowerCase().includes(query.toLowerCase()))),[rows,cutoff,statusFilter,appFilter,query]);
  const active=rows.find(r=>r.id===selected)||filtered[0]||null;
  const counts={total:rows.length,new:rows.filter(r=>getStatus(r)==="new").length,review:rows.filter(r=>getStatus(r)==="under_review").length,resolved:rows.filter(r=>getStatus(r)==="resolved").length};
- useEffect(()=>{setNote(active?.developer_review?.[0]?.resolution_note||"")},[active?.id]);
+ useEffect(()=>{setNote((active?getReview(active)?.resolution_note:null)||"")},[active?.id]);
  const updateStatus=async(next:ReviewStatus)=>{if(!active||!supabase)return;setSaving(true);setError("");const {data:s}=await supabase.auth.getSession();const uid=s.session?.user?.id;if(!uid){setSaving(false);return}
  const payload={feedback_id:active.id,developer_id:uid,status:next,resolution_note:note.trim()||null,updated_at:new Date().toISOString(),resolved_at:next==="resolved"?new Date().toISOString():null};
  const existing=await supabase.from("developer_feedback_reviews").select("id").eq("feedback_id",active.id).maybeSingle();
