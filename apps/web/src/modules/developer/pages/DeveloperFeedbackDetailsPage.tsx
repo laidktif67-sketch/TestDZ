@@ -64,11 +64,11 @@ export default function DeveloperFeedbackDetailsPage(){
  const result=existing?await supabase.from("developer_feedback_reviews").update(values).eq("feedback_id",id):await supabase.from("developer_feedback_reviews").insert({feedback_id:id,developer_id:uid,...values});
  if(result.error){setError("Unable to update feedback. Please check your access and try again.");setBusy(false);return}
  if(field==="status")setStatus(value as ReviewStatus);else setPriority(value as Priority);
- await addEvent(field==="status"?"status_changed":"priority_changed",oldValue,value,uid);await load();setBusy(false)
+ await load();setBusy(false)
  };
  const sendReply=async(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!supabase||!reply.trim()||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
  const {data:msg,error:e1}=await supabase.from("developer_feedback_messages").insert({feedback_id:id,sender_id:uid,body:reply.trim()}).select("id").single();if(e1||!msg){setError("Your reply could not be sent.");setBusy(false);return}
- await addEvent("message_sent",null,"Developer reply",uid);
+ await addEvent("message_sent",msg.id,"Developer reply",uid);
  for(const file of files){const ext=file.name.split(".").pop()?.toLowerCase()||"bin";const path=id+"/"+uid+"/"+crypto.randomUUID()+"."+ext;const upload=await supabase.storage.from("developer-feedback-attachments").upload(path,file,{contentType:file.type,upsert:false});if(upload.error){setError("Reply sent, but "+file.name+" could not be uploaded.");continue}
  const saved=await supabase.from("developer_feedback_attachments").insert({feedback_id:id,message_id:msg.id,uploaded_by:uid,storage_path:path,original_filename:file.name,mime_type:file.type,size_bytes:file.size});if(saved.error)setError("Reply sent, but attachment metadata could not be saved.");
  else await addEvent("attachment_added",null,file.name,uid);
