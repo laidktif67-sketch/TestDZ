@@ -74,11 +74,11 @@ export default function NotificationPreferencesPage() {
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
       const legacyTypes = legacy ? {
-        newTests: legacy.newTests,
-        rewards: legacy.rewards,
-        supportMessages: legacy.support,
-        systemUpdates: legacy.system,
-        marketing: legacy.promotions
+        newTests: legacy.newTests ?? defaults.types.newTests,
+        rewards: legacy.rewards ?? defaults.types.rewards,
+        supportMessages: legacy.support ?? defaults.types.supportMessages,
+        systemUpdates: legacy.system ?? defaults.types.systemUpdates,
+        marketing: legacy.promotions ?? defaults.types.marketing
       } : {};
       if (saved || legacy) setPrefs({
         ...defaults, ...(saved || {}),
