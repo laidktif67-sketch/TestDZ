@@ -74,7 +74,7 @@ export default function DeveloperFeedbackDetailsPage(){
  const {data:msg,error:e1}=await supabase.from("developer_feedback_messages").insert({feedback_id:id,sender_id:uid,body:reply.trim()}).select("id").single();if(e1||!msg){setError("Your reply could not be sent.");setBusy(false);return}
  for(const file of files){const ext=file.name.split(".").pop()?.toLowerCase()||"bin";const path=id+"/"+uid+"/"+crypto.randomUUID()+"."+ext;const upload=await supabase.storage.from("developer-feedback-attachments").upload(path,file,{contentType:file.type,upsert:false});if(upload.error){setError("Reply sent, but "+file.name+" could not be uploaded.");continue}
  const saved=await supabase.from("developer_feedback_attachments").insert({feedback_id:id,message_id:msg.id,uploaded_by:uid,storage_path:path,original_filename:file.name,mime_type:file.type,size_bytes:file.size});if(saved.error)setError("Reply sent, but attachment metadata could not be saved.");
- else await addEvent("attachment_added",null,file.name,uid);
+ 
  }
  setReply("");setFiles([]);await load();setBusy(false)
  };
