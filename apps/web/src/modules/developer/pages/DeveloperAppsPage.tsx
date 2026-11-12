@@ -11,6 +11,8 @@ import "../styles/developer-apps.css";
 type Filter = "all" | "published" | "draft" | "paused" | "archived";
 type Sort = "latest" | "oldest" | "name";
 
+type AppMetrics = { tests: number; testers: number; rating: number | null };
+
 function Glyph({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
@@ -59,6 +61,7 @@ function AppsPage() {
   const userId = useUserId();
   const navigate = useNavigate();
   const [apps, setApps] = useState<AppRecord[]>([]);
+  const [appMetrics, setAppMetrics] = useState<Record<string, AppMetrics>>({});
   const [limit, setLimit] = useState<AppLimit | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
@@ -81,9 +84,64 @@ function AppsPage() {
     if (!supabase) { setError("Supabase is not configured."); setLoading(false); return; }
     setLoading(true); setError("");
     const [{ data: rows, error: appsError }, { data: limits, error: limitError }] = await Promise.all([listApps(), getAppLimit()]);
+    const appRows = (rows ?? []) as AppRecord[];
     if (appsError) setError("Could not load your applications. Please refresh and try again.");
-    else setApps((rows ?? []) as AppRecord[]);
+    else setApps(appRows);
     if (!limitError) setLimit(Array.isArray(limits) ? limits[0] ?? null : limits as AppLimit);
+
+    if (!appsError && appRows.length) {
+      const appIds = appRows.map(app => app.id);
+      const { data: tests, error: testsError } = await supabase.from("tests").select("id,app_id").in("app_id", appIds);
+      if (!testsError) {
+        const testRows = (tests ?? []) as { id: string; app_id: string }[];
+        const testToApp = new Map(testRows.map(test => [test.id, test.app_id]));
+        const next: Record<string, AppMetrics> = {};
+        appIds.forEach(id => { next[id] = { tests: 0, testers: 0, rating: null }; });
+        testRows.forEach(test => { if (next[test.app_id]) next[test.app_id].tests += 1; });
+        if (testRows.length) {
+          const { data: assignments, error: assignmentsError } = await supabase
+            .from("assignments").select("id,test_id,tester_id")
+            .in("test_id", testRows.map(test => test.id));
+          if (!assignmentsError) {
+            const assignmentRows = (assignments ?? []) as { id: string; test_id: string; tester_id: string }[];
+            const testersByApp = new Map<string, Set<string>>();
+            const assignmentToApp = new Map<string, string>();
+            assignmentRows.forEach(assignment => {
+              const appId = testToApp.get(assignment.test_id);
+              if (!appId || !next[appId]) return;
+              if (!testersByApp.has(appId)) testersByApp.set(appId, new Set());
+              if (assignment.tester_id) testersByApp.get(appId)?.add(assignment.tester_id);
+              assignmentToApp.set(assignment.id, appId);
+            });
+            testersByApp.forEach((testers, appId) => { next[appId].testers = testers.size; });
+            if (assignmentRows.length) {
+              const { data: feedback, error: feedbackError } = await supabase
+                .from("feedback").select("assignment_id,rating")
+                .in("assignment_id", assignmentRows.map(assignment => assignment.id))
+                .not("rating", "is", null);
+              if (!feedbackError) {
+                const ratingsByApp = new Map<string, number[]>();
+                (feedback ?? []).forEach(item => {
+                  if (typeof item.rating !== "number") return;
+                  const appId = assignmentToApp.get(item.assignment_id);
+                  if (!appId) return;
+                  if (!ratingsByApp.has(appId)) ratingsByApp.set(appId, []);
+                  ratingsByApp.get(appId)?.push(item.rating);
+                });
+                ratingsByApp.forEach((ratings, appId) => {
+                  next[appId].rating = ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
+                });
+              }
+            }
+          }
+        }
+        setAppMetrics(next);
+      } else {
+        setAppMetrics({});
+      }
+    } else if (!appsError) {
+      setAppMetrics({});
+    }
     setLoading(false);
   }
 
@@ -202,7 +260,7 @@ function AppsPage() {
           <section className={"dmy-app-grid " + (layout === "list" ? "list-view" : "")}>{visible.map(app => <article className="dmy-app-card" key={app.id}>
             <div className="dmy-card-top"><AppMark app={app}/><div className="dmy-app-title"><strong>{app.name}</strong><small dir="ltr">{app.package_name}</small></div><span className={"dmy-status " + app.status}>{app.status === "published" ? "Published" : app.status === "draft" ? "Draft" : app.status === "paused" ? "Paused" : "Archived"}</span><button type="button" className="dmy-more" aria-label={"More actions for " + app.name} onClick={() => navigate("/apps/" + app.id)}><Glyph name="menu"/></button></div>
             <p className="dmy-description">{app.description || "No description added yet."}</p>
-            <div className="dmy-card-metrics"><span><Glyph name="download" size={18}/><b>—</b><small>Downloads</small></span><span><Glyph name="users" size={18}/><b>—</b><small>Testers</small></span><span><Glyph name="star" size={18}/><b>—</b><small>Rating</small></span></div>
+            <div className="dmy-card-metrics"><span><Glyph name="tests" size={18}/><b>{appMetrics[app.id]?.tests ?? 0}</b><small>Tests</small></span><span><Glyph name="users" size={18}/><b>{appMetrics[app.id]?.testers ?? 0}</b><small>Testers</small></span><span><Glyph name="star" size={18}/><b>{appMetrics[app.id]?.rating == null ? "—" : appMetrics[app.id].rating.toFixed(1)}</b><small>Rating / 5</small></span></div>
             <div className="dmy-updated"><Glyph name="clock" size={16}/> Added {new Date(app.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
             <div className="dmy-card-actions"><Link to={"/apps/" + app.id}><Glyph name="eye" size={17}/> View Details</Link><Link to={"/apps/" + app.id + "?edit=1"}><Glyph name="edit" size={17}/> Edit</Link>{app.status === "draft" ? <button type="button" disabled title="Test creation becomes available after the test workflow is implemented"><Glyph name="tests" size={17}/> Create Test</button> : app.status === "published" ? <button type="button" disabled title="Review submission is not available for this status yet">Submit for Review</button> : null}</div>
           </article>)}</section>}
