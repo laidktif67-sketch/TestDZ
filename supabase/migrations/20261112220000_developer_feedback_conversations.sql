@@ -161,15 +161,32 @@ on public.developer_feedback_events for insert to authenticated
 with check (
   actor_id = (select auth.uid())
   and exists (
-    select 1 from public.feedback f
+    select 1
+    from public.feedback f
     where f.id = developer_feedback_events.feedback_id
       and (
-        f.tester_id = (select auth.uid())
-        or exists (
-          select 1 from public.assignments a
-          join public.tests t on t.id = a.test_id
-          where a.id = f.assignment_id
-            and t.developer_id = (select auth.uid())
+        (
+          developer_feedback_events.event_type in ('message_sent', 'attachment_added')
+          and (
+            f.tester_id = (select auth.uid())
+            or exists (
+              select 1
+              from public.assignments a
+              join public.tests t on t.id = a.test_id
+              where a.id = f.assignment_id
+                and t.developer_id = (select auth.uid())
+            )
+          )
+        )
+        or (
+          developer_feedback_events.event_type in ('status_changed', 'priority_changed')
+          and exists (
+            select 1
+            from public.assignments a
+            join public.tests t on t.id = a.test_id
+            where a.id = f.assignment_id
+              and t.developer_id = (select auth.uid())
+          )
         )
       )
   )
@@ -184,7 +201,12 @@ values (
   10485760,
   array['image/png','image/jpeg','image/webp','text/plain','application/pdf','application/zip']
 )
-on conflict (id) do nothing;
+on conflict (id) do update
+set
+  name = excluded.name,
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 create policy developer_feedback_attachments_storage_insert
 on storage.objects for insert to authenticated
@@ -195,8 +217,8 @@ with check (
   and exists (
     select 1
     from public.feedback f
-    where f.id = ((storage.foldername(name))[1])::uuid
-      and (
+    where f.id = case
+      when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
         f.tester_id = (select auth.uid())
         or exists (
           select 1 from public.assignments a
@@ -217,6 +239,61 @@ using (
     select 1
     from public.feedback f
     where f.id = ((storage.foldername(name))[1])::uuid
+      and (
+        f.tester_id = (select auth.uid())
+        or exists (
+          select 1 from public.assignments a
+          join public.tests t on t.id = a.test_id
+          where a.id = f.assignment_id
+            and t.developer_id = (select auth.uid())
+        )
+      )
+  )
+);
+
+commit;
+
+      then ((storage.foldername(name))[1])::uuid
+      else null
+    end
+      and (
+        f.tester_id = (select auth.uid())
+        or exists (
+          select 1 from public.assignments a
+          join public.tests t on t.id = a.test_id
+          where a.id = f.assignment_id
+            and t.developer_id = (select auth.uid())
+        )
+      )
+  )
+);
+
+create policy developer_feedback_attachments_storage_select
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'developer-feedback-attachments'
+  and (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+  and exists (
+    select 1
+    from public.feedback f
+    where f.id = case
+      when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
+        f.tester_id = (select auth.uid())
+        or exists (
+          select 1 from public.assignments a
+          join public.tests t on t.id = a.test_id
+          where a.id = f.assignment_id
+            and t.developer_id = (select auth.uid())
+        )
+      )
+  )
+);
+
+commit;
+
+      then ((storage.foldername(name))[1])::uuid
+      else null
+    end
       and (
         f.tester_id = (select auth.uid())
         or exists (
