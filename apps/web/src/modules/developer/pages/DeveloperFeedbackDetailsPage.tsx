@@ -60,7 +60,7 @@ export default function DeveloperFeedbackDetailsPage(){
  const addEvent=async(type:Event["event_type"],oldValue:string|null,newValue:string|null,actor:string)=>{if(!supabase)return;await supabase.from("developer_feedback_events").insert({feedback_id:id,actor_id:actor,event_type:type,old_value:oldValue,new_value:newValue})};
  const updateReview=async(field:"status"|"priority",value:string)=>{if(!supabase||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
  const {data:existing,error:readError}=await supabase.from("developer_feedback_reviews").select("id,status,priority").eq("feedback_id",id).maybeSingle();if(readError){setError("Could not load the current feedback review.");setBusy(false);return}
- const values={[field]:value,updated_at:new Date().toISOString(),...(field==="status"?{resolved_at:value==="resolved"?new Date().toISOString():null}:{})};
+ const values={[field]:value};
  const result=existing?await supabase.from("developer_feedback_reviews").update(values).eq("feedback_id",id):await supabase.from("developer_feedback_reviews").insert({feedback_id:id,developer_id:uid,...values});
  if(result.error){setError("Unable to update feedback. Please check your access and try again.");setBusy(false);return}
  if(field==="status")setStatus(value as ReviewStatus);else setPriority(value as Priority);
