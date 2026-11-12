@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(18);
 
 select ok(
   to_regclass('public.support_ticket_messages') is not null,
@@ -37,6 +37,34 @@ select ok(
       and (tgtype & 2) = 0
   ),
   'ticket creation audit runs AFTER INSERT so its event foreign key is valid'
+);
+
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'support_ticket_events'
+      and column_name = 'old_priority'
+  ) and exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'support_ticket_events'
+      and column_name = 'new_priority'
+  ) and exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.support_ticket_events'::regclass
+      and conname = 'support_ticket_events_event_type_check'
+      and pg_get_constraintdef(oid) like '%priority_changed%'
+  ),
+  'support ticket event schema supports priority audit records'
+);
+
+select ok(
+  exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.support_tickets'::regclass
+      and tgname = 'support_tickets_audit_status_update'
+      and pg_get_triggerdef(oid) like '%priority%'
+  ) and pg_get_functiondef('private.audit_support_ticket_changes()'::regprocedure) like '%priority_changed%',
+  'support ticket priority updates are guarded and audited by the database trigger'
 );
 
 select ok(
