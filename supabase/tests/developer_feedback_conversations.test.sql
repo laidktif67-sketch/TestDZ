@@ -1,6 +1,6 @@
 begin;
 
-select plan(13);
+select plan(15);
 
 select ok(
   to_regclass('public.developer_feedback_messages') is not null
@@ -75,6 +75,27 @@ select ok(
       and contype = 'u'
   ),
   'feedback messages expose the composite key required by attachment integrity'
+);
+
+select ok(
+  (select attnotnull
+   from pg_attribute
+   where attrelid = 'public.developer_feedback_attachments'::regclass
+     and attname = 'message_id'
+     and not attisdropped),
+  'every feedback attachment must reference a conversation message'
+);
+
+select ok(
+  not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.developer_feedback_attachments'::regclass
+      and conname in (
+        'developer_feedback_attachments_feedback_id_fkey',
+        'developer_feedback_attachments_message_id_fkey'
+      )
+  ),
+  'legacy independent attachment foreign keys are replaced by the composite foreign key'
 );
 
 select ok(
