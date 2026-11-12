@@ -91,7 +91,7 @@ export default function DeveloperCreateTestPage() {
     setStep(value => Math.min(8, value + 1) as Stage);
   }
 
-  async function publishDraft() {
+  async function saveAsDraft() {\n    if (!selectedApp) { setSaveError("Select an application before saving your draft."); setStep(1); return; }\n    if (title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters before saving."); setStep(2); return; }\n    await publishDraft();\n  }\n\n  async function publishDraft() {
     if (!supabase || !selected) return;
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) { navigate("/auth", { replace: true }); return; }
@@ -159,7 +159,7 @@ export default function DeveloperCreateTestPage() {
             {step === 8 && <div className="dct-publish-state"><span><Icon name="check" size={30} /></span><h3>Ready to save your test</h3><p>Your campaign will be created as a draft. You can review it from My Tests after saving.</p></div>}
             {saveError && <div className="dct-error">{saveError}</div>}
             <div className="dct-tip"><span>💡</span><p><strong>Pro Tip:</strong> A well-defined test helps you get high-quality feedback. Make sure to set clear goals and instructions.</p></div>
-            <div className="dct-actions"><button type="button" className="dct-draft" onClick={() => navigate("/developer/tests")}><Icon name="check" size={18} />Save as Draft</button><div><button type="button" className="dct-cancel" onClick={() => navigate("/developer/tests")}>Cancel</button>{step < 8 ? <button type="button" className="dct-next" onClick={next}>Next Step <Icon name="arrow" size={18} /></button> : <button type="button" className="dct-next" onClick={() => void publishDraft()} disabled={saving}>{saving ? "Saving…" : "Create Draft"} <Icon name="arrow" size={18} /></button>}</div></div>
+            <div className="dct-actions"><button type="button" className="dct-draft" onClick={() => void saveAsDraft()}><Icon name="check" size={18} />Save as Draft</button><div><button type="button" className="dct-cancel" onClick={() => navigate("/developer/tests")}>Cancel</button>{step < 8 ? <button type="button" className="dct-next" onClick={next}>Next Step <Icon name="arrow" size={18} /></button> : <button type="button" className="dct-next" onClick={() => void publishDraft()} disabled={saving}>{saving ? "Saving…" : "Create Draft"} <Icon name="arrow" size={18} /></button>}</div></div>
           </section>
 
           <aside className="dct-overview"><div className="dct-overview-head"><h2>Test Overview</h2><Icon name="info" size={20} /></div>{selected ? <><div className="dct-overview-app"><AppIcon app={selected} /><div><strong>{selected.name}</strong><span className={"dct-status " + selected.status}><i />{selected.status === "published" ? "Published" : "Draft"}</span><p>{selected.description || "Application selected for this testing campaign."}</p></div></div><div className="dct-overview-details"><div><Icon name="android" /><span>Package Name</span><strong dir="ltr">{selected.package_name}</strong></div><div><Icon name="apps" /><span>Category</span><strong>{selected.category}</strong></div><div><Icon name="info" /><span>Current Version</span><strong>Not provided</strong></div><div><Icon name="info" /><span>App Size</span><strong>Not provided</strong></div></div></> : <div className="dct-overview-empty"><Icon name="apps" size={34} /><strong>No app selected</strong><p>Choose an app to see its details here.</p></div>}</aside>
