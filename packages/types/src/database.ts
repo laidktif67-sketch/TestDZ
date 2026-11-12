@@ -1652,6 +1652,7 @@ export type Database = {
           description: string
           id: string
           priority: string
+          requester_role: string
           resolved_at: string | null
           resolved_by: string | null
           status: string
@@ -1666,6 +1667,8 @@ export type Database = {
           description: string
           id?: string
           priority?: string
+          requester_role?: string
+          requester_role?: string
           resolved_at?: string | null
           resolved_by?: string | null
           status?: string
