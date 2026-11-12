@@ -37,6 +37,8 @@
   display: grid;
   place-items: center;
   color: #75c7ff;
+  background: transparent;
+  border-radius: 0;
   filter: drop-shadow(0 5px 8px #00aaff55);
 }
 
@@ -84,8 +86,11 @@
 }
 
 .td-dashboard.td-dashboard .td-sidebar-promo {
+  display: block;
+  min-height: 0;
   margin-top: auto;
   padding: 17px 13px 16px;
+  text-align: left;
   border: 1px solid #ffffff16;
   border-radius: 17px;
   background: linear-gradient(145deg, #124b91, #073467);
@@ -138,11 +143,17 @@
   cursor: pointer;
 }
 
-.td-dashboard.td-dashboard .td-brand-flask .td-icon {
+ .td-dashboard.td-dashboard .td-brand-flask .td-icon {
+  display: block;
   width: 32px;
   height: 32px;
   stroke-width: 1.65;
   filter: drop-shadow(0 3px 7px #39baff45);
+}
+
+.td-dashboard.td-dashboard .td-brand-flask::after {
+  content: none;
+  display: none;
 }
 
 .td-dashboard.td-dashboard .td-nav-link .td-icon {
@@ -161,7 +172,12 @@
   transform: translateY(-1px) scale(1.06);
 }
 
-.td-dashboard.td-dashboard .td-rocket {
+ .td-dashboard.td-dashboard .td-rocket {
+  display: grid;
+  place-items: center;
+  color: #9ed8ff;
+  font-size: 43px;
+  line-height: normal;
   margin: 0 0 9px;
   text-align: center;
   filter: drop-shadow(0 5px 8px #001c4880);
@@ -170,6 +186,13 @@
 .td-dashboard.td-dashboard .td-rocket .td-icon {
   width: 40px;
   height: 40px;
+  stroke: currentColor;
+  fill: none;
+  filter: drop-shadow(0 5px 7px #001c4880);
+}
+
+.td-dashboard.td-dashboard .td-user-trigger {
+  padding: 7px 5px;
 }
 
 .td-dashboard.td-dashboard .td-sidebar-promo > a .td-icon {
