@@ -1,5 +1,5 @@
 .sf-dashboard{--sf-blue:#075cf5;--sf-navy:#092d70;background:#edf5ff;background-image:linear-gradient(135deg,#eef5ff 0%,#eaf4ff 55%,#d9efff 100%);font-family:"Plus Jakarta Sans","Noto Sans",sans-serif}
-.sf-dashboard .td-rocket{margin-bottom:12px}
+
 .sf-main{min-width:0;background:transparent;padding:0 22px 28px;position:relative}
 .sf-topbar{height:96px;min-height:96px;padding:0 4px 0 0;background:transparent;box-shadow:none;border:0}
 .sf-search{height:49px;max-width:550px;border:1px solid #c8d9f1;border-radius:18px;background:#fff;box-shadow:0 2px 7px #173d7210;padding:0 20px;gap:14px}
