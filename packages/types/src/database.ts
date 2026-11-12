@@ -883,6 +883,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          archived_at: string | null
           body: string
           created_at: string
           data: Json
@@ -893,6 +894,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           body: string
           created_at?: string
           data?: Json
@@ -903,6 +905,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived_at?: string | null
           body?: string
           created_at?: string
           data?: Json
