@@ -57,7 +57,6 @@ export default function DeveloperFeedbackDetailsPage(){
  useEffect(()=>{void load()},[load]);
  const app=feedback?.assignment?.test?.app;const test=feedback?.assignment?.test;
  const number=useMemo(()=>id.replaceAll("-","").slice(0,8).toUpperCase(),[id]);
- const addEvent=async(type:Event["event_type"],oldValue:string|null,newValue:string|null,actor:string)=>{if(!supabase)return;await supabase.from("developer_feedback_events").insert({feedback_id:id,actor_id:actor,event_type:type,old_value:oldValue,new_value:newValue})};
  const updateReview=async(field:"status"|"priority",value:string)=>{if(!supabase||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
  const {data:existing,error:readError}=await supabase.from("developer_feedback_reviews").select("id,status,priority").eq("feedback_id",id).maybeSingle();if(readError){setError("Could not load the current feedback review.");setBusy(false);return}
  const result=existing
@@ -73,7 +72,6 @@ export default function DeveloperFeedbackDetailsPage(){
  };
  const sendReply=async(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!supabase||!reply.trim()||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
  const {data:msg,error:e1}=await supabase.from("developer_feedback_messages").insert({feedback_id:id,sender_id:uid,body:reply.trim()}).select("id").single();if(e1||!msg){setError("Your reply could not be sent.");setBusy(false);return}
- await addEvent("message_sent",msg.id,"Developer reply",uid);
  for(const file of files){const ext=file.name.split(".").pop()?.toLowerCase()||"bin";const path=id+"/"+uid+"/"+crypto.randomUUID()+"."+ext;const upload=await supabase.storage.from("developer-feedback-attachments").upload(path,file,{contentType:file.type,upsert:false});if(upload.error){setError("Reply sent, but "+file.name+" could not be uploaded.");continue}
  const saved=await supabase.from("developer_feedback_attachments").insert({feedback_id:id,message_id:msg.id,uploaded_by:uid,storage_path:path,original_filename:file.name,mime_type:file.type,size_bytes:file.size});if(saved.error)setError("Reply sent, but attachment metadata could not be saved.");
  else await addEvent("attachment_added",null,file.name,uid);
