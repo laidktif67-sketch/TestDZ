@@ -1,6 +1,6 @@
 begin;
 
-select plan(18);
+select plan(19);
 
 select ok(
   to_regclass('public.developer_feedback_messages') is not null
@@ -169,17 +169,32 @@ select ok(
 );
 
 select ok(
-  exists (
+  has_table_privilege('authenticated', 'public.developer_feedback_events', 'SELECT')
+  and not has_table_privilege('authenticated', 'public.developer_feedback_events', 'INSERT')
+  and not exists (
     select 1 from pg_policies
     where schemaname = 'public'
       and tablename = 'developer_feedback_events'
-      and policyname = 'developer_feedback_events_insert_participants'
-      and with_check like '%message_sent%'
-      and with_check like '%attachment_added%'
-      and with_check not like '%status_changed%'
-      and with_check not like '%priority_changed%'
+      and cmd = 'INSERT'
   ),
-  'clients cannot directly forge review status or priority audit events'
+  'clients can read the audit trail but cannot insert audit events directly'
+);
+
+select ok(
+  exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.developer_feedback_messages'::regclass
+      and tgname = 'developer_feedback_message_audit_insert'
+      and not tgisinternal
+      and (tgtype & 4) = 4
+  ) and exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.developer_feedback_attachments'::regclass
+      and tgname = 'developer_feedback_attachment_audit_insert'
+      and not tgisinternal
+      and (tgtype & 4) = 4
+  ),
+  'message and attachment activity is written automatically by database triggers'
 );
 
 select * from finish();
