@@ -293,7 +293,7 @@ export default function DeveloperDashboardPage() {
           <div className="dd-panel-head"><h2><Icon name="rocket"/>{t.quick}</h2><Link to="/apps">{t.view}<Icon name="arrow" size={15}/></Link></div>
           <div className="dd-quick-grid">
             <Link to="/apps" className="dd-quick-item q-blue"><span><Icon name="box" size={24}/></span><div><strong>Create New App</strong><small>Add an Android application</small></div><Icon name="arrow"/></Link>
-            <span className="dd-quick-item q-green dd-quick-disabled" aria-disabled="true" title="Test creation is not available yet"><span><Icon name="check" size={24}/></span><div><strong>Create Test</strong><small>Coming in the next phase</small></div><Icon name="arrow"/></span>
+            <Link to="/developer/tests/new" className="dd-quick-item q-green"><span><Icon name="check" size={24}/></span><div><strong>Create Test</strong><small>Launch a testing campaign</small></div><Icon name="arrow"/></Link>
             <a href="#analytics-overview" className="dd-quick-item q-violet"><span><Icon name="chart" size={24}/></span><div><strong>View Analytics</strong><small>Application and test activity</small></div><Icon name="arrow"/></a>
             <a href="https://github.com/laidktif67-sketch/TestDZ/blob/architecture-v1/docs/MASTER_BLUEPRINT.md" target="_blank" rel="noreferrer" className="dd-quick-item q-amber"><span><Icon name="book" size={24}/></span><div><strong>Read Docs</strong><small>Developer documentation</small></div><Icon name="arrow"/></a>
           </div>
