@@ -169,7 +169,8 @@ export default function SubmitFeedbackPage() {
         </section>
 
         <form className="sf-form-card" onSubmit={submit}>
-          <section className="sf-type-field">\n            <label className="sf-field"><span><b>0.</b> Test assignment <em>*</em></span><select required value={assignmentId} onChange={event => setAssignmentId(event.target.value)} disabled={assignmentsLoading || !assignments.length}><option value="">{assignmentsLoading ? "Loading your tests…" : "Select a test"}</option>{assignments.map(item => <option key={item.id} value={item.id}>{item.test?.app?.name || "App"} · {item.test?.title || "Test"}</option>)}</select><small>{assignments.length ? "Choose the test you are reporting feedback about." : "You need an active or completed test assignment before submitting feedback."}</small></label>
+          <section className="sf-type-field">
+            <label className="sf-field"><span><b>0.</b> Test assignment <em>*</em></span><select required value={assignmentId} onChange={event => setAssignmentId(event.target.value)} disabled={assignmentsLoading || !assignments.length}><option value="">{assignmentsLoading ? "Loading your tests…" : "Select a test"}</option>{assignments.map(item => <option key={item.id} value={item.id}>{item.test?.app?.name || "App"} · {item.test?.title || "Test"}</option>)}</select><small>{assignments.length ? "Choose the test you are reporting feedback about." : "You need an active or completed test assignment before submitting feedback."}</small></label>
             <h2><span>1.</span> Feedback Type <em>*</em></h2>
             <div className="sf-type-options">
               {feedbackTypes.map(type => <button key={type.value} type="button" className={feedbackType === type.value ? "sf-type-option selected" : "sf-type-option"} onClick={() => setFeedbackType(type.value)} aria-pressed={feedbackType === type.value}>
