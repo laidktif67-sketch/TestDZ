@@ -437,26 +437,17 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          created_at?: string
           developer_id: string
           feedback_id: string
           id?: string
           resolution_note?: string | null
-          resolved_at?: string | null
           status?: string
           priority?: string
-          updated_at?: string
         }
         Update: {
-          created_at?: string
-          developer_id?: string
-          feedback_id?: string
-          id?: string
           resolution_note?: string | null
-          resolved_at?: string | null
           status?: string
           priority?: string
-          updated_at?: string
         }
         Relationships: [
           {
