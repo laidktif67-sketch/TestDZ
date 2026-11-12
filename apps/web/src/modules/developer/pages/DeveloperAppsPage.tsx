@@ -210,6 +210,7 @@ function AppsPage() {
       <nav className="dmy-nav">
         <Link to="/developer-dashboard"><Glyph name="home"/>Dashboard</Link>
         <Link to="/apps" className="active"><Glyph name="apps"/>My Apps</Link>
+        <Link to="/developer/tests/new"><Glyph name="tests"/>Create Test</Link>
         <Link to="/developer/tests"><Glyph name="tests"/>My Tests</Link>
         <Link to="/tester-dashboard"><Glyph name="users"/>Testers</Link>
         <Link to="/developer-dashboard"><Glyph name="chart"/>Analytics</Link>
