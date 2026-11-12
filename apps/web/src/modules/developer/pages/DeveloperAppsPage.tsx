@@ -212,11 +212,11 @@ function AppsPage() {
         <Link to="/apps" className="active"><Glyph name="apps"/>My Apps</Link>
         <Link to="/developer/tests/new"><Glyph name="tests"/>Create Test</Link>
         <Link to="/developer/tests"><Glyph name="tests"/>My Tests</Link>
-        <Link to="/tester-dashboard"><Glyph name="users"/>Testers</Link>
-        <Link to="/developer-dashboard"><Glyph name="chart"/>Analytics</Link>
+        <Link to="/developer/testers"><Glyph name="users"/>Testers</Link>
+        <Link to="/developer/analytics"><Glyph name="chart"/>Analytics</Link>
         <Link to="/developer/feedback"><Glyph name="feedback"/>Feedback</Link>
         <Link to="/developer/notifications"><Glyph name="bell"/>Notifications</Link>
-        <Link to="/developer-dashboard"><Glyph name="crown"/>Subscription</Link>
+        <Link to="/developer/subscription"><Glyph name="crown"/>Subscription</Link>
         <Link to="/developer/settings"><Glyph name="settings"/>Settings</Link>
         <Link to="/developer/help"><Glyph name="help"/>Help & Support</Link>
       </nav>
