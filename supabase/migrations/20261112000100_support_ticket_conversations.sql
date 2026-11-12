@@ -244,7 +244,8 @@ with check (
   and (storage.foldername(name))[2] = (select auth.uid())::text
   and exists (
     select 1 from public.support_tickets t
-    where t.id = ((storage.foldername(name))[1])::uuid
+    where t.id = case
+      when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
       and t.status <> 'closed'
   )
@@ -259,6 +260,39 @@ using (
   and exists (
     select 1 from public.support_tickets t
     where t.id = ((storage.foldername(name))[1])::uuid
+      and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
+  )
+);
+
+commit;
+
+        then ((storage.foldername(name))[1])::uuid
+      else null
+    end
+      and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
+      and t.status <> 'closed'
+  )
+);
+
+drop policy if exists support_attachments_select_participants on storage.objects;
+create policy support_attachments_select_participants
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'support-attachments'
+  and (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+  and exists (
+    select 1 from public.support_tickets t
+    where t.id = case
+      when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}
+      and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
+  )
+);
+
+commit;
+
+        then ((storage.foldername(name))[1])::uuid
+      else null
+    end
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
   )
 );
