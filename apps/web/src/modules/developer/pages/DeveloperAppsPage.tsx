@@ -218,9 +218,9 @@ function AppsPage() {
         <Link to="/developer/notifications"><Glyph name="bell"/>Notifications</Link>
         <Link to="/developer-dashboard"><Glyph name="crown"/>Subscription</Link>
         <Link to="/developer/settings"><Glyph name="settings"/>Settings</Link>
-        <Link to="/help"><Glyph name="help"/>Help & Support</Link>
+        <Link to="/developer/help"><Glyph name="help"/>Help & Support</Link>
       </nav>
-      <div className="dmy-promo"><span className="dmy-promo-rocket">🚀</span><strong>Grow Your Apps<br/>with TestDZ</strong><Link to="/pricing">Upgrade Plan <Glyph name="arrow" size={15}/></Link></div>
+      <div className="dmy-promo"><span className="dmy-promo-rocket">🚀</span><strong>Grow Your Apps<br/>with TestDZ</strong><Link to="/developer/subscription">Upgrade Plan <Glyph name="arrow" size={15}/></Link></div>
     </aside>
 
     <section className="dmy-content">
