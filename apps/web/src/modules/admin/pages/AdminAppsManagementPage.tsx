@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-apps-management.css";
+import AdminSidebar from "../components/AdminSidebar";
 
 type AppStatus = "Approved" | "Pending" | "Rejected" | "Suspended";
 type AppRecord = { id: string; name: string; description: string; developer: string; handle: string; category: string; version: string; status: AppStatus; submitted: string; downloads: string; activeUsers: string };
@@ -33,7 +34,7 @@ export default function AdminAppsManagementPage() {
   <aside className="admin-sidebar">
    <Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link>
    <div className="admin-sidebar-label">Workspace</div>
-   <nav className="admin-nav" aria-label="Admin navigation">{nav.map(([label,icon,path])=><Link key={path} to={path} className={"admin-nav-item "+(path==="/admin/apps"?"active":"")}><span className="apps-nav-symbol">{icon}</span><span>{label}</span>{path==="/admin/apps"&&<i/>}</Link>)}</nav>
+   <AdminSidebar activePath="/admin/apps" />
    <div className="admin-sidebar-label">System</div><Link className="admin-nav-item" to="/admin/audit-trail"><span className="apps-nav-symbol">◷</span><span>Audit Trail</span></Link>
    <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div>
   </aside>
