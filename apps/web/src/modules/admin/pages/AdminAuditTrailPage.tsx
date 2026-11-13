@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-audit-trail.css";
 import AdminSidebar from "../components/AdminSidebar";
-import AdminIcon from "../components/AdminIcon";
 
 type AuditEvent={id:string;user:string;role:string;action:string;entity:string;entityId:string;date:string;ip:string;result:"Success"|"Failed";requestId:string;description:string;before?:string;after?:string;duration:string};
 const events:AuditEvent[]=[
