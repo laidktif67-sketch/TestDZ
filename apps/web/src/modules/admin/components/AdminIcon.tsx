@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type AdminIconName = "search" | "bell" | "mail" | "home" | "file" | "calendar" | "download" | "clock" | "wallet" | "card" | "shield" | "user" | "phone" | "pin" | "alert" | "check" | "close" | "refresh" | "arrow" | "gift" | "chart" | "settings" | "info" | "flask" | "arrow-left" | "user-check";
+type AdminIconName = "search" | "bell" | "mail" | "home" | "file" | "calendar" | "download" | "clock" | "wallet" | "card" | "shield" | "user" | "phone" | "pin" | "alert" | "check" | "close" | "refresh" | "arrow" | "gift" | "chart" | "settings" | "info" | "flask" | "arrow-left" | "user-check" | "code" | "grid" | "star" | "users" | "edit" | "more-horizontal" | "activity" | "building" | "check-circle";
 
 const paths: Record<AdminIconName, ReactNode> = {
  search: <><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 4.5 4.5"/></>,
@@ -22,6 +22,15 @@ const paths: Record<AdminIconName, ReactNode> = {
  flask: <><path d="M9 3h6M10 3v6l-5 9a2.4 2.4 0 0 0 2.1 3.6h9.8A2.4 2.4 0 0 0 19 18l-5-9V3"/><path d="M7.5 15h9"/></>,
  "arrow-left": <><path d="M20 12H5"/><path d="m11 6-6 6 6 6"/></>,
  "user-check": <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></>,
+ code: <><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></>,
+ grid: <><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></>,
+ star: <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>,
+ users: <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+ edit: <><path d="m14 5 5 5M4 20l4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/></>,
+ "more-horizontal": <><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>,
+ activity: <path d="M22 12h-4l-3 8L9 4l-3 8H2"/>,
+ building: <><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1m4 0h1M9 11h1m4 0h1M9 15h1m4 0h1M10 21v-3h4v3"/></>,
+ "check-circle": <><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></>,
  check: <path d="m5 12 4 4L19 6"/>,
  close: <path d="m6 6 12 12M18 6 6 18"/>,
  refresh: <><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.5-3"/></>,
