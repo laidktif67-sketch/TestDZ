@@ -19,9 +19,6 @@ const initialLeaders:Leader[] = [
  {id:9,name:"Yacine Belkacem",role:"Developer",points:10970,tests:150,success:89.9,rewards:520,trend:2},
  {id:10,name:"Amina Khelifi",role:"Tester",points:10680,tests:145,success:88.7,rewards:500,trend:1}
 ];
-const nav=[
- ["Admin Dashboard","⌂","/admin"],["Users Management","♙","/admin/users"],["Developers","⌘","/admin/developers"],["Testers","♧","/admin/testers"],["Tests","▤","/admin/tests"],["Apps Management","▦","/admin/apps"],["Cohorts","▱","/admin/cohorts"],["Assignments","☷","/admin/assignments"],["Reports & Reviews","▣","/admin/reports"],["Medical Exceptions","♡","/admin/medical-exceptions"],["Support Center","◉","/admin/support"],["Financial","▤","/admin/financial"],["Notifications","♧","/admin/notifications"],["System Monitoring","⌁","/admin/monitoring"],["System Logs","▤","/admin/logs"],["Audit Trail","◷","/admin/audit-trail"],["Analytics","▥","/admin/analytics"],["Leaderboard","🏆","/admin/leaderboard"],["Rewards & Withdrawals","♜","/admin/rewards"],["Settings","⚙","/admin/settings"]
-] as const;
 const fmt=(n:number)=>n.toLocaleString("en-US");
 function Sparkline({seed=0}:{seed?:number}){const points=Array.from({length:10},(_,i)=>{const y=24-((i*7+seed*3)%17);return `${i*11},${y}`}).join(" ");return <svg className="lb-spark" viewBox="0 0 100 30" aria-hidden="true"><polyline points={points}/></svg>}
 function Trend({value}:{value:number}){return <span className="lb-trend">↑ +{value}%</span>}
