@@ -1,5 +1,5 @@
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import type { ReactNode } from "react";
 import "../styles/admin-sidebar.css";
 
 type AdminSidebarProps = { activePath: string };
@@ -87,15 +87,17 @@ function SidebarIcon({ name }: { name: SidebarIconName }) {
 }
 
 export default function AdminSidebar({ activePath }: AdminSidebarProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const isActive = (path: string) =>
     activePath === path || (path !== "/admin" && activePath.startsWith(path + "/"));
 
   return (
-    <nav className="admin-nav admin-sidebar-nav" aria-label="Admin navigation">
+    <nav className={"admin-nav admin-sidebar-nav" + (mobileOpen ? " is-mobile-open" : "")} aria-label="Admin navigation">
+      <button type="button" className="admin-sidebar-mobile-toggle" aria-expanded={mobileOpen} aria-label={mobileOpen ? "Close admin navigation" : "Open admin navigation"} onClick={() => setMobileOpen(open => !open)}><span aria-hidden="true">{mobileOpen ? "×" : "☰"}</span><span>{mobileOpen ? "Close menu" : "Menu"}</span></button>
       <div className="admin-sidebar-section-label">WORKSPACE</div>
       {primaryItems.map(([label, path, icon]) => (
         <Link key={path} to={path} aria-current={isActive(path) ? "page" : undefined}
-          className={"admin-nav-item" + (isActive(path) ? " active" : "")}>
+          onClick={() => setMobileOpen(false)} className={"admin-nav-item" + (isActive(path) ? " active" : "")}>
           <span className="admin-sidebar-icon" aria-hidden="true"><SidebarIcon name={icon} /></span>
           <span>{label}</span>
         </Link>
@@ -109,7 +111,7 @@ export default function AdminSidebar({ activePath }: AdminSidebarProps) {
         </div>
         {financialItems.map(([label, path, icon]) => (
           <Link key={path} to={path} aria-current={activePath === path ? "page" : undefined}
-            className={"admin-sidebar-subitem" + (activePath === path ? " active" : "")}>
+            onClick={() => setMobileOpen(false)} className={"admin-sidebar-subitem" + (activePath === path ? " active" : "")}>
             <span className="admin-sidebar-icon" aria-hidden="true"><SidebarIcon name={icon} /></span>
             <span>{label}</span>
           </Link>
