@@ -47,7 +47,7 @@ import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmen
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
 import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
-import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
+import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
@@ -115,7 +115,7 @@ export default function App() {
             </Route>
             <Route path="/notifications" element={<NotificationsCenterPage />} />
             <Route element={<RoleGuard requiredRole="admin" />}>
-              <Route path="/admin" element={<TesterSectionPage />} />
+              <Route path="/admin" element={<AdminDashboardPage />} />
             </Route>
             <Route path="/dashboard" element={<RoleHomeRedirect />} />
             <Route element={<RoleGuard requiredRole="tester" />}>
