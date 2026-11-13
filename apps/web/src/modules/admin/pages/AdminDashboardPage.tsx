@@ -127,27 +127,26 @@ export default function AdminDashboardPage() {
         <section className="admin-metrics" aria-label="Platform statistics">{metrics.map((item) => <MetricCard item={item} key={item.label} />)}</section>
 
         <section className="admin-primary-grid">
-          <article className="admin-panel admin-growth">
-            <div className="admin-panel-heading"><div><h2><Icon name="chart" /> Platform Growth</h2><p>Users, tests and submissions over time</p></div><span className="admin-select-static">Last 30 days　⌄</span></div>
-            <TrendChart /><div className="admin-chart-legend"><span><i className="blue-dot" />Users</span><span><i className="teal-dot" />Tests</span><span><i className="purple-dot" />Submissions</span></div>
-          </article>
-
-          <article className="admin-panel admin-test-status">
-            <div className="admin-panel-heading"><div><h2><Icon name="flask" /> Test Status</h2><p>Illustrative campaign overview</p></div></div>
-            <div className="admin-status-content"><div className="admin-donut"><div><strong>78%</strong><span>Success rate</span></div></div><div className="admin-status-legend"><div><i className="green-dot" /><span>Passed</span><strong>78%</strong></div><div><i className="red-dot" /><span>Needs attention</span><strong>22%</strong></div><small>3,210 total tests</small></div></div>
-          </article>
-
           <article className="admin-panel admin-quick-actions">
-            <div className="admin-panel-heading"><h2><Icon name="bolt" /> Quick Actions</h2></div>
+            <div className="admin-panel-heading"><h2><Icon name="bolt" /> Quick Actions</h2><p>Open the dedicated workspace for each task</p></div>
             <div className="admin-action-grid">
-              {[["users","Manage Users"],["file","Review Reports"],["heart","Medical Requests"],["support","Support Tickets"],["wallet","Manage Rewards"],["settings","System Settings"]].map(([icon,label]) => label === "Manage Developers" ? <Link className="admin-action-tile" key={label} to="/admin/developers"><Icon name={icon} size={21} /><span>{label}</span></Link> : label === "Medical Requests" ? <Link className="admin-action-tile" key={label} to="/admin/medical-exceptions"><Icon name={icon} size={21} /><span>{label}</span></Link> : label === "Support Tickets" ? <Link className="admin-action-tile" key={label} to="/admin/support"><Icon name={icon} size={21} /><span>{label}</span></Link> : label === "Manage Users" ? <Link className="admin-action-tile" key={label} to="/admin/users"><Icon name={icon} size={21} /><span>{label}</span></Link> : label === "Review Reports" ? <Link className="admin-action-tile" key={label} to="/admin/reports"><Icon name={icon} size={21} /><span>{label}</span></Link> : label === "Manage Rewards" ? <Link className="admin-action-tile" key={label} to="/admin/rewards"><Icon name={icon} size={21} /><span>{label}</span></Link> : <div className="admin-action-tile" key={label}><Icon name={icon} size={21} /><span>{label}</span></div>)}
+              {[["users","Manage Users","/admin/users"],["file","Review Reports","/admin/reports"],["heart","Medical Requests","/admin/medical-exceptions"],["support","Support Tickets","/admin/support"],["wallet","Rewards Management","/admin/rewards"],["chart","Analytics Dashboard","/admin/analytics"]].map(([icon,label,path])=><Link className="admin-action-tile" key={label} to={path}><Icon name={icon} size={21}/><span>{label}</span></Link>)}
             </div>
+          </article>
+          <article className="admin-panel admin-operations-summary">
+            <div className="admin-panel-heading"><h2><Icon name="activity"/> Operational Snapshot</h2><span className="admin-total-badge">Preview</span></div>
+            <div className="admin-task-list">
+              <div className="admin-task-row"><span className="admin-task-icon amber"><Icon name="clock" size={17}/></span><span className="admin-task-copy"><strong>Medical exception reviews</strong><small>Awaiting an admin decision</small></span><b className="admin-task-count">08</b></div>
+              <div className="admin-task-row"><span className="admin-task-icon blue"><Icon name="support" size={17}/></span><span className="admin-task-copy"><strong>Open support tickets</strong><small>Need a staff response</small></span><b className="admin-task-count">12</b></div>
+              <div className="admin-task-row"><span className="admin-task-icon red"><Icon name="shield" size={17}/></span><span className="admin-task-copy"><strong>Suspension appeals</strong><small>Pending review</small></span><b className="admin-task-count">03</b></div>
+            </div>
+            <p className="admin-demo-note">Financial approvals and reward issuance are intentionally excluded here and handled in their own modules.</p>
           </article>
         </section>
 
         <section className="admin-secondary-grid">
           <article className="admin-panel">
-            <div className="admin-panel-heading"><h2><Icon name="clock" /> Needs Your Attention</h2><span className="admin-total-badge">29 pending</span></div>
+            <div className="admin-panel-heading"><h2><Icon name="clock" /> Needs Your Attention</h2><span className="admin-total-badge">23 pending</span></div>
             <div className="admin-task-list">{tasks.map((task) => <div className="admin-task-row" key={task.title}><span className={`admin-task-icon ${task.tone}`}><Icon name="file" size={17} /></span><span className="admin-task-copy"><strong>{task.title}</strong><small>{task.detail}</small></span><b className="admin-task-count">{task.count}</b></div>)}</div>
           </article>
 
