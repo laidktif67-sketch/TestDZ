@@ -14,7 +14,7 @@ const rewards = [
 ];
 const rules = [
  ["✓","Test Completion","250 points per completed test","250 pts","blue"],
- ["🏆","Achievement","500–2,000 points per achievement","500–2K","purple"],
+ ["★","Achievement","500–2,000 points per achievement","500–2K","purple"],
  ["♧","Referral","200 points per referred user","200 pts","green"],
  ["★","Special Events","1,000 points for special events","1,000 pts","orange"]
 ];
