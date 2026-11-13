@@ -285,6 +285,14 @@ begin
     raise exception 'ACCOUNT_NOT_SUSPENDED' using errcode = '23514';
   end if;
 
+  perform 1
+  from public.account_suspensions
+  where user_id = p_user_id and status = 'active'
+  for update;
+  if not found then
+    raise exception 'ACTIVE_SUSPENSION_NOT_FOUND' using errcode = 'P0002';
+  end if;
+
   update public.profiles set is_banned = false where id = p_user_id;
   update public.account_suspensions
   set status = 'lifted', lifted_at = now(), lifted_by = v_actor, lift_reason = btrim(p_reason)
