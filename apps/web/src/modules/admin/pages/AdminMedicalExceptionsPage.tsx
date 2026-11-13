@@ -83,7 +83,7 @@ export default function AdminMedicalExceptionsPage() {
       <div className="admin-content medical-content">
         <section className="admin-welcome medical-welcome">
           <div><span className="admin-eyebrow">TESTDZ · ADMIN WORKSPACE</span><h1>إدارة طلبات الاستثناء الطبي</h1><p>مراجعة طلبات المختبرين واتخاذ القرار المناسب مع توثيق كل إجراء.</p></div>
-          <div className="admin-welcome-art" aria-hidden="true">✚　✦</div>
+          <div className="admin-welcome-art" aria-hidden="true"><AdminIcon name="shield" size={25}/><AdminIcon name="activity" size={17}/></div>
           <span className="medical-period"><Icon name="calendar" /> آخر 30 يوماً</span>
         </section>
 
