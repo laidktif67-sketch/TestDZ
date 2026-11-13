@@ -70,6 +70,15 @@ function MetricCard({ item }: { item: typeof metrics[number] }) {
   </article>;
 }
 
+function TrendChart() {
+  return <svg className="admin-chart" viewBox="0 0 620 190" preserveAspectRatio="none" role="img" aria-label="Illustrative platform growth chart">
+    <g stroke="#e9eef7" strokeWidth="1"><path d="M38 24H610M38 66H610M38 108H610M38 150H610" /></g>
+    <path d="M38 137 C90 125 102 92 150 101 S218 62 265 73 S328 39 375 51 S438 27 482 39 S550 14 610 12" fill="none" stroke="#1766df" strokeWidth="3.5" />
+    <path d="M38 155 C90 149 102 124 150 133 S218 103 265 112 S328 83 375 94 S438 67 482 80 S550 51 610 60" fill="none" stroke="#12b8ad" strokeWidth="3" />
+    <path d="M38 170 C90 165 102 151 150 158 S218 136 265 145 S328 119 375 128 S438 105 482 116 S550 91 610 98" fill="none" stroke="#9365e9" strokeWidth="3" />
+  </svg>;
+}
+
 export default function AdminDashboardPage() {
   return <main className="admin-dashboard">
     <aside className="admin-sidebar">
@@ -93,6 +102,13 @@ export default function AdminDashboardPage() {
         </section>
 
         <section className="admin-metrics" aria-label="Platform statistics">{metrics.map((item) => <MetricCard item={item} key={item.label} />)}</section>
+
+        <section className="admin-panel admin-trend-panel">
+          <div className="admin-panel-heading"><h2><Icon name="chart" /> Platform Growth</h2><span className="admin-total-badge">Last 30 days</span></div>
+          <TrendChart />
+          <div className="admin-chart-legend"><span><i className="blue-dot" /> Active tests</span><span><i className="teal-dot" /> Developer activity</span><span><i className="purple-dot" /> Completed reviews</span></div>
+          <p className="admin-demo-note">Illustrative trend lines for the design preview; these are not live analytics.</p>
+        </section>
 
         <section className="admin-primary-grid">
           <article className="admin-panel admin-quick-actions">
