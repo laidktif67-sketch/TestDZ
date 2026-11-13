@@ -137,8 +137,8 @@ select throws_ok(
 );
 
 select throws_ok(
-  $delete from public.developer_feedback_events
-    where feedback_id = '70000000-0000-4000-8000-000000000001'$,
+  $sql$delete from public.developer_feedback_events
+    where feedback_id = '70000000-0000-4000-8000-000000000001'$sql$,
   '42501', null,
   'authenticated participants cannot delete database-authored audit events'
 );
