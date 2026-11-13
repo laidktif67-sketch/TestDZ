@@ -52,6 +52,7 @@ import AdminAppsManagementPage from "./modules/admin/pages/AdminAppsManagementPa
 import AdminReportsReviewsPage from "./modules/admin/pages/AdminReportsReviewsPage";
 import AdminNotificationsPage from "./modules/admin/pages/AdminNotificationsPage";
 import AdminSystemMonitoringPage from "./modules/admin/pages/AdminSystemMonitoringPage";
+import AdminSystemLogsPage from "./modules/admin/pages/AdminSystemLogsPage";
 import AdminFinancialPage from "./modules/admin/pages/AdminFinancialPage";
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
 import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
@@ -135,6 +136,7 @@ export default function App() {
               <Route path="/admin/reports" element={<AdminReportsReviewsPage />} />
               <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
               <Route path="/admin/monitoring" element={<AdminSystemMonitoringPage />} />
+              <Route path="/admin/logs" element={<AdminSystemLogsPage />} />
               <Route path="/admin/financial" element={<AdminFinancialPage />} />
               <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
