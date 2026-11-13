@@ -20,9 +20,9 @@ export default function AuthGuard() {
     }
 
     let active = true;
-    setAccountStatus("loading");
+    setAccountStatus({ userId: user.id, status: "loading" });
 
-    void identityApi.getAccountStatus(user.id)
+    void Promise.resolve(identityApi.getAccountStatus(user.id))
       .then(({ data, error: statusError }) => {
         if (statusError) throw statusError;
         if (!data) throw new Error("PROFILE_NOT_FOUND");
