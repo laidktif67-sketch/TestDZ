@@ -181,6 +181,38 @@ try {
     storage_path: feedbackPath, original_filename: "feedback.txt", mime_type: "text/plain", size_bytes: 17
   }, "insert feedback attachment metadata");
 
+  // Final assignment submission evidence: upload while the assignment is active,
+  // then expose the private object only after the submission RPC records metadata.
+  const assignmentFileId = uuid();
+  const assignmentEvidencePath = `${testDeveloperId}/${tester.id}/${assignmentId}/${assignmentFileId}.pdf`;
+  result = await upload(tester, "assignment-evidence", assignmentEvidencePath, Buffer.from("%PDF-1.4\\nTestDZ evidence\\n%%EOF"), "application/pdf");
+  check(result.response.ok, "active tester uploads private final-assignment evidence");
+  const submitted = await must("/rest/v1/rpc/submit_assignment_report", {
+    method: "POST", token: tester.token,
+    body: {
+      p_assignment_id: assignmentId,
+      p_report_text: "The application was tested across the agreed scenarios and the results were recorded with supporting evidence.",
+      p_comments: "Storage integration test submission.",
+      p_files: [{ path: assignmentEvidencePath, name: "final-evidence.pdf", mime_type: "application/pdf", size_bytes: 28 }]
+    }
+  }, "submit final assignment report");
+  check(submitted?.status === "submitted" && submitted?.attachments_count === 1, "tester submits report and attachment metadata through the RPC");
+  result = await download(tester, "assignment-evidence", assignmentEvidencePath);
+  check(result.response.ok && result.text.includes("TestDZ evidence"), "submitting tester can download their final evidence");
+  result = await download(developer, "assignment-evidence", assignmentEvidencePath);
+  check(result.response.ok && result.text.includes("TestDZ evidence"), "owning developer can download submitted final evidence");
+  await expectDenied(`/storage/v1/object/authenticated/assignment-evidence/${assignmentEvidencePath}`, { token: outsider.token }, "unrelated account cannot download final assignment evidence");
+  await expectDenied(objectPath("assignment-evidence", `${testDeveloperId}/${outsider.id}/${assignmentId}/${uuid()}.pdf`), {
+    method: "POST", token: outsider.token, body: Buffer.from("%PDF-1.4\\nforged\\n%%EOF"), contentType: "application/pdf"
+  }, "unrelated account cannot upload final assignment evidence");
+  await expectDenied(objectPath("assignment-evidence", `${testDeveloperId}/${tester.id}/${assignmentId}/${uuid()}.pdf`), {
+    method: "POST", token: tester.token, body: Buffer.from("%PDF-1.4\\nlate\\n%%EOF"), contentType: "application/pdf"
+  }, "assignment cannot accept additional evidence after final submission");
+  await expectDenied("/rest/v1/rpc/submit_assignment_report", {
+    method: "POST", token: tester.token,
+    body: { p_assignment_id: assignmentId, p_report_text: "A second report must not be accepted for the same assignment.", p_comments: "", p_files: [] }
+  }, "duplicate final report submission is rejected");
+
   // Evidence object keys are bound to test/tester/report/file identity.
   const fileId = uuid();
   const evidencePath = `${testDeveloperId}/${tester.id}/${reportId}/${fileId}.txt`;
@@ -213,11 +245,13 @@ try {
 
   process.stdout.write(`Storage API regression passed: ${checks} assertions.\n`);
 } finally {
-  for (const bucket of ["support-attachments", "developer-feedback-attachments", "test-evidence"]) {
+  for (const bucket of ["support-attachments", "developer-feedback-attachments", "test-evidence", "assignment-evidence"]) {
     const paths = uploaded.filter(item => item.bucket === bucket).map(item => item.path);
     if (paths.length) await removeObjects(bucket, paths);
   }
   await removeRows("report_attachments", `report_id=eq.${reportId}`, "report attachment metadata");
+  await removeRows("assignment_submission_attachments", `assignment_id=eq.${assignmentId}`, "assignment submission attachment metadata");
+  await removeRows("assignment_submissions", `assignment_id=eq.${assignmentId}`, "assignment submission");
   await removeRows("reports", `id=eq.${reportId}`, "report");
   await removeRows("support_ticket_attachments", `ticket_id=eq.${ticketId}`, "support attachment metadata");
   await removeRows("support_ticket_messages", `ticket_id=eq.${ticketId}`, "support messages");
