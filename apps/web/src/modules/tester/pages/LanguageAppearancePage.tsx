@@ -80,7 +80,8 @@ export default function LanguageAppearancePage() {
     root.dataset.theme = prefs.theme;
     root.lang = language.slice(0, 2);
     root.dir = language === "ar-DZ" ? "rtl" : "ltr";
-    return () => { delete root.dataset.theme; root.dir = "ltr"; };
+    // These are app-wide preferences. Keep them applied after route navigation;
+    // resetting dir/theme on unmount breaks Arabic RTL and dark mode on other pages.
   }, [prefs.theme, language]);
   const update = <K extends keyof Preferences,>(key: K, value: Preferences[K]) => setPrefs(current => ({ ...current, [key]: value }));
   async function save() {

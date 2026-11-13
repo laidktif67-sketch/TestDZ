@@ -1,4 +1,5 @@
 import { profilesApi } from "../features/profiles/profiles-api";
+import { identityApi } from "../shared/auth/identity-api";
 
 export function translateAuthError(message: string) {
   const value = message.toLowerCase();
@@ -10,8 +11,16 @@ export function translateAuthError(message: string) {
   return "تعذر إكمال العملية. تحقق من البيانات وحاول مرة أخرى.";
 }
 
-export async function getPostAuthRoute(userId: string): Promise<"/tester-dashboard" | "/onboarding"> {
+export async function getPostAuthRoute(userId: string): Promise<"/admin" | "/tester-dashboard" | "/developer-dashboard" | "/onboarding"> {
+  // Resolve server-assigned roles first so administrators are sent to their workspace.
+  const roles = await identityApi.getUserRoles(userId);
+  if (roles.includes("admin")) return "/admin";
+
   const { data: profile, error } = await profilesApi.getOnboardingStatus(userId);
   if (error) throw error;
-  return profile?.onboarding_completed_at ? "/tester-dashboard" : "/onboarding";
+  if (!profile?.onboarding_completed_at) return "/onboarding";
+
+  if (roles.includes("tester")) return "/tester-dashboard";
+  if (roles.includes("developer")) return "/developer-dashboard";
+  return "/tester-dashboard";
 }
