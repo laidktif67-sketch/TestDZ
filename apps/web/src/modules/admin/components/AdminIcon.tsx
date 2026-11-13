@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type AdminIconName = "search" | "bell" | "mail" | "home" | "file" | "calendar" | "download" | "clock" | "wallet" | "card" | "shield" | "user" | "phone" | "pin" | "alert" | "check" | "close" | "refresh" | "arrow" | "gift" | "chart" | "settings" | "info" | "flask" | "arrow-left" | "user-check" | "code" | "grid" | "star" | "users" | "edit" | "more-horizontal" | "activity" | "building" | "check-circle" | "globe";
+type AdminIconName = "search" | "bell" | "mail" | "home" | "file" | "calendar" | "download" | "clock" | "wallet" | "card" | "shield" | "user" | "phone" | "pin" | "alert" | "check" | "close" | "refresh" | "arrow" | "gift" | "chart" | "settings" | "info" | "flask" | "arrow-left" | "user-check" | "code" | "grid" | "star" | "users" | "edit" | "more-horizontal" | "activity" | "building" | "check-circle" | "globe" | "filter";
 
 const paths: Record<AdminIconName, ReactNode> = {
  search: <><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 4.5 4.5"/></>,
@@ -32,6 +32,7 @@ const paths: Record<AdminIconName, ReactNode> = {
  building: <><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1m4 0h1M9 11h1m4 0h1M9 15h1m4 0h1M10 21v-3h4v3"/></>,
  "check-circle": <><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></>,
  globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></>,
+ filter: <path d="M4 5h16l-6.5 7.2V19l-3-1.7v-5.1L4 5Z"/>,
  check: <path d="m5 12 4 4L19 6"/>,
  close: <path d="m6 6 12 12M18 6 6 18"/>,
  refresh: <><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.5-3"/></>,
