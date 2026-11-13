@@ -49,6 +49,24 @@ create table public.assignment_submission_attachments (
 );
 
 alter table public.assignment_submission_attachments enable row level security;
+
+-- New tables are created after the global suspension migration, so explicitly
+-- inherit its restrictive account gate and write trigger.
+create policy account_not_banned on public.assignment_submissions
+  as restrictive for all to authenticated
+  using (not (select private.is_current_user_banned()))
+  with check (not (select private.is_current_user_banned()));
+create policy account_not_banned on public.assignment_submission_attachments
+  as restrictive for all to authenticated
+  using (not (select private.is_current_user_banned()))
+  with check (not (select private.is_current_user_banned()));
+
+create trigger reject_banned_account_writes
+  before insert or update or delete on public.assignment_submissions
+  for each row execute function private.reject_banned_account_write();
+create trigger reject_banned_account_writes
+  before insert or update or delete on public.assignment_submission_attachments
+  for each row execute function private.reject_banned_account_write();
 alter table public.assignment_submissions enable row level security;
 revoke all on public.assignment_submissions, public.assignment_submission_attachments from public, anon, authenticated;
 grant select on public.assignment_submissions, public.assignment_submission_attachments to authenticated;
