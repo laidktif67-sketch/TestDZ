@@ -27,7 +27,9 @@ values
 on conflict (id) do nothing;
 
 insert into public.user_roles (user_id, role)
-values ('26000000-0000-4000-8000-000000000001', 'admin')
+values
+  ('26000000-0000-4000-8000-000000000001', 'admin'),
+  ('26000000-0000-4000-8000-000000000002', 'tester')
 on conflict (user_id, role) do nothing;
 
 select ok(
