@@ -50,6 +50,8 @@ import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewar
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
+import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
+import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
 import SubmitFeedbackPage from "./modules/tester/pages/SubmitFeedbackPage";
 import ReportProblemPage from "./modules/tester/pages/ReportProblemPage";
 import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
@@ -99,8 +101,8 @@ export default function App() {
             <Route path="/submit-feedback" element={<SubmitFeedbackPage />} />
             <Route path="/report-problem" element={<ReportProblemPage />} />
             <Route path="/wallet-rewards" element={<WalletRewardsPage />} />
-            <Route path="/withdrawal-request" element={<Navigate to="/wallet-rewards" replace />} />
-            <Route path="/withdrawal-status" element={<Navigate to="/wallet-rewards" replace />} />
+            <Route path="/withdrawal-request" element={<WithdrawalRequestPage />} />
+            <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
             <Route path="/help" element={<HelpSupportPage />} />
             <Route path="/support" element={<SupportCenterPage />} />
             <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
