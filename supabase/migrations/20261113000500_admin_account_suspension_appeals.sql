@@ -174,13 +174,10 @@ begin
     jsonb_build_object('appeal_deadline', v_deadline)
   );
 
-  insert into public.notifications (user_id, type, title, body, data)
-  select ur.user_id, 'account_suspension_appeal', 'Suspension appeal submitted',
-    'A suspended user has submitted an appeal for administrator review.',
-    jsonb_build_object('appeal_id', v_appeal_id, 'suspension_id', p_suspension_id)
-  from public.user_roles ur
-  where ur.role = 'admin';
-
+  -- The submitter is suspended. Do not write to notifications here:
+  -- PR27 intentionally blocks all writes by banned identities, including writes
+  -- performed inside SECURITY DEFINER functions. The pending appeal itself is
+  -- the administrator review queue; admin notifications are emitted on review.
   return v_appeal_id;
 end;
 $function$;
@@ -203,7 +200,8 @@ begin
   if v_actor is null or not private.is_admin() then
     raise exception 'ADMIN_REQUIRED' using errcode = '42501';
   end if;
-  if p_decision not in ('accepted', 'rejected')
+  if p_decision is null
+    or p_decision not in ('accepted', 'rejected')
     or p_resolution is null
     or char_length(btrim(p_resolution)) not between 10 and 2000 then
     raise exception 'INVALID_APPEAL_DECISION' using errcode = '22023';
