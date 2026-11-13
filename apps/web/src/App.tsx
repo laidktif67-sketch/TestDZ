@@ -62,6 +62,7 @@ import AdminWithdrawalFailedPage from "./modules/admin/pages/AdminWithdrawalFail
 import AdminRewardsPage from "./modules/admin/pages/AdminRewardsPage";
 import AdminTransactionsLedgerPage from "./modules/admin/pages/AdminTransactionsLedgerPage";
 import AdminDeveloperPaymentsPage from "./modules/admin/pages/AdminDeveloperPaymentsPage";
+import AdminDeveloperPaymentDetailsPage from "./modules/admin/pages/AdminDeveloperPaymentDetailsPage";
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
 import AdminDeveloperDetailsPage from "./modules/admin/pages/AdminDeveloperDetailsPage";
 import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
@@ -156,6 +157,7 @@ export default function App() {
               <Route path="/admin/rewards" element={<AdminRewardsPage />} />
               <Route path="/admin/transactions-ledger" element={<AdminTransactionsLedgerPage />} />
               <Route path="/admin/developer-payments" element={<AdminDeveloperPaymentsPage />} />
+              <Route path="/admin/developer-payments/:id" element={<AdminDeveloperPaymentDetailsPage />} />
               <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
               <Route path="/admin/users" element={<AdminUserManagementPage />} />
