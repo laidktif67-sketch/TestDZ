@@ -10,7 +10,7 @@ type Withdrawal = {
 };
 
 const requests: Withdrawal[] = [
-  { id: "WD-2026-1247", name: "Sara Benali", email: "sara.benali@testdz.com", amount: 120, method: "Bank Transfer", date: "Dec 4, 2026 · 14:32", status: "Pending", initials: "SB", note: "Please process my withdrawal. Thank you!" },
+  { id: "WD-2026-1247", name: "Sara Benali", email: "sara.benali@testdz.dz", amount: 120, method: "Bank Transfer", date: "Nov 8, 2026 · 14:32", status: "Pending", initials: "SB", note: "Ready for payout, thank you!" },
   { id: "WD-2026-1246", name: "Mohamed Amine", email: "amine.mohamed@testdz.com", amount: 85, method: "PayPal", date: "Dec 4, 2026 · 13:45", status: "Completed", initials: "MA", note: "Standard withdrawal request." },
   { id: "WD-2026-1245", name: "Fatima Zahra", email: "fatima.zahra@testdz.com", amount: 200, method: "Cryptocurrency", date: "Dec 4, 2026 · 12:20", status: "Completed", initials: "FZ", note: "USDT wallet payout request." },
   { id: "WD-2026-1244", name: "Rami Djaafar", email: "rami.djaafar@testdz.com", amount: 75, method: "PayPal", date: "Dec 4, 2026 · 11:50", status: "Rejected", initials: "RD", note: "Payment details need verification." },
