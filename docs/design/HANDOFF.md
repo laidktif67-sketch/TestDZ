@@ -10,7 +10,7 @@
 - M-00: SemanticStatus, Button, EmptyState, ErrorState, Skeleton, StateNotice.
 - M-02: CheckInState. Server date is Africa/Algiers. No past/future dates, one check-in per assignment/day. TestDZ check-in is not proof of Google Play opt-in.
 - M-03: MedicalExceptionForm collects selected dates + short reason only; no upload. Admin only decides. Tester’s developer cannot view the request. Privacy text remains placeholder pending legal counsel. Proposed 300-character limit requires backend alignment.
-- M-05: PointsDisclosure and ledger states. Always show the exact translated non-cash phrase. No currency, conversion, cash-out, or withdrawal language.
+- M-05: Show earned, pending, and rejected rewards separately. Approved earned rewards may be converted to a cash withdrawal under the administrator-configured rate and eligibility rules. Purchased credits remain non-withdrawable. Never imply pending or rejected rewards are withdrawable.
 - M-12: Offline, expired session, account restricted, no permission, not found are separate. Account restriction is shown even if the session still exists.
 
 ## Accessibility and responsive
