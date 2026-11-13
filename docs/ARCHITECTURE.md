@@ -54,10 +54,10 @@ Guest, Tester, Developer, Both, Admin, Support. A user may have multiple roles. 
 
 ### Wallets and ledger
 
-- `earned_points` and `purchased_credits` are distinct balances with distinct purposes.
-- Earned points are earned through verified platform activity and may become eligible for cash withdrawal only under an administrator-configured conversion policy; the point-to-currency rate must not be hard-coded.
-- `purchased_credits` remain a separate, non-withdrawable balance used only for configurable platform services.
-- Cash withdrawal is a planned capability, not an active production workflow until request creation, admin review, payout reconciliation, and secure ledger reservation/release operations are implemented and tested.
+- `earned_points` and `purchased_credits` are distinct balances with distinct purposes; do not merge or convert the two balances.
+- Earned points are earned through verified platform activity and become eligible for cash withdrawal after the reward is approved, subject to an administrator-configured conversion policy; the point-to-currency rate must not be hard-coded.
+- `purchased_credits` remain a separate, non-withdrawable balance used only for configurable platform services; they cannot be converted into earned points or cash.
+- Cash withdrawal is an intended product capability. It must not be presented as production-ready until request creation, admin review, payout reconciliation, and secure ledger reservation/release operations are implemented and tested.
 - Each request must snapshot its conversion rate and currency at submission; later configuration changes must not alter an existing request.
 - Withdrawal lifecycle: submitted → under_review → processing → completed, with rejected/cancelled paths and audited status transitions. Reserve points atomically; completion consumes them, while rejection/cancellation releases them atomically.
 - Purchased credits are purchased in DZD and spent on configurable platform services.
