@@ -4,7 +4,7 @@
 - Reference branch: `feat/developer-report-review`, PR #31, start SHA `c0ab024cbb11d95e698f4cd382e44abe8d216904`.
 - Token source: `apps/web/src/styles/tokens.css`; fonts Plus Jakarta Sans / Noto Sans Arabic. HTML snapshots embed the existing tokens plus proposals listed in TOKEN_CHANGES.md.
 - Entry point: `mockups/index.html`.
-- Files: `m00-m00-{ar,fr,en}.html`, `m02-m02-{ar,fr,en}.html`, `m03-m03-{ar,fr,en}.html`, `m05-m05-{ar,fr,en}.html`, `m12-m12-{ar,fr,en}.html`.
+- Files: `shared-foundations-states-{ar,fr,en}.html`, `tester-assignment-checkin-states-{ar,fr,en}.html`, `tester-medical-exception-request-{ar,fr,en}.html`, `tester-wallet-points-states-{ar,fr,en}.html`, `shared-account-access-states-{ar,fr,en}.html`.
 
 ## Components and behavior
 - M-00: SemanticStatus, Button, EmptyState, ErrorState, Skeleton, StateNotice.
