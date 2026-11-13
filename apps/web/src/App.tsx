@@ -50,6 +50,7 @@ import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage"
 import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
 import AdminMedicalExceptionsPage from "./modules/admin/pages/AdminMedicalExceptionsPage";
 import AdminSupportCenterPage from "./modules/admin/pages/AdminSupportCenterPage";
+import AdminUserManagementPage from "./modules/admin/pages/AdminUserManagementPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
@@ -120,6 +121,7 @@ export default function App() {
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
+              <Route path="/admin/users" element={<AdminUserManagementPage />} />
             </Route>
             <Route path="/dashboard" element={<RoleHomeRedirect />} />
             <Route element={<RoleGuard requiredRole="tester" />}>
