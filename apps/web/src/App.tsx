@@ -48,6 +48,7 @@ import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSumm
 import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
+import AdminAnalyticsPage from "./modules/admin/pages/AdminAnalyticsPage";
 import AdminAppsManagementPage from "./modules/admin/pages/AdminAppsManagementPage";
 import AdminReportsReviewsPage from "./modules/admin/pages/AdminReportsReviewsPage";
 import AdminNotificationsPage from "./modules/admin/pages/AdminNotificationsPage";
@@ -132,6 +133,7 @@ export default function App() {
             <Route path="/notifications" element={<NotificationsCenterPage />} />
             <Route element={<RoleGuard requiredRole="admin" />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
               <Route path="/admin/apps" element={<AdminAppsManagementPage />} />
               <Route path="/admin/reports" element={<AdminReportsReviewsPage />} />
               <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
