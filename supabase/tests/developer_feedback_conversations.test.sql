@@ -57,6 +57,14 @@ select ok(
         'developer_feedback_attachments',
         'developer_feedback_events'
       )
+      and permissive = 'PERMISSIVE'
+  )
+  and exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'developer_feedback_messages'
+      and policyname = 'account_not_banned'
+      and permissive = 'RESTRICTIVE'
   )
   and exists (
     select 1 from pg_policies
