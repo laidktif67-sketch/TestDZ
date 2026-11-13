@@ -1,83 +1,31 @@
-name: Apply one Supabase migration
+name: Apply one Supabase migration to TestDZ-Rebuild
 
 on:
   workflow_dispatch:
     inputs:
-      migration:
-        description: Migration to apply to the development project
-        type: choice
+      migration_version:
+        description: Exact 14-digit version of the migration to apply
+        type: string
         required: true
-        options:
-          - 016a
-          - 016b
-          - 016c
 
 permissions:
   contents: read
 
 concurrency:
-  group: testdz-supabase-development-migrations
+  group: testdz-rebuild-manual-migrations
   cancel-in-progress: false
 
 jobs:
-  verify-preconditions:
-    if: github.ref == 'refs/heads/feat/week-4-design-system'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: development
-    steps:
-      - name: Checkout the approved base branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client
-
-      - name: Validate target project and database URL
-        env:
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: |
-          set -euo pipefail
-          test "$SUPABASE_PROJECT_REF" = "naqjjykcglxiobkmdllj"
-          python3 - <<'PY'
-          import os
-          from urllib.parse import unquote, urlparse
-
-          ref = os.environ["SUPABASE_PROJECT_REF"]
-          parsed = urlparse(os.environ["SUPABASE_DB_URL"])
-          host = parsed.hostname or ""
-          user = unquote(parsed.username or "")
-          if ref not in host and ref not in user:
-              raise SystemExit("SUPABASE_DB_URL does not identify the approved TestDZ project")
-          PY
-
-      - name: Verify remote migration preconditions
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          MIGRATION: ${{ inputs.migration }}
-        run: |
-          set -euo pipefail
-          case "$MIGRATION" in
-            016a) FILE="supabase/tests/verify_preconditions_016a.sql" ;;
-            016b) FILE="supabase/tests/verify_preconditions_016b.sql" ;;
-            016c) FILE="supabase/tests/verify_preconditions_016c.sql" ;;
-            *) echo "Unsupported migration selection"; exit 1 ;;
-          esac
-          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
-
   apply:
-    needs: verify-preconditions
-    if: github.ref == 'refs/heads/feat/week-4-design-system'
+    # Deployments are dispatched from protected main only. The GitHub Environment
+    # must have required reviewers configured in repository settings.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: development
+    environment: testdz-rebuild-migrations
     steps:
-      - name: Checkout the approved base branch
-        uses: actions/checkout@v4
+      - name: Checkout protected main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
 
@@ -91,44 +39,93 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
 
-      - name: Link only to the approved development project
+      - name: Validate the only permitted remote target
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_REF" = "ouzppgsvwsgtqyabkwjk"
+          test -n "$SUPABASE_DB_URL"
+          python3 - <<'PY'
+          import os
+          from urllib.parse import unquote, urlparse
+
+          expected_ref = "ouzppgsvwsgtqyabkwjk"
+          ref = os.environ["SUPABASE_PROJECT_REF"]
+          parsed = urlparse(os.environ["SUPABASE_DB_URL"])
+          host = parsed.hostname or ""
+          user = unquote(parsed.username or "")
+          if ref != expected_ref or (ref not in host and f".{ref}" not in user):
+              raise SystemExit("Database URL does not identify the approved TestDZ-Rebuild project")
+          if "naqjjykcglxiobkmdllj" in host or "naqjjykcglxiobkmdllj" in user:
+              raise SystemExit("Legacy TestDZ target is forbidden")
+          PY
+
+      - name: Link the validated Rebuild project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
           set -euo pipefail
-          test "$SUPABASE_PROJECT_REF" = "naqjjykcglxiobkmdllj"
+          test "$SUPABASE_PROJECT_REF" = "ouzppgsvwsgtqyabkwjk"
           supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
-      - name: Keep the complete applied history and only the selected pending migration
+      - name: Select exactly one pending migration and exclude staging-only files
         env:
-          MIGRATION: ${{ inputs.migration }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          MIGRATION_VERSION: ${{ inputs.migration_version }}
         run: |
           set -euo pipefail
-          case "$MIGRATION" in
-            016a)
-              rm -- supabase/migrations/20261107000200_assignments_feedback_constraints.sql
-              rm -- supabase/migrations/20261107000300_cohort_triggers_data_migration.sql
-              EXPECTED_VERSION="20261107000100"
-              ;;
-            016b)
-              rm -- supabase/migrations/20261107000300_cohort_triggers_data_migration.sql
-              EXPECTED_VERSION="20261107000200"
-              ;;
-            016c)
-              EXPECTED_VERSION="20261107000300"
-              ;;
-            *)
-              echo "Unsupported migration selection"
-              exit 1
-              ;;
-          esac
-          test -f "supabase/migrations/${EXPECTED_VERSION}_"*.sql
-          echo "Selected target version: $EXPECTED_VERSION"
-          echo "Earlier migration files are retained; only later pending files are excluded."
+          [[ "$MIGRATION_VERSION" =~ ^[0-9]{14}$ ]]
 
-      - name: Preview pending changes
+          selected_file="$(find supabase/migrations -maxdepth 1 -type f -name "${MIGRATION_VERSION}_*.sql" -print -quit)"
+          test -n "$selected_file"
+          test -f "$selected_file"
+
+          applied_file="$(mktemp)"
+          trap 'rm -f "$applied_file"' EXIT
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -Atqc \
+            "SELECT version FROM supabase_migrations.schema_migrations ORDER BY version" > "$applied_file"
+
+          if grep -Eiq 'staging[-_ ]only' "$selected_file"; then
+            echo "::error::The selected migration is marked staging-only and cannot be deployed by this workflow."
+            exit 1
+          fi
+          if grep -Fxq "$MIGRATION_VERSION" "$applied_file"; then
+            echo "::error::The selected migration is already recorded as applied."
+            exit 1
+          fi
+
+          for file in supabase/migrations/*.sql; do
+            version="$(basename "$file" | cut -d_ -f1)"
+            [[ "$version" =~ ^[0-9]{14}$ ]] || {
+              echo "::error::Unexpected migration filename: $file"
+              exit 1
+            }
+
+            if grep -Fxq "$version" "$applied_file"; then
+              continue
+            fi
+
+            if [[ "$version" < "$MIGRATION_VERSION" ]]; then
+              echo "::error::Earlier migration $version is still pending. Apply migrations in order."
+              exit 1
+            fi
+
+            if [[ "$version" > "$MIGRATION_VERSION" ]]; then
+              # Supabase db push applies every pending file in its directory.
+              # Remove later pending files from this ephemeral runner so only
+              # the explicitly selected migration can be pushed.
+              rm -- "$file"
+            fi
+          done
+
+          test -f "$selected_file"
+          echo "Validated selected migration version: $MIGRATION_VERSION"
+
+      - name: Preview the single selected migration
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -136,30 +133,23 @@ jobs:
           set -euo pipefail
           supabase db push --remote --dry-run
 
-      - name: Apply selected migration
+      - name: Apply the selected migration
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -euo pipefail
           if ! supabase db push --remote --yes; then
-            echo "::error::Migration push failed. No automatic rollback is claimed; inspect supabase_migrations.schema_migrations and the database schema before retrying."
+            echo "::error::Migration push failed. No automatic rollback is claimed; inspect migration history and schema before retrying."
             exit 1
           fi
 
-      - name: Verify exact migration history and database structure
+      - name: Verify the selected migration was recorded
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          MIGRATION: ${{ inputs.migration }}
+          MIGRATION_VERSION: ${{ inputs.migration_version }}
         run: |
           set -euo pipefail
-          case "$MIGRATION" in
-            016a) FILE="supabase/tests/verify_016a.sql" ;;
-            016b) FILE="supabase/tests/verify_016b.sql" ;;
-            016c) FILE="supabase/tests/verify_016c.sql" ;;
-            *) echo "Unsupported migration selection"; exit 1 ;;
-          esac
-          if ! psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"; then
-            echo "::error::Post-apply verification failed. The migration MAY already be recorded/applied; inspect schema_migrations and the live schema. Do not blindly rerun."
-            exit 1
-          fi
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -v version="$MIGRATION_VERSION" \
+            -c "SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = :'version';" \
+            | grep -q '1'
