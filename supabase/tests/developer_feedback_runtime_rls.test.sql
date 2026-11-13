@@ -41,10 +41,12 @@ values
   ('40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','RLS Test A'),
   ('40000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','RLS Test B');
 
-insert into public.cohorts (id, test_id, name, capacity)
+-- cohorts.test_id was intentionally removed by the cohort normalization migration.
+-- Ownership now lives in cohort_tests; assignments retain their own test_id.
+insert into public.cohorts (id, name, capacity)
 values
-  ('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','RLS Cohort A',5),
-  ('50000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000002','RLS Cohort B',5);
+  ('50000000-0000-4000-8000-000000000001','RLS Cohort A',5),
+  ('50000000-0000-4000-8000-000000000002','RLS Cohort B',5);
 
 insert into public.assignments (id, cohort_id, test_id, tester_id)
 values
