@@ -12,9 +12,9 @@ const initial:Notice[]=[
 {id:4,title:"New assignment",body:"A new assignment has been assigned",category:"Tests",priority:"Normal",read:true,time:"12 min ago",icon:"users"},
 {id:5,title:"System alert",body:"High server load detected (78%)",category:"System",priority:"Critical",read:false,time:"15 min ago",icon:"alert"},
 {id:6,title:"Achievement unlocked",body:"“Top Performer” badge earned",category:"Users",priority:"Low",read:true,time:"18 min ago",icon:"star"},
-{id:7,title:"New cohort created",body:"Frontend Experts cohort created",category:"Cohorts",priority:"Normal",read:false,time:"22 min ago",icon:"♟"},
-{id:8,title:"Test completed",body:"“Data Science Quiz” completed (95%)",category:"Tests",priority:"Normal",read:true,time:"25 min ago",icon:"✓"},
-{id:9,title:"Payment review required",body:"A developer payment needs attention",category:"System",priority:"High",read:false,time:"31 min ago",icon:"ⓘ"}];
+{id:7,title:"New cohort created",body:"Frontend Experts cohort created",category:"Cohorts",priority:"Normal",read:false,time:"22 min ago",icon:"users"},
+{id:8,title:"Test completed",body:"“Data Science Quiz” completed (95%)",category:"Tests",priority:"Normal",read:true,time:"25 min ago",icon:"check"},
+{id:9,title:"Payment review required",body:"A developer payment needs attention",category:"System",priority:"High",read:false,time:"31 min ago",icon:"info"}];
 const categories=["All","System","Users","Tests","Cohorts"] as const;
 type Category=typeof categories[number];
 export default function AdminNotificationsPage(){
