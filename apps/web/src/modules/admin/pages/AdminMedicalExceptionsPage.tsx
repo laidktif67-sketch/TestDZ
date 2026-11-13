@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-medical-exceptions.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 type RequestStatus = "pending" | "approved" | "rejected";
 type MedicalRequest = {
