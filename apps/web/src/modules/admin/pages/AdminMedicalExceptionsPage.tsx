@@ -1,3 +1,4 @@
+import AdminIcon from "../components/AdminIcon";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -75,8 +76,8 @@ export default function AdminMedicalExceptionsPage() {
 
     <section className="admin-main">
       <header className="admin-topbar">
-        <label className="admin-search"><Icon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث باسم المختبر أو رقم الطلب..." /></label>
-        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="الإشعارات"><Icon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>المشرف</span></div></div>
+        <label className="admin-search"><AdminIcon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث باسم المختبر أو رقم الطلب..." /></label>
+        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="الإشعارات"><AdminIcon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>المشرف</span></div></div>
       </header>
 
       <div className="admin-content medical-content">
