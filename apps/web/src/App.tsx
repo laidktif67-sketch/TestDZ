@@ -19,6 +19,20 @@ import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
 import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import DeveloperMyTestsPage from "./modules/developer/pages/DeveloperMyTestsPage";
+import DeveloperTestCampaignDetailsPage from "./modules/developer/pages/DeveloperTestCampaignDetailsPage";
+import DeveloperCreateTestPage from "./modules/developer/pages/DeveloperCreateTestPage";
+import DeveloperSettingsPage from "./modules/developer/pages/DeveloperSettingsPage";
+import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTestMonitoringPage";
+import DeveloperSubscriptionPage from "./modules/developer/pages/DeveloperSubscriptionPage";
+import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
+import DeveloperAnalyticsPage from "./modules/developer/pages/DeveloperAnalyticsPage";
+import DeveloperTestResultsPage from "./modules/developer/pages/DeveloperTestResultsPage";
+import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
+import DeveloperFeedbackDetailsPage from "./modules/developer/pages/DeveloperFeedbackDetailsPage";
+import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
+import DeveloperHelpCenterPage from "./modules/developer/pages/DeveloperHelpCenterPage";
+import DeveloperSupportCenterPage from "./modules/developer/pages/DeveloperSupportCenterPage";
+import DeveloperSupportTicketDetailsPage from "./modules/developer/pages/DeveloperSupportTicketDetailsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
@@ -121,6 +135,20 @@ export default function App() {
             <Route element={<RoleGuard requiredRole="developer" />}>
               <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
               <Route path="/developer/tests" element={<DeveloperMyTestsPage />} />
+              <Route path="/developer/tests/:id" element={<DeveloperTestCampaignDetailsPage />} />
+              <Route path="/developer/tests/:id/monitoring" element={<DeveloperTestMonitoringPage />} />
+              <Route path="/developer/tests/new" element={<DeveloperCreateTestPage />} />
+              <Route path="/developer/settings" element={<DeveloperSettingsPage />} />
+              <Route path="/developer/subscription" element={<DeveloperSubscriptionPage />} />
+              <Route path="/developer/testers" element={<DeveloperTestersPage />} />
+              <Route path="/developer/analytics" element={<DeveloperAnalyticsPage />} />
+              <Route path="/developer/results" element={<DeveloperTestResultsPage />} />
+              <Route path="/developer/feedback" element={<DeveloperFeedbackPage />} />
+              <Route path="/developer/feedback/:id" element={<DeveloperFeedbackDetailsPage />} />
+              <Route path="/developer/notifications" element={<DeveloperNotificationsPage />} />
+              <Route path="/developer/help" element={<DeveloperHelpCenterPage />} />
+              <Route path="/developer/support" element={<DeveloperSupportCenterPage />} />
+              <Route path="/developer/support/:id" element={<DeveloperSupportTicketDetailsPage />} />
               <Route path="/apps" element={<AppsPage />} />
               <Route path="/apps/:id" element={<AppDetailPage />} />
             </Route>

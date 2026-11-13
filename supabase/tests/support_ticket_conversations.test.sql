@@ -1,6 +1,6 @@
 begin;
 
-select plan(9);
+select plan(19);
 
 select ok(
   to_regclass('public.support_ticket_messages') is not null,
@@ -41,6 +41,34 @@ select ok(
 
 select ok(
   exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'support_ticket_events'
+      and column_name = 'old_priority'
+  ) and exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'support_ticket_events'
+      and column_name = 'new_priority'
+  ) and exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.support_ticket_events'::regclass
+      and conname = 'support_ticket_events_event_type_check'
+      and pg_get_constraintdef(oid) like '%priority_changed%'
+  ),
+  'support ticket event schema supports priority audit records'
+);
+
+select ok(
+  exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.support_tickets'::regclass
+      and tgname = 'support_tickets_audit_status_update'
+      and pg_get_triggerdef(oid) like '%priority%'
+  ) and pg_get_functiondef('private.audit_support_ticket_changes()'::regprocedure) like '%priority_changed%',
+  'support ticket priority updates are guarded and audited by the database trigger'
+);
+
+select ok(
+  exists (
     select 1 from storage.buckets
     where id = 'support-attachments' and public = false
   ),
@@ -64,6 +92,111 @@ select ok(
       and with_check like '%auth.uid%'
   ),
   'attachment metadata insert policy binds paths to the authenticated uploader'
+);
+
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'support_tickets'
+      and column_name = 'requester_role' and is_nullable = 'NO'
+  ) and exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.support_tickets'::regclass
+      and conname = 'support_tickets_requester_role_check'
+  ),
+  'support tickets record a constrained requester role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_tickets'
+      and policyname = 'support_tickets_insert_owner_role'
+      and with_check like '%requester_role%'
+      and with_check like '%user_roles%'
+      and with_check like '%admin%'
+  ),
+  'ticket requester role must match an authorized account role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_tickets'
+      and policyname = 'support_tickets_select_owner_role_or_support'
+      and qual like '%requester_role%'
+      and qual like '%user_roles%'
+  ),
+  'ticket reads are scoped to the active requester role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_messages'
+      and policyname = 'support_ticket_messages_select_participants'
+      and qual like '%requester_role%'
+  ) and exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_messages'
+      and policyname = 'support_ticket_messages_insert_participants'
+      and with_check like '%requester_role%'
+  ),
+  'support messages enforce requester-role isolation for reads and writes'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_attachments'
+      and policyname = 'support_ticket_attachments_select_participants'
+      and qual like '%requester_role%'
+  ) and exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_attachments'
+      and policyname = 'support_ticket_attachments_insert_message_author'
+      and with_check like '%requester_role%'
+  ),
+  'support attachments enforce requester-role isolation'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'support_ticket_events'
+      and policyname = 'support_ticket_events_select_participants'
+      and qual like '%requester_role%'
+  ),
+  'support activity history is scoped to the ticket requester role'
+);
+
+select ok(
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname = 'support_attachments_insert_participants'
+      and with_check like '%requester_role%'
+  ) and exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname = 'support_attachments_select_participants'
+      and qual like '%requester_role%'
+  ),
+  'support attachment storage access follows requester-role isolation'
+);
+
+select ok(
+  has_column_privilege('authenticated', 'public.support_tickets', 'priority', 'UPDATE')
+  and not has_column_privilege('anon', 'public.support_tickets', 'priority', 'UPDATE')
+  and exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'support_tickets'
+      and policyname = 'support_tickets_update_support_staff'
+      and qual like '%is_support_staff%'
+      and with_check like '%is_support_staff%'
+  ),
+  'priority updates are column-granted but remain restricted to support staff by RLS'
 );
 
 select * from finish();
