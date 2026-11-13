@@ -1,9 +1,13 @@
 begin;
-select plan(10);
+select plan(12);
 select ok(to_regclass('public.assignment_submissions') is not null,'assignment submissions table exists');
 select ok(to_regclass('public.assignment_submission_attachments') is not null,'submission attachments table exists');
 select ok((select relrowsecurity from pg_class where oid='public.assignment_submissions'::regclass),'submissions RLS enabled');
 select ok((select relrowsecurity from pg_class where oid='public.assignment_submission_attachments'::regclass),'attachments RLS enabled');
+select ok(exists(select 1 from pg_policies where schemaname='public' and tablename='assignment_submissions' and policyname='account_not_banned' and permissive='RESTRICTIVE')
+  and exists(select 1 from pg_policies where schemaname='public' and tablename='assignment_submission_attachments' and policyname='account_not_banned' and permissive='RESTRICTIVE'),'both new tables enforce suspended-account RLS');
+select ok(exists(select 1 from pg_trigger where tgrelid='public.assignment_submissions'::regclass and tgname='reject_banned_account_writes' and not tgisinternal)
+  and exists(select 1 from pg_trigger where tgrelid='public.assignment_submission_attachments'::regclass and tgname='reject_banned_account_writes' and not tgisinternal),'both new tables enforce suspended-account write triggers');
 select ok(not has_table_privilege('authenticated','public.assignment_submissions','INSERT')
   and not has_table_privilege('authenticated','public.assignment_submission_attachments','INSERT'),'clients cannot directly create submissions or attachment metadata');
 select ok(has_function_privilege('authenticated','public.submit_assignment_report(uuid,text,text,jsonb)','EXECUTE')
