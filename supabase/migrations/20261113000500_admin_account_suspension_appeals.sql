@@ -307,6 +307,86 @@ begin
 end;
 $function$;
 
+create or replace function public.get_my_account_suspension()
+returns table (
+  suspension_id uuid,
+  reason text,
+  suspended_at timestamptz,
+  appeal_deadline timestamptz,
+  appeal_id uuid,
+  appeal_status text,
+  appeal_submitted_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
+declare
+  v_user uuid := auth.uid();
+begin
+  if v_user is null then
+    raise exception 'AUTHENTICATION_REQUIRED' using errcode = '42501';
+  end if;
+  if not exists (
+    select 1 from public.profiles p where p.id = v_user and p.is_banned
+  ) then
+    return;
+  end if;
+
+  return query
+  select s.id, s.reason, s.suspended_at, s.appeal_deadline,
+         a.id, a.status, a.submitted_at
+  from public.account_suspensions s
+  left join public.account_suspension_appeals a on a.suspension_id = s.id
+  where s.user_id = v_user and s.status = 'active'
+  order by s.suspended_at desc
+  limit 1;
+end;
+$function$;
+
+create or replace function public.admin_list_account_suspension_appeals(
+  p_status text default 'pending'
+)
+returns table (
+  appeal_id uuid,
+  suspension_id uuid,
+  user_id uuid,
+  message text,
+  appeal_status text,
+  submitted_at timestamptz,
+  suspension_reason text,
+  suspended_at timestamptz,
+  appeal_deadline timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null or not private.is_admin() then
+    raise exception 'ADMIN_REQUIRED' using errcode = '42501';
+  end if;
+  if p_status is null or p_status not in ('pending', 'accepted', 'rejected') then
+    raise exception 'INVALID_APPEAL_STATUS' using errcode = '22023';
+  end if;
+
+  return query
+  select a.id, a.suspension_id, a.user_id, a.message, a.status,
+         a.submitted_at, s.reason, s.suspended_at, s.appeal_deadline
+  from public.account_suspension_appeals a
+  join public.account_suspensions s on s.id = a.suspension_id
+  where a.status = p_status
+  order by a.submitted_at asc
+  limit 100;
+end;
+$function$;
+
+revoke all on function public.get_my_account_suspension() from public, anon;
+revoke all on function public.admin_list_account_suspension_appeals(text) from public, anon;
+grant execute on function public.get_my_account_suspension() to authenticated;
+grant execute on function public.admin_list_account_suspension_appeals(text) to authenticated;
 revoke all on function public.admin_suspend_user(uuid, text) from public, anon;
 revoke all on function public.submit_account_suspension_appeal(uuid, text) from public, anon;
 revoke all on function public.admin_review_account_suspension_appeal(uuid, text, text) from public, anon;
