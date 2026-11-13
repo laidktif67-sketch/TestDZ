@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-medical-exceptions.css";
+import AdminSidebar from "../components/AdminSidebar";
 
 type RequestStatus = "pending" | "approved" | "rejected";
 type MedicalRequest = {
@@ -68,14 +69,7 @@ export default function AdminMedicalExceptionsPage() {
     <aside className="admin-sidebar">
       <Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link>
       <div className="admin-sidebar-label">الإدارة</div>
-      <nav className="admin-nav" aria-label="تنقل الإدارة">
-        <Link className="admin-nav-item" to="/admin"><Icon name="home" /><span>لوحة التحكم</span></Link>
-        <div className="admin-nav-item"><Icon name="users" /><span>المستخدمون</span></div>
-        <div className="admin-nav-item"><Icon name="file" /><span>الاختبارات والتقارير</span></div>
-        <Link className="admin-nav-item active" to="/admin/medical-exceptions" aria-current="page"><Icon name="heart" /><span>الاستثناءات الطبية</span><i /></Link>
-        <div className="admin-nav-item"><Icon name="shield" /><span>الحظر والاستئنافات</span></div>
-        <div className="admin-nav-item"><Icon name="bell" /><span>الإشعارات</span></div>
-      </nav>
+      <AdminSidebar activePath="/admin/medical-exceptions" />
       <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>مشرف المنصة</small></div><span className="admin-online" /></div>
     </aside>
 
