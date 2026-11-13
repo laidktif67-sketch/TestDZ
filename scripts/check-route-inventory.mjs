@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 const routeFile = resolve("apps/web/src/AppRoutes.tsx");
 const routeDirectory = resolve("apps/web/src/routes");
@@ -29,6 +29,37 @@ const requiredPaths = [
 ];
 const missingPaths = requiredPaths.filter((path) => !allRouteSource.includes(path));
 
+const routeSourceFiles = [
+  [routeFile, sources.app],
+  [resolve(routeDirectory, "publicRoutes.tsx"), sources.public],
+  [resolve(routeDirectory, "adminRoutes.tsx"), sources.admin],
+  [resolve(routeDirectory, "developerRoutes.tsx"), sources.developer],
+  [resolve(routeDirectory, "testerRoutes.tsx"), sources.tester],
+  [resolve(routeDirectory, "authenticatedRoutes.tsx"), sources.authenticated],
+];
+const importErrors = [];
+for (const [file, source] of routeSourceFiles) {
+  for (const match of source.matchAll(/from\\s+["'](\\.[^"']+)["']/g)) {
+    const specifier = match[1];
+    const base = resolve(dirname(file), specifier);
+    const candidates = [
+      base,
+      `${base}.tsx`,
+      `${base}.ts`,
+      `${base}.jsx`,
+      `${base}.js`,
+      resolve(base, "index.tsx"),
+      resolve(base, "index.ts"),
+    ];
+    if (!candidates.some((candidate) => existsSync(candidate))) {
+      importErrors.push(`${file}: unresolved relative import "${specifier}"`);
+    }
+  }
+}
+
+const declaredPaths = [...allRouteSource.matchAll(/<Route\\s+(?:key="[^"]+"\\s+)?path="([^"]+)"/g)].map((match) => match[1]);
+const duplicatePaths = declaredPaths.filter((path, index) => declaredPaths.indexOf(path) !== index);
+
 const moduleContracts = [
   ["public", "{publicRouteElements}", "export const publicRouteElements"],
   ["admin", "{adminRouteElements}", "export const adminRouteElements"],
@@ -57,6 +88,13 @@ if (routeElementCount !== 102) {
 }
 if (missingPaths.length > 0) {
   errors.push(`Missing required route declarations: ${missingPaths.join(", ")}.`);
+}
+
+if (importErrors.length > 0) {
+  errors.push(`Unresolved relative imports in route modules: ${importErrors.join("; ")}.`);
+}
+if (duplicatePaths.length > 0) {
+  errors.push(`Duplicate route path declarations: ${[...new Set(duplicatePaths)].join(", ")}.`);
 }
 
 const publicRouteIndex = sources.public.indexOf('<Route key="public-1" path="/"');
