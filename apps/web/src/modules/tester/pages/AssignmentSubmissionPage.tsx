@@ -104,10 +104,11 @@ export default function AssignmentSubmissionPage() {
     setIsSubmitting(true); setNotice("");
     const uploadedPaths: string[] = [];
     try {
-      const files = [];
+      if (!assignment.test?.id) throw new Error("The assigned test details are unavailable.");
+      const files: { path: string; name: string; mime_type: string; size_bytes: number }[] = [];
       for (const item of evidence) {
         const extension = item.file.type === "image/png" ? "png"
-          : item.file.type === "image/jpeg" ? (item.file.name.toLowerCase().endsWith(".png") ? "jpg" : "jpg")
+          : item.file.type === "image/jpeg" ? "jpg"
           : item.file.type === "image/webp" ? "webp"
           : item.file.type === "application/pdf" ? "pdf" : null;
         if (!extension) throw new Error("An evidence file has an unsupported type.");
