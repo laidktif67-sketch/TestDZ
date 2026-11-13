@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(9);
 
 select ok(
   to_regprocedure('public.submit_assignment_checkin(uuid,text)') is not null,
@@ -62,6 +62,14 @@ select ok(
   and pg_get_functiondef('public.submit_assignment_checkin(uuid,text)'::regprocedure)
     like '%earned_points%',
   'duplicate check-ins are rejected and the reward is ledger-backed'
+);
+
+select ok(
+  pg_get_functiondef('public.submit_assignment_checkin(uuid,text)'::regprocedure)
+    like '%v_rewarded_checkins < 14%'
+  and pg_get_functiondef('public.submit_assignment_checkin(uuid,text)'::regprocedure)
+    like '%for update%',
+  'daily check-in rewards are capped at 14 per tester and test under a row lock'
 );
 
 select * from finish();
