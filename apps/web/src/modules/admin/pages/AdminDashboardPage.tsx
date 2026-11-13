@@ -60,7 +60,7 @@ function Icon({ name, size = 19 }: { name: string; size?: number }) {
     bolt: <path d="m13 2-3 8h7l-6 12 1-9H5l8-11Z" />,
     menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
   };
-  return <svg {...common}>{shapes[name] ?? shapes.apps}</svg>;
+  return <svg {...common}>{shapes[name] ?? null}</svg>;
 }
 
 function MetricCard({ item }: { item: typeof metrics[number] }) {
