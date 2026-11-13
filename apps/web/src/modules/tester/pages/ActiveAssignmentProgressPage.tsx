@@ -68,8 +68,8 @@ export default function ActiveAssignmentProgressPage(){
    const result=data as {checkin_id?:string;checkin_date?:string;points_awarded?:number}|null;
    if(!result?.checkin_id||!result.checkin_date)throw new Error("The check-in response was incomplete.");
    setCheckins(current=>current.some(row=>row.checkin_date===result.checkin_date)?current:[...current,{id:result.checkin_id!,checkin_date:result.checkin_date!,evidence_url:null}]);
-   setEarned(current=>current+Number(result.points_awarded||2));
-   setCheckinNotice("Today's check-in was recorded successfully. +2 points awarded.");
+   setEarned(current=>current+Number(result.points_awarded??0));
+   setCheckinNotice(Number(result.points_awarded??0)>0?"Today's check-in was recorded successfully. +2 points awarded.":"Today's check-in was recorded. The 14-point reward cap for this test has already been reached.");
   }catch{
    setCheckinNotice("A connection error prevented the check-in. No confirmation was recorded.");
   }finally{setCheckinSubmitting(false);}
