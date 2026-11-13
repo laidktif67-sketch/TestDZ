@@ -22,6 +22,7 @@ import SupportTicketDetailsPage from "../modules/tester/pages/SupportTicketDetai
 import LiveChatPage from "../modules/tester/pages/LiveChatPage";
 import ProfileCompletionPage from "../pages/ProfileCompletionPage";
 import RoleGuard from "../shared/guards/RoleGuard";
+import { testerSecurityRouteElements } from "./testerRoutes";
 
 // Shared authenticated routes; AuthGuard and OnboardingGuard remain in AppRoutes.
 export const authenticatedRouteElements = (

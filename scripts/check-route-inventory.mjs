@@ -2,20 +2,20 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const routeFile = resolve("apps/web/src/AppRoutes.tsx");
-const publicRouteFile = resolve("apps/web/src/routes/publicRoutes.tsx");
-const adminRouteFile = resolve("apps/web/src/routes/adminRoutes.tsx");
-const developerRouteFile = resolve("apps/web/src/routes/developerRoutes.tsx");
-const testerRouteFile = resolve("apps/web/src/routes/testerRoutes.tsx");
-const authenticatedRouteFile = resolve("apps/web/src/routes/authenticatedRoutes.tsx");
-const source = readFileSync(routeFile, "utf8");
-const publicSource = readFileSync(publicRouteFile, "utf8");
-const adminSource = readFileSync(adminRouteFile, "utf8");
-const developerSource = readFileSync(developerRouteFile, "utf8");
-const testerSource = readFileSync(testerRouteFile, "utf8");
-const authenticatedSource = readFileSync(authenticatedRouteFile, "utf8");
-const allRouteSource = `${source}\n${publicSource}\n${adminSource}\n${developerSource}\n${testerSource}\n${authenticatedSource}`;
+const routeDirectory = resolve("apps/web/src/routes");
+const sources = {
+  app: readFileSync(routeFile, "utf8"),
+  public: readFileSync(resolve(routeDirectory, "publicRoutes.tsx"), "utf8"),
+  admin: readFileSync(resolve(routeDirectory, "adminRoutes.tsx"), "utf8"),
+  developer: readFileSync(resolve(routeDirectory, "developerRoutes.tsx"), "utf8"),
+  tester: readFileSync(resolve(routeDirectory, "testerRoutes.tsx"), "utf8"),
+  authenticated: readFileSync(resolve(routeDirectory, "authenticatedRoutes.tsx"), "utf8"),
+};
+
+const allRouteSource = Object.values(sources).join("\n");
 const routeElementCount = (allRouteSource.match(/<Route\b/g) ?? []).length;
 const pathCount = (allRouteSource.match(/<Route\s+(?:key="[^"]+"\s+)?path=/g) ?? []).length;
+const errors = [];
 
 const requiredPaths = [
   'path="/"',
@@ -27,57 +27,68 @@ const requiredPaths = [
   'path="/apps/:id"',
   'path="*"',
 ];
-
 const missingPaths = requiredPaths.filter((path) => !allRouteSource.includes(path));
-const publicRouteIndex = publicSource.indexOf('<Route key="public-1" path="/"');
-const authGuardIndex = source.indexOf("<Route element={<AuthGuard");
-const onboardingGuardIndex = source.indexOf("<Route element={<OnboardingGuard");
-const wildcardIndex = source.lastIndexOf('<Route path="*"');
 
-const errors = [];
+const moduleContracts = [
+  ["public", "{publicRouteElements}", "export const publicRouteElements"],
+  ["admin", "{adminRouteElements}", "export const adminRouteElements"],
+  ["developer", "{developerRouteElements}", "export const developerRouteElements"],
+  ["authenticated", "{authenticatedRouteElements}", "export const authenticatedRouteElements"],
+];
+for (const [name, composition, declaration] of moduleContracts) {
+  if (!sources.app.includes(composition) || !sources[name].includes(declaration)) {
+    errors.push(`The ${name} route module is not correctly composed into AppRoutes.`);
+  }
+}
+if (
+  !sources.app.includes("{testerWorkspaceRouteElements}") ||
+  !sources.tester.includes("export const testerWorkspaceRouteElements") ||
+  !sources.authenticated.includes("{testerSecurityRouteElements}") ||
+  !sources.tester.includes("export const testerSecurityRouteElements")
+) {
+  errors.push("Both tester route groups must be composed inside the appropriate guards.");
+}
 
 if (pathCount !== 96) {
   errors.push(`Expected 96 explicit path declarations from the captured baseline, found ${pathCount}.`);
 }
-
-if (routeElementCount < pathCount) {
-  errors.push(`Route element count (${routeElementCount}) is lower than explicit path count (${pathCount}).`);
+if (routeElementCount !== 102) {
+  errors.push(`Expected 102 Route elements from the captured baseline, found ${routeElementCount}.`);
 }
-
-if (!source.includes("{publicRouteElements}") || !publicSource.includes("export const publicRouteElements")) {
-  errors.push("Public routes must be composed through the publicRouteElements module.");
-}
-
-if (!source.includes("{adminRouteElements}") || !adminSource.includes("export const adminRouteElements")) {\n  errors.push("Admin routes must be composed through the adminRouteElements module.");\n}\n\nif (!source.includes("{developerRouteElements}") || !developerSource.includes("export const developerRouteElements")) {\n  errors.push("Developer routes must be composed through the developerRouteElements module.");\n}\n\nif (!source.includes("{testerSecurityRouteElements}") || !source.includes("{testerWorkspaceRouteElements}") || !testerSource.includes("export const testerSecurityRouteElements") || !testerSource.includes("export const testerWorkspaceRouteElements")) {\n  errors.push("Tester routes must be composed through the tester route module.");\n}\n\nif (!source.includes("{authenticatedRouteElements}") || !authenticatedSource.includes("export const authenticatedRouteElements")) {
-  errors.push("Shared authenticated routes must be composed through the authenticatedRouteElements module.");
-}
-
 if (missingPaths.length > 0) {
   errors.push(`Missing required route declarations: ${missingPaths.join(", ")}.`);
 }
 
+const publicRouteIndex = sources.public.indexOf('<Route key="public-1" path="/"');
+const publicCompositionIndex = sources.app.indexOf("{publicRouteElements}");
+const authGuardIndex = sources.app.indexOf("<Route element={<AuthGuard");
+const onboardingGuardIndex = sources.app.indexOf("<Route element={<OnboardingGuard");
+const wildcardIndex = sources.app.lastIndexOf('<Route path="*"');
 if (
   publicRouteIndex < 0 ||
-  source.indexOf("{publicRouteElements}") < 0 ||
-  source.indexOf("{publicRouteElements}") > authGuardIndex ||
+  publicCompositionIndex < 0 ||
   authGuardIndex < 0 ||
   onboardingGuardIndex < 0 ||
   wildcardIndex < 0 ||
-  !(authGuardIndex < onboardingGuardIndex && onboardingGuardIndex < wildcardIndex)
+  !(publicCompositionIndex < authGuardIndex && authGuardIndex < onboardingGuardIndex && onboardingGuardIndex < wildcardIndex)
 ) {
-  errors.push("Public routes must precede the auth guard, and auth/onboarding/wildcard markers must remain ordered.");
+  errors.push("Public routes, auth/onboarding guards, and wildcard route must retain their required ordering.");
 }
 
-if (!source.includes('<Navigate to="/help" replace />')) {
+if (!allRouteSource.includes('<Navigate to="/help" replace />')) {
   errors.push('The /help-support redirect must continue to use Navigate to="/help" with replace.');
 }
-
-if (!source.includes('<Navigate to="/" replace />')) {
+if (!sources.app.includes('<Navigate to="/" replace />')) {
   errors.push('The wildcard redirect must continue to use Navigate to="/" with replace.');
 }
-
-if (!source.includes('<RoleHomeRedirect />')) {
+if (!sources.app.includes('<RoleHomeRedirect />')) {
   errors.push("The /dashboard route must continue to use RoleHomeRedirect.");
+}
+if (!sources.authenticated.includes('requiredRole="tester"')) {
+  errors.push("Tester security routes must remain protected by the tester RoleGuard.");
+}
+if (!sources.app.includes('requiredRole="admin"') || !sources.app.includes('requiredRole="developer"')) {
+  errors.push("Admin and developer route groups must remain protected by their role guards.");
 }
 
 if (errors.length > 0) {
@@ -87,5 +98,5 @@ if (errors.length > 0) {
 } else {
   console.log("Route inventory check passed.");
   console.log(`Route elements: ${routeElementCount}; explicit path declarations: ${pathCount}.`);
-  console.log("Required route parameters, redirect markers, and guard ordering are present.");
+  console.log("Required route modules, parameters, redirects, and guard ordering are present.");
 }

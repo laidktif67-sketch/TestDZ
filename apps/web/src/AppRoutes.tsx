@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { publicRouteElements } from "./routes/publicRoutes";
 import { adminRouteElements } from "./routes/adminRoutes";
 import { developerRouteElements } from "./routes/developerRoutes";
-import { testerSecurityRouteElements, testerWorkspaceRouteElements } from "./routes/testerRoutes";
+import { testerWorkspaceRouteElements } from "./routes/testerRoutes";
 import AuthGuard from "./shared/guards/AuthGuard";
 import OnboardingGuard from "./shared/guards/OnboardingGuard";
 import RoleGuard, { RoleHomeRedirect } from "./shared/guards/RoleGuard";
