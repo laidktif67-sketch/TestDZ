@@ -9,7 +9,7 @@ import "../styles/active-assignment-progress.css";
 type Assignment={id:string;status:string;start_date:string|null;medical_extension_days:number;test:{id:string;title:string;description:string|null;short_summary:string|null;start_date:string|null;end_date:string|null;app:{name:string;icon_url:string|null;category:string|null;play_store_url:string|null}|null}|null};
 type Checkin={id:string;checkin_date:string;evidence_url:string|null};
 type Leader={id:string;name:string;avatar:string|null;points:number};
-const dateOnly=(v:Date)=>{const d=new Date(v.getTime()-v.getTimezoneOffset()*60000);return d.toISOString().slice(0,10);};
+const dateOnly=(v:Date)=>new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Algiers",year:"numeric",month:"2-digit",day:"2-digit"}).format(v);
 const dateLabel=(v:string|null|undefined)=>v?new Date(v+"T12:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"To be announced";
 const initials=(v:string)=>v.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase()||"T";
 
@@ -19,22 +19,28 @@ export default function ActiveAssignmentProgressPage(){
  const [assignment,setAssignment]=useState<Assignment|null>(null),[checkins,setCheckins]=useState<Checkin[]>([]),[feedbackCount,setFeedbackCount]=useState(0),[earned,setEarned]=useState(0);
  const [name,setName]=useState("Tester"),[avatar,setAvatar]=useState(""),[unread,setUnread]=useState(0),[leaders,setLeaders]=useState<Leader[]>([]);
  const [loading,setLoading]=useState(true),[error,setError]=useState(""),[leaderError,setLeaderError]=useState(""),[menuOpen,setMenuOpen]=useState(false);
+ const [checkinSubmitting,setCheckinSubmitting]=useState(false),[checkinNotice,setCheckinNotice]=useState("");
  useEffect(()=>{
   if(preview){setAssignment({id:"preview-assignment",status:"active",start_date:"2026-11-04",medical_extension_days:0,test:{id:"preview-test",title:"Productivity Pro",description:"Help us test this productivity application. Explore its core features, check reliability and share honest feedback throughout the testing period.",short_summary:"A productivity app for organizing tasks and improving focus.",start_date:"2026-11-04",end_date:"2026-11-17",app:{name:"BestDev Team",icon_url:null,category:"Productivity",play_store_url:null}}});setCheckins(Array.from({length:7},(_,i)=>({id:String(i),checkin_date:"2026-11-"+String(4+i).padStart(2,"0"),evidence_url:null})));setFeedbackCount(1);setEarned(120);setLeaders([{id:"p1",name:"Sara Dev",avatar:null,points:1180},{id:"p2",name:"Ahmed Tech",avatar:null,points:1250},{id:"p3",name:"Omar Code",avatar:null,points:1100}]);setName("John Doe");setLoading(false);return;}
   if(!session?.user?.id||!id||!supabase){setLoading(false);return;}let alive=true;const client=supabase,uid=session.user.id;
   (async()=>{
-   const [profile,notice,a,c,f,l,roleRows]=await Promise.all([
+   const [profile,notice,a,c,f,roleRows]=await Promise.all([
     client.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
     client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
     client.from("assignments").select("id,status,start_date,medical_extension_days,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category,play_store_url))").eq("id",id).eq("tester_id",uid).maybeSingle(),
     client.from("checkins").select("id,checkin_date,evidence_url").eq("assignment_id",id).eq("tester_id",uid).order("checkin_date"),
     client.from("feedback").select("id",{count:"exact",head:true}).eq("assignment_id",id).eq("tester_id",uid),
-    client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_id",id),
     client.from("user_roles").select("user_id").eq("role","tester").limit(5000)
    ]);
    if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notice.count??0);
    if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
-   setAssignment(a.data as unknown as Assignment);setCheckins((c.data??[]) as Checkin[]);setFeedbackCount(f.count??0);setEarned((l.data??[]).reduce((sum,x)=>sum+Number(x.amount||0),0));
+   setAssignment(a.data as unknown as Assignment);const checkinRows=(c.data??[]) as Checkin[];setCheckins(checkinRows);setFeedbackCount(f.count??0);
+   const checkinIds=checkinRows.map(row=>row.id);
+   const [assignmentLedger,checkinLedger]=await Promise.all([
+    client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_id",id),
+    checkinIds.length?client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_type","checkin").in("reference_id",checkinIds):Promise.resolve({data:[]})
+   ]);
+   if(!alive)return;setEarned([...(assignmentLedger.data??[]),...(checkinLedger.data??[])].reduce((sum,x)=>sum+Number(x.amount||0),0));
    const ids=(roleRows.data??[]).map(x=>x.user_id);
    if(ids.length){const [profiles,ledger]=await Promise.all([client.from("profiles").select("id,display_name,avatar_url").in("id",ids),client.from("points_ledger").select("user_id,amount").eq("wallet_type","earned_points").in("user_id",ids).limit(20000)]);
     if(!alive)return;if(profiles.error||ledger.error)setLeaderError("Leaderboard rankings are temporarily unavailable.");else{const map=new Map<string,Leader>();for(const p of profiles.data??[])map.set(p.id,{id:p.id,name:p.display_name?.trim()||"TestDZ Tester",avatar:p.avatar_url||null,points:0});for(const x of ledger.data??[]){const row=map.get(x.user_id);if(row)row.points+=Number(x.amount||0);}setLeaders([...map.values()].sort((x,y)=>y.points-x.points).slice(0,3));}}
@@ -49,6 +55,26 @@ export default function ActiveAssignmentProgressPage(){
  const currentDay=Math.min(days,elapsed),progress=Math.min(100,Math.round(checkins.length/days*100)),checkinSet=new Set(checkins.map(x=>x.checkin_date));
  const evidenceCount=checkins.filter(x=>x.evidence_url).length,endDate=start?dateOnly(new Date(new Date(start+"T12:00:00").getTime()+(days-1)*86400000)):null;
  const done=assignment?.status==="completed",leadersSorted=[...leaders].sort((a,b)=>b.points-a.points),myRank=leadersSorted.findIndex(x=>x.id===session?.user?.id)+1;
+ const checkedInToday=checkinSet.has(today);
+ const submitCheckin=async()=>{
+  if(!supabase||!session?.user?.id||!assignment||assignment.status!=="active"||checkedInToday||checkinSubmitting)return;
+  setCheckinSubmitting(true);setCheckinNotice("");
+  try{
+   const {data,error:rpcError}=await supabase.rpc("submit_assignment_checkin",{p_assignment_id:id,p_note:null});
+   if(rpcError){
+    setCheckinNotice(rpcError.message.includes("CHECKIN_ALREADY_RECORDED")?"You have already checked in for today.":rpcError.message.includes("ASSIGNMENT_NOT_ACTIVE")?"This assignment is no longer active.":"We couldn't record your check-in. Please try again.");
+    return;
+   }
+   const result=data as {checkin_id?:string;checkin_date?:string;points_awarded?:number}|null;
+   if(!result?.checkin_id||!result.checkin_date)throw new Error("The check-in response was incomplete.");
+   setCheckins(current=>current.some(row=>row.checkin_date===result.checkin_date)?current:[...current,{id:result.checkin_id!,checkin_date:result.checkin_date!,evidence_url:null}]);
+   setEarned(current=>current+Number(result.points_awarded??0));
+   setCheckinNotice(Number(result.points_awarded??0)>0?"Today's check-in was recorded successfully. +2 points awarded.":"Today's check-in was recorded. The 14-point reward cap for this test has already been reached.");
+  }catch{
+   setCheckinNotice("A connection error prevented the check-in. No confirmation was recorded.");
+  }finally{setCheckinSubmitting(false);}
+ };
+
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests",active:true},{label:"Leaderboard",icon:"trophy",href:"/leaderboard"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help & Support",icon:"help",href:"/help-support"},{label:"Settings",icon:"settings",href:"/settings"}];
  return <div className="td-dashboard aap-page"><TesterSidebar nav={nav} name={name} firstName={name.split(/\s+/)[0]||"Tester"} avatar={avatar} roles={preview?["tester",...roles]:roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={preview}/>
  <main className="td-main aap-main"><header className="td-topbar"><label className="td-search"><Icon name="search" size={21}/><input placeholder="Search tests..." aria-label="Search tests"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={22}/>{unread>0&&<i>{unread>9?"9+":unread}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:initials(name)}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
@@ -60,7 +86,7 @@ export default function ActiveAssignmentProgressPage(){
  <section className="aap-panel aap-daily"><div className="aap-section-title"><h2><Icon name="calendar" size={22}/>Daily Progress</h2><span>Day {currentDay} of {days}</span></div><div className="aap-days">{Array.from({length:days},(_,i)=>{const d=start?dateOnly(new Date(new Date(start+"T12:00:00").getTime()+i*86400000)):null;const checked=d?checkinSet.has(d):i<checkins.length;return <div className={"aap-day "+(checked?"completed ":"")+(i+1===currentDay?"today":"")} key={i}><span>{checked?<Icon name="check" size={15}/>:i+1===currentDay?i+1:""}</span><b>{i+1}</b></div>;})}</div><div className="aap-track"><i style={{width:progress+"%"}}/></div><small>{checkins.length} valid check-ins recorded</small></section></div>
  <div className="aap-main-grid">
  <section className="aap-panel aap-tasks"><div className="aap-section-title"><h2><Icon name="check" size={22}/>Today’s Tasks</h2><span>{done?"Completed":"Day "+currentDay+" of "+days}</span></div>
- <div className="aap-task"><span className="aap-task-icon green"><Icon name="check" size={19}/></span><div><strong>Daily Check-in</strong><p>Confirm your participation for today’s testing day.</p></div><Link className="aap-task-action secondary" to="/check-in-history">{start&&checkinSet.has(today)?"Completed · View":"Open Check-in History"}</Link></div>
+ <div className="aap-task"><span className="aap-task-icon green"><Icon name="check" size={19}/></span><div><strong>Daily Check-in</strong><p>Confirm your participation for today’s testing day.</p></div><button type="button" className="aap-task-action secondary" onClick={submitCheckin} disabled={done||checkedInToday||checkinSubmitting}>{checkedInToday?"Completed · View":checkinSubmitting?"Recording…":"Check in now"}</button>{checkinNotice&&<small className="aap-checkin-notice" role="status" aria-live="polite">{checkinNotice}</small>}<Link className="aap-task-action secondary" to="/check-in-history">History</Link></div>
  <div className="aap-task"><span className="aap-task-icon purple"><Icon name="play" size={19}/></span><div><strong>Test the Application</strong><p>Explore the app’s features and report any issues.</p></div>{test?.app?.play_store_url?<a className="aap-task-action" href={test.app.play_store_url} target="_blank" rel="noreferrer">Open App <Icon name="arrow" size={14}/></a>:<span className="aap-task-state">Continue testing</span>}</div>
  <div className="aap-task"><span className="aap-task-icon orange"><Icon name="message" size={19}/></span><div><strong>Share Feedback</strong><p>Report bugs or suggest improvements.</p></div><Link className="aap-task-action" to="/submit-feedback">Submit Feedback <Icon name="arrow" size={14}/></Link></div>
  <div className="aap-task"><span className="aap-task-icon cyan"><Icon name="folder" size={19}/></span><div><strong>Upload Evidence</strong><p>{evidenceCount} evidence file{evidenceCount===1?"":"s"} linked to your check-ins.</p></div><Link className="aap-task-action secondary" to={"/assignments/"+id+"/submit"}>Upload / Submit <Icon name="arrow" size={14}/></Link></div>
