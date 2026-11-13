@@ -48,6 +48,7 @@ import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSumm
 import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
+import AdminAuditTrailPage from "./modules/admin/pages/AdminAuditTrailPage";
 import AdminMedicalExceptionsPage from "./modules/admin/pages/AdminMedicalExceptionsPage";
 import AdminSupportCenterPage from "./modules/admin/pages/AdminSupportCenterPage";
 import AdminUserManagementPage from "./modules/admin/pages/AdminUserManagementPage";
@@ -122,6 +123,7 @@ export default function App() {
               <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
               <Route path="/admin/users" element={<AdminUserManagementPage />} />
+              <Route path="/admin/audit-trail" element={<AdminAuditTrailPage />} />
             </Route>
             <Route path="/dashboard" element={<RoleHomeRedirect />} />
             <Route element={<RoleGuard requiredRole="tester" />}>
