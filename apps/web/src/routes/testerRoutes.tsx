@@ -1,17 +1,17 @@
 import { Route } from "react-router-dom";
-import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
-import MyTestsPage from "./modules/tester/pages/MyTestsPage";
-import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
-import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
-import LanguageAppearancePage from "./modules/tester/pages/LanguageAppearancePage";
-import PrivacyDataManagementPage from "./modules/tester/pages/PrivacyDataManagementPage";
-import LoginActivitySecurityPage from "./modules/tester/pages/LoginActivitySecurityPage";
-import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
-import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
-import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
-import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
-import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
-import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
+import TesterDashboardPage from "../modules/tester/pages/TesterDashboardPage";
+import MyTestsPage from "../modules/tester/pages/MyTestsPage";
+import DiscoverTestsPage from "../modules/tester/pages/DiscoverTestsPage";
+import TestPreviewPage from "../modules/tester/pages/TestPreviewPage";
+import LanguageAppearancePage from "../modules/tester/pages/LanguageAppearancePage";
+import PrivacyDataManagementPage from "../modules/tester/pages/PrivacyDataManagementPage";
+import LoginActivitySecurityPage from "../modules/tester/pages/LoginActivitySecurityPage";
+import TestCompletionRewardPage from "../modules/tester/pages/TestCompletionRewardPage";
+import TesterLeaderboardPage from "../modules/tester/pages/TesterLeaderboardPage";
+import CheckInHistoryPage from "../modules/tester/pages/CheckInHistoryPage";
+import ActivityHistoryPage from "../modules/tester/pages/ActivityHistoryPage";
+import ReferralProgramPage from "../modules/tester/pages/ReferralProgramPage";
+import ReferralHistoryPage from "../modules/tester/pages/ReferralHistoryPage";
 
 // Tester role-protected routes; parent guards stay in AppRoutes.
 export const testerSecurityRouteElements = [
