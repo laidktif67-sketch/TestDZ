@@ -8,6 +8,7 @@ on:
     paths:
       - "supabase/**"
       - ".github/workflows/supabase-migration-tests.yml"
+      - "scripts/storage-api-regression.mjs"
   pull_request:
     paths:
       - "supabase/**"
@@ -36,10 +37,19 @@ jobs:
           version: latest
 
       - name: Start isolated local Supabase services
-        run: supabase start -x studio,edge-runtime,storage-api,imgproxy,logflare,vector
+        run: supabase start -x studio,edge-runtime,logflare,vector
 
       - name: Apply migrations and run SQL regression tests locally
         run: supabase test db
+
+      - name: Run authenticated Storage API regression tests locally
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="${API_URL:-${SUPABASE_URL:-}}"
+          export SUPABASE_ANON_KEY="${ANON_KEY:-${SUPABASE_ANON_KEY:-}}"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}"
+          node scripts/storage-api-regression.mjs
 
       - name: Stop local Supabase services
         if: always() && steps.setup-cli.outcome == 'success'
