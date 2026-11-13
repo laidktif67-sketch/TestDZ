@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-cohort-details.css";
 import AdminSidebar from "../components/AdminSidebar";
-import AdminIcon from "../components/AdminIcon";
 
 type Member={name:string;role:"Developer"|"Tester";status:"Active"|"Inactive";initials:string};
 const developers:Member[]=[
