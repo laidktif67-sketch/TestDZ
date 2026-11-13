@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-withdrawal-failed.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 export default function AdminWithdrawalFailedPage() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ export default function AdminWithdrawalFailedPage() {
       <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online" /></div>
     </aside>
     <section className="admin-main">
-      <header className="admin-topbar"><label className="admin-search"><span>⌕</span><input aria-label="Search users, email, or ID" placeholder="Search users, email, or ID..." /></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications">♧<span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages">✉<span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
+      <header className="admin-topbar"><label className="admin-search"><AdminIcon name="search"/><input aria-label="Search users, email, or ID" placeholder="Search users, email, or ID..." /></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell"/><span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages"><AdminIcon name="mail"/><span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
       <div className="admin-content wf-content">
         <section className="admin-welcome wf-banner"><div className="wf-banner-icon">▣</div><div><h1>Withdrawal Rejected / Failed</h1><p>Review unsuccessful withdrawal outcomes</p></div><nav><Link to="/admin">⌂</Link><span>/</span><Link to="/admin/tester-withdrawals">Withdrawals</Link><span>/</span><b>Rejected Request</b></nav></section>
         <div className="wf-alert" role="note"><strong>ⓘ　Preview only — no live payout or account changes</strong><span>!</span></div>
