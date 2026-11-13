@@ -2,3 +2,6 @@
 @media(max-width:1150px){.users-main-grid{grid-template-columns:1fr}.users-profile{grid-row:1}.users-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:850px){.users-content{padding:13px}.users-bottom-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.users-content{padding:10px}.users-welcome h1{font-size:18px}.users-period{display:none}.users-stats{gap:7px}.users-stats article{padding:9px;gap:7px}.users-stat-icon{width:34px;height:34px}.users-stats strong{font-size:17px}.users-stats small{font-size:9px}.users-filters{grid-template-columns:1fr 1fr}.users-filters label{grid-column:1/-1}.users-table{min-width:590px}.users-table-footer{font-size:8px}.users-action-cards{grid-template-columns:1fr 1fr}.users-mini-row{grid-template-columns:76px auto 1fr}.users-appeal-row{gap:5px}}
+
+/* Align the verification badge with user names in profile details. */
+.users-profile-head h3{display:flex;align-items:center;gap:6px}.users-profile-head h3 svg{display:inline-block;vertical-align:middle;flex:none}
