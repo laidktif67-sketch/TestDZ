@@ -1,10 +1,40 @@
+import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { identityApi } from "../auth/identity-api";
 import { useIdentity } from "../auth/hooks/useIdentity";
 import "./route-guards.css";
 
+type AccountStatus = "loading" | "active" | "banned" | "error";
+
 export default function AuthGuard() {
-  const { session, user, loading, error, refreshSession } = useIdentity();
+  const { session, user, loading, error, refreshSession, signOut } = useIdentity();
   const location = useLocation();
+  const [accountStatus, setAccountStatus] = useState<AccountStatus>("loading");
+  const [statusRevision, setStatusRevision] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setAccountStatus("loading");
+      return;
+    }
+
+    let active = true;
+    setAccountStatus("loading");
+
+    void identityApi.getAccountStatus(user.id)
+      .then(({ data, error: statusError }) => {
+        if (statusError) throw statusError;
+        if (!data) throw new Error("PROFILE_NOT_FOUND");
+        if (active) setAccountStatus(data.is_banned ? "banned" : "active");
+      })
+      .catch(() => {
+        if (active) setAccountStatus("error");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id, statusRevision]);
 
   if (loading) {
     return (
@@ -36,6 +66,43 @@ export default function AuthGuard() {
         replace
         state={{ from: location.pathname + location.search + location.hash }}
       />
+    );
+  }
+
+  if (accountStatus === "loading") {
+    return (
+      <main className="route-guard-screen" aria-live="polite" aria-busy="true">
+        <span className="route-guard-spinner" aria-hidden="true" />
+        <p>Verifying your account status…</p>
+      </main>
+    );
+  }
+
+  if (accountStatus === "error") {
+    return (
+      <main className="route-guard-screen" role="alert">
+        <div className="route-guard-message">
+          <strong>We couldn’t verify your account status.</strong>
+          <p>Access remains blocked until your account status can be confirmed.</p>
+          <button type="button" onClick={() => setStatusRevision((revision) => revision + 1)}>
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (accountStatus === "banned") {
+    return (
+      <main className="route-guard-screen" role="alert">
+        <div className="route-guard-message">
+          <strong>Account suspended</strong>
+          <p>Your account is currently suspended. Contact TestDZ support if you believe this is a mistake.</p>
+          <button type="button" onClick={() => { void signOut().catch(() => undefined); }}>
+            Sign out
+          </button>
+        </div>
+      </main>
     );
   }
 
