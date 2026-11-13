@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-tester-withdrawals.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 type Withdrawal = {
   id: string; name: string; email: string; amount: number; method: "Bank Transfer" | "PayPal" | "Cryptocurrency";
@@ -43,7 +44,7 @@ export default function AdminTesterWithdrawalsPage() {
       <AdminSidebar activePath="/admin/tester-withdrawals" />      <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online" /></div>
     </aside>
     <section className="admin-main">
-      <header className="admin-topbar"><label className="admin-search"><span>⌕</span><input aria-label="Search withdrawal requests" placeholder="Search users, withdrawal requests, or transaction IDs..." value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications">♧<span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages">✉<span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
+      <header className="admin-topbar"><label className="admin-search"><AdminIcon name="search"/><input aria-label="Search withdrawal requests" placeholder="Search users, withdrawal requests, or transaction IDs..." value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell"/><span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages"><AdminIcon name="mail"/><span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
       <div className="admin-content tw-content">
         <section className="admin-welcome tw-welcome"><div><span className="admin-eyebrow">TESTDZ · FINANCIAL OPERATIONS</span><h1><Icon>▣</Icon> Tester Withdrawals Management</h1><p>Review tester cash-out requests for eligible earned rewards; actual transfers remain disabled</p></div><div className="tw-toolbar"><select aria-label="Reporting period" value={period} onChange={(event) => setPeriod(event.target.value)}><option>Last 7 Days</option><option>Last 30 Days</option><option>Last 90 Days</option><option>This Year</option></select><button type="button" onClick={() => setNotice("Report export is a preview action. No live financial records are available yet.")}>⇩ Export Report</button></div></section>
         <div className="tw-demo"><strong>DEMO MODE</strong><span>Illustrative sample data only. Reward eligibility, conversion rates and payout execution are not connected; no balance or transfer changes.</span></div>
