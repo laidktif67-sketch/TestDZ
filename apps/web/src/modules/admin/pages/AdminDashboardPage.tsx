@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import AdminSidebar from "../components/AdminSidebar";
@@ -80,9 +80,13 @@ function TrendChart() {
 }
 
 export default function AdminDashboardPage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return <main className="admin-dashboard">
-    <aside className="admin-sidebar">
-      <a className="admin-brand" href="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></a>
+    <aside className={`admin-sidebar ${mobileNavOpen ? "is-open" : ""}`}>
+      <div className="admin-sidebar-header">
+        <a className="admin-brand" href="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></a>
+        <button type="button" className="admin-mobile-menu-toggle" aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen((open) => !open)}><Icon name={mobileNavOpen ? "check" : "menu"} size={20} /></button>
+      </div>
       <div className="admin-sidebar-label">Workspace</div>
       <AdminSidebar activePath="/admin" />
       <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online" /></div>
