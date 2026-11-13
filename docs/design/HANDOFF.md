@@ -32,3 +32,7 @@
 
 ## Validation limits
 Static standalone HTML only. No application runtime, browser screenshots, real device test, backend integration, screen-reader test, or native French proofreading was run. No files outside docs/design were modified. No image generation was used.
+
+
+## Sample data note
+Names, dates, balances, and ledger rows shown in the HTML are illustrative design data only. They are not live account data and must be replaced with API-backed values during implementation.
