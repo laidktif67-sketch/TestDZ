@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-support-center.css";
 import AdminSidebar from "../components/AdminSidebar";
-import AdminIcon from "../components/AdminIcon";
 
 type Kind = "support" | "report";
 type Status = "open" | "waiting" | "resolved";
