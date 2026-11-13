@@ -77,7 +77,7 @@ begin
   insert into public.wallets (user_id, earned_points, purchased_credits)
   values (v_user_id, 2, 0)
   on conflict (user_id) do update
-    set earned_points = public.wallets.earned_points + 2,
+    set earned_points = wallets.earned_points + 2,
         updated_at = pg_catalog.now();
 
   return pg_catalog.jsonb_build_object(
