@@ -116,7 +116,7 @@ select throws_ok(
 
 select throws_ok(
   $sql$insert into storage.objects (bucket_id, name)
-    values ('support-attachments','22000000-0000-4000-8000-000000000001/21000000-0000-4000-8000-000000000002/forged.txt')$,
+    values ('support-attachments','22000000-0000-4000-8000-000000000001/21000000-0000-4000-8000-000000000002/forged.txt')$sql$,
   '42501', null,
   'requester B cannot upload into requester A ticket folder'
 );
