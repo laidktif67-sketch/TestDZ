@@ -14,6 +14,22 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_submissions: {
+        Row: { id: string; assignment_id: string; test_id: string; tester_id: string; report_text: string; comments: string; status: string; submitted_at: string; reviewed_by: string | null; reviewed_at: string | null; review_note: string | null; created_at: string }
+        Insert: { id?: string; assignment_id: string; test_id: string; tester_id: string; report_text: string; comments?: string; status?: string; submitted_at?: string; reviewed_by?: string | null; reviewed_at?: string | null; review_note?: string | null; created_at?: string }
+        Update: { id?: string; assignment_id?: string; test_id?: string; tester_id?: string; report_text?: string; comments?: string; status?: string; submitted_at?: string; reviewed_by?: string | null; reviewed_at?: string | null; review_note?: string | null; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "assignment_submissions_assignment_fk"; columns: ["assignment_id", "test_id", "tester_id"]; isOneToOne: true; referencedRelation: "assignments"; referencedColumns: ["id", "test_id", "tester_id"] }
+        ]
+      }
+      assignment_submission_attachments: {
+        Row: { id: string; submission_id: string; assignment_id: string; test_id: string; tester_id: string; storage_path: string; original_filename: string; mime_type: string; size_bytes: number; created_at: string }
+        Insert: { id?: string; submission_id: string; assignment_id: string; test_id: string; tester_id: string; storage_path: string; original_filename: string; mime_type: string; size_bytes: number; created_at?: string }
+        Update: { id?: string; submission_id?: string; assignment_id?: string; test_id?: string; tester_id?: string; storage_path?: string; original_filename?: string; mime_type?: string; size_bytes?: number; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "assignment_submission_attachment_owner_fk"; columns: ["submission_id", "assignment_id", "test_id", "tester_id"]; isOneToOne: false; referencedRelation: "assignment_submissions"; referencedColumns: ["id", "assignment_id", "test_id", "tester_id"] }
+        ]
+      }
       apps: {
         Row: {
           archived_from_status: string | null
@@ -2125,6 +2141,10 @@ export type Database = {
     Functions: {
       submit_assignment_checkin: {
         Args: { p_assignment_id: string; p_note?: string | null }
+        Returns: Json
+      }
+      submit_assignment_report: {
+        Args: { p_assignment_id: string; p_report_text: string; p_comments?: string; p_files?: Json }
         Returns: Json
       }
 
