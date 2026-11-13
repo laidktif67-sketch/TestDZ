@@ -18,3 +18,6 @@
 /* Use a vector menu glyph instead of a text-symbol icon; mirror motion for RTL. */
 .admin-sidebar-menu-icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .admin-sidebar-nav:dir(rtl) .admin-nav-item:hover{transform:translateX(-1px)}
+
+/* Mobile drawer indentation follows the current writing direction. */
+@media(max-width:850px){.admin-sidebar .admin-sidebar-nav.is-mobile-open .admin-sidebar-subitem{margin-inline-start:8px;margin-left:0}}
