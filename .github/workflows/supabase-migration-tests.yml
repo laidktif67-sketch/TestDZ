@@ -9,10 +9,14 @@ on:
       - "supabase/**"
       - ".github/workflows/supabase-migration-tests.yml"
       - "scripts/storage-api-regression.mjs"
+      - "scripts/check-apply-migration-workflow.mjs"
+      - ".github/workflows/apply-migration.yml"
   pull_request:
     paths:
       - "supabase/**"
       - ".github/workflows/supabase-migration-tests.yml"
+      - ".github/workflows/apply-migration.yml"
+      - "scripts/check-apply-migration-workflow.mjs"
   workflow_dispatch:
 
 permissions:
@@ -29,6 +33,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Verify migration deployment workflow safety
+        run: node scripts/check-apply-migration-workflow.mjs
 
       - name: Set up Supabase CLI
         id: setup-cli
