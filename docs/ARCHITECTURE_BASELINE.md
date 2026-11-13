@@ -11,10 +11,9 @@
 
 | Check | Evidence/result | Status |
 |---|---|---|
-| PR branch | GitHub PR #32 head is `feat/admin-dashboard-overview` | Verified remotely |
-| Remote HEAD | `77be7294803250eaf48fc3682463084566973cc5` | Verified remotely |
-| PR state | Open, draft, unmerged | Verified remotely |
-| PR base | `feat/admin-account-suspension-appeals` | Verified remotely |
+| Remote branch | `refactor/feature-based-architecture` | Verified remotely |
+| Remote HEAD at this documentation update | `9a39315e13a25303ba4c43f1cd6fc648e14b1af3` | Verified remotely |
+| PR state for this branch | Not verified in this checkpoint | Not verified |
 | Local current branch and HEAD | Not readable through the GitHub repository API | Not verified in this checkpoint |
 | Local `git status --short` | Not readable through the GitHub repository API | Not verified in this checkpoint |
 | Local untracked `node_modules/` | Previously reported by the user; must be preserved | Do not delete, clean, reset or overwrite |

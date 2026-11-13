@@ -19,13 +19,13 @@ This is an incremental target, not a mandate to move every existing file. Preser
 ├── apps/
 │   └── web/
 │       └── src/
-│           ├── app/
-│           │   ├── App.tsx
-│           │   └── router/
-│           │       ├── publicRoutes.tsx
-│           │       ├── testerRoutes.tsx
-│           │       ├── developerRoutes.tsx
-│           │       └── adminRoutes.tsx
+│           ├── app/                   # future home for app-wide providers and composition
+│           ├── routes/                # current migration implementation
+│           │   ├── publicRoutes.tsx
+│           │   ├── authenticatedRoutes.tsx
+│           │   ├── testerRoutes.tsx
+│           │   ├── developerRoutes.tsx
+│           │   └── adminRoutes.tsx
 │           ├── pages/                 # public/auth/legal/onboarding entry pages
 │           ├── features/
 │           │   ├── identity/
