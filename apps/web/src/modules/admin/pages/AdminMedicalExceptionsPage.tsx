@@ -68,21 +68,21 @@ export default function AdminMedicalExceptionsPage() {
 
   return <main className="admin-dashboard admin-medical-page" dir="rtl">
     <aside className="admin-sidebar">
-      <Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link>
+      <Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>ابنِ · اختبر · طوّر</small></span></Link>
       <div className="admin-sidebar-label keep-sidebar-label">الإدارة</div>
-      <AdminSidebar activePath="/admin/medical-exceptions" />
-      <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>مشرف المنصة</small></div><span className="admin-online" /></div>
+      <AdminSidebar activePath="/admin/medical-exceptions" locale="ar" />
+      <div className="admin-sidebar-footer"><span className="admin-avatar">مش</span><div><strong>المشرف</strong><small>مشرف المنصة</small></div><span className="admin-online" /></div>
     </aside>
 
     <section className="admin-main">
       <header className="admin-topbar">
         <label className="admin-search"><AdminIcon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث باسم المختبر أو رقم الطلب..." /></label>
-        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="الإشعارات"><AdminIcon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>المشرف</span></div></div>
+        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="الإشعارات"><AdminIcon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">مش</span><span>المشرف</span></div></div>
       </header>
 
       <div className="admin-content medical-content">
         <section className="admin-welcome medical-welcome">
-          <div><span className="admin-eyebrow">TESTDZ · ADMIN WORKSPACE</span><h1>إدارة طلبات الاستثناء الطبي</h1><p>مراجعة طلبات المختبرين واتخاذ القرار المناسب مع توثيق كل إجراء.</p></div>
+          <div><span className="admin-eyebrow">TESTDZ · لوحة الإدارة</span><h1>إدارة طلبات الاستثناء الطبي</h1><p>مراجعة طلبات المختبرين واتخاذ القرار المناسب مع توثيق كل إجراء.</p></div>
           <div className="admin-welcome-art" aria-hidden="true"><AdminIcon name="shield" size={25}/><AdminIcon name="activity" size={17}/></div>
           <span className="medical-period"><Icon name="calendar" /> آخر 30 يوماً</span>
         </section>
