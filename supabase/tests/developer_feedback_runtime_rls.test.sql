@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(18);
 
 -- Isolated fixture graph: four cohort developers and one non-member. Each
 -- member owns one test; assignments only cross between different members.
@@ -126,6 +126,21 @@ select is(
      and event_type = 'message_sent'),
   1,
   'message insert creates exactly one database-authored audit event'
+);
+
+select throws_ok(
+  $update public.developer_feedback_events
+    set new_value = 'forged audit edit'
+    where feedback_id = '70000000-0000-4000-8000-000000000001'$,
+  '42501', null,
+  'authenticated participants cannot update database-authored audit events'
+);
+
+select throws_ok(
+  $delete from public.developer_feedback_events
+    where feedback_id = '70000000-0000-4000-8000-000000000001'$,
+  '42501', null,
+  'authenticated participants cannot delete database-authored audit events'
 );
 
 insert into storage.objects (bucket_id, name)
