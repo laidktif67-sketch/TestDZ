@@ -24,7 +24,7 @@ Out of V1: iOS/web app testing, public API, standalone marketplace, browser exte
 
 ## 2. Binding principles
 
-1. Earned points and purchased credits are separate balances and cannot be converted.
+1. Earned points and purchased credits are separate balances. Verified earned points may be converted to a cash withdrawal under the administrator-configured reward policy; purchased credits are never cashable.
 2. Subscription rows are authoritative; profile tier is only a cache.
 3. Payment activation requires a verified, signed, idempotent provider webhook.
 4. Product copy must not guarantee tester counts or Play Console eligibility.
@@ -143,8 +143,8 @@ Formation uses subscription priority, waiting time, reputation and device compat
 
 ## 7. Wallet and ledger
 
-- `earned_points`: earned through verified platform activity; eligible for cash withdrawal only when the feature is enabled and configured by administrators.
-- `purchased_credits`: purchased in DZD and consumed for platform services; never cashable.
+- `earned_points`: earned through verified platform activity; eligible for cash withdrawal after approval when the feature is enabled and configured by administrators.
+- `purchased_credits`: purchased in DZD and consumed for platform services; never cashable and never convertible to earned points.
 - Withdrawal conversion rates, thresholds, supported payout methods and processing targets are platform configuration, not frontend constants.
 - A withdrawal request snapshots its conversion rate and currency at creation. Its points are reserved atomically and cannot be spent twice.
 - Status transitions (`submitted`, `under_review`, `processing`, `completed`, `rejected`, `cancelled`) are server-controlled, idempotent and audited. Rejected/cancelled requests release reserved points; completed requests consume them.
