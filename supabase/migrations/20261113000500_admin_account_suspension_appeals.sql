@@ -166,14 +166,10 @@ begin
   values (p_suspension_id, v_user, btrim(p_message))
   returning id into v_appeal_id;
 
-  insert into public.audit_logs (
-    actor_id, action, entity_type, entity_id, after_data, metadata
-  ) values (
-    v_user, 'account.suspension_appeal_submitted', 'account_suspension', p_suspension_id,
-    jsonb_build_object('appeal_id', v_appeal_id, 'status', 'pending'),
-    jsonb_build_object('appeal_deadline', v_deadline)
-  );
-
+  -- The appeal row is the immutable submission record. Do not write to audit_logs
+  -- in this RPC: PR27 correctly blocks all writes performed by banned sessions,
+  -- including writes from SECURITY DEFINER functions. The admin review is audited
+  -- separately by admin_review_account_suspension_appeal().
   -- The submitter is suspended. Do not write to notifications here:
   -- PR27 intentionally blocks all writes by banned identities, including writes
   -- performed inside SECURITY DEFINER functions. The pending appeal itself is
