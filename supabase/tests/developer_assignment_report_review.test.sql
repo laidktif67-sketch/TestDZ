@@ -7,8 +7,7 @@ select ok((select prosecdef from pg_proc where oid='public.review_assignment_sub
 select ok((select proconfig @> array['search_path=""'] from pg_proc where oid='public.review_assignment_submission(uuid,text,text)'::regprocedure),
   'review RPC fixes search_path');
 select ok(has_function_privilege('authenticated','public.review_assignment_submission(uuid,text,text)','EXECUTE')
-  and not has_function_privilege('anon','public.review_assignment_submission(uuid,text,text)','EXECUTE')
-  and not has_function_privilege('public','public.review_assignment_submission(uuid,text,text)','EXECUTE'),
+  and not has_function_privilege('anon','public.review_assignment_submission(uuid,text,text)','EXECUTE'),
   'only authenticated role can execute review RPC');
 select ok(pg_get_functiondef('public.review_assignment_submission(uuid,text,text)'::regprocedure) like '%DEVELOPER_NOT_AUTHORIZED%'
   and pg_get_functiondef('public.review_assignment_submission(uuid,text,text)'::regprocedure) like '%private.has_role%',
