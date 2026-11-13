@@ -1,6 +1,6 @@
 begin;
 
-select plan(12);
+select plan(16);
 
 -- Two requesters and one support agent; all fixtures are transaction-scoped.
 insert into auth.users (
@@ -115,10 +115,59 @@ select throws_ok(
 );
 
 select throws_ok(
-  $$insert into storage.objects (bucket_id, name)
-    values ('support-attachments','22000000-0000-4000-8000-000000000001/21000000-0000-4000-8000-000000000002/forged.txt')$$,
+  $insert into storage.objects (bucket_id, name)
+    values ('support-attachments','22000000-0000-4000-8000-000000000001/21000000-0000-4000-8000-000000000002/forged.txt')$,
   '42501', null,
   'requester B cannot upload into requester A ticket folder'
+);
+
+select is(
+  (with changed as (
+    update public.support_tickets
+    set priority = 'urgent'
+    where id = '22000000-0000-4000-8000-000000000001'
+    returning id
+  ) select count(*)::int from changed),
+  0,
+  'a requester cannot change ticket priority even though the column grant exists'
+);
+
+select set_config('request.jwt.claim.sub','21000000-0000-4000-8000-000000000003',true);
+select set_config('request.jwt.claims','{"sub":"21000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+
+update public.support_tickets
+set priority = 'high'
+where id = '22000000-0000-4000-8000-000000000001';
+
+select is(
+  (select priority from public.support_tickets where id = '22000000-0000-4000-8000-000000000001'),
+  'high',
+  'authorized support staff can update ticket priority'
+);
+
+select is(
+  (select count(*)::int from public.support_ticket_events
+   where ticket_id = '22000000-0000-4000-8000-000000000001'
+     and event_type = 'priority_changed'
+     and old_priority = 'normal'
+     and new_priority = 'high'),
+  1,
+  'support priority change creates a database-authored audit event'
+);
+
+select throws_ok(
+  $update public.support_ticket_events
+    set new_priority = 'urgent'
+    where ticket_id = '22000000-0000-4000-8000-000000000001'$,
+  '42501', null,
+  'support staff cannot directly update audit events'
+);
+
+select throws_ok(
+  $delete from public.support_ticket_events
+    where ticket_id = '22000000-0000-4000-8000-000000000001'$,
+  '42501', null,
+  'support staff cannot directly delete audit events'
 );
 
 select set_config('request.jwt.claim.sub','21000000-0000-4000-8000-000000000003',true);
