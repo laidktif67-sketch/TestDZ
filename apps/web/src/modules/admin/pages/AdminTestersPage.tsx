@@ -7,7 +7,7 @@ import AdminSidebar from "../components/AdminSidebar";
 
 type Tester = { id:string; name:string; initials:string; email:string; status:"Active"|"Pending"|"Suspended"; cohort:string; tests:number; assignments:number; success:number; joined:string; lastActivity:string; recent:string[] };
 const seed:Tester[]=[
-{id:"TST-1047",name:"Sara Belkacem",initials:"SB",email:"sara.belkacem@testdz.dz",status:"Active",cohort:"Cohort A",tests:12,assignments:8,success:92.5,joined:"Nov 1, 2026",lastActivity:"Nov 13, 2026",recent:["Completed test: React Components","Joined Cohort A","Signed in"]},
+{id:"TST-1047",name:"Sara Benali",initials:"SB",email:"sara.benali@testdz.dz",status:"Active",cohort:"Cohort A",tests:12,assignments:8,success:92.5,joined:"Nov 1, 2026",lastActivity:"Nov 13, 2026",recent:["Completed test: React Components","Joined Cohort A","Signed in"]},
 {id:"TST-1042",name:"Mohamed Tarek",initials:"MT",email:"mohamed.tarek@testdz.dz",status:"Active",cohort:"Cohort B",tests:14,assignments:10,success:96,joined:"Oct 28, 2026",lastActivity:"Nov 13, 2026",recent:["Submitted API feedback","Completed assignment","Signed in"]},
 {id:"TST-1038",name:"Nour Chenouf",initials:"NC",email:"nour.chenouf@testdz.dz",status:"Active",cohort:"Cohort A",tests:10,assignments:7,success:89,joined:"Oct 20, 2026",lastActivity:"Nov 12, 2026",recent:["Completed UI test","Updated profile"]},
 {id:"TST-1029",name:"Yacine Hadjout",initials:"YH",email:"yacine.hadjout@testdz.dz",status:"Pending",cohort:"Cohort C",tests:6,assignments:4,success:75,joined:"Oct 18, 2026",lastActivity:"Nov 12, 2026",recent:["Accepted invitation","Joined Cohort C"]},
