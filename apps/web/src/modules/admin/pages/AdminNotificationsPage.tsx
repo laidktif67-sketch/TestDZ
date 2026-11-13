@@ -16,7 +16,6 @@ const initial:Notice[]=[
 {id:9,title:"Payment review required",body:"A developer payment needs attention",category:"System",priority:"High",read:false,time:"31 min ago",icon:"ⓘ"}];
 const categories=["All","System","Users","Tests","Cohorts"] as const;
 type Category=typeof categories[number];
-const navigation=[["Overview","/admin"],["Users","/admin/users"],["Developers","/admin/developers"],["Testers","/admin/testers"],["Tests Management","/admin/tests"],["Assignments","/admin/assignments"],["Cohorts","/admin/cohorts"],["Apps Management","/admin/apps"],["Reports & Reviews","/admin/reports"],["Financial","/admin/financial"],["Notifications","/admin/notifications"],["Settings","/admin/settings"]];
 export default function AdminNotificationsPage(){
 const [rows,setRows]=useState(initial),[filter,setFilter]=useState<Category>("All"),[query,setQuery]=useState(""),[page,setPage]=useState(1),[selected,setSelected]=useState<number[]>([]),[channels,setChannels]=useState({email:true,inApp:true,push:true,sms:false}),[audience,setAudience]=useState("All Users"),[message,setMessage]=useState(""),[notice,setNotice]=useState("");
 const unread=rows.filter(x=>!x.read).length;
