@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-reports-reviews.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 type Status="Approved"|"Pending"|"Rejected"|"Needs Revision";
 type Report={id:string;title:string;version:string;developer:string;tester:string;test:string;status:Status;score:number;date:string;summary:string};
 const seed:Report[]=[
@@ -24,7 +25,7 @@ const counts:Record<(typeof filters)[number],number>={"All Reports":248,Pending:
 const decide=(status:Status)=>{setRows(old=>old.map(r=>r.id===chosen.id?{...r,status}:r));setNotice(chosen.id+" changed to "+status+" in this local preview only. No production report or reward was changed.");};
 return <main className="admin-dashboard admin-reports-page">
 <aside className="admin-sidebar"><Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link><div className="admin-sidebar-label">Workspace</div><AdminSidebar activePath="/admin/reports" /><div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div></aside>
-<section className="admin-main"><header className="admin-topbar"><label className="admin-search">⌕ <input placeholder="Search reports, developers, or testers..." value={q} onChange={e=>setQ(e.target.value)}/></label><div className="admin-top-actions"><button className="admin-icon-button" type="button">♧<span>3</span></button><button className="admin-icon-button" type="button">✉<span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
+<section className="admin-main"><header className="admin-topbar"><label className="admin-search"><AdminIcon name="search" size={18}/> <input placeholder="Search reports, developers, or testers..." value={q} onChange={e=>setQ(e.target.value)}/></label><div className="admin-top-actions"><button className="admin-icon-button" type="button"><AdminIcon name="bell" size={18}/><span>3</span></button><button className="admin-icon-button" type="button"><AdminIcon name="mail" size={18}/><span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
 <div className="admin-content reports-content"><section className="reports-hero"><div className="reports-hero-icon">✓</div><div><span>TESTDZ · ADMIN WORKSPACE</span><h1>Reports &amp; Reviews</h1><p>Review and manage test reports from developers and testers</p></div><span className="reports-period">▦　Last 30 Days　⌄</span></section>
 <div className="reports-demo-banner"><b>DEMO MODE</b><span>Illustrative reports and evidence. Decisions and notes are local previews only.</span></div>
 <section className="reports-metrics">{[["248","Total Reports","blue","▤","+12%"],["192","Approved","green","✓","+8%"],["32","Pending Review","orange","◷","+5%"],["24","Rejected","red","×","-3%"]].map(([n,l,t,i,p])=><article className={"reports-metric "+t} key={l}><span>{i}</span><div><strong>{n}</strong><small>{l}</small></div><b>{p}</b></article>)}</section>
