@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-assignments.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 type AssignmentStatus = "Completed" | "In Progress" | "Pending" | "Overdue";
 type Assignment = { id:string; tester:string; test:string; developer:string; status:AssignmentStatus; progress:number; start:string; due:string; activity:string[] };
@@ -25,7 +26,7 @@ export default function AdminAssignmentsPage(){
  const completed=seed.filter(a=>a.status==="Completed").length,inProgress=seed.filter(a=>a.status==="In Progress").length,overdue=seed.filter(a=>a.status==="Overdue").length;
  const notify=(action:string)=>setNotice("Demo preview only: "+action+". No tester, developer, assignment, deadline, or database record was changed.");
  return <main className="admin-dashboard admin-assignments-page"><aside className="admin-sidebar"><Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link><div className="admin-sidebar-label">Workspace</div><AdminSidebar activePath="/admin/assignments" /><div className="admin-sidebar-label aa-system">System</div><div className="admin-nav-item"><Glyph kind="history"/><span>System Logs</span></div><div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div></aside>
- <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><span>⌕</span><input placeholder="Search assignments, testers, or tests..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><span className="aa-bell">3</span><span className="admin-avatar">AD</span></div></header>
+ <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><AdminIcon name="search" size={18}/><input placeholder="Search assignments, testers, or tests..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><span className="aa-bell">3</span><span className="admin-avatar">AD</span></div></header>
  <div className="admin-content aa-content"><section className="admin-welcome aa-hero"><div><span className="admin-eyebrow">TESTDZ · ADMIN WORKSPACE</span><h1>Assignments Management</h1><p>Monitor assignment distribution, tester progress and deadlines across the platform.</p></div><span className="aa-hero-mark"><Glyph kind="tasks"/></span></section>
  <div className="aa-demo-banner">DEMO MODE — All assignment records, counts, dates and activity below are illustrative sample data.</div>
  <section className="aa-metrics"><Metric icon="users" label="Total Assignments" value="245" tone="blue" detail="Across all test campaigns"/><Metric icon="check" label="Completed" value={String(completed+176)} tone="green" detail="Submitted for review"/><Metric icon="tasks" label="In Progress" value={String(inProgress+39)} tone="purple" detail="Currently being completed"/><Metric icon="history" label="Overdue" value={String(overdue+24)} tone="red" detail="Require attention"/></section>
