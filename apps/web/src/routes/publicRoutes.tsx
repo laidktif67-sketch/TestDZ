@@ -1,14 +1,14 @@
 import { Route } from "react-router-dom";
-import AuthPage from "./pages/AuthPage";
-import SignupSuccessPage from "./pages/SignupSuccessPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import PasswordResetSuccessPage from "./pages/PasswordResetSuccessPage";
-import InvalidOtpPage from "./pages/InvalidOtpPage";
-import LandingPage from "./pages/LandingPage";
-import LegalPage from "./pages/LegalPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import AuthCallbackPage from "./pages/AuthCallbackPage";
+import AuthPage from "../pages/AuthPage";
+import SignupSuccessPage from "../pages/SignupSuccessPage";
+import ForgotPasswordPage from "../pages/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
+import PasswordResetSuccessPage from "../pages/PasswordResetSuccessPage";
+import InvalidOtpPage from "../pages/InvalidOtpPage";
+import LandingPage from "../pages/LandingPage";
+import LegalPage from "../pages/LegalPage";
+import VerifyEmailPage from "../pages/VerifyEmailPage";
+import AuthCallbackPage from "../pages/AuthCallbackPage";
 
 // Public and authentication-entry routes. Keep their declaration order stable.
 export const publicRouteElements = [
