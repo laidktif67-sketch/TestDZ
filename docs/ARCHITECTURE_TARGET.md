@@ -3,7 +3,7 @@
 
 **Status:** approved target direction; migration not yet complete  
 **Repository:** `laidktif67-sketch/TestDZ`  
-**Current migration ref:** `refactor/feature-based-architecture` at `87c42edbbaacc182d04429c79d226a1042c739f0` (remote source inspection; local validation pending)  
+**Current migration ref:** `refactor/feature-based-architecture` at `9bbf14392504224ae14e541dae450a945b826cab` (remote source inspection; local validation pending)  
 **Scope:** architecture and controlled migration plan only. This document does not authorize a rewrite, database changes, production deployment, or merge to `main`.
 
 ## 1. Architectural decision
