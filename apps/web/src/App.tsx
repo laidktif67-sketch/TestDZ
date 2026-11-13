@@ -58,6 +58,7 @@ import AdminSystemLogsPage from "./modules/admin/pages/AdminSystemLogsPage";
 import AdminFinancialPage from "./modules/admin/pages/AdminFinancialPage";
 import AdminTesterWithdrawalsPage from "./modules/admin/pages/AdminTesterWithdrawalsPage";
 import AdminRewardsPage from "./modules/admin/pages/AdminRewardsPage";
+import AdminTransactionsLedgerPage from "./modules/admin/pages/AdminTransactionsLedgerPage";
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
 import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
 import AdminTestsPage from "./modules/admin/pages/AdminTestsPage";
@@ -146,6 +147,7 @@ export default function App() {
               <Route path="/admin/financial" element={<AdminFinancialPage />} />
               <Route path="/admin/tester-withdrawals" element={<AdminTesterWithdrawalsPage />} />
               <Route path="/admin/rewards" element={<AdminRewardsPage />} />
+              <Route path="/admin/transactions-ledger" element={<AdminTransactionsLedgerPage />} />
               <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
               <Route path="/admin/users" element={<AdminUserManagementPage />} />
