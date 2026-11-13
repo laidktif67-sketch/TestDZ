@@ -115,7 +115,7 @@ select throws_ok(
 );
 
 select throws_ok(
-  $insert into storage.objects (bucket_id, name)
+  $sql$insert into storage.objects (bucket_id, name)
     values ('support-attachments','22000000-0000-4000-8000-000000000001/21000000-0000-4000-8000-000000000002/forged.txt')$,
   '42501', null,
   'requester B cannot upload into requester A ticket folder'
@@ -156,16 +156,16 @@ select is(
 );
 
 select throws_ok(
-  $update public.support_ticket_events
+  $sql$update public.support_ticket_events
     set new_priority = 'urgent'
-    where ticket_id = '22000000-0000-4000-8000-000000000001'$,
+    where ticket_id = '22000000-0000-4000-8000-000000000001'$sql$,
   '42501', null,
   'support staff cannot directly update audit events'
 );
 
 select throws_ok(
-  $delete from public.support_ticket_events
-    where ticket_id = '22000000-0000-4000-8000-000000000001'$,
+  $sql$delete from public.support_ticket_events
+    where ticket_id = '22000000-0000-4000-8000-000000000001'$sql$,
   '42501', null,
   'support staff cannot directly delete audit events'
 );
