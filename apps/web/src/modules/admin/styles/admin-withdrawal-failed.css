@@ -3,3 +3,9 @@
 /* Keep PayPal branding aligned with payout metadata. */
 .wf-paypal{display:inline-flex;align-items:center;gap:7px}
 .wf-paypal .admin-payment-method-icon{flex:0 0 auto;vertical-align:middle}
+
+/* Keep inline action and metadata icons aligned with text in both directions. */
+.wf-person p,.wf-role,.wf-card header h2,.wf-note,.wf-actions a,.wf-actions button,.wf-history b,.wf-next>div>span{display:inline-flex;align-items:center;gap:6px}
+.wf-card header h2{display:flex}
+.wf-person p svg,.wf-role svg,.wf-card header h2 svg,.wf-note svg,.wf-actions svg,.wf-history b svg,.wf-next>div>span svg{flex:none;vertical-align:middle}
+.wf-banner-icon{display:flex;align-items:center;justify-content:center}
