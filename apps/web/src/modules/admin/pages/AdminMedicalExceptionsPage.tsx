@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-medical-exceptions.css";
@@ -23,7 +24,7 @@ const statusText: Record<RequestStatus,string> = { pending: "قيد المراج
 const formatDate = (value: string) => new Intl.DateTimeFormat("ar-DZ", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Africa/Algiers" }).format(new Date(value + "T12:00:00"));
 
 function Icon({ name, size = 18 }: { name: string; size?: number }) {
-  const paths: Record<string, React.ReactNode> = {
+  const paths: Record<string, ReactNode> = {
     home: <><path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-6h6v6" /></>,
     users: <><circle cx="9" cy="8" r="3" /><path d="M3 20v-2a6 6 0 0 1 12 0v2m1-14a3 3 0 0 1 0 6m2 2a5 5 0 0 1 3 5v1" /></>,
     shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></>,
