@@ -32,6 +32,7 @@ const financialItems = [
   ["Tester Withdrawals", "/admin/tester-withdrawals"],
   ["Rewards Management", "/admin/rewards"],
   ["Transactions Ledger", "/admin/transactions-ledger"],
+  ["Developer Payments", "/admin/developer-payments"],
 ];
 
 export default function AdminSidebar({ activePath }: AdminSidebarProps) {
@@ -51,7 +52,7 @@ export default function AdminSidebar({ activePath }: AdminSidebarProps) {
           <Link key={path} to={path} aria-current={activePath === path ? "page" : undefined}
             className={"admin-sidebar-subitem" + (activePath === path ? " active" : "")}>{label}</Link>
         ))}
-        <span className="admin-sidebar-subitem is-disabled" aria-disabled="true">Developer Payments · Coming soon</span>
+
       </div>
       <div className="admin-sidebar-section-label">SYSTEM</div>
       {systemItems.map(([label,path,icon]) => (
