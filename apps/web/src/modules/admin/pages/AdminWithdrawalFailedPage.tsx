@@ -3,6 +3,7 @@ import "../styles/admin-dashboard.css";
 import "../styles/admin-withdrawal-failed.css";
 import AdminSidebar from "../components/AdminSidebar";
 import AdminIcon from "../components/AdminIcon";
+import AdminPaymentMethodIcon from "../components/AdminPaymentMethodIcon";
 
 export default function AdminWithdrawalFailedPage() {
   const { id } = useParams();
@@ -22,13 +23,13 @@ export default function AdminWithdrawalFailedPage() {
         <div className="wf-alert" role="note"><strong>ⓘ　Preview only — no live payout or account changes</strong><span>!</span></div>
         <section className="admin-panel wf-hero">
           <div className="wf-person"><div className="wf-avatar">RD<span>✓</span></div><div><h2>Rami Djaafar <span>✓</span></h2><b className="wf-role">♟ Tester</b><p>✉　rami.djaafar@testdz.dz</p><p>☎　+213 555 123 456</p><p>⌖　Algeria, Algiers</p><p>▦　Joined: Mar 20, 2026</p></div></div>
-          <div className="wf-request-id"><small>Withdrawal Request ID</small><strong>{requestId} <button type="button" aria-label="Copy request ID" onClick={()=>{if(navigator.clipboard) void navigator.clipboard.writeText(requestId);}}>▢</button></strong><div className="wf-metrics"><div><small>Request Amount</small><b>$75.00</b></div><div><small>Method</small><b className="wf-paypal">℗ PayPal</b></div><div><small>Request Date</small><b>▦　Nov 8, 2026<br/>　　14:25</b></div></div></div>
+          <div className="wf-request-id"><small>Withdrawal Request ID</small><strong>{requestId} <button type="button" aria-label="Copy request ID" onClick={()=>{if(navigator.clipboard) void navigator.clipboard.writeText(requestId);}}>▢</button></strong><div className="wf-metrics"><div><small>Request Amount</small><b>$75.00</b></div><div><small>Method</small><b className="wf-paypal"><AdminPaymentMethodIcon method="PayPal" size={24}/> PayPal</b></div><div><small>Request Date</small><b>▦　Nov 8, 2026<br/>　　14:25</b></div></div></div>
           <div className="wf-outcome"><span>×</span><strong>{isKnownRejected?"Rejected":"Rejected / Failed"}</strong><b>Nov 8, 2026 · 15:10</b></div>
         </section>
         <div className="wf-grid">
           <div className="wf-left">
             <section className="admin-panel wf-card"><header><h2>⚠　Failure / Rejection Details</h2></header><dl><div><dt>Reason:</dt><dd><b className="wf-reason">Payment details need verification.</b></dd></div><div><dt>Decision Date:</dt><dd>▦　Nov 8, 2026 · 15:10</dd></div><div><dt>Reviewed By:</dt><dd>♟　Admin</dd></div><div><dt>Note:</dt><dd><span className="wf-note">ⓘ　Payout was not completed due to incomplete payment details.</span></dd></div></dl></section>
-            <section className="admin-panel wf-card wf-payment"><header><h2>▣　Payment Attempt</h2></header><div className="wf-payment-row"><strong className="wf-paypal">℗ PayPal</strong><div><small>Status</small><b className="wf-not-paid">×　Not Paid</b></div><div><small>Attempt Date</small><b>▦　Nov 8, 2026 · 15:10</b></div></div></section>
+            <section className="admin-panel wf-card wf-payment"><header><h2>▣　Payment Attempt</h2></header><div className="wf-payment-row"><strong className="wf-paypal"><AdminPaymentMethodIcon method="PayPal" size={24}/> PayPal</strong><div><small>Status</small><b className="wf-not-paid">×　Not Paid</b></div><div><small>Attempt Date</small><b>▦　Nov 8, 2026 · 15:10</b></div></div></section>
           </div>
           <div className="wf-right">
             <section className="admin-panel wf-card wf-timeline"><header><h2>◷　Request Timeline</h2></header><div className="wf-steps"><div className="done"><i>✓</i><div><b>Request Submitted</b><small>Nov 8, 2026 · 14:25</small></div><span>Completed</span></div><div className="done blue"><i>✓</i><div><b>Under Review</b><small>Nov 8, 2026 · 14:40</small></div><span>Completed</span></div><div className="current"><i>×</i><div><b>Rejected</b><small>Nov 8, 2026 · 15:10</small></div><span>Current</span></div><div className="pending"><i>◷</i><div><b>Payment Not Sent</b><small>Nov 8, 2026 · 15:10</small></div><span>Pending</span></div></div></section>
