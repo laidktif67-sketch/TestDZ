@@ -93,7 +93,7 @@ export default function AdminSidebar({ activePath }: AdminSidebarProps) {
 
   return (
     <nav className={"admin-nav admin-sidebar-nav" + (mobileOpen ? " is-mobile-open" : "")} aria-label="Admin navigation">
-      <button type="button" className="admin-sidebar-mobile-toggle" aria-expanded={mobileOpen} aria-label={mobileOpen ? "Close admin navigation" : "Open admin navigation"} onClick={() => setMobileOpen(open => !open)}><span aria-hidden="true">{mobileOpen ? "×" : "☰"}</span><span>{mobileOpen ? "Close menu" : "Menu"}</span></button>
+      <button type="button" className="admin-sidebar-mobile-toggle" aria-expanded={mobileOpen} aria-label={mobileOpen ? "Close admin navigation" : "Open admin navigation"} onClick={() => setMobileOpen(open => !open)}><svg className="admin-sidebar-menu-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{mobileOpen ? <path d="m6 6 12 12M18 6 6 18" /> : <path d="M3 6h18M3 12h18M3 18h18" />}</svg><span>{mobileOpen ? "Close menu" : "Menu"}</span></button>
       <div className="admin-sidebar-section-label">WORKSPACE</div>
       {primaryItems.map(([label, path, icon]) => (
         <Link key={path} to={path} aria-current={isActive(path) ? "page" : undefined}
