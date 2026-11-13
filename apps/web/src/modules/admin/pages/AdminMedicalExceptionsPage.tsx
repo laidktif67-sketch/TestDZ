@@ -108,7 +108,7 @@ export default function AdminMedicalExceptionsPage() {
               {filtered.map((request) => <tr key={request.id} className={selectedId === request.id ? "chosen" : ""}><td><span className="medical-tester-cell"><i>{request.initials}</i><span><strong>{request.tester}</strong><small>{request.id}</small></span></span></td><td>{request.dates.length} {request.dates.length === 1 ? "day" : "days"}</td><td><span className={"medical-status " + request.status}>{statusText[request.status]}</span></td><td><button className="medical-view-button" type="button" onClick={() => {setSelectedId(request.id);setDecision(null);setNote("");setNotice("");}}>View Request</button></td></tr>)}
               {filtered.length === 0 && <tr><td colSpan={4} className="medical-empty">No requests match your search or filters.</td></tr>}
             </tbody></table></div>
-            <div className="medical-list-footer"><span>Showing {filtered.length} من {requests.length} demo requests</span><Link to="/admin">Back to Dashboard <Icon name="back" size={14} /></Link></div>
+            <div className="medical-list-footer"><span>Showing {filtered.length} of {requests.length} demo requests</span><Link to="/admin">Back to Dashboard <Icon name="back" size={14} /></Link></div>
           </article>
 
           <article className="admin-panel medical-detail-panel">
