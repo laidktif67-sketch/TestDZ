@@ -15,3 +15,7 @@ Source of truth: `apps/web/src/styles/tokens.css`. Proposals only; no source tok
 | `--control-min-height` | `44px` | — | Current feature controls include targets below 44px. |
 
 WCAG relative luminance formula: (lighter + 0.05) / (darker + 0.05). Normal text threshold: 4.5:1. Existing checks: text #071b50 = 16.39:1; muted #526486 = 5.96:1; soft #7183a2 = 3.84:1; primary #075cf5 = 5.44:1. Do not use text-soft, accent, or current danger as normal-size text on white.
+
+
+## Semantic text on proposed soft backgrounds
+The proposed foreground/background pairs also pass normal-text AA in the mockups: success #087a50 on #e8f5ee = 4.79:1; warning #b45309 on #fff4e5 = 4.62:1; danger #b42318 on #fff0ef = 5.94:1; info #1758b8 on #e8f0ff = 5.87:1. Ratios are rounded to two decimals. Recalculate if either token changes.
