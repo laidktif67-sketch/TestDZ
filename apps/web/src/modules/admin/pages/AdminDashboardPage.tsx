@@ -10,28 +10,6 @@ const metrics = [
   { icon: "activity", value: "03", label: "Security Alerts", trend: "Requires monitoring", tone: "green" },
 ];
 
-const navigation = [
-  { label: "Overview", icon: "home", active: true },
-  { label: "Users", icon: "users" },
-  { label: "Developers", icon: "code" },
-  { label: "Tests Management", icon: "flask" },
-  { label: "Testers", icon: "flask" },
-  { label: "Apps Management", icon: "apps" },
-  { label: "Cohorts", icon: "layers" },
-  { label: "Assignments", icon: "tasks" },
-  { label: "Reports & Reviews", icon: "file" },
-  { label: "Medical Exceptions", icon: "heart" },
-  { label: "Support Center", icon: "support" },
-  { label: "Suspensions & Appeals", icon: "shield" },
-  { label: "Financial", icon: "card" },
-  { label: "Analytics", icon: "chart" },
-  { label: "Leaderboard", icon: "trophy" },
-  { label: "Notifications", icon: "bell" },
-  { label: "Audit Trail", icon: "history" },
-  { label: "System Monitoring", icon: "activity" },
-  { label: "System Logs", icon: "file" },
-  { label: "Settings", icon: "settings" },
-];
 
 const tasks = [
   { title: "Medical exception requests", detail: "Waiting for an admin decision", count: "08", tone: "amber" },
@@ -83,15 +61,6 @@ function Icon({ name, size = 19 }: { name: string; size?: number }) {
     menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
   };
   return <svg {...common}>{shapes[name] ?? shapes.apps}</svg>;
-}
-
-function TrendChart() {
-  return <svg className="admin-chart" viewBox="0 0 620 190" preserveAspectRatio="none" role="img" aria-label="Illustrative platform growth chart">
-    <g stroke="#e9eef7" strokeWidth="1"><path d="M38 24H610M38 66H610M38 108H610M38 150H610" /></g>
-    <path d="M38 137 C90 125 102 92 150 101 S218 62 265 73 S328 39 375 51 S438 27 482 39 S550 14 610 12" fill="none" stroke="#1766df" strokeWidth="3.5" />
-    <path d="M38 155 C90 149 102 124 150 133 S218 103 265 112 S328 83 375 94 S438 67 482 80 S550 51 610 60" fill="none" stroke="#12b8ad" strokeWidth="3" />
-    <path d="M38 170 C90 165 102 151 150 158 S218 136 265 145 S328 119 375 128 S438 105 482 116 S550 91 610 98" fill="none" stroke="#9365e9" strokeWidth="3" />
-  </svg>;
 }
 
 function MetricCard({ item }: { item: typeof metrics[number] }) {
