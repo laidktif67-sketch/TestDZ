@@ -2,11 +2,10 @@
 # TestDZ — Architecture Baseline
 
 **Purpose:** factual checkpoint for the controlled architecture migration.  
-**Remote branch:** `feat/admin-dashboard-overview`  
-**Reviewed commit:** `77be7294803250eaf48fc3682463084566973cc5`  
-**PR:** [#32](https://github.com/laidktif67-sketch/TestDZ/pull/32) — open, draft, not merged.  
-**PR base:** `feat/admin-account-suspension-appeals` (not `main`).  
-**Important:** this is a remote GitHub snapshot, not a claim that the local Termux worktree has been inspected.
+**Remote branch:** `refactor/feature-based-architecture`  
+**Reviewed commit:** `87c42edbbaacc182d04429c79d226a1042c739f0`  
+**PR:** PR state for this branch has not been verified in this checkpoint.  
+**Important:** this is a remote GitHub source snapshot, not a claim that the local Termux worktree has been inspected.
 
 ## 1. Repository and worktree status
 
@@ -31,7 +30,7 @@ Inventory was read from the recursive Git tree and `apps/web/src/App.tsx` at the
 |---|---|
 | Recursive tree entries, including directories | 758 |
 | File/blob entries | 655 |
-| Route declarations in `App.tsx` | 96 |
+| Explicit route path declarations across `AppRoutes.tsx` and route modules | 96 |
 | Top-level `src/pages/` TSX pages | 13 |
 | `modules/admin/pages/` TSX pages | 29 |
 | `modules/developer/pages/` TSX pages | 18 |
@@ -41,7 +40,7 @@ Inventory was read from the recursive Git tree and `apps/web/src/App.tsx` at the
 | Tracked files under `supabase/tests/` | 10 |
 | Shared types package | `packages/types/` exists with apps, database, identity and profiles type files |
 | App entry | `apps/web/src/main.tsx` |
-| Route composition | `apps/web/src/App.tsx` |
+| Route composition | `apps/web/src/AppRoutes.tsx` with `apps/web/src/routes/*` modules |
 | npm workspaces | `apps/web`, `packages/*` |
 
 The 96 route declarations include the wildcard route and a redirect alias; they are not 96 unique page components. The 93 page-file count is the sum of the four page directories above, not the route count.
@@ -49,14 +48,14 @@ The 96 route declarations include the wildcard route and a redirect alias; they 
 ### Current route and guard observations
 
 - `main.tsx` mounts React StrictMode, `BrowserRouter`, `App`, `styles/tokens.css` and `styles.css`.
-- `App.tsx` mounts `IdentityProvider` around `Routes`.
+- `App.tsx` mounts `IdentityProvider` around `AppRoutes`; `AppRoutes.tsx` composes the route modules.
 - Protected route nesting is `AuthGuard` → `OnboardingGuard` → role-specific `RoleGuard`.
 - The public/auth/legal route declarations are outside the authenticated route guard.
 - `/help-support` redirects to `/help` with `replace`.
 - `/dashboard` renders `RoleHomeRedirect`.
 - The wildcard route redirects to `/` with `replace`.
 - Route parameters include `:id` and `:invoiceId`; these names must be preserved.
-- Admin, developer and tester pages are eagerly imported in `App.tsx`; route extraction must not add lazy loading as part of the first step.
+- Admin, developer, tester, public, and shared authenticated route declarations have been extracted into `apps/web/src/routes/`; route imports remain eager.
 - `RoleGuard` uses `WorkspaceRole = Extract<AccountRole, "tester" | "developer" | "admin">`. The role model also includes `support`; it has no independent role-guarded workspace route in the current route tree.
 
 ## 3. Identity and UI boundaries verified from source
@@ -89,7 +88,7 @@ An earlier local typecheck was reported on a different local commit (`5ec6d68`) 
 
 ## 5. Route declaration inventory from source (96)
 
-The following is the exact declaration order extracted from the reviewed `App.tsx`. It is the **source baseline**. A live browser/runtime comparison was not possible in this checkpoint, so runtime parity remains an open gate rather than a passed check.
+The following list records the declaration inventory captured from the earlier source baseline. Route declarations are now distributed across `apps/web/src/AppRoutes.tsx` and `apps/web/src/routes/*.tsx`; the route count remains 96 in the current remote source. It is the **source baseline**, not runtime proof. A live browser/runtime comparison was not possible in this checkpoint, so runtime parity remains an open gate rather than a passed check.
 
 1. `/`
 2. `/terms`
@@ -199,7 +198,7 @@ git branch --show-current
 git log -1 --oneline --decorate
 git status --short
 git rev-parse HEAD
-git rev-parse origin/feat/admin-dashboard-overview
+git rev-parse origin/refactor/feature-based-architecture
 git diff --stat
 git diff --cached --stat
 npm run typecheck
@@ -208,6 +207,14 @@ npm run build
 
 Preserve all output, especially any `?? node_modules/` or other local changes. Do not pull or overwrite local changes until the local branch and remote relationship are understood. If local HEAD differs from the reviewed SHA, rerun the route/source inventory on the actual checkout before changing code.
 
-## 7. Gate decision
+## 7. Current route-extraction status
 
-**Route extraction is not yet authorized by evidence.** The route source is understood at a high level, but the local worktree state, exact-SHA typecheck/build, route behavior tests and dependency-cycle report remain unverified. The first safe completed work should therefore be documentation and baseline recording only. Begin the mechanical route split after these checks are run and failures are understood/classified. No application source, CSS, Supabase migration, RLS, GRANT or RPC file was changed while establishing this baseline.
+**Source-level extraction is in progress; runtime validation remains a release gate.** On the reviewed branch, route declarations are separated into:
+- `publicRoutes.tsx` — public, legal and authentication-entry routes.
+- `authenticatedRoutes.tsx` — shared authenticated routes, including the tester-security subgroup protected by `RoleGuard`.
+- `adminRoutes.tsx`, `developerRoutes.tsx`, and `testerRoutes.tsx` — role-specific route declarations.
+- `AppRoutes.tsx` — composition and parent guard nesting.
+
+The source inventory currently reports 96 explicit `path` declarations and 102 `Route` elements across the route modules. `scripts/check-route-inventory.mjs` is intended to enforce this inventory, module composition, redirects, and guard ordering; it has **not yet been executed against this commit**. TypeScript, production build, route smoke tests, and dependency-cycle checks are also still unverified on this exact SHA.
+
+Do not merge to `main`, deploy, or claim runtime parity until the route check, typecheck, build, and available route smoke tests have been run and their outputs reviewed. Preserve local changes and the untracked `node_modules/` directory.

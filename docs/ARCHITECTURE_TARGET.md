@@ -3,7 +3,7 @@
 
 **Status:** approved target direction; migration not yet complete  
 **Repository:** `laidktif67-sketch/TestDZ`  
-**Baseline ref reviewed:** `77be7294803250eaf48fc3682463084566973cc5` on `feat/admin-dashboard-overview`  
+**Current migration ref:** `refactor/feature-based-architecture` at `87c42edbbaacc182d04429c79d226a1042c739f0` (remote source inspection; local validation pending)  
 **Scope:** architecture and controlled migration plan only. This document does not authorize a rewrite, database changes, production deployment, or merge to `main`.
 
 ## 1. Architectural decision
@@ -109,7 +109,7 @@ Target policy:
 
 ## 4. Routing, guards and redirect contract
 
-The current `main.tsx` mounts `BrowserRouter`; `App.tsx` mounts `IdentityProvider` around `Routes`. Protected route nesting currently applies `AuthGuard` → `OnboardingGuard` → role-specific `RoleGuard`. Preserve this ordering while extracting route declarations.
+The current `main.tsx` mounts `BrowserRouter`; `App.tsx` mounts `IdentityProvider` around `AppRoutes`. Route declarations have been mechanically split into `src/routes/` modules. Protected route nesting applies `AuthGuard` → `OnboardingGuard` → role-specific `RoleGuard`; preserve this ordering and test it after each grouped extraction.
 
 Routing extraction must be a mechanical move first: route paths, route elements, nesting, and order remain unchanged. Do not change paths, aliases, parameters, wildcard handling, redirects, role precedence, or guard logic in the same commit.
 
@@ -151,7 +151,7 @@ The mappings below refer to files/directories that exist at the reviewed ref. Th
 
 | Existing source | Proposed destination | Rule |
 |---|---|---|
-| `apps/web/src/App.tsx` | `apps/web/src/app/App.tsx` plus `app/router/*Routes.tsx` | Split routes mechanically only after a passing baseline and route/guard snapshots. |
+| `apps/web/src/AppRoutes.tsx` plus `apps/web/src/routes/*` | Keep `AppRoutes.tsx` as composition root initially; consider moving under `app/router/` only after validation. | Route modules exist on the migration branch; exact-SHA typecheck/build and runtime route checks are pending. |
 | `apps/web/src/main.tsx` | Keep at current path initially | It mounts StrictMode, BrowserRouter and global styles; move only if a real app-entry convention is needed. |
 | `apps/web/src/pages/LandingPage.tsx`, `AuthPage.tsx`, `AuthCallbackPage.tsx`, `SignupSuccessPage.tsx`, `ForgotPasswordPage.tsx`, `ResetPasswordPage.tsx`, `PasswordResetSuccessPage.tsx`, `InvalidOtpPage.tsx`, `VerifyEmailPage.tsx`, `LegalPage.tsx` | Keep in `pages/` initially | Public/auth/legal screens. Auth logic must continue to call the canonical identity API. |
 | `apps/web/src/pages/OnboardingPage.tsx`, `InterestsPage.tsx`, `ProfileCompletionPage.tsx` | Keep in `pages/` initially; profile-owned logic may later move to `features/profiles` | Keep current onboarding routes and guard exceptions unchanged. |
