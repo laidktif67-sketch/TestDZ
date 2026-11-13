@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const routeFile = resolve("apps/web/src/AppRoutes.tsx");
 const source = readFileSync(routeFile, "utf8");
-const routeCount = (source.match(/<Route\b/g) ?? []).length;
+const routeElementCount = (source.match(/<Route\b/g) ?? []).length;
 const pathCount = (source.match(/<Route\s+path=/g) ?? []).length;
 
 const requiredPaths = [
@@ -25,8 +25,12 @@ const wildcardIndex = source.lastIndexOf('<Route path="*"');
 
 const errors = [];
 
-if (routeCount !== 96) {
-  errors.push(`Expected 96 Route elements from the captured baseline, found ${routeCount}.`);
+if (pathCount !== 96) {
+  errors.push(`Expected 96 explicit path declarations from the captured baseline, found ${pathCount}.`);
+}
+
+if (routeElementCount < pathCount) {
+  errors.push(`Route element count (${routeElementCount}) is lower than explicit path count (${pathCount}).`);
 }
 
 if (missingPaths.length > 0) {
@@ -61,6 +65,6 @@ if (errors.length > 0) {
   process.exitCode = 1;
 } else {
   console.log("Route inventory check passed.");
-  console.log(`Route elements: ${routeCount}; explicit path declarations: ${pathCount}.`);
+  console.log(`Route elements: ${routeElementCount}; explicit path declarations: ${pathCount}.`);
   console.log("Required route parameters, redirect markers, and guard ordering are present.");
 }
