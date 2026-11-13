@@ -3,9 +3,11 @@ import { resolve } from "node:path";
 
 const routeFile = resolve("apps/web/src/AppRoutes.tsx");
 const publicRouteFile = resolve("apps/web/src/routes/publicRoutes.tsx");
+const adminRouteFile = resolve("apps/web/src/routes/adminRoutes.tsx");
 const source = readFileSync(routeFile, "utf8");
 const publicSource = readFileSync(publicRouteFile, "utf8");
-const allRouteSource = `${source}\n${publicSource}`;
+const adminSource = readFileSync(adminRouteFile, "utf8");
+const allRouteSource = `${source}\n${publicSource}\n${adminSource}`;
 const routeElementCount = (allRouteSource.match(/<Route\b/g) ?? []).length;
 const pathCount = (allRouteSource.match(/<Route\s+(?:key="[^"]+"\s+)?path=/g) ?? []).length;
 
@@ -40,7 +42,7 @@ if (!source.includes("{publicRouteElements}") || !publicSource.includes("export 
   errors.push("Public routes must be composed through the publicRouteElements module.");
 }
 
-if (missingPaths.length > 0) {
+if (!source.includes("{adminRouteElements}") || !adminSource.includes("export const adminRouteElements")) {\n  errors.push("Admin routes must be composed through the adminRouteElements module.");\n}\n\nif (missingPaths.length > 0) {
   errors.push(`Missing required route declarations: ${missingPaths.join(", ")}.`);
 }
 

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { publicRouteElements } from "./routes/publicRoutes";
+import { adminRouteElements } from "./routes/adminRoutes";
 import AppsPage from "./modules/developer/pages/DeveloperAppsPage";
 import AppDetailPage from "./modules/developer/pages/DeveloperAppDetailPage";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -38,35 +39,6 @@ import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmen
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
 import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
-import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
-import AdminAnalyticsPage from "./modules/admin/pages/AdminAnalyticsPage";
-import AdminLeaderboardPage from "./modules/admin/pages/AdminLeaderboardPage";
-import AdminAppsManagementPage from "./modules/admin/pages/AdminAppsManagementPage";
-import AdminReportsReviewsPage from "./modules/admin/pages/AdminReportsReviewsPage";
-import AdminNotificationsPage from "./modules/admin/pages/AdminNotificationsPage";
-import AdminSystemMonitoringPage from "./modules/admin/pages/AdminSystemMonitoringPage";
-import AdminSystemLogsPage from "./modules/admin/pages/AdminSystemLogsPage";
-import AdminFinancialPage from "./modules/admin/pages/AdminFinancialPage";
-import AdminTesterWithdrawalsPage from "./modules/admin/pages/AdminTesterWithdrawalsPage";
-import AdminWithdrawalDetailsPage from "./modules/admin/pages/AdminWithdrawalDetailsPage";
-import AdminWithdrawalFailedPage from "./modules/admin/pages/AdminWithdrawalFailedPage";
-import AdminRewardsPage from "./modules/admin/pages/AdminRewardsPage";
-import AdminTransactionsLedgerPage from "./modules/admin/pages/AdminTransactionsLedgerPage";
-import AdminDeveloperPaymentsPage from "./modules/admin/pages/AdminDeveloperPaymentsPage";
-import AdminDeveloperPaymentDetailsPage from "./modules/admin/pages/AdminDeveloperPaymentDetailsPage";
-import AdminInvoiceDetailsPage from "./modules/admin/pages/AdminInvoiceDetailsPage";
-import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
-import AdminDeveloperDetailsPage from "./modules/admin/pages/AdminDeveloperDetailsPage";
-import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
-import AdminTesterDetailsPage from "./modules/admin/pages/AdminTesterDetailsPage";
-import AdminTestsPage from "./modules/admin/pages/AdminTestsPage";
-import AdminAssignmentsPage from "./modules/admin/pages/AdminAssignmentsPage";
-import AdminCohortDetailsPage from "./modules/admin/pages/AdminCohortDetailsPage";
-import AdminSettingsPage from "./modules/admin/pages/AdminSettingsPage";
-import AdminAuditTrailPage from "./modules/admin/pages/AdminAuditTrailPage";
-import AdminMedicalExceptionsPage from "./modules/admin/pages/AdminMedicalExceptionsPage";
-import AdminSupportCenterPage from "./modules/admin/pages/AdminSupportCenterPage";
-import AdminUserManagementPage from "./modules/admin/pages/AdminUserManagementPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
@@ -122,35 +94,7 @@ export default function AppRoutes() {
             </Route>
             <Route path="/notifications" element={<NotificationsCenterPage />} />
             <Route element={<RoleGuard requiredRole="admin" />}>
-              <Route path="/admin" element={<AdminDashboardPage />} />
-              <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
-              <Route path="/admin/leaderboard" element={<AdminLeaderboardPage />} />
-              <Route path="/admin/apps" element={<AdminAppsManagementPage />} />
-              <Route path="/admin/reports" element={<AdminReportsReviewsPage />} />
-              <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
-              <Route path="/admin/monitoring" element={<AdminSystemMonitoringPage />} />
-              <Route path="/admin/logs" element={<AdminSystemLogsPage />} />
-              <Route path="/admin/financial" element={<AdminFinancialPage />} />
-              <Route path="/admin/tester-withdrawals" element={<AdminTesterWithdrawalsPage />} />
-              <Route path="/admin/tester-withdrawals/:id" element={<AdminWithdrawalDetailsPage />} />
-              <Route path="/admin/withdrawal-failed/:id" element={<AdminWithdrawalFailedPage />} />
-              <Route path="/admin/rewards" element={<AdminRewardsPage />} />
-              <Route path="/admin/transactions-ledger" element={<AdminTransactionsLedgerPage />} />
-              <Route path="/admin/developer-payments" element={<AdminDeveloperPaymentsPage />} />
-              <Route path="/admin/developer-payments/:id" element={<AdminDeveloperPaymentDetailsPage />} />
-              <Route path="/admin/invoices/:invoiceId" element={<AdminInvoiceDetailsPage />} />
-              <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
-              <Route path="/admin/support" element={<AdminSupportCenterPage />} />
-              <Route path="/admin/users" element={<AdminUserManagementPage />} />
-              <Route path="/admin/developers" element={<AdminDevelopersPage />} />
-              <Route path="/admin/developers/:id" element={<AdminDeveloperDetailsPage />} />
-              <Route path="/admin/testers" element={<AdminTestersPage />} />
-              <Route path="/admin/testers/:id" element={<AdminTesterDetailsPage />} />
-              <Route path="/admin/tests" element={<AdminTestsPage />} />
-              <Route path="/admin/assignments" element={<AdminAssignmentsPage />} />
-              <Route path="/admin/cohorts" element={<AdminCohortDetailsPage />} />
-              <Route path="/admin/settings" element={<AdminSettingsPage />} />
-              <Route path="/admin/audit-trail" element={<AdminAuditTrailPage />} />
+              {adminRouteElements}
             </Route>
             <Route path="/dashboard" element={<RoleHomeRedirect />} />
             <Route element={<RoleGuard requiredRole="tester" />}>
