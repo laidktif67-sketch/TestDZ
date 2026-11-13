@@ -46,12 +46,14 @@ if (missingPaths.length > 0) {
 
 if (
   publicRouteIndex < 0 ||
+  source.indexOf("{publicRouteElements}") < 0 ||
+  source.indexOf("{publicRouteElements}") > authGuardIndex ||
   authGuardIndex < 0 ||
   onboardingGuardIndex < 0 ||
   wildcardIndex < 0 ||
-  !(publicRouteIndex < authGuardIndex && authGuardIndex < onboardingGuardIndex && onboardingGuardIndex < wildcardIndex)
+  !(authGuardIndex < onboardingGuardIndex && onboardingGuardIndex < wildcardIndex)
 ) {
-  errors.push("Public/auth/onboarding/wildcard route ordering or guard nesting markers changed.");
+  errors.push("Public routes must precede the auth guard, and auth/onboarding/wildcard markers must remain ordered.");
 }
 
 if (!source.includes('<Navigate to="/help" replace />')) {
