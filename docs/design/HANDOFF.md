@@ -36,3 +36,11 @@ Static standalone HTML only. No application runtime, browser screenshots, real d
 
 ## Sample data note
 Names, dates, balances, and ledger rows shown in the HTML are illustrative design data only. They are not live account data and must be replaced with API-backed values during implementation.
+
+
+## Admin dashboard concept (added 2026-11-13)
+- Preview entry: `mockups/admin-dashboard-overview-ar.html` (Arabic), plus French and English variants.
+- This is a static responsive concept with illustrative values and non-functional navigation/action tiles.
+- Scope represented: overview metrics, platform growth, test status, quick actions, pending admin queues, recent activity, community contributors and system overview.
+- Future module links include payments, withdrawals, rewards, leaderboard and monitoring. These are mockup-only placeholders and must not be treated as implemented features.
+- No files outside `docs/design/` were changed. No Admin route, source component, API, migration, or database object was added.
