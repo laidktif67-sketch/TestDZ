@@ -2,3 +2,36 @@
 @media(max-width:1250px){.testers-layout{grid-template-columns:1fr}.testers-profile{display:grid;grid-template-columns:1fr 1fr}.testers-profile-banner{grid-column:1/-1}.testers-profile-metrics{grid-column:1/-1}.testers-profile-section{min-width:0}.testers-profile-actions{grid-column:1/-1}}
 @media(max-width:850px){.testers-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.testers-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.testers-search{grid-column:1/-1}.testers-result-count{justify-self:end}.testers-table{min-width:850px}}
 @media(max-width:560px){.testers-content{padding:10px}.testers-welcome{align-items:flex-start}.testers-welcome h1{font-size:18px}.testers-export{font-size:9px;padding:8px}.testers-stats{gap:7px}.testers-stats article{padding:9px;gap:7px}.testers-stats article>span{width:34px;height:34px}.testers-stats strong{font-size:17px}.testers-stats small{font-size:9px}.testers-stats b{font-size:7px}.testers-filters{gap:7px}.testers-filters select{min-width:0;font-size:9px}.testers-profile{display:block}.testers-table-footer{flex-direction:column}.testers-profile-banner{padding:13px}}
+
+/* Keep the directory and selected tester profile from competing for width. */
+.admin-testers-page .testers-layout,
+.admin-testers-page .testers-directory,
+.admin-testers-page .testers-profile,
+.admin-testers-page .testers-table-wrap{min-width:0;max-width:100%;}
+.admin-testers-page .testers-layout{grid-template-columns:minmax(0,1.8fr) minmax(280px,.85fr);align-items:start;}
+.admin-testers-page .testers-profile{display:block;overflow:hidden;}
+.admin-testers-page .testers-profile-banner{min-width:0;}
+.admin-testers-page .testers-profile-banner>div{min-width:0;}
+.admin-testers-page .testers-profile-banner h2,
+.admin-testers-page .testers-profile-banner p,
+.admin-testers-page .testers-profile-section strong{overflow-wrap:anywhere;}
+.admin-testers-page .testers-profile-metrics{grid-template-columns:repeat(3,minmax(0,1fr));}
+.admin-testers-page .testers-profile-section{min-width:0;}
+.admin-testers-page .testers-profile-actions{grid-template-columns:repeat(2,minmax(0,1fr));}
+@media(max-width:1250px){
+ .admin-testers-page .testers-layout{grid-template-columns:minmax(0,1fr);}
+ .admin-testers-page .testers-profile{display:block;}
+}
+@media(max-width:850px){
+ .admin-testers-page .testers-filters{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .admin-testers-page .testers-result-count{white-space:normal;}
+ .admin-testers-page .testers-table{min-width:850px;}
+}
+@media(max-width:560px){
+ .admin-testers-page .testers-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .admin-testers-page .testers-filters{grid-template-columns:minmax(0,1fr);}
+ .admin-testers-page .testers-search{grid-column:auto;}
+ .admin-testers-page .testers-result-count{justify-self:start;}
+ .admin-testers-page .testers-profile-actions{grid-template-columns:minmax(0,1fr);}
+ .admin-testers-page .testers-profile-actions a{grid-column:auto;}
+}
