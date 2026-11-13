@@ -48,9 +48,6 @@ async function download(client, bucket, path) {
   return client.storage.from(bucket).download(path);
 }
 
-const testerId = id();
-const developerId = id();
-const outsiderId = id();
 const appTesterId = id();
 const appDeveloperId = id();
 const testTesterId = id();
@@ -66,7 +63,6 @@ try {
   const tester = await createActor("tester", ["tester", "developer"]);
   const developer = await createActor("developer", ["developer"]);
   const outsider = await createActor("outsider", ["tester"]);
-  assert.equal(tester.id, testerId, "fixture actor IDs are generated before insertion");
 
   must(await admin.from("apps").insert([
     { id: appTesterId, developer_id: tester.id, name: "Storage Tester App", package_name: `test.storage.tester.${suffix}` },
@@ -157,11 +153,24 @@ try {
 
   process.stdout.write(`Storage API regression passed: ${checks} assertions.\n`);
 } finally {
-  // Remove test objects and fixture users from this disposable local stack.
+  // Remove test objects and fixture rows from this disposable local stack.
   for (const bucket of ["support-attachments", "developer-feedback-attachments", "test-evidence"]) {
     const paths = uploaded.filter(item => item.bucket === bucket).map(item => item.path);
     if (paths.length) await admin.storage.from(bucket).remove(paths);
   }
+  await admin.from("report_attachments").delete().eq("report_id", reportId);
+  await admin.from("reports").delete().eq("id", reportId);
+  await admin.from("support_ticket_attachments").delete().eq("ticket_id", ticketId);
+  await admin.from("support_ticket_messages").delete().eq("ticket_id", ticketId);
+  await admin.from("support_tickets").delete().in("id", [ticketId, closedTicketId]);
+  await admin.from("developer_feedback_attachments").delete().eq("feedback_id", feedbackId);
+  await admin.from("developer_feedback_messages").delete().eq("feedback_id", feedbackId);
+  await admin.from("feedback").delete().eq("id", feedbackId);
+  await admin.from("assignments").delete().eq("id", assignmentId);
+  await admin.from("cohort_tests").delete().eq("cohort_id", cohortId);
+  await admin.from("cohorts").delete().eq("id", cohortId);
+  await admin.from("tests").delete().in("id", [testTesterId, testDeveloperId]);
+  await admin.from("apps").delete().in("id", [appTesterId, appDeveloperId]);
   for (const userId of createdUsers.reverse()) {
     await admin.auth.admin.deleteUser(userId);
   }
