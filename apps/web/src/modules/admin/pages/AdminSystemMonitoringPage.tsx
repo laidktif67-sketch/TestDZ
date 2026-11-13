@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-system-monitoring.css";
 import AdminSidebar from "../components/AdminSidebar";
-const nav=[["Admin Dashboard","/admin"],["Users","/admin/users"],["Developers","/admin/developers"],["Testers","/admin/testers"],["Tests Management","/admin/tests"],["Assignments","/admin/assignments"],["Cohorts","/admin/cohorts"],["Apps Management","/admin/apps"],["Reports & Reviews","/admin/reports"],["Financial","/admin/financial"],["Notifications","/admin/notifications"],["Settings","/admin/settings"],["System Monitoring","/admin/monitoring"],["System Logs","/admin/logs"],["Audit Trail","/admin/audit-trail"]];
 const logs=[["ERROR","11:00:12","Database query timeout (250ms)"],["WARNING","10:59:45","High memory usage (78%)"],["INFO","10:58:32","Scheduled backup completed"],["INFO","10:58:32","New user registered: user_8427"],["INFO","10:56:18","Test completed: test_123"]];
 const alerts=[["error","Server load is approaching 80%","2 min ago","High"],["warning","Database response time increased","5 min ago","Medium"],["info","New cohort created: Cohort #12","10 min ago","Info"],["success","Backup completed successfully","15 min ago","Success"]];
 function Spark({n=0}:{n?:number}){return <svg viewBox="0 0 100 36" preserveAspectRatio="none"><polyline points={n?"0,29 12,25 24,27 36,16 48,20 60,10 72,14 84,5 100,8":"0,28 12,24 24,25 36,17 48,20 60,13 72,16 84,7 100,9"} fill="none" stroke="currentColor" strokeWidth="3"/></svg>}
