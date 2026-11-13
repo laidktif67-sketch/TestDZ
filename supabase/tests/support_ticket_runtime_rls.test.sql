@@ -121,14 +121,16 @@ select throws_ok(
   'requester B cannot upload into requester A ticket folder'
 );
 
+update public.support_tickets
+set priority = 'urgent'
+where id = '22000000-0000-4000-8000-000000000001';
+
+select set_config('request.jwt.claim.sub','21000000-0000-4000-8000-000000000001',true);
+select set_config('request.jwt.claims','{"sub":"21000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
 select is(
-  (with changed as (
-    update public.support_tickets
-    set priority = 'urgent'
-    where id = '22000000-0000-4000-8000-000000000001'
-    returning id
-  ) select count(*)::int from changed),
-  0,
+  (select priority from public.support_tickets where id = '22000000-0000-4000-8000-000000000001'),
+  'normal',
   'a requester cannot change ticket priority even though the column grant exists'
 );
 
