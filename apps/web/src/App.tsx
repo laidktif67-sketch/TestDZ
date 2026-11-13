@@ -50,6 +50,7 @@ import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage"
 import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
 import AdminTestsPage from "./modules/admin/pages/AdminTestsPage";
+import AdminAssignmentsPage from "./modules/admin/pages/AdminAssignmentsPage";
 import AdminCohortDetailsPage from "./modules/admin/pages/AdminCohortDetailsPage";
 import AdminSettingsPage from "./modules/admin/pages/AdminSettingsPage";
 import AdminAuditTrailPage from "./modules/admin/pages/AdminAuditTrailPage";
@@ -129,6 +130,7 @@ export default function App() {
               <Route path="/admin/users" element={<AdminUserManagementPage />} />
               <Route path="/admin/developers" element={<AdminDevelopersPage />} />
               <Route path="/admin/tests" element={<AdminTestsPage />} />
+              <Route path="/admin/assignments" element={<AdminAssignmentsPage />} />
               <Route path="/admin/cohorts" element={<AdminCohortDetailsPage />} />
               <Route path="/admin/settings" element={<AdminSettingsPage />} />
               <Route path="/admin/audit-trail" element={<AdminAuditTrailPage />} />
