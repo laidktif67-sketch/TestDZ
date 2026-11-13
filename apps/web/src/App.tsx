@@ -49,6 +49,7 @@ import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewar
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
 import AdminAppsManagementPage from "./modules/admin/pages/AdminAppsManagementPage";
+import AdminReportsReviewsPage from "./modules/admin/pages/AdminReportsReviewsPage";
 import AdminFinancialPage from "./modules/admin/pages/AdminFinancialPage";
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
 import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
@@ -129,6 +130,7 @@ export default function App() {
             <Route element={<RoleGuard requiredRole="admin" />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/admin/apps" element={<AdminAppsManagementPage />} />
+              <Route path="/admin/reports" element={<AdminReportsReviewsPage />} />
               <Route path="/admin/financial" element={<AdminFinancialPage />} />
               <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
