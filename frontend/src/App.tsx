@@ -4,6 +4,8 @@ import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-rou
 import imageCompression from "browser-image-compression";
 import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
+import WithdrawalStatusPage from "./WithdrawalStatusPage";
+import DiscoverTestsPage, { TestPreviewPage } from "./DiscoverTestsPage";
 
 function Brand() {
   return <Link className="brand" to="/" aria-label="TestDZ الصفحة الرئيسية"><span className="brand-mark">T</span><span>Test<span className="brand-accent">DZ</span></span></Link>;
@@ -346,6 +348,130 @@ function AppDetailPage(){
   </section></main>;
 }
 
+
+type WalletLedgerEntry = { id: string; amount: number; reason: string; created_at: string; wallet_type: string };
+
+function WithdrawalPage() {
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState("");
+  const [displayName, setDisplayName] = useState("Tester");
+  const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
+  const [entries, setEntries] = useState<WalletLedgerEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [method, setMethod] = useState<"Binance" | "BaridiMob" | "PayPal">("Binance");
+  const [amount, setAmount] = useState("10000");
+  const [agreed, setAgreed] = useState(true);
+  const [notice, setNotice] = useState("");
+  const [accountDetails, setAccountDetails] = useState("");
+  const minimum = 5000;
+  const maximum = 100000;
+  const parsedAmount = Number(amount);
+  const amountValid = Number.isInteger(parsedAmount) && parsedAmount >= minimum && parsedAmount <= maximum;
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (!supabase) { if (active) setLoading(false); return; }
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) { navigate("/auth", { replace: true }); return; }
+      const id = auth.user.id;
+      const [{ data: wallet }, { data: profile }, { data: ledger }] = await Promise.all([
+        supabase.from("wallets").select("earned_points").eq("user_id", id).maybeSingle(),
+        supabase.from("profiles").select("display_name").eq("id", id).maybeSingle(),
+        supabase.from("points_ledger").select("id,amount,reason,created_at,wallet_type").eq("user_id", id).eq("wallet_type", "earned_points").order("created_at", { ascending: false }).limit(4),
+      ]);
+      if (!active) return;
+      setUserId(id);
+      setDisplayName(profile?.display_name || auth.user.email?.split("@")[0] || "Tester");
+      setEarnedPoints(wallet?.earned_points ?? 0);
+      setEntries((ledger ?? []) as WalletLedgerEntry[]);
+      setLoading(false);
+    }
+    void load();
+    return () => { active = false; };
+  }, [navigate]);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setNotice("");
+    if (!amountValid) { setNotice("Enter an amount between 5,000 and 100,000 points."); return; }
+    if (earnedPoints === null || parsedAmount > earnedPoints) { setNotice("Your earned-points balance is not sufficient for this amount."); return; }
+    if (!accountDetails.trim()) { setNotice("Enter the destination account details first."); return; }
+    if (!agreed) { setNotice("Please accept the withdrawal terms to continue."); return; }
+    setNotice("Your details are ready, but withdrawal requests are not enabled yet. No points were deducted and no request was submitted.");
+  }
+
+  return <main className="withdrawal-app">
+    <aside className="withdraw-sidebar">
+      <Link to="/dashboard" className="withdraw-brand"><span className="withdraw-brand-mark">✓</span><span><strong>TestDZ</strong><small>Test · Learn · Earn</small></span></Link>
+      <nav className="withdraw-nav" aria-label="Tester navigation">
+        <Link to="/dashboard"><span>⌂</span>Dashboard</Link>
+        <Link to="/dashboard"><span>⌕</span>Discover Tests</Link>
+        <Link to="/dashboard"><span>▣</span>My Tests</Link>
+        <Link to="/dashboard"><span>♔</span>Rewards</Link>
+        <Link to="/wallet/withdraw" className="active"><span>▰</span>Wallet</Link>
+        <Link to="/profile"><span>♙</span>Profile</Link>
+        <Link to="/dashboard"><span>◉</span>Help &amp; Support</Link>
+        <Link to="/profile"><span>⚙</span>Settings</Link>
+      </nav>
+      <div className="withdraw-sidebar-promo"><div className="promo-trophy">🏆</div><strong>Your feedback helps build a better Android experience!</strong><span>♥</span></div>
+    </aside>
+    <section className="withdraw-main">
+      <header className="withdraw-topbar">
+        <div className="withdraw-search"><span>⌕</span><input placeholder="Search tests..." aria-label="Search tests" /></div>
+        <div className="withdraw-user-actions"><button className="withdraw-bell" aria-label="Notifications">♧<i>3</i></button><span className="withdraw-user-avatar">{displayName.slice(0,2).toUpperCase()}</span><strong>{displayName}</strong><span>⌄</span></div>
+      </header>
+      <div className="withdraw-content">
+        <Link className="withdraw-back" to="/dashboard">←　Back to Wallet</Link>
+        <section className="withdraw-hero">
+          <div className="withdraw-hero-icon">▣</div>
+          <div><h1>Withdrawal Request</h1><p>Withdraw your earned rewards using Binance, BaridiMob or PayPal.</p></div>
+          <div className="withdraw-hero-art"><span>＄</span><span>↗</span><span>＄</span></div>
+        </section>
+        <div className="withdraw-columns">
+          <form className="withdraw-form-panel" onSubmit={submit}>
+            <section className="withdraw-step">
+              <h2><i>1</i>Select Withdrawal Method</h2>
+              <div className="withdraw-methods">
+                {(["Binance", "BaridiMob", "PayPal"] as const).map((item) => <button type="button" key={item} className={"withdraw-method " + (method === item ? "selected" : "")} onClick={() => setMethod(item)} aria-pressed={method === item}>
+                  {method === item && <span className="withdraw-selected">✓</span>}
+                  <span className={"withdraw-method-logo " + item.toLowerCase()}>{item === "Binance" ? "◆" : item === "BaridiMob" ? "▰" : "P"}</span>
+                  <strong>{item}</strong>
+                </button>)}
+              </div>
+            </section>
+            <section className="withdraw-step">
+              <h2><i>2</i>Enter Amount</h2>
+              <div className="withdraw-amount-wrap"><input inputMode="numeric" type="number" min={minimum} max={maximum} step="1" placeholder="Enter amount in points..." value={amount} onChange={e => setAmount(e.target.value)} /><span>Points</span></div>
+              <p className="withdraw-hint">ⓘ Minimum: 5,000 points · Maximum: 100,000 points · Available: {loading ? "…" : (earnedPoints ?? 0).toLocaleString("en-US")}</p>
+              <label className="withdraw-account-label">{method} account details<input value={accountDetails} onChange={e => setAccountDetails(e.target.value)} placeholder={method === "PayPal" ? "PayPal email address" : method === "Binance" ? "Binance Pay ID / email"} dir="auto" /></label>
+            </section>
+            <section className="withdraw-step">
+              <h2><i>3</i>Review &amp; Confirm</h2>
+              <div className="withdraw-review">
+                <div><span>▣</span><small>Withdrawal Amount</small><strong>{amountValid ? parsedAmount.toLocaleString("en-US") : "—"} Points</strong></div>
+                <div><span className="review-method-icon">◆</span><small>Payment Method</small><strong>{method}</strong></div>
+                <div><span>◷</span><small>Estimated Processing</small><strong>1 – 3 Business Days</strong></div>
+              </div>
+            </section>
+            <label className="withdraw-terms"><input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} /><span>I agree to the withdrawal terms and conditions.</span></label>
+            {notice && <div className="withdraw-notice" role="status">{notice}</div>}
+            <button className="withdraw-submit" type="submit" disabled={loading || earnedPoints === null}>➤　Submit Withdrawal Request</button>
+            <p className="withdraw-disclaimer">Withdrawal submission is currently unavailable. This page does not deduct points or create a payment request.</p>
+          </form>
+          <aside className="withdraw-right">
+            <section className="withdraw-info-card"><h2><span>i</span>Important Information</h2><ul><li>Minimum withdrawal: 5,000 points</li><li>Maximum withdrawal: 100,000 points per request</li><li>Processing time: 1 – 3 business days</li><li>Ensure your account details are correct</li></ul></section>
+            <section className="withdraw-history-card"><h2><span>◷</span>Recent Transactions <Link to="/wallet/withdraw">View All →</Link></h2>
+              {loading ? <p className="withdraw-empty">Loading wallet activity…</p> : entries.length ? entries.map(entry => <article className="withdraw-history-row" key={entry.id}><span className="history-symbol">◆</span><div><strong>{entry.reason.replaceAll("_", " ")}</strong><small>{new Date(entry.created_at).toLocaleString("en-US", { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</small></div><b className={entry.amount < 0 ? "negative" : "positive"}>{entry.amount > 0 ? "+" : ""}{entry.amount.toLocaleString("en-US")} pts</b></article>) : <p className="withdraw-empty">No wallet activity yet.</p>}
+            </section>
+            <section className="withdraw-balance-card"><span>Available earned points</span><strong>{loading ? "…" : (earnedPoints ?? 0).toLocaleString("en-US")}</strong><small>Points balance from your TestDZ wallet</small></section>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>;
+}
+
 export default function App() {
-  return <Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/dashboard" element={<DashboardPage />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+  return <Routes><Route path="/" element={<LandingPage />} /><Route path="/auth" element={<AuthPage />} /><Route path="/auth/callback" element={<AuthCallbackPage />} /><Route path="/verify-email" element={<VerifyEmailPage />} /><Route path="/forgot-password" element={<ForgotPasswordPage />} /><Route path="/reset-password" element={<ResetPasswordPage />} /><Route path="/onboarding" element={<OnboardingPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="/dashboard" element={<DashboardPage />} /><Route path="/discover" element={<DiscoverTestsPage />} /><Route path="/tests/:id" element={<TestPreviewPage />} /><Route path="/apps" element={<AppsPage />} /><Route path="/apps/:id" element={<AppDetailPage />} /><Route path="/wallet/withdraw" element={<WithdrawalPage />} /><Route path="/wallet/withdrawals/:requestId" element={<WithdrawalStatusPage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes>;
 }

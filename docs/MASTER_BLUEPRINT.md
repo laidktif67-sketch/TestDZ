@@ -24,7 +24,9 @@ Out of V1: iOS/web app testing, public API, standalone marketplace, browser exte
 
 ## 2. Binding principles
 
-1. Earned points and purchased credits are separate balances and cannot be converted.
+1. Earned points and purchased credits are separate balances. Earned points may be redeemed for cash withdrawals under an administrator-configured conversion policy; purchased credits remain non-withdrawable and cannot be converted into earned points.
+17. The point-to-currency conversion rate, minimum/maximum withdrawal and supported payout methods are configurable by administrators; no rate is committed yet or hard-coded in frontend code.
+18. Withdrawal requests require a server-side, atomic and idempotent workflow: reserve eligible points, snapshot the conversion rate/currency/method, require admin review, record provider reference and payout evidence, then consume or release the reservation. Every transition is audited.
 2. Subscription rows are authoritative; profile tier is only a cache.
 3. Payment activation requires a verified, signed, idempotent provider webhook.
 4. Product copy must not guarantee tester counts or Play Console eligibility.
@@ -138,7 +140,12 @@ Formation uses subscription priority, waiting time, reputation and device compat
 
 ## 7. Wallet and ledger
 
-- `earned_points`: earned through platform activity; not purchasable or cashable.
+- `earned_points`: earned through verified platform activity; eligible for cash withdrawal only when the withdrawal feature is enabled and configured by administrators.
+- `purchased_credits`: purchased in DZD and consumed for platform services; never cashable.
+- Withdrawal conversion rates, thresholds, supported payout methods and processing targets are platform configuration, not constants in frontend code.
+- A withdrawal request snapshots its rate and currency at creation. Its points are reserved atomically and cannot be spent twice.
+- Status transitions (`submitted`, `under_review`, `processing`, `completed`, `rejected`, `cancelled`) are server-controlled, idempotent and audited. Rejected/cancelled requests release reserved points; completed requests consume them.
+- Binance, BaridiMob and PayPal are requested UI options only; each provider's availability, legal/compliance requirements, account validation and payout integration must be verified before enabling it.
 - `purchased_credits`: purchased in DZD and consumed for platform services.
 - Every balance mutation must be a trusted server-side transaction with row locking, unique idempotency key, non-negative balance checks and ledger insert in the same transaction.
 - Clients cannot insert/update/delete ledger entries or update wallet balances.
@@ -195,7 +202,7 @@ Every privileged configuration update must be audited.
 ## 12. Screens
 
 Public: Landing, Pricing, Login/Register.  
-Tester: Dashboard, Discover, My Tests, Test Detail, Profile.  
+Tester: Dashboard, Discover, My Tests, Test Detail, Rewards, Wallet, Withdrawal Request, Withdrawal Details & Status, Profile.  
 Developer: Dashboard, My Apps, App Detail, Create Test, Reviews, Billing.  
 Admin: Overview, Users, Plans & Config, Disputes & Reports.
 
@@ -212,6 +219,9 @@ Planned Edge Functions:
 Planned RPCs:
 - `get_active_subscription()` (implemented; returns only the caller's subscription)
 - `award_points` (not yet implemented)
+- `create_withdrawal_request` (planned; atomic points reservation and rate snapshot)
+- `review_withdrawal_request` (planned; admin-only decision and audit)
+- `complete_withdrawal_payout` / `reject_withdrawal_request` (planned; reconcile payout or release reservation)
 - `create_test`
 - `form_cohort`
 - `submit_checkin`
