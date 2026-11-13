@@ -39,7 +39,7 @@ const routeSourceFiles = [
 ];
 const importErrors = [];
 for (const [file, source] of routeSourceFiles) {
-  for (const match of source.matchAll(/from\\s+["'](\\.[^"']+)["']/g)) {
+  for (const match of source.matchAll(/from\s+["'](\.[^"']+)["']/g)) {
     const specifier = match[1];
     const base = resolve(dirname(file), specifier);
     const candidates = [
@@ -57,7 +57,7 @@ for (const [file, source] of routeSourceFiles) {
   }
 }
 
-const declaredPaths = [...allRouteSource.matchAll(/<Route\\s+(?:key="[^"]+"\\s+)?path="([^"]+)"/g)].map((match) => match[1]);
+const declaredPaths = [...allRouteSource.matchAll(/<Route\s+(?:key="[^"]+"\s+)?path="([^"]+)"/g)].map((match) => match[1]);
 const duplicatePaths = declaredPaths.filter((path, index) => declaredPaths.indexOf(path) !== index);
 
 const moduleContracts = [
