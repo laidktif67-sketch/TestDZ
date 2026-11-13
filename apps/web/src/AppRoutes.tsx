@@ -2,36 +2,24 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { publicRouteElements } from "./routes/publicRoutes";
 import { adminRouteElements } from "./routes/adminRoutes";
 import { developerRouteElements } from "./routes/developerRoutes";
+import { testerSecurityRouteElements, testerWorkspaceRouteElements } from "./routes/testerRoutes";
 import OnboardingPage from "./pages/OnboardingPage";
 import InterestsPage from "./pages/InterestsPage";
-import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
-import MyTestsPage from "./modules/tester/pages/MyTestsPage";
-import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
-import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
-import LanguageAppearancePage from "./modules/tester/pages/LanguageAppearancePage";
-import PrivacyDataManagementPage from "./modules/tester/pages/PrivacyDataManagementPage";
 import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
-import LoginActivitySecurityPage from "./modules/tester/pages/LoginActivitySecurityPage";
 import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
 import AssignmentDetailsPage from "./modules/tester/pages/AssignmentDetailsPage";
 import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmentProgressPage";
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
-import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
-import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
 import SubmitFeedbackPage from "./modules/tester/pages/SubmitFeedbackPage";
 import ReportProblemPage from "./modules/tester/pages/ReportProblemPage";
 import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
-import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
-import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
-import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
-import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
 import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import SupportCenterPage from "./modules/tester/pages/SupportCenterPage";
 import SupportTicketDetailsPage from "./modules/tester/pages/SupportTicketDetailsPage";
@@ -73,7 +61,7 @@ export default function AppRoutes() {
             <Route path="/notification-preferences" element={<NotificationPreferencesPage />} />
             <Route path="/active-sessions" element={<ActiveSessionsPage />} />
             <Route element={<RoleGuard requiredRole="tester" />}>
-              <Route path="/tester/security-history" element={<LoginActivitySecurityPage />} />
+              {testerSecurityRouteElements}
             </Route>
             <Route path="/notifications" element={<NotificationsCenterPage />} />
             <Route element={<RoleGuard requiredRole="admin" />}>
@@ -81,18 +69,7 @@ export default function AppRoutes() {
             </Route>
             <Route path="/dashboard" element={<RoleHomeRedirect />} />
             <Route element={<RoleGuard requiredRole="tester" />}>
-              <Route path="/tester-dashboard" element={<TesterDashboardPage />} />
-              <Route path="/my-tests" element={<MyTestsPage />} />
-              <Route path="/assignments/:id/reward" element={<TestCompletionRewardPage />} />
-              <Route path="/leaderboard" element={<TesterLeaderboardPage />} />
-              <Route path="/tester/language-appearance" element={<LanguageAppearancePage />} />
-              <Route path="/tester/privacy" element={<PrivacyDataManagementPage />} />
-              <Route path="/check-in-history" element={<CheckInHistoryPage />} />
-              <Route path="/activity-history" element={<ActivityHistoryPage />} />
-              <Route path="/referral-program" element={<ReferralProgramPage />} />
-              <Route path="/referral-history" element={<ReferralHistoryPage />} />
-              <Route path="/discover-tests" element={<DiscoverTestsPage />} />
-              <Route path="/tests/:id" element={<TestPreviewPage />} />
+              {testerWorkspaceRouteElements}
             </Route>
             <Route element={<RoleGuard requiredRole="developer" />}>
               {developerRouteElements}

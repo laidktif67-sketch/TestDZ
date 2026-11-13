@@ -5,11 +5,13 @@ const routeFile = resolve("apps/web/src/AppRoutes.tsx");
 const publicRouteFile = resolve("apps/web/src/routes/publicRoutes.tsx");
 const adminRouteFile = resolve("apps/web/src/routes/adminRoutes.tsx");
 const developerRouteFile = resolve("apps/web/src/routes/developerRoutes.tsx");
+const testerRouteFile = resolve("apps/web/src/routes/testerRoutes.tsx");
 const source = readFileSync(routeFile, "utf8");
 const publicSource = readFileSync(publicRouteFile, "utf8");
 const adminSource = readFileSync(adminRouteFile, "utf8");
 const developerSource = readFileSync(developerRouteFile, "utf8");
-const allRouteSource = `${source}\n${publicSource}\n${adminSource}\n${developerSource}`;
+const testerSource = readFileSync(testerRouteFile, "utf8");
+const allRouteSource = `${source}\n${publicSource}\n${adminSource}\n${developerSource}\n${testerSource}`;
 const routeElementCount = (allRouteSource.match(/<Route\b/g) ?? []).length;
 const pathCount = (allRouteSource.match(/<Route\s+(?:key="[^"]+"\s+)?path=/g) ?? []).length;
 
@@ -44,7 +46,7 @@ if (!source.includes("{publicRouteElements}") || !publicSource.includes("export 
   errors.push("Public routes must be composed through the publicRouteElements module.");
 }
 
-if (!source.includes("{adminRouteElements}") || !adminSource.includes("export const adminRouteElements")) {\n  errors.push("Admin routes must be composed through the adminRouteElements module.");\n}\n\nif (!source.includes("{developerRouteElements}") || !developerSource.includes("export const developerRouteElements")) {\n  errors.push("Developer routes must be composed through the developerRouteElements module.");\n}\n\nif (missingPaths.length > 0) {
+if (!source.includes("{adminRouteElements}") || !adminSource.includes("export const adminRouteElements")) {\n  errors.push("Admin routes must be composed through the adminRouteElements module.");\n}\n\nif (!source.includes("{developerRouteElements}") || !developerSource.includes("export const developerRouteElements")) {\n  errors.push("Developer routes must be composed through the developerRouteElements module.");\n}\n\nif (!source.includes("{testerSecurityRouteElements}") || !source.includes("{testerWorkspaceRouteElements}") || !testerSource.includes("export const testerSecurityRouteElements") || !testerSource.includes("export const testerWorkspaceRouteElements")) {\n  errors.push("Tester routes must be composed through the tester route module.");\n}\n\nif (missingPaths.length > 0) {
   errors.push(`Missing required route declarations: ${missingPaths.join(", ")}.`);
 }
 
