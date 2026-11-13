@@ -63,6 +63,7 @@ import AdminDeveloperPaymentsPage from "./modules/admin/pages/AdminDeveloperPaym
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
 import AdminDeveloperDetailsPage from "./modules/admin/pages/AdminDeveloperDetailsPage";
 import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
+import AdminTesterDetailsPage from "./modules/admin/pages/AdminTesterDetailsPage";
 import AdminTestsPage from "./modules/admin/pages/AdminTestsPage";
 import AdminAssignmentsPage from "./modules/admin/pages/AdminAssignmentsPage";
 import AdminCohortDetailsPage from "./modules/admin/pages/AdminCohortDetailsPage";
@@ -157,6 +158,7 @@ export default function App() {
               <Route path="/admin/developers" element={<AdminDevelopersPage />} />
               <Route path="/admin/developers/:id" element={<AdminDeveloperDetailsPage />} />
               <Route path="/admin/testers" element={<AdminTestersPage />} />
+              <Route path="/admin/testers/:id" element={<AdminTesterDetailsPage />} />
               <Route path="/admin/tests" element={<AdminTestsPage />} />
               <Route path="/admin/assignments" element={<AdminAssignmentsPage />} />
               <Route path="/admin/cohorts" element={<AdminCohortDetailsPage />} />
