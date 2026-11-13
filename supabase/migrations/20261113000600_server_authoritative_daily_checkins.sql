@@ -20,6 +20,9 @@ declare
   v_user_id uuid := auth.uid();
   v_assignment_tester uuid;
   v_assignment_status text;
+  v_test_id uuid;
+  v_rewarded_checkins integer := 0;
+  v_points_awarded integer := 0;
   v_checkin_date date;
   v_checkin_id uuid;
   v_existing_id uuid;
@@ -37,8 +40,8 @@ begin
 
   -- Serialize submissions for this assignment to make duplicate detection
   -- and the one-reward-only guarantee race-safe.
-  select a.tester_id, a.status
-    into v_assignment_tester, v_assignment_status
+  select a.tester_id, a.status, a.test_id
+    into v_assignment_tester, v_assignment_status, v_test_id
   from public.assignments a
   where a.id = p_assignment_id
   for update;
@@ -49,6 +52,20 @@ begin
   if v_assignment_status <> 'active' then
     raise exception 'ASSIGNMENT_NOT_ACTIVE' using errcode = '42501';
   end if;
+
+  -- Serialize rewards for this tester/test pair so concurrent assignments
+  -- cannot exceed the documented 14 rewarded check-ins per test.
+  perform 1 from public.tests t where t.id = v_test_id for update;
+  select pg_catalog.count(*)::integer into v_rewarded_checkins
+  from public.checkins c
+  join public.assignments a on a.id = c.assignment_id
+  join public.points_ledger l
+    on l.reference_type = 'checkin'
+   and l.reference_id = c.id
+   and l.user_id = v_user_id
+   and l.wallet_type = 'earned_points'
+   and l.amount = 2
+  where a.tester_id = v_user_id and a.test_id = v_test_id;
 
   v_checkin_date := (pg_catalog.clock_timestamp() at time zone 'Africa/Algiers')::date;
 
@@ -67,23 +84,26 @@ begin
 
   -- The ledger key is tied to the inserted check-in, and the assignment row
   -- lock plus unique check-in constraint prevent a second daily reward.
-  insert into public.points_ledger (
-    user_id, wallet_type, amount, reason, reference_type, reference_id, idempotency_key
-  ) values (
-    v_user_id, 'earned_points', 2, 'Daily assignment check-in',
-    'checkin', v_checkin_id, 'checkin:' || v_checkin_id::text
-  );
+  if v_rewarded_checkins < 14 then
+    v_points_awarded := 2;
+    insert into public.points_ledger (
+      user_id, wallet_type, amount, reason, reference_type, reference_id, idempotency_key
+    ) values (
+      v_user_id, 'earned_points', v_points_awarded, 'Daily assignment check-in',
+      'checkin', v_checkin_id, 'checkin:' || v_checkin_id::text
+    );
 
-  insert into public.wallets (user_id, earned_points, purchased_credits)
-  values (v_user_id, 2, 0)
-  on conflict (user_id) do update
-    set earned_points = wallets.earned_points + 2,
-        updated_at = pg_catalog.now();
+    insert into public.wallets (user_id, earned_points, purchased_credits)
+    values (v_user_id, v_points_awarded, 0)
+    on conflict (user_id) do update
+      set earned_points = wallets.earned_points + v_points_awarded,
+          updated_at = pg_catalog.now();
+  end if;
 
   return pg_catalog.jsonb_build_object(
     'checkin_id', v_checkin_id,
     'checkin_date', v_checkin_date,
-    'points_awarded', 2
+    'points_awarded', v_points_awarded
   );
 end;
 $function$;
