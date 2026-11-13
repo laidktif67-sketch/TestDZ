@@ -5,3 +5,6 @@
 .tl-payment-method{display:inline-flex;align-items:center;gap:7px;min-width:0;vertical-align:middle}
 .tl-payment-method .admin-payment-method-icon{flex:0 0 auto}
 .tl-detail dl dd .tl-payment-method{justify-content:flex-start}
+
+/* Shared vector icon alignment: keep icons centered and prevent flex shrink. */
+.tl-kpis i svg{display:block;flex:none}.tl-hero-icon svg,.tl-period svg,.tl-export svg{display:block;flex:none}
