@@ -2201,12 +2201,14 @@ export type Database = {
           evidence_storage_path: string | null
           id: string
           reason: string
-          requested_dates: string[]
+          requested_dates: string[] | null
+          requested_days: number
           review_note: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
           tester_id: string
+          updated_at: string
         }
         SetofOptions: {
           from: "*"
