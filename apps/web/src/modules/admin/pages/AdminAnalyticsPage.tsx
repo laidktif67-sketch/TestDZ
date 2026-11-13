@@ -6,9 +6,6 @@ import AdminSidebar from "../components/AdminSidebar";
 
 type Range = "24h" | "7d" | "30d" | "90d" | "Custom";
 type PerformerTab = "Users" | "Developers" | "Testers";
-const navigation = [
- ["Admin Dashboard","⌂","/admin"],["Users Management","♙","/admin/users"],["Developers","⌘","/admin/developers"],["Testers","♧","/admin/testers"],["Tests Management","▤","/admin/tests"],["Apps Management","◇","/admin/apps"],["Cohorts","▱","/admin/cohorts"],["Assignments","☷","/admin/assignments"],["Reports & Reviews","▣","/admin/reports"],["Medical Exceptions","♡","/admin/medical-exceptions"],["Support Center","◉","/admin/support"],["Financial","▤","/admin/financial"],["Notifications","♧","/admin/notifications"],["System Monitoring","⌁","/admin/monitoring"],["System Logs","▤","/admin/logs"],["Audit Trail","◷","/admin/audit-trail"],["Analytics","▥","/admin/analytics"],["Leaderboard","♜","/admin/leaderboard"],["Settings","⚙","/admin/settings"]
-] as const;
 const activity = [
  {icon:"♧",tone:"green",title:"New user registered from Algeria",time:"2 min ago"},
  {icon:"⌘",tone:"purple",title:"New application submitted: TestPro",time:"3 min ago"},
