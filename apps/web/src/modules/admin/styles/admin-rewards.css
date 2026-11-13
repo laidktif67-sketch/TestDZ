@@ -14,3 +14,6 @@
 .ar-pagination button:disabled{opacity:.4}
 .ar-pagination select{margin-left:7px}
 @media(max-width:560px){.ar-pagination{align-items:flex-start;flex-direction:column}.ar-pagination>div{width:100%;justify-content:flex-start}.ar-period{flex:1;justify-content:center}}
+
+/* Shared SVG alignment for reward metrics, rule rows, headings and actions. */
+.ar-hero h1,.ar-card header h2,.ar-actions button,.ar-period,.ar-hero>button{align-items:center;gap:7px}.ar-hero h1,.ar-card header h2{display:flex}.ar-gift svg,.ar-period svg,.ar-hero>button svg,.ar-kpis i svg,.ar-card header h2 svg,.ar-actions button svg,.ar-rule i svg{display:block;flex:none;vertical-align:middle}
