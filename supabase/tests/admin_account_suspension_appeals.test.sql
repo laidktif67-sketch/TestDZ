@@ -128,10 +128,10 @@ select ok(
 );
 
 select lives_ok(
-  $select public.submit_account_suspension_appeal(
+  $$select public.submit_account_suspension_appeal(
     (select suspension_id from public.get_my_account_suspension()),
     'I believe this suspension was applied in error and request a review.'
-  )$,
+  )$$,
   'the suspended user can submit an appeal within the seven-day window'
 );
 
