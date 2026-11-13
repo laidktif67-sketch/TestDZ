@@ -27,6 +27,7 @@ import DeveloperSubscriptionPage from "./modules/developer/pages/DeveloperSubscr
 import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
 import DeveloperAnalyticsPage from "./modules/developer/pages/DeveloperAnalyticsPage";
 import DeveloperTestResultsPage from "./modules/developer/pages/DeveloperTestResultsPage";
+import DeveloperReviewReportsPage from "./modules/developer/pages/DeveloperReviewReportsPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
 import DeveloperFeedbackDetailsPage from "./modules/developer/pages/DeveloperFeedbackDetailsPage";
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
@@ -143,6 +144,8 @@ export default function App() {
               <Route path="/developer/testers" element={<DeveloperTestersPage />} />
               <Route path="/developer/analytics" element={<DeveloperAnalyticsPage />} />
               <Route path="/developer/results" element={<DeveloperTestResultsPage />} />
+              <Route path="/developer/reports" element={<DeveloperReviewReportsPage />} />
+              <Route path="/developer/reports/:id" element={<DeveloperReviewReportsPage />} />
               <Route path="/developer/feedback" element={<DeveloperFeedbackPage />} />
               <Route path="/developer/feedback/:id" element={<DeveloperFeedbackDetailsPage />} />
               <Route path="/developer/notifications" element={<DeveloperNotificationsPage />} />

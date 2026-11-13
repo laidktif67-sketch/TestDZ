@@ -2147,6 +2147,10 @@ export type Database = {
         Args: { p_assignment_id: string; p_report_text: string; p_comments?: string; p_files?: Json }
         Returns: Json
       }
+      review_assignment_submission: {
+        Args: { p_submission_id: string; p_decision: string; p_review_note?: string | null }
+        Returns: Json
+      }
 
       add_cohort_test: {
         Args: { p_cohort_id: string; p_test_id: string }
