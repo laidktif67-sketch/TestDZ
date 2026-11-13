@@ -24,18 +24,23 @@ export default function ActiveAssignmentProgressPage(){
   if(preview){setAssignment({id:"preview-assignment",status:"active",start_date:"2026-11-04",medical_extension_days:0,test:{id:"preview-test",title:"Productivity Pro",description:"Help us test this productivity application. Explore its core features, check reliability and share honest feedback throughout the testing period.",short_summary:"A productivity app for organizing tasks and improving focus.",start_date:"2026-11-04",end_date:"2026-11-17",app:{name:"BestDev Team",icon_url:null,category:"Productivity",play_store_url:null}}});setCheckins(Array.from({length:7},(_,i)=>({id:String(i),checkin_date:"2026-11-"+String(4+i).padStart(2,"0"),evidence_url:null})));setFeedbackCount(1);setEarned(120);setLeaders([{id:"p1",name:"Sara Dev",avatar:null,points:1180},{id:"p2",name:"Ahmed Tech",avatar:null,points:1250},{id:"p3",name:"Omar Code",avatar:null,points:1100}]);setName("John Doe");setLoading(false);return;}
   if(!session?.user?.id||!id||!supabase){setLoading(false);return;}let alive=true;const client=supabase,uid=session.user.id;
   (async()=>{
-   const [profile,notice,a,c,f,l,roleRows]=await Promise.all([
+   const [profile,notice,a,c,f,roleRows]=await Promise.all([
     client.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
     client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
     client.from("assignments").select("id,status,start_date,medical_extension_days,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category,play_store_url))").eq("id",id).eq("tester_id",uid).maybeSingle(),
     client.from("checkins").select("id,checkin_date,evidence_url").eq("assignment_id",id).eq("tester_id",uid).order("checkin_date"),
     client.from("feedback").select("id",{count:"exact",head:true}).eq("assignment_id",id).eq("tester_id",uid),
-    client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_id",id),
     client.from("user_roles").select("user_id").eq("role","tester").limit(5000)
    ]);
    if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notice.count??0);
    if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
-   setAssignment(a.data as unknown as Assignment);setCheckins((c.data??[]) as Checkin[]);setFeedbackCount(f.count??0);setEarned((l.data??[]).reduce((sum,x)=>sum+Number(x.amount||0),0));
+   setAssignment(a.data as unknown as Assignment);const checkinRows=(c.data??[]) as Checkin[];setCheckins(checkinRows);setFeedbackCount(f.count??0);
+   const checkinIds=checkinRows.map(row=>row.id);
+   const [assignmentLedger,checkinLedger]=await Promise.all([
+    client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_id",id),
+    checkinIds.length?client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_type","checkin").in("reference_id",checkinIds):Promise.resolve({data:[]})
+   ]);
+   if(!alive)return;setEarned([...(assignmentLedger.data??[]),...(checkinLedger.data??[])].reduce((sum,x)=>sum+Number(x.amount||0),0));
    const ids=(roleRows.data??[]).map(x=>x.user_id);
    if(ids.length){const [profiles,ledger]=await Promise.all([client.from("profiles").select("id,display_name,avatar_url").in("id",ids),client.from("points_ledger").select("user_id,amount").eq("wallet_type","earned_points").in("user_id",ids).limit(20000)]);
     if(!alive)return;if(profiles.error||ledger.error)setLeaderError("Leaderboard rankings are temporarily unavailable.");else{const map=new Map<string,Leader>();for(const p of profiles.data??[])map.set(p.id,{id:p.id,name:p.display_name?.trim()||"TestDZ Tester",avatar:p.avatar_url||null,points:0});for(const x of ledger.data??[]){const row=map.get(x.user_id);if(row)row.points+=Number(x.amount||0);}setLeaders([...map.values()].sort((x,y)=>y.points-x.points).slice(0,3));}}
