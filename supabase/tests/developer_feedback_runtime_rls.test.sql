@@ -129,9 +129,9 @@ select is(
 );
 
 select throws_ok(
-  $update public.developer_feedback_events
+  $sql$update public.developer_feedback_events
     set new_value = 'forged audit edit'
-    where feedback_id = '70000000-0000-4000-8000-000000000001'$,
+    where feedback_id = '70000000-0000-4000-8000-000000000001'$sql$,
   '42501', null,
   'authenticated participants cannot update database-authored audit events'
 );
