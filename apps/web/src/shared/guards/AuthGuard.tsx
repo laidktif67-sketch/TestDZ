@@ -9,12 +9,13 @@ type AccountStatus = "loading" | "active" | "banned" | "error";
 export default function AuthGuard() {
   const { session, user, loading, error, refreshSession, signOut } = useIdentity();
   const location = useLocation();
-  const [accountStatus, setAccountStatus] = useState<AccountStatus>("loading");
+  const [accountStatus, setAccountStatus] = useState<{ userId: string | null; status: AccountStatus }>({ userId: null, status: "loading" });
+  const currentAccountStatus = accountStatus.userId === user?.id ? accountStatus.status : "loading";
   const [statusRevision, setStatusRevision] = useState(0);
 
   useEffect(() => {
     if (!user?.id) {
-      setAccountStatus("loading");
+      setAccountStatus({ userId: user?.id ?? null, status: "loading" });
       return;
     }
 
@@ -25,10 +26,10 @@ export default function AuthGuard() {
       .then(({ data, error: statusError }) => {
         if (statusError) throw statusError;
         if (!data) throw new Error("PROFILE_NOT_FOUND");
-        if (active) setAccountStatus(data.is_banned ? "banned" : "active");
+        if (active) setAccountStatus({ userId: user.id, status: data.is_banned ? "banned" : "active" });
       })
       .catch(() => {
-        if (active) setAccountStatus("error");
+        if (active) setAccountStatus({ userId: user.id, status: "error" });
       });
 
     return () => {
@@ -69,7 +70,7 @@ export default function AuthGuard() {
     );
   }
 
-  if (accountStatus === "loading") {
+  if (currentAccountStatus === "loading") {
     return (
       <main className="route-guard-screen" aria-live="polite" aria-busy="true">
         <span className="route-guard-spinner" aria-hidden="true" />
@@ -78,7 +79,7 @@ export default function AuthGuard() {
     );
   }
 
-  if (accountStatus === "error") {
+  if (currentAccountStatus === "error") {
     return (
       <main className="route-guard-screen" role="alert">
         <div className="route-guard-message">
@@ -92,7 +93,7 @@ export default function AuthGuard() {
     );
   }
 
-  if (accountStatus === "banned") {
+  if (currentAccountStatus === "banned") {
     return (
       <main className="route-guard-screen" role="alert">
         <div className="route-guard-message">
