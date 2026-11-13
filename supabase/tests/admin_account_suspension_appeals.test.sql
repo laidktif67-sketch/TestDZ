@@ -166,7 +166,7 @@ select set_config('request.jwt.claims', '{"sub":"26000000-0000-4000-8000-0000000
 
 select lives_ok(
   $$select public.admin_review_account_suspension_appeal(
-    (select id from public.account_suspension_appeals
+    (select appeal_id from public.admin_list_account_suspension_appeals('pending')
       where user_id = '26000000-0000-4000-8000-000000000002'),
     'accepted',
     'The evidence review confirmed the suspension was mistaken.'
