@@ -1,22 +1,22 @@
 import { Route } from "react-router-dom";
-import AppsPage from "./modules/developer/pages/DeveloperAppsPage";
-import AppDetailPage from "./modules/developer/pages/DeveloperAppDetailPage";
-import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
-import DeveloperMyTestsPage from "./modules/developer/pages/DeveloperMyTestsPage";
-import DeveloperTestCampaignDetailsPage from "./modules/developer/pages/DeveloperTestCampaignDetailsPage";
-import DeveloperCreateTestPage from "./modules/developer/pages/DeveloperCreateTestPage";
-import DeveloperSettingsPage from "./modules/developer/pages/DeveloperSettingsPage";
-import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTestMonitoringPage";
-import DeveloperSubscriptionPage from "./modules/developer/pages/DeveloperSubscriptionPage";
-import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
-import DeveloperAnalyticsPage from "./modules/developer/pages/DeveloperAnalyticsPage";
-import DeveloperTestResultsPage from "./modules/developer/pages/DeveloperTestResultsPage";
-import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
-import DeveloperFeedbackDetailsPage from "./modules/developer/pages/DeveloperFeedbackDetailsPage";
-import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
-import DeveloperHelpCenterPage from "./modules/developer/pages/DeveloperHelpCenterPage";
-import DeveloperSupportCenterPage from "./modules/developer/pages/DeveloperSupportCenterPage";
-import DeveloperSupportTicketDetailsPage from "./modules/developer/pages/DeveloperSupportTicketDetailsPage";
+import AppsPage from "../modules/developer/pages/DeveloperAppsPage";
+import AppDetailPage from "../modules/developer/pages/DeveloperAppDetailPage";
+import DeveloperDashboardPage from "../modules/developer/pages/DeveloperDashboardPage";
+import DeveloperMyTestsPage from "../modules/developer/pages/DeveloperMyTestsPage";
+import DeveloperTestCampaignDetailsPage from "../modules/developer/pages/DeveloperTestCampaignDetailsPage";
+import DeveloperCreateTestPage from "../modules/developer/pages/DeveloperCreateTestPage";
+import DeveloperSettingsPage from "../modules/developer/pages/DeveloperSettingsPage";
+import DeveloperTestMonitoringPage from "../modules/developer/pages/DeveloperTestMonitoringPage";
+import DeveloperSubscriptionPage from "../modules/developer/pages/DeveloperSubscriptionPage";
+import DeveloperTestersPage from "../modules/developer/pages/DeveloperTestersPage";
+import DeveloperAnalyticsPage from "../modules/developer/pages/DeveloperAnalyticsPage";
+import DeveloperTestResultsPage from "../modules/developer/pages/DeveloperTestResultsPage";
+import DeveloperFeedbackPage from "../modules/developer/pages/DeveloperFeedbackPage";
+import DeveloperFeedbackDetailsPage from "../modules/developer/pages/DeveloperFeedbackDetailsPage";
+import DeveloperNotificationsPage from "../modules/developer/pages/DeveloperNotificationsPage";
+import DeveloperHelpCenterPage from "../modules/developer/pages/DeveloperHelpCenterPage";
+import DeveloperSupportCenterPage from "../modules/developer/pages/DeveloperSupportCenterPage";
+import DeveloperSupportTicketDetailsPage from "../modules/developer/pages/DeveloperSupportTicketDetailsPage";
 
 // Developer workspace routes. The parent RoleGuard remains in AppRoutes.
 export const developerRouteElements = [
