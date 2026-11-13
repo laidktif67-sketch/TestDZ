@@ -9,3 +9,6 @@
 .asm-status-dot.healthy { background: #16a36a; }
 .asm-status-dot.warning { background: #e99a22; }
 .asm-status-dot.critical { background: #d94242; }
+
+/* Keep vector status and section icons centered across monitoring cards. */
+.asm-card header b{display:flex;align-items:center;gap:7px}.asm-card header b svg,.asm-card>p svg,.asm-services>p svg,.admin-icon-button svg{display:block;flex:none;vertical-align:middle}
