@@ -49,6 +49,7 @@ import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewar
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
 import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
+import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
 import AdminTestsPage from "./modules/admin/pages/AdminTestsPage";
 import AdminAssignmentsPage from "./modules/admin/pages/AdminAssignmentsPage";
 import AdminCohortDetailsPage from "./modules/admin/pages/AdminCohortDetailsPage";
@@ -129,6 +130,7 @@ export default function App() {
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
               <Route path="/admin/users" element={<AdminUserManagementPage />} />
               <Route path="/admin/developers" element={<AdminDevelopersPage />} />
+              <Route path="/admin/testers" element={<AdminTestersPage />} />
               <Route path="/admin/tests" element={<AdminTestsPage />} />
               <Route path="/admin/assignments" element={<AdminAssignmentsPage />} />
               <Route path="/admin/cohorts" element={<AdminCohortDetailsPage />} />
