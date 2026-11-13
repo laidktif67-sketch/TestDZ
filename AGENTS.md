@@ -64,3 +64,6 @@ For each UI task, briefly report:
 - Any remaining checks that require the owner's device, browser, or screenshot.
 
 For non-UI tasks, follow the relevant project instructions and do not force an unrelated design workflow.
+
+## Backend engineering context
+- For backend, database, RLS, migrations, and deployment work, read and follow the repository-root `CLAUDE.md` in addition to these instructions.
