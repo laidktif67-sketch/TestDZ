@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-settings.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 type ToggleKey = "maintenance"|"beta"|"analytics"|"registration"|"emailVerification"|"autoAssign"|"showResults"|"allowReview"|"emailNotifications"|"newAssignment"|"twoFactor"|"multiSession";
 const initial:Record<ToggleKey,boolean>={maintenance:false,beta:true,analytics:true,registration:true,emailVerification:true,autoAssign:false,showResults:true,allowReview:true,emailNotifications:true,newAssignment:true,twoFactor:true,multiSession:false};
