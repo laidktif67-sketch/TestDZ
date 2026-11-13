@@ -1,6 +1,6 @@
 begin;
 
-select plan(18);
+select plan(19);
 
 select ok(
   to_regclass('public.support_ticket_messages') is not null,
@@ -183,6 +183,20 @@ select ok(
       and qual like '%requester_role%'
   ),
   'support attachment storage access follows requester-role isolation'
+);
+
+select ok(
+  has_column_privilege('authenticated', 'public.support_tickets', 'priority', 'UPDATE')
+  and not has_column_privilege('anon', 'public.support_tickets', 'priority', 'UPDATE')
+  and exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'support_tickets'
+      and policyname = 'support_tickets_update_support_staff'
+      and qual like '%is_support_staff%'
+      and with_check like '%is_support_staff%'
+  ),
+  'priority updates are column-granted but remain restricted to support staff by RLS'
 );
 
 select * from finish();
