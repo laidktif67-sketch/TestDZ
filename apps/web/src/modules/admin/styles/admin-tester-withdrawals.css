@@ -10,3 +10,6 @@
 
 /* Shared vector icon alignment: keep icons centered and prevent flex shrink. */
 .tw-stat-icon svg,.tw-quick-grid button svg,.tw-details h2 svg,.tw-profile b svg{display:block;flex:none}.tw-stat-icon,.tw-quick-grid button{align-items:center;gap:7px}
+
+/* Keep payment-related SVG icons aligned with existing withdrawal controls. */
+.tw-welcome h1 svg,.tw-stat-icon svg,.tw-trends .admin-panel-heading h2 svg,.tw-methods .admin-panel-heading h2 svg,.tw-quick-grid button svg,.tw-requests .admin-panel-heading h2 svg,.tw-requests .admin-panel-heading button svg,.tw-filters label svg,.tw-table-wrap button svg,.tw-note b svg{display:inline-block;flex:none;vertical-align:middle}.tw-quick-grid button,.tw-filters label{display:flex;align-items:center;gap:7px}.tw-welcome h1{display:flex;align-items:center;gap:8px}.tw-stat-icon{display:grid;place-items:center}
