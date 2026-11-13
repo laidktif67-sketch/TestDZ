@@ -6,7 +6,7 @@
 @media(max-width:850px){
  .admin-sidebar{min-height:0}
  .admin-sidebar .admin-sidebar-nav{display:grid;grid-template-columns:1fr;gap:4px;overflow:visible;padding:8px 0 0}
- .admin-sidebar .admin-sidebar-mobile-toggle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:42px;border:1px solid #ffffff35;border-radius:9px;background:#ffffff12;color:#fff;font:700 12px inherit;cursor:pointer}
+ .admin-sidebar .admin-sidebar-mobile-toggle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:42px;border:1px solid #ffffff35;border-radius:9px;background:#ffffff12;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
  .admin-sidebar .admin-sidebar-nav:not(.is-mobile-open)>:not(.admin-sidebar-mobile-toggle){display:none}
  .admin-sidebar .admin-sidebar-nav.is-mobile-open{grid-template-columns:repeat(2,minmax(0,1fr));max-height:min(65vh,520px);overflow-y:auto;overscroll-behavior:contain}
  .admin-sidebar .admin-sidebar-nav.is-mobile-open>.admin-sidebar-section-label,.admin-sidebar .admin-sidebar-nav.is-mobile-open>.admin-sidebar-group{grid-column:1/-1}
