@@ -61,6 +61,9 @@ async function createActor(label, roles) {
 async function insert(table, row, label) {
   await must(`/rest/v1/${table}`, { method: "POST", body: row }, label);
 }
+async function insertAs(actor, table, row, label) {
+  await must(`/rest/v1/${table}`, { method: "POST", token: actor.token, body: row }, label);
+}
 async function removeRows(table, filter, label) {
   const result = await request(`/rest/v1/${table}?${filter}`, { method: "DELETE" });
   if (!result.response.ok) process.stderr.write(`Cleanup warning (${label}): ${result.response.status} ${result.text}\n`);
@@ -145,10 +148,10 @@ try {
   }, "support bucket rejects files larger than 10 MiB");
 
   const supportMessageId = uuid();
-  await insert("support_ticket_messages", {
+  await insertAs(tester, "support_ticket_messages", {
     id: supportMessageId, ticket_id: ticketId, sender_id: tester.id, body: "Storage API support attachment message."
   }, "insert support message");
-  await insert("support_ticket_attachments", {
+  await insertAs(tester, "support_ticket_attachments", {
     ticket_id: ticketId, message_id: supportMessageId, uploaded_by: tester.id,
     storage_path: supportPath, original_filename: "support.txt", mime_type: "text/plain", size_bytes: 16
   }, "insert support attachment metadata");
@@ -166,10 +169,10 @@ try {
   }, "unrelated user cannot upload feedback attachment");
 
   const feedbackMessageId = uuid();
-  await insert("developer_feedback_messages", {
+  await insertAs(tester, "developer_feedback_messages", {
     id: feedbackMessageId, feedback_id: feedbackId, sender_id: tester.id, body: "Storage API feedback attachment message."
   }, "insert feedback message");
-  await insert("developer_feedback_attachments", {
+  await insertAs(tester, "developer_feedback_attachments", {
     feedback_id: feedbackId, message_id: feedbackMessageId, uploaded_by: tester.id,
     storage_path: feedbackPath, original_filename: "feedback.txt", mime_type: "text/plain", size_bytes: 17
   }, "insert feedback attachment metadata");
@@ -191,7 +194,7 @@ try {
     method: "POST", token: tester.token, body: Buffer.from("<html/>"), contentType: "text/html"
   }, "test evidence bucket rejects disallowed extension or MIME");
 
-  await insert("report_attachments", {
+  await insertAs(tester, "report_attachments", {
     report_id: reportId, assignment_id: assignmentId, test_id: testDeveloperId,
     tester_id: tester.id, file_id: fileId, file_extension: "txt", original_filename: "evidence.txt"
   }, "insert report attachment metadata");
