@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-financial.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 type Activity = { date: string; type: string; user: string; amount: string; status: "Completed" | "Pending" | "Failed"; };
 const activity: Activity[] = [
@@ -21,7 +22,7 @@ export default function AdminFinancialPage(){
  const pending=activity.filter(x=>x.status==="Pending").length;
  return <main className="admin-dashboard admin-financial-page">
   <aside className="admin-sidebar"><Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link><div className="admin-sidebar-label">Workspace</div><AdminSidebar activePath="/admin/financial" /><div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div></aside>
-  <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><span>⌕</span><input aria-label="Search financial activity" placeholder="Search users, transactions, or anything..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications">♧<span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages">✉<span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
+  <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><AdminIcon name="search"/><input aria-label="Search financial activity" placeholder="Search users, transactions, or anything..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell"/><span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages"><AdminIcon name="mail"/><span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
    <div className="admin-content fo-content"><section className="admin-welcome fo-welcome"><div><span className="admin-eyebrow">TESTDZ · ADMIN WORKSPACE</span><h1><Icon>▥</Icon> Financial Overview</h1><p>Overview of the platform’s financial performance and activities</p></div><div className="fo-toolbar"><label>▦ <select aria-label="Reporting period" value={period} onChange={e=>setPeriod(e.target.value)}><option>Last 7 Days</option><option>Last 30 Days</option><option>Last 90 Days</option><option>This Year</option></select></label><button type="button" onClick={()=>window.print()}>⇩ Export Report</button></div></section>
     <div className="fo-demo"><b>DEMO MODE</b><span>All figures and activity records are illustrative sample data. No real payment, wallet, balance or reward records are read or changed.</span></div>
     {notice&&<div className="fo-notice" role="status">{notice}<button onClick={()=>setNotice("")}>Dismiss</button></div>}
