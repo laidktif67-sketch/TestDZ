@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-tests.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 type TestStatus = "Published" | "Active" | "Draft" | "Paused";
 type TestRecord = { id:string; title:string; developer:string; category:string; difficulty:string; participants:number; status:TestStatus; created:string; success:number; submissions:number };
@@ -25,7 +26,7 @@ export default function AdminTestsPage(){
  const published=tests.filter(t=>t.status==="Published").length,active=tests.filter(t=>t.status==="Active").length,drafts=tests.filter(t=>t.status==="Draft").length;
  function togglePause(){if(!selected)return;setTests(old=>old.map(t=>t.id===selected.id?{...t,status:t.status==="Paused"?"Active":"Paused"}:t));setNotice("Preview only: status changed locally. No live test or assignment was changed.");}
  return <main className="admin-dashboard admin-tests-page"><aside className="admin-sidebar"><Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link><div className="admin-sidebar-label">Workspace</div><AdminSidebar activePath="/admin/tests" /><div className="admin-sidebar-label at-system">System</div><div className="admin-nav-item"><Glyph kind="history"/><span>System Logs</span></div><div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div></aside>
- <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><span>⌕</span><input placeholder="Search tests, titles, or developers..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><span className="at-notice-count">3</span><span className="admin-avatar">AD</span></div></header>
+ <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><AdminIcon name="search" size={18}/><input placeholder="Search tests, titles, or developers..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><span className="at-notice-count">3</span><span className="admin-avatar">AD</span></div></header>
  <div className="admin-content at-content"><section className="admin-welcome at-hero"><div><span className="admin-eyebrow">TESTDZ · ADMIN WORKSPACE</span><h1>Tests Management</h1><p>Monitor test campaigns, quality, participation and platform compliance.</p></div><span className="at-hero-mark">✓</span></section>
  <div className="at-demo-banner">DEMO MODE — All test records, metrics, ratings and activity shown here are illustrative sample data.</div>
  <section className="at-metrics"><Metric icon="flask" label="Total Tests" value="245" tone="blue" detail="Across all categories"/><Metric icon="history" label="Active Tests" value={String(active+128)} tone="green" detail="Currently accepting activity"/><Metric icon="users" label="Published" value={String(published+88)} tone="purple" detail="Visible test campaigns"/><Metric icon="settings" label="Drafts" value={String(drafts+23)} tone="amber" detail="Not yet published"/></section>
