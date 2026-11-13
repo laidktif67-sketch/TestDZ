@@ -7,3 +7,6 @@
 .tw-method-body p .admin-payment-method-icon{flex:0 0 auto}
 .tw-payment-method{display:inline-flex;align-items:center;gap:7px;min-width:0;vertical-align:middle}
 .tw-payment-method .admin-payment-method-icon{flex:0 0 auto}
+
+/* Shared vector icon alignment: keep icons centered and prevent flex shrink. */
+.tw-stat-icon svg,.tw-quick-grid button svg,.tw-details h2 svg,.tw-profile b svg{display:block;flex:none}.tw-stat-icon,.tw-quick-grid button{align-items:center;gap:7px}
