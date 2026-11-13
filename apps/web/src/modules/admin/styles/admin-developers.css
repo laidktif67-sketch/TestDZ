@@ -4,3 +4,6 @@
 @media(max-width:560px){.developers-content{padding:10px}.developers-welcome h1{font-size:19px}.dev-add-button{font-size:9px;padding:8px}.dev-stats{gap:7px}.dev-stats article{padding:9px;gap:7px}.dev-stat-icon{width:34px;height:34px}.dev-stats strong{font-size:17px}.dev-stats small{font-size:9px}.dev-filters{grid-template-columns:1fr 1fr}.dev-search{grid-column:1/-1}.dev-table{min-width:900px}.dev-table-actions button{padding:0 6px}.dev-table-footer{flex-direction:column}.dev-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dev-profile-head{gap:9px}.dev-profile-avatar{width:52px;height:52px}.dev-activity-metrics{gap:4px}}
 
 .dev-profile-action{text-decoration:none}
+
+/* Align shared SVGs in developer rating and profile badges. */
+.dev-rating svg,.dev-profile-head h3 svg{display:inline-block;vertical-align:middle;flex:none}.dev-profile-head h3{display:flex;align-items:center;gap:6px}
