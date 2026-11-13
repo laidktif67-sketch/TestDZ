@@ -1,6 +1,6 @@
 begin;
 
-select plan(18);
+select plan(22);
 
 -- Isolated fixture graph: four cohort developers and one non-member. Each
 -- member owns one test; assignments only cross between different members.
@@ -231,6 +231,58 @@ select throws_ok(
       '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002/forged.txt')$$,
   '42501', null,
   'a cohort member without feedback participation cannot upload into another member feedback folder'
+);
+
+-- Exercise the actual review triggers under the owning developer identity.
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
+insert into public.developer_feedback_reviews (feedback_id, developer_id)
+values (
+  '70000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001'
+);
+
+update public.developer_feedback_reviews
+set status = 'resolved',
+    priority = 'urgent'
+where feedback_id = '70000000-0000-4000-8000-000000000001';
+
+select is(
+  (select count(*)::int from public.developer_feedback_events
+   where feedback_id = '70000000-0000-4000-8000-000000000001'
+     and actor_id = '10000000-0000-4000-8000-000000000001'
+     and event_type = 'status_changed'
+     and old_value = 'new'
+     and new_value = 'resolved'),
+  1,
+  'review status update writes exactly one database-authored status event'
+);
+
+select is(
+  (select count(*)::int from public.developer_feedback_events
+   where feedback_id = '70000000-0000-4000-8000-000000000001'
+     and actor_id = '10000000-0000-4000-8000-000000000001'
+     and event_type = 'priority_changed'
+     and old_value = 'normal'
+     and new_value = 'urgent'),
+  1,
+  'review priority update writes exactly one database-authored priority event'
+);
+
+select ok(
+  (select resolved_at is not null and updated_at >= created_at
+   from public.developer_feedback_reviews
+   where feedback_id = '70000000-0000-4000-8000-000000000001'),
+  'review timestamps are populated and resolution time is server-owned'
+);
+
+select throws_ok(
+  $sql$update public.developer_feedback_reviews
+    set updated_at = '2000-01-01T00:00:00Z'
+    where feedback_id = '70000000-0000-4000-8000-000000000001'$sql$,
+  '42501', null,
+  'authenticated developers cannot forge review update timestamps'
 );
 
 reset role;
