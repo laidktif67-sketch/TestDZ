@@ -96,6 +96,7 @@ try {
   const tester = await createActor("tester", ["tester", "developer"]);
   const developer = await createActor("developer", ["developer"]);
   const outsider = await createActor("outsider", ["tester"]);
+  const support = await createActor("support", ["support"]);
 
   await insert("apps", [
     { id: appTesterId, developer_id: tester.id, name: "Storage Tester App", package_name: `test.storage.tester.${suffix}` },
@@ -133,6 +134,8 @@ try {
   check(result.response.ok, "ticket owner uploads support attachment through Storage API");
   result = await download(tester, "support-attachments", supportPath);
   check(result.response.ok && result.text.includes("support evidence"), "ticket owner downloads support attachment through Storage API");
+  result = await download(support, "support-attachments", supportPath);
+  check(result.response.ok && result.text.includes("support evidence"), "authorized support staff downloads support attachment");
   await expectDenied(`/storage/v1/object/authenticated/support-attachments/${supportPath}`, { token: outsider.token }, "unrelated user cannot download support attachment");
   await expectDenied(objectPath("support-attachments", `${ticketId}/${outsider.id}/forged.txt`), {
     method: "POST", token: outsider.token, body: Buffer.from("forged"), contentType: "text/plain"
