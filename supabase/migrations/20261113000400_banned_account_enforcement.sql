@@ -23,6 +23,28 @@ $function$;
 revoke all on function private.is_current_user_banned() from public, anon;
 grant execute on function private.is_current_user_banned() to authenticated;
 
+create or replace function private.reject_banned_account_write()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+begin
+  if (select private.is_current_user_banned()) then
+    raise exception 'ACCOUNT_SUSPENDED'
+      using errcode = '42501';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$function$;
+
+revoke all on function private.reject_banned_account_write()
+  from public, anon, authenticated;
+
 -- Restrictive policies are ANDed with every existing permissive policy. They
 -- therefore preserve the existing ownership/role rules while denying banned
 -- sessions access to other public tables.
@@ -79,27 +101,7 @@ begin
 end;
 $migration$;
 
-create or replace function private.reject_banned_account_write()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-begin
-  if (select private.is_current_user_banned()) then
-    raise exception 'ACCOUNT_SUSPENDED'
-      using errcode = '42501';
-  end if;
 
-  if tg_op = 'DELETE' then
-    return old;
-  end if;
-  return new;
-end;
-$function$;
-
-revoke all on function private.reject_banned_account_write()
-  from public, anon, authenticated;
 
 -- Storage is outside the public schema and needs its own restrictive policy.
 drop policy if exists account_not_banned on storage.objects;
