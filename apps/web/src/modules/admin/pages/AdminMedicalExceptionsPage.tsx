@@ -69,7 +69,7 @@ export default function AdminMedicalExceptionsPage() {
   return <main className="admin-dashboard admin-medical-page" dir="rtl">
     <aside className="admin-sidebar">
       <Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link>
-      <div className="admin-sidebar-label">الإدارة</div>
+      <div className="admin-sidebar-label keep-sidebar-label">الإدارة</div>
       <AdminSidebar activePath="/admin/medical-exceptions" />
       <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>مشرف المنصة</small></div><span className="admin-online" /></div>
     </aside>
