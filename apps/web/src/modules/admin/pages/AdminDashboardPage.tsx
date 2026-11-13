@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 
 const metrics = [
@@ -105,9 +106,7 @@ export default function AdminDashboardPage() {
       <a className="admin-brand" href="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></a>
       <div className="admin-sidebar-label">Workspace</div>
       <nav className="admin-nav" aria-label="Admin navigation">
-        {navigation.map((item) => <div key={item.label} className={`admin-nav-item ${item.active ? "active" : ""}`} aria-current={item.active ? "page" : undefined}>
-          <Icon name={item.icon} size={17} /><span>{item.label}</span>{item.active && <i />}
-        </div>)}
+        {navigation.map((item) => item.label === "Medical Exceptions" ? <Link key={item.label} to="/admin/medical-exceptions" className="admin-nav-item"><Icon name={item.icon} size={17} /><span>{item.label}</span></Link> : <div key={item.label} className={`admin-nav-item ${item.active ? "active" : ""}`} aria-current={item.active ? "page" : undefined}><Icon name={item.icon} size={17} /><span>{item.label}</span>{item.active && <i />}</div>)}
       </nav>
       <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online" /></div>
     </aside>
@@ -141,7 +140,7 @@ export default function AdminDashboardPage() {
           <article className="admin-panel admin-quick-actions">
             <div className="admin-panel-heading"><h2><Icon name="bolt" /> Quick Actions</h2></div>
             <div className="admin-action-grid">
-              {[["users","Manage Users"],["file","Review Reports"],["heart","Medical Requests"],["support","Support Tickets"],["wallet","Manage Rewards"],["settings","System Settings"]].map(([icon,label]) => <div className="admin-action-tile" key={label}><Icon name={icon} size={21} /><span>{label}</span></div>)}
+              {[["users","Manage Users"],["file","Review Reports"],["heart","Medical Requests"],["support","Support Tickets"],["wallet","Manage Rewards"],["settings","System Settings"]].map(([icon,label]) => label === "Medical Requests" ? <Link className="admin-action-tile" key={label} to="/admin/medical-exceptions"><Icon name={icon} size={21} /><span>{label}</span></Link> : <div className="admin-action-tile" key={label}><Icon name={icon} size={21} /><span>{label}</span></div>)}
             </div>
           </article>
         </section>
