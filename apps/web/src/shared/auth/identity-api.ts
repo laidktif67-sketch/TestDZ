@@ -38,6 +38,14 @@ export const identityApi = {
     return getClient().auth.getUser();
   },
 
+  getAccountStatus(userId: string) {
+    return getClient()
+      .from("profiles")
+      .select("is_banned")
+      .eq("id", userId)
+      .maybeSingle();
+  },
+
   getUserRoles(userId: string): Promise<AccountRole[]> {
     const query = getClient()
       .from("user_roles")
