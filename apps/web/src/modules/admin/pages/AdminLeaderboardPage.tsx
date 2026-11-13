@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-leaderboard.css";
+import AdminSidebar from "../components/AdminSidebar";
 
 type Role = "Developer" | "Tester";
 type Category = "Overall" | "Developers" | "Testers" | "Apps" | "Cohorts";
@@ -41,7 +42,7 @@ export default function AdminLeaderboardPage(){
  const move=(id:number,direction:-1|1)=>setLeaders(current=>{const next=[...current];const index=next.findIndex(x=>x.id===id);const target=index+direction;if(index<0||target<0||target>=next.length)return current;[next[index],next[target]]=[next[target],next[index]];return next;});
  const categories:Category[]=["Overall","Developers","Testers","Apps","Cohorts"];
  return <main className="admin-dashboard lb-page">
-  <aside className="admin-sidebar"><Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link><div className="admin-sidebar-label">Workspace</div><nav className="admin-nav" aria-label="Admin navigation">{nav.map(([label,icon,path])=><Link key={label} to={path} className={"admin-nav-item "+(label==="Leaderboard"?"active":"")}><span className="lb-nav-symbol">{icon}</span><span>{label}</span></Link>)}</nav><div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div></aside>
+  <aside className="admin-sidebar"><Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link><div className="admin-sidebar-label">Workspace</div><AdminSidebar activePath="/admin/leaderboard" /><div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div></aside>
   <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><span>⌕</span><input aria-label="Search admin workspace" placeholder="Search users, developers, tests, or anything..."/></label><div className="admin-top-actions"><button type="button" aria-label="Notifications" className="admin-icon-button">♧<span>3</span></button><button type="button" aria-label="Messages" className="admin-icon-button">✉<span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span><span>⌄</span></div></div></header>
    <div className="admin-content lb-content">
     <section className="lb-hero"><div className="lb-hero-icon">🏆</div><div><h1>Leaderboard Management</h1><p>Manage rankings and rewards for top performers</p></div><div className="lb-hero-actions"><select aria-label="Leaderboard date range" value={range} onChange={e=>setRange(e.target.value)}><option>Last 7 Days</option><option>Last 30 Days</option><option>Last 90 Days</option><option>All Time</option></select><button type="button" onClick={()=>setNotice("Preview refreshed. Live ranking sync is not connected.")}>↻　Refresh</button></div></section>
