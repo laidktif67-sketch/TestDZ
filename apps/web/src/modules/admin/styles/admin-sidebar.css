@@ -21,3 +21,6 @@
 
 /* Mobile drawer indentation follows the current writing direction. */
 @media(max-width:850px){.admin-sidebar .admin-sidebar-nav.is-mobile-open .admin-sidebar-subitem{margin-inline-start:8px;margin-left:0}}
+
+/* Pages that use the shared sidebar already render their own WORKSPACE label. */
+.admin-sidebar:has(.admin-sidebar-nav)>.admin-sidebar-label{display:none}
