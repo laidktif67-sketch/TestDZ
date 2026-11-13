@@ -53,7 +53,7 @@ select is(
 select throws_ok(
   $$insert into public.support_ticket_messages (ticket_id, sender_id, body)
     values ('22000000-0000-4000-8000-000000000001','21000000-0000-4000-8000-000000000002','Forged support sender')$$,
-  '42501',
+  '42501', null,
   'requester A cannot forge requester B as support message sender'
 );
 
@@ -80,7 +80,7 @@ select is(
 select throws_ok(
   $$insert into public.support_tickets (user_id, requester_role, subject, category, description)
     values ('21000000-0000-4000-8000-000000000001','developer','Forged developer role','technical','Requester A cannot create a ticket as a role they do not hold.')$$,
-  '42501',
+  '42501', null,
   'tester A cannot create a support ticket under the developer requester role'
 );
 
@@ -110,14 +110,14 @@ select is(
 select throws_ok(
   $$insert into public.support_ticket_messages (ticket_id, sender_id, body)
     values ('22000000-0000-4000-8000-000000000001','21000000-0000-4000-8000-000000000002','Cross-ticket write must fail')$$,
-  '42501',
+  '42501', null,
   'requester B cannot append a message to requester A ticket'
 );
 
 select throws_ok(
   $$insert into storage.objects (bucket_id, name)
     values ('support-attachments','22000000-0000-4000-8000-000000000001/21000000-0000-4000-8000-000000000002/forged.txt')$$,
-  '42501',
+  '42501', null,
   'requester B cannot upload into requester A ticket folder'
 );
 
