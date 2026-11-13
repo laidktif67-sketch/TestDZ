@@ -9,7 +9,7 @@ const triggerBlock = workflow.match(/^on:\s*\n([\s\S]*?)(?=^[^\s#]|\s*$)/m)?.[1]
 assert.match(triggerBlock, /^\s{2}workflow_dispatch:/m, "deployment must be manual");
 assert.doesNotMatch(triggerBlock, /^\s{2}(push|pull_request|schedule):/m, "deployment must not run automatically");
 
-assert.match(workflow, /if: github\.ref == 'refs\/heads\/main'/, "deployment must originate from protected main");
+assert.match(workflow, /if: github\.ref == 'refs\/heads\/main'/, "deployment must originate from main only");
 assert.match(workflow, /environment:\s*testdz-rebuild-migrations\b/, "deployment must use the approval-gated GitHub Environment");
 assert.match(workflow, /test "\$SUPABASE_PROJECT_REF" = "ouzppgsvwsgtqyabkwjk"/, "target must be TestDZ-Rebuild only");
 assert.doesNotMatch(workflow, /naqjjykcglxiobkmdllj/, "legacy TestDZ project ref must never appear");
