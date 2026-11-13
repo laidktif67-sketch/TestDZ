@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-apps-management.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 type AppStatus = "Approved" | "Pending" | "Rejected" | "Suspended";
 type AppRecord = { id: string; name: string; description: string; developer: string; handle: string; category: string; version: string; status: AppStatus; submitted: string; downloads: string; activeUsers: string };
@@ -38,7 +39,7 @@ export default function AdminAppsManagementPage() {
    <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div>
   </aside>
   <section className="admin-main">
-   <header className="admin-topbar"><label className="admin-search"><span>⌕</span><input aria-label="Search apps and developers" placeholder="Search users, apps, or developers..." value={query} onChange={event=>setQuery(event.target.value)}/></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications">♧<span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages">✉<span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
+   <header className="admin-topbar"><label className="admin-search"><AdminIcon name="search" size={18}/><input aria-label="Search apps and developers" placeholder="Search users, apps, or developers..." value={query} onChange={event=>setQuery(event.target.value)}/></label><div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell" size={18}/><span>3</span></button><button type="button" className="admin-icon-button" aria-label="Messages"><AdminIcon name="mail" size={18}/><span>5</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div></header>
    <div className="admin-content apps-content">
     <section className="apps-hero"><div className="apps-hero-icon">◇</div><div><span>TESTDZ · ADMIN WORKSPACE</span><h1>Apps Management</h1><p>Review and manage all submitted applications</p></div><span className="apps-period">▦　Last 30 Days　⌄</span></section>
     <div className="apps-demo-banner"><strong>DEMO MODE</strong><span>Sample app records only. Status actions below are local previews and do not update production data.</span></div>
