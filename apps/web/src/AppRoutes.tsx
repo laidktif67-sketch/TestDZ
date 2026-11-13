@@ -1,18 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { publicRouteElements } from "./routes/publicRoutes";
 import AppsPage from "./modules/developer/pages/DeveloperAppsPage";
 import AppDetailPage from "./modules/developer/pages/DeveloperAppDetailPage";
-import AuthPage from "./pages/AuthPage";
-import SignupSuccessPage from "./pages/SignupSuccessPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import PasswordResetSuccessPage from "./pages/PasswordResetSuccessPage";
-import InvalidOtpPage from "./pages/InvalidOtpPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import InterestsPage from "./pages/InterestsPage";
-import LandingPage from "./pages/LandingPage";
-import LegalPage from "./pages/LegalPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import AuthCallbackPage from "./pages/AuthCallbackPage";
 import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
 import MyTestsPage from "./modules/tester/pages/MyTestsPage";
 import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
@@ -98,17 +89,7 @@ import RoleGuard, { RoleHomeRedirect } from "./shared/guards/RoleGuard";
 export default function AppRoutes() {
   return (
     <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/terms" element={<LegalPage kind="terms" />} />
-        <Route path="/privacy" element={<LegalPage kind="privacy" />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/signup-success" element={<SignupSuccessPage />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/password-reset-success" element={<PasswordResetSuccessPage />} />
-        <Route path="/invalid-otp" element={<InvalidOtpPage />} />
+        {publicRouteElements}
 
         <Route element={<AuthGuard />}>
           <Route element={<OnboardingGuard />}>

@@ -2,9 +2,12 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const routeFile = resolve("apps/web/src/AppRoutes.tsx");
+const publicRouteFile = resolve("apps/web/src/routes/publicRoutes.tsx");
 const source = readFileSync(routeFile, "utf8");
-const routeElementCount = (source.match(/<Route\b/g) ?? []).length;
-const pathCount = (source.match(/<Route\s+path=/g) ?? []).length;
+const publicSource = readFileSync(publicRouteFile, "utf8");
+const allRouteSource = `${source}\n${publicSource}`;
+const routeElementCount = (allRouteSource.match(/<Route\b/g) ?? []).length;
+const pathCount = (allRouteSource.match(/<Route\s+(?:key="[^"]+"\s+)?path=/g) ?? []).length;
 
 const requiredPaths = [
   'path="/"',
@@ -31,6 +34,10 @@ if (pathCount !== 96) {
 
 if (routeElementCount < pathCount) {
   errors.push(`Route element count (${routeElementCount}) is lower than explicit path count (${pathCount}).`);
+}
+
+if (!source.includes("{publicRouteElements}") || !publicSource.includes("export const publicRouteElements")) {
+  errors.push("Public routes must be composed through the publicRouteElements module.");
 }
 
 if (missingPaths.length > 0) {
