@@ -2123,6 +2123,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      submit_assignment_checkin: {
+        Args: { p_assignment_id: string; p_note?: string | null }
+        Returns: Json
+      }
+
       add_cohort_test: {
         Args: { p_cohort_id: string; p_test_id: string }
         Returns: number
