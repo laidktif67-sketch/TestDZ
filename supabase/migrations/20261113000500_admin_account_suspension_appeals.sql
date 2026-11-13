@@ -112,9 +112,13 @@ begin
     jsonb_build_object('suspension_id', v_suspension_id, 'appeal_deadline', now() + interval '7 days')
   );
 
-  insert into public.notifications (user_id, type, title, body, data)
+  insert into public.notifications (user_id, recipient_role, type, title, body, data)
   values (
-    p_user_id, 'account_suspended', 'Account suspended',
+    p_user_id,
+    case when exists (select 1 from public.user_roles where user_id = p_user_id and role = 'developer')
+      and not exists (select 1 from public.user_roles where user_id = p_user_id and role = 'tester')
+      then 'developer' else 'tester' end,
+    'account_suspended', 'Account suspended',
     'Your TestDZ account has been suspended. You may submit one appeal within 7 days.',
     jsonb_build_object('suspension_id', v_suspension_id, 'appeal_deadline', now() + interval '7 days')
   );
@@ -241,9 +245,12 @@ begin
     jsonb_build_object('appeal_id', p_appeal_id, 'resolution', btrim(p_resolution))
   );
 
-  insert into public.notifications (user_id, type, title, body, data)
+  insert into public.notifications (user_id, recipient_role, type, title, body, data)
   values (
     v_appeal.user_id,
+    case when exists (select 1 from public.user_roles where user_id = v_appeal.user_id and role = 'developer')
+      and not exists (select 1 from public.user_roles where user_id = v_appeal.user_id and role = 'tester')
+      then 'developer' else 'tester' end,
     case when p_decision = 'accepted' then 'account_reinstated' else 'account_appeal_rejected' end,
     case when p_decision = 'accepted' then 'Account reinstated' else 'Appeal reviewed' end,
     case when p_decision = 'accepted'
@@ -306,9 +313,13 @@ begin
     jsonb_build_object('reason', btrim(p_reason))
   );
 
-  insert into public.notifications (user_id, type, title, body, data)
+  insert into public.notifications (user_id, recipient_role, type, title, body, data)
   values (
-    p_user_id, 'account_reinstated', 'Account reinstated',
+    p_user_id,
+    case when exists (select 1 from public.user_roles where user_id = p_user_id and role = 'developer')
+      and not exists (select 1 from public.user_roles where user_id = p_user_id and role = 'tester')
+      then 'developer' else 'tester' end,
+    'account_reinstated', 'Account reinstated',
     'An administrator has lifted your account suspension.',
     jsonb_build_object('reason', btrim(p_reason))
   );
