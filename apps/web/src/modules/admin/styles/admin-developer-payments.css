@@ -7,3 +7,6 @@
 .dp-page .dp-hero{background:linear-gradient(115deg,#eaf3ff,#f4f8ff 55%,#e8f7f4)}
 .dp-page .dp-demo{line-height:1.5}
 @media(max-width:900px){.dp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dp-toolbar{align-items:flex-start;flex-direction:column}.dp-filters{width:100%;flex-wrap:wrap}.dp-filters label{flex:1}.dp-filters input{width:100%}}
+
+/* Shared vector icon alignment: keep icons centered and prevent flex shrink. */
+.dp-kpis article>i svg,.dp-hero-icon svg,.dp-toolbar svg{display:block;flex:none}
