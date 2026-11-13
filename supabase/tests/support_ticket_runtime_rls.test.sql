@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(17);
 
 -- Two requesters and one support agent; all fixtures are transaction-scoped.
 insert into auth.users (
