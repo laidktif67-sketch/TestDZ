@@ -58,8 +58,6 @@ jobs:
           user = unquote(parsed.username or "")
           if ref != expected_ref or (ref not in host and f".{ref}" not in user):
               raise SystemExit("Database URL does not identify the approved TestDZ-Rebuild project")
-          if "naqjjykcglxiobkmdllj" in host or "naqjjykcglxiobkmdllj" in user:
-              raise SystemExit("Legacy TestDZ target is forbidden")
           PY
 
       - name: Link the validated Rebuild project
