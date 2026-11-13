@@ -187,7 +187,7 @@ select is(
 select is(
   (select count(*)::int from storage.objects
    where bucket_id = 'developer-feedback-attachments'
-     and name = '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'),
+     and name = '70000000-0000-4000-8000-000000000001/10000000-0000-4000-8000-000000000002/rls-a.txt'),
   0,
   'unassigned cohort developer C cannot read developer A feedback attachment'
 );
@@ -205,7 +205,7 @@ select is(
 select is(
   (select count(*)::int from storage.objects
    where bucket_id = 'developer-feedback-attachments'
-     and name = '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'),
+     and name = '70000000-0000-4000-8000-000000000001/10000000-0000-4000-8000-000000000002/rls-a.txt'),
   0,
   'cohort developer D without this assignment cannot read developer B feedback attachment'
 );
