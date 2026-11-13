@@ -56,6 +56,7 @@ import AdminNotificationsPage from "./modules/admin/pages/AdminNotificationsPage
 import AdminSystemMonitoringPage from "./modules/admin/pages/AdminSystemMonitoringPage";
 import AdminSystemLogsPage from "./modules/admin/pages/AdminSystemLogsPage";
 import AdminFinancialPage from "./modules/admin/pages/AdminFinancialPage";
+import AdminTesterWithdrawalsPage from "./modules/admin/pages/AdminTesterWithdrawalsPage";
 import AdminDevelopersPage from "./modules/admin/pages/AdminDevelopersPage";
 import AdminTestersPage from "./modules/admin/pages/AdminTestersPage";
 import AdminTestsPage from "./modules/admin/pages/AdminTestsPage";
@@ -142,6 +143,7 @@ export default function App() {
               <Route path="/admin/monitoring" element={<AdminSystemMonitoringPage />} />
               <Route path="/admin/logs" element={<AdminSystemLogsPage />} />
               <Route path="/admin/financial" element={<AdminFinancialPage />} />
+              <Route path="/admin/tester-withdrawals" element={<AdminTesterWithdrawalsPage />} />
               <Route path="/admin/medical-exceptions" element={<AdminMedicalExceptionsPage />} />
               <Route path="/admin/support" element={<AdminSupportCenterPage />} />
               <Route path="/admin/users" element={<AdminUserManagementPage />} />
