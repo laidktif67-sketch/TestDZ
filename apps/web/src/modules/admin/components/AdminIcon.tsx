@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type AdminIconName = "search" | "bell" | "mail" | "home" | "file" | "calendar" | "download" | "clock" | "wallet" | "card" | "shield" | "user" | "phone" | "pin" | "alert" | "check" | "close" | "refresh" | "arrow" | "gift" | "chart" | "settings";
+type AdminIconName = "search" | "bell" | "mail" | "home" | "file" | "calendar" | "download" | "clock" | "wallet" | "card" | "shield" | "user" | "phone" | "pin" | "alert" | "check" | "close" | "refresh" | "arrow" | "gift" | "chart" | "settings" | "info" | "flask" | "arrow-left" | "user-check";
 
 const paths: Record<AdminIconName, ReactNode> = {
  search: <><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 4.5 4.5"/></>,
@@ -18,6 +18,10 @@ const paths: Record<AdminIconName, ReactNode> = {
  phone: <><path d="M7 3H5a2 2 0 0 0-2 2c0 8.8 7.2 16 16 16a2 2 0 0 0 2-2v-2l-5-2-2 3a14 14 0 0 1-6-6l3-2z"/></>,
  pin: <><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,
  alert: <><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5m0 3h.01"/></>,
+ info: <><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></>,
+ flask: <><path d="M9 3h6M10 3v6l-5 9a2.4 2.4 0 0 0 2.1 3.6h9.8A2.4 2.4 0 0 0 19 18l-5-9V3"/><path d="M7.5 15h9"/></>,
+ "arrow-left": <><path d="M20 12H5"/><path d="m11 6-6 6 6 6"/></>,
+ "user-check": <><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></>,
  check: <path d="m5 12 4 4L19 6"/>,
  close: <path d="m6 6 12 12M18 6 6 18"/>,
  refresh: <><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.5-3"/></>,
