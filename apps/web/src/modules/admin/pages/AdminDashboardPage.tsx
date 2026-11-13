@@ -4,7 +4,7 @@ import "../styles/admin-dashboard.css";
 
 const metrics = [
   { icon: "flask", value: "4,780", label: "Active Tests", trend: "Operational snapshot", tone: "blue" },
-  { icon: "file", value: "29", label: "Items Awaiting Review", trend: "Across admin queues", tone: "amber" },
+  { icon: "file", value: "23", label: "Items Awaiting Review", trend: "Across admin queues", tone: "amber" },
   { icon: "support", value: "12", label: "Open Support Tickets", trend: "Support workload", tone: "purple" },
   { icon: "activity", value: "03", label: "Security Alerts", trend: "Requires monitoring", tone: "green" },
 ];
