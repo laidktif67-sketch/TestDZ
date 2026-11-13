@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "../styles/admin-sidebar.css";
 
-type AdminSidebarProps = { activePath: string };
+type AdminSidebarProps = { activePath: string; locale?: "ar" | "en" };
 type SidebarIconName =
   | "layout" | "users" | "code" | "user-check" | "flask" | "grid"
   | "clipboard" | "message-square" | "trophy" | "layers" | "heart-pulse"
@@ -86,43 +86,46 @@ function SidebarIcon({ name }: { name: SidebarIconName }) {
   return <svg {...common}>{shapes[name]}</svg>;
 }
 
-export default function AdminSidebar({ activePath }: AdminSidebarProps) {
+export default function AdminSidebar({ activePath, locale = "en" }: AdminSidebarProps) {
+  const isArabic = locale === "ar";
+  const labels: Record<string, string> = { Overview:"نظرة عامة", Users:"المستخدمون", Developers:"المطورون", Testers:"المختبرون", Tests:"الاختبارات", "Apps Management":"إدارة التطبيقات", Assignments:"التكليفات", "Reports & Reviews":"التقارير والمراجعات", Leaderboard:"لوحة المتصدرين", Cohorts:"مجموعات المختبرين", "Medical Exceptions":"الاستثناءات الطبية", "Support Center":"مركز الدعم", Notifications:"الإشعارات", Analytics:"التحليلات", "System Monitoring":"مراقبة النظام", "System Logs":"سجلات النظام", "Audit Trail":"سجل التدقيق", Settings:"الإعدادات", "Financial Overview":"نظرة عامة مالية", "Tester Withdrawals":"سحوبات المختبرين", "Rewards Management":"إدارة المكافآت", "Transactions Ledger":"سجل المعاملات", "Developer Payments":"مدفوعات المطورين", Financial:"الشؤون المالية", WORKSPACE:"مساحة العمل", FINANCE:"المالية", SYSTEM:"النظام", Menu:"القائمة", "Close menu":"إغلاق القائمة", "Open admin navigation":"فتح قائمة الإدارة", "Close admin navigation":"إغلاق قائمة الإدارة", "Admin navigation":"قائمة الإدارة" };
+  const labelText = (value: string) => isArabic ? (labels[value] ?? value) : value;
   const [mobileOpen, setMobileOpen] = useState(false);
   const isActive = (path: string) =>
     activePath === path || (path !== "/admin" && activePath.startsWith(path + "/"));
 
   return (
-    <nav className={"admin-nav admin-sidebar-nav" + (mobileOpen ? " is-mobile-open" : "")} aria-label="Admin navigation">
-      <button type="button" className="admin-sidebar-mobile-toggle" aria-expanded={mobileOpen} aria-label={mobileOpen ? "Close admin navigation" : "Open admin navigation"} onClick={() => setMobileOpen(open => !open)}><svg className="admin-sidebar-menu-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{mobileOpen ? <path d="m6 6 12 12M18 6 6 18" /> : <path d="M3 6h18M3 12h18M3 18h18" />}</svg><span>{mobileOpen ? "Close menu" : "Menu"}</span></button>
-      <div className="admin-sidebar-section-label">WORKSPACE</div>
+    <nav className={"admin-nav admin-sidebar-nav" + (mobileOpen ? " is-mobile-open" : "")} aria-label={labelText("Admin navigation")}>
+      <button type="button" className="admin-sidebar-mobile-toggle" aria-expanded={mobileOpen} aria-label={labelText(mobileOpen ? "Close admin navigation" : "Open admin navigation")} onClick={() => setMobileOpen(open => !open)}><svg className="admin-sidebar-menu-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{mobileOpen ? <path d="m6 6 12 12M18 6 6 18" /> : <path d="M3 6h18M3 12h18M3 18h18" />}</svg><span>{labelText(mobileOpen ? "Close menu" : "Menu")}</span></button>
+      <div className="admin-sidebar-section-label">{labelText("WORKSPACE")}</div>
       {primaryItems.map(([label, path, icon]) => (
         <Link key={path} to={path} aria-current={isActive(path) ? "page" : undefined}
           onClick={() => setMobileOpen(false)} className={"admin-nav-item" + (isActive(path) ? " active" : "")}>
           <span className="admin-sidebar-icon" aria-hidden="true"><SidebarIcon name={icon} /></span>
-          <span>{label}</span>
+          <span>{labelText(label)}</span>
         </Link>
       ))}
-      <div className="admin-sidebar-section-label">FINANCE</div>
+      <div className="admin-sidebar-section-label">{labelText("FINANCE")}</div>
       <div className={"admin-sidebar-group" + (financialItems.some(([, path]) => path === activePath) ? " is-active" : "")}>
         <div className="admin-sidebar-group-title">
           <span className="admin-sidebar-icon" aria-hidden="true"><SidebarIcon name="wallet" /></span>
-          <span>Financial</span>
+          <span>{labelText("Financial")}</span>
           <span className="admin-sidebar-chevron" aria-hidden="true"><SidebarIcon name="chevron-down" /></span>
         </div>
         {financialItems.map(([label, path, icon]) => (
           <Link key={path} to={path} aria-current={activePath === path ? "page" : undefined}
             onClick={() => setMobileOpen(false)} className={"admin-sidebar-subitem" + (activePath === path ? " active" : "")}>
             <span className="admin-sidebar-icon" aria-hidden="true"><SidebarIcon name={icon} /></span>
-            <span>{label}</span>
+            <span>{labelText(label)}</span>
           </Link>
         ))}
       </div>
-      <div className="admin-sidebar-section-label">SYSTEM</div>
+      <div className="admin-sidebar-section-label">{labelText("SYSTEM")}</div>
       {systemItems.map(([label, path, icon]) => (
         <Link key={path} to={path} aria-current={isActive(path) ? "page" : undefined}
           className={"admin-nav-item" + (isActive(path) ? " active" : "")}>
           <span className="admin-sidebar-icon" aria-hidden="true"><SidebarIcon name={icon} /></span>
-          <span>{label}</span>
+          <span>{labelText(label)}</span>
         </Link>
       ))}
     </nav>
