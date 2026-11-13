@@ -51,7 +51,8 @@ async function createActor(label, roles) {
     extraHeaders: { Prefer: "resolution=merge-duplicates,return=minimal" }
   }, `create ${label} profile`);
   await must("/rest/v1/user_roles", {
-    method: "POST", body: roles.map(role => ({ user_id: created.id, role }))
+    method: "POST", body: roles.map(role => ({ user_id: created.id, role })),
+    extraHeaders: { Prefer: "resolution=ignore-duplicates,return=minimal" }
   }, `assign ${label} roles`);
   const session = await must("/auth/v1/token?grant_type=password", {
     method: "POST", token: anonKey, body: { email, password }
@@ -230,6 +231,9 @@ try {
   await removeRows("tests", `id=in.(${testTesterId},${testDeveloperId})`, "tests");
   await removeRows("apps", `id=in.(${appTesterId},${appDeveloperId})`, "apps");
   for (const userId of createdUsers.reverse()) {
+    // Auth bootstrap creates a wallet row referencing the profile; remove this
+    // test-only dependent row before deleting the Auth user/profile.
+    await removeRows("wallets", `user_id=eq.${userId}`, `test wallet for ${userId}`);
     const result = await request(`/auth/v1/admin/users/${userId}`, { method: "DELETE" });
     if (!result.response.ok) process.stderr.write(`Auth cleanup warning (${userId}): ${result.response.status} ${result.text}\n`);
   }
