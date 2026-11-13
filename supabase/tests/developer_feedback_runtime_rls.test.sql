@@ -2,8 +2,8 @@ begin;
 
 select plan(16);
 
--- Isolated fixture graph: two developers, two testers, two tests, and one
--- feedback record per tester. All rows are rolled back at the end of the test.
+-- Isolated fixture graph: four cohort developers and one non-member. Each
+-- member owns one test; assignments only cross between different members.
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
@@ -70,15 +70,15 @@ values
   ('60000000-0000-4000-8000-000000000005','50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001');
 
 select throws_ok(
-  $insert into public.assignments (cohort_id, test_id, tester_id)
-    values ('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001')$,
+  $sql$insert into public.assignments (cohort_id, test_id, tester_id)
+    values ('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001')$sql$,
   '23503', null,
   'a user outside the cohort cannot be assigned as a tester'
 );
 
 select throws_ok(
-  $insert into public.assignments (cohort_id, test_id, tester_id)
-    values ('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001')$,
+  $sql$insert into public.assignments (cohort_id, test_id, tester_id)
+    values ('50000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001')$sql$,
   'P0001', 'SELF_TEST_FORBIDDEN',
   'a developer cannot be assigned to test their own test'
 );
@@ -122,7 +122,7 @@ select throws_ok(
 select is(
   (select count(*)::int from public.developer_feedback_events
    where feedback_id = '70000000-0000-4000-8000-000000000001'
-     and actor_id = '20000000-0000-4000-8000-000000000001'
+     and actor_id = '10000000-0000-4000-8000-000000000002'
      and event_type = 'message_sent'),
   1,
   'message insert creates exactly one database-authored audit event'
@@ -162,7 +162,7 @@ select is(
 select is(
   (select count(*)::int from storage.objects
    where bucket_id = 'developer-feedback-attachments'
-     and name = '70000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/rls-a.txt'),
+     and name = '70000000-0000-4000-8000-000000000001/10000000-0000-4000-8000-000000000002/rls-a.txt'),
   1,
   'owning developer A can read a participant feedback attachment'
 );
