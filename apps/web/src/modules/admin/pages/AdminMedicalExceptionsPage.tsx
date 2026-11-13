@@ -14,16 +14,16 @@ type MedicalRequest = {
 };
 
 const initialRequests: MedicalRequest[] = [
-  { id: "ME-001", tester: "سارة بن عيسى", initials: "سع", assignment: "TST-20251113-001", test: "اختبار واجهة User", submittedAt: "2025/11/13 14:30", dates: ["2025-11-13","2025-11-14"], reason: "أعاني of حالة صحية تستدعي الراحة الطبية لفترة قصيرة، وأرجو إعفائي of الADاركة خلال هذه الdays.", status: "pending" },
+  { id: "ME-001", tester: "سارة بن عيسى", initials: "سع", assignment: "TST-20251113-001", test: "User Interface Test", submittedAt: "2025/11/13 14:30", dates: ["2025-11-13","2025-11-14"], reason: "I need a short period of medical rest and request an exemption from participation on these dates.", status: "pending" },
   { id: "ME-002", tester: "أحمد شرياك", initials: "أش", assignment: "TST-20251112-004", test: "Shopping App Test", submittedAt: "2025/11/13 12:15", dates: ["2025-11-12"], reason: "I need a short rest period due to a temporary health issue.", status: "pending" },
-  { id: "ME-003", tester: "مريم دهشان", initials: "مد", assignment: "TST-20251110-002", test: "Performance Test", submittedAt: "2025/11/12 16:20", dates: ["2025-11-08","2025-11-09"], reason: "تShowingت لa temporary health issue ofعتني of إكمال days الADاركة المطلوبة.", status: "rejected", reviewer: "ADرف النظام", reviewedAt: "2025/11/12 17:10", reviewNote: "يرجى تقديم تواريخ ضof فترة التكليف النشط." },
-  { id: "ME-004", tester: "علي بن عمار", initials: "عب", assignment: "TST-20251109-006", test: "Compatibility Test", submittedAt: "2025/11/12 11:45", dates: ["2025-11-11"], reason: "أطلب إعفاءً لday واحد بسبب موعد طبي.", status: "approved", reviewer: "ADرف النظام", reviewedAt: "2025/11/13 09:20", reviewNote: "تمت الApprove على day الإعفاء." },
-  { id: "ME-005", tester: "ياسمين بوزيان", initials: "يب", assignment: "TST-20251108-003", test: "Quality Assurance Test", submittedAt: "2025/11/11 10:30", dates: ["2025-11-10"], reason: "ظرف صحي طارئ ofعني of تسجيل الدخول.", status: "approved", reviewer: "ADرف النظام", reviewedAt: "2025/11/11 11:45", reviewNote: "تمت الApprove." },
-  { id: "ME-006", tester: "إكرام دهان", initials: "إد", assignment: "TST-20251107-005", test: "اختبار واجهة User", submittedAt: "2025/11/10 09:20", dates: ["2025-11-07","2025-11-08"], reason: "أحتاج إلى إعفاء مؤقت بسبب a temporary health issue.", status: "rejected", reviewer: "ADرف النظام", reviewedAt: "2025/11/10 12:00", reviewNote: "The dates do not match the assignment period." },
+  { id: "ME-003", tester: "مريم دهشان", initials: "مد", assignment: "TST-20251110-002", test: "Performance Test", submittedAt: "2025/11/12 16:20", dates: ["2025-11-08","2025-11-09"], reason: "A health issue prevented me from completing the required participation days.", status: "rejected", reviewer: "System Administrator", reviewedAt: "2025/11/12 17:10", reviewNote: "Please provide dates within the active assignment period." },
+  { id: "ME-004", tester: "علي بن عمار", initials: "عب", assignment: "TST-20251109-006", test: "Compatibility Test", submittedAt: "2025/11/12 11:45", dates: ["2025-11-11"], reason: "I request a one-day exemption due to a medical appointment.", status: "approved", reviewer: "System Administrator", reviewedAt: "2025/11/13 09:20", reviewNote: "The exemption day has been approved." },
+  { id: "ME-005", tester: "ياسمين بوزيان", initials: "يب", assignment: "TST-20251108-003", test: "Quality Assurance Test", submittedAt: "2025/11/11 10:30", dates: ["2025-11-10"], reason: "An urgent health issue prevented me from signing in.", status: "approved", reviewer: "System Administrator", reviewedAt: "2025/11/11 11:45", reviewNote: "Approved." },
+  { id: "ME-006", tester: "إكرام دهان", initials: "إد", assignment: "TST-20251107-005", test: "User Interface Test", submittedAt: "2025/11/10 09:20", dates: ["2025-11-07","2025-11-08"], reason: "I need a temporary exemption due to a health issue.", status: "rejected", reviewer: "System Administrator", reviewedAt: "2025/11/10 12:00", reviewNote: "The dates do not match the assignment period." },
 ];
 
 const statusText: Record<RequestStatus,string> = { pending: "Pending Review", approved: "Approved", rejected: "Rejected" };
-const formatDate = (value: string) => new Intl.DateTimeFormat("ar-DZ", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Africa/Algiers" }).format(new Date(value + "T12:00:00"));
+const formatDate = (value: string) => new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Africa/Algiers" }).format(new Date(value + "T12:00:00"));
 
 function Icon({ name, size = 18 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
@@ -61,7 +61,7 @@ export default function AdminMedicalExceptionsPage() {
       setNotice("Please provide a reason before rejecting this request.");
       return;
     }
-    setRequests((current) => current.map((request) => request.id === selected.id ? { ...request, status: decision, reviewer: "Current Admin (Demo)", reviewedAt: new Date().toLocaleString("ar-DZ"), reviewNote: note.trim() } : request));
+    setRequests((current) => current.map((request) => request.id === selected.id ? { ...request, status: decision, reviewer: "Current Admin (Demo)", reviewedAt: new Date().toLocaleString("en-GB"), reviewNote: note.trim() } : request));
     setNotice("Request status updated in the demo preview only. No decision was sent to the database.");
     setDecision(null);
   }
@@ -69,15 +69,15 @@ export default function AdminMedicalExceptionsPage() {
   return <main className="admin-dashboard admin-medical-page" dir="ltr">
     <aside className="admin-sidebar">
       <Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link>
-      <div className="admin-sidebar-label keep-sidebar-label">Administration</div>
+      <div className="admin-sidebar-label keep-sidebar-label">الإدارة</div>
       <AdminSidebar activePath="/admin/medical-exceptions" locale="en" />
-      <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform Administrator</small></div><span className="admin-online" /></div>
+      <div className="admin-sidebar-footer"><span className="admin-avatar">مش</span><div><strong>المشرف</strong><small>Platform Administrator</small></div><span className="admin-online" /></div>
     </aside>
 
     <section className="admin-main">
       <header className="admin-topbar">
         <label className="admin-search"><AdminIcon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by tester or request ID..." /></label>
-        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div>
+        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">مش</span><span>المشرف</span></div></div>
       </header>
 
       <div className="admin-content medical-content">
@@ -92,40 +92,40 @@ export default function AdminMedicalExceptionsPage() {
         <section className="medical-stats" aria-label="Request Summary">
           <article><span className="medical-stat-icon blue"><Icon name="file" size={23} /></span><div><strong>{counts.all}</strong><small>Total Requests</small></div></article>
           <article><span className="medical-stat-icon amber"><Icon name="clock" size={23} /></span><div><strong>{counts.pending}</strong><small>Pending Review</small></div></article>
-          <article><span className="medical-stat-icon green"><Icon name="check" size={23} /></span><div><strong>{counts.approved}</strong><small>تمت الApprove</small></div></article>
-          <article><span className="medical-stat-icon red"><Icon name="close" size={23} /></span><div><strong>{counts.rejected}</strong><small>تم الReject</small></div></article>
+          <article><span className="medical-stat-icon green"><Icon name="check" size={23} /></span><div><strong>{counts.approved}</strong><small>تمت الموافقة</small></div></article>
+          <article><span className="medical-stat-icon red"><Icon name="close" size={23} /></span><div><strong>{counts.rejected}</strong><small>تم الرفض</small></div></article>
         </section>
 
-        {notice && <div className="medical-notice" role="status">{notice}<button type="button" onClick={() => setNotice("")} aria-label="Close">×</button></div>}
+        {notice && <div className="medical-notice" role="status">{notice}<button type="button" onClick={() => setNotice("")} aria-label="إغلاق">×</button></div>}
 
         <section className="medical-workspace">
           <article className="admin-panel medical-list-panel">
             <div className="admin-panel-heading"><h2><Icon name="file" /> Medical Exception Requests</h2><span className="admin-total-badge">{counts.pending} Pending</span></div>
-            <div className="medical-filters" role="group" aria-label="Filter by status">
+            <div className="medical-filters" role="group" aria-label="Filter by Status">
               {(["all","pending","approved","rejected"] as const).map((value) => <button type="button" key={value} className={filter === value ? "selected" : ""} onClick={() => setFilter(value)}>{value === "all" ? "All Statuses" : statusText[value]} <b>{counts[value]}</b></button>)}
             </div>
-            <div className="medical-table-wrap"><table className="medical-table"><thead><tr><th>Tester</th><th>Requested Dates</th><th>Status</th><th>الDetails</th></tr></thead><tbody>
+            <div className="medical-table-wrap"><table className="medical-table"><thead><tr><th>Tester</th><th>Requested Dates</th><th>Status</th><th>Details</th></tr></thead><tbody>
               {filtered.map((request) => <tr key={request.id} className={selectedId === request.id ? "chosen" : ""}><td><span className="medical-tester-cell"><i>{request.initials}</i><span><strong>{request.tester}</strong><small>{request.id}</small></span></span></td><td>{request.dates.length} {request.dates.length === 1 ? "day" : "days"}</td><td><span className={"medical-status " + request.status}>{statusText[request.status]}</span></td><td><button className="medical-view-button" type="button" onClick={() => {setSelectedId(request.id);setDecision(null);setNote("");setNotice("");}}>View Request</button></td></tr>)}
               {filtered.length === 0 && <tr><td colSpan={4} className="medical-empty">No requests match your search or filters.</td></tr>}
             </tbody></table></div>
-            <div className="medical-list-footer"><span>Showing {filtered.length} of {requests.length} demo requests</span><Link to="/admin">Back to Dashboard <Icon name="back" size={14} /></Link></div>
+            <div className="medical-list-footer"><span>Showing {filtered.length} من {requests.length} demo requests</span><Link to="/admin">Back to Dashboard <Icon name="back" size={14} /></Link></div>
           </article>
 
           <article className="admin-panel medical-detail-panel">
-            <div className="admin-panel-heading"><h2><Icon name="file" /> Details طلب الاستثناء</h2><span className={"medical-status " + selected.status}>{statusText[selected.status]}</span></div>
-            <div className="medical-profile"><span className="medical-profile-avatar">{selected.initials}</span><div><strong>{selected.tester}</strong><small>Tester · {selected.assignment}</small><small>{selected.test}</small></div></div>
+            <div className="admin-panel-heading"><h2><Icon name="file" /> Exception Request Details</h2><span className={"medical-status " + selected.status}>{statusText[selected.status]}</span></div>
+            <div className="medical-profile"><span className="medical-profile-avatar">{selected.initials}</span><div><strong>{selected.tester}</strong><small>مختبر · {selected.assignment}</small><small>{selected.test}</small></div></div>
             <div className="medical-meta-grid"><div><small>Submitted</small><strong>{selected.submittedAt}</strong></div><div><small>Requested Duration</small><strong>{selected.dates.length} day</strong></div></div>
             <section className="medical-detail-block"><h3><Icon name="calendar" /> Requested Exemption Dates</h3><div className="medical-date-chips">{selected.dates.map((date) => <span key={date}>{formatDate(date)}</span>)}</div></section>
-            <section className="medical-detail-block"><h3><Icon name="file" /> Request Reason of Tester</h3><blockquote>{selected.reason}</blockquote></section>
+            <section className="medical-detail-block"><h3><Icon name="file" /> Reason Provided by Tester</h3><blockquote>{selected.reason}</blockquote></section>
             {selected.status === "pending" ? <>
-              <section className="medical-decision"><h3>قرار Admin</h3><div className="medical-decision-options"><button type="button" className={decision === "approved" ? "approve active" : "approve"} onClick={() => {setDecision("approved");setNotice("");}}> <Icon name="check" /> Approve</button><button type="button" className={decision === "rejected" ? "reject active" : "reject"} onClick={() => {setDecision("rejected");setNotice("");}}> <Icon name="close" /> Reject</button></div><label htmlFor="medical-review-note">ملاحظة Admin {decision === "rejected" ? "(مطلوبة عند الReject)" : "(optional)"}</label><textarea id="medical-review-note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add a note explaining the decision..." /><small className="medical-char-count">{note.length}/2000</small></section>
+              <section className="medical-decision"><h3>Admin Decision</h3><div className="medical-decision-options"><button type="button" className={decision === "approved" ? "approve active" : "approve"} onClick={() => {setDecision("approved");setNotice("");}}> <Icon name="check" /> Approve</button><button type="button" className={decision === "rejected" ? "reject active" : "reject"} onClick={() => {setDecision("rejected");setNotice("");}}> <Icon name="close" /> Reject</button></div><label htmlFor="medical-review-note">Admin Note {decision === "rejected" ? "(required when rejecting)" : "(optional)"}</label><textarea id="medical-review-note" maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add a note explaining the decision..." /><small className="medical-char-count">{note.length}/2000</small></section>
               <button type="button" className="medical-save-button" disabled={!decision} onClick={saveDecision}>Save Demo Decision <Icon name="check" /></button>
             </> : <section className="medical-reviewed"><strong>This request has been reviewed</strong><span>Reviewed by: {selected.reviewer}</span><span>Date: {selected.reviewedAt}</span>{selected.reviewNote && <p>{selected.reviewNote}</p>}</section>}
-            <p className="medical-policy-note"><Icon name="shield" /> الApprove تسجل days الإعفاء وتمدد مهلة التكليف داخلياً. هذه الdays لا تُحتسب كdays تسجيل في Google Play ولا تofح نقاط تسجيل dayي.</p>
+            <p className="medical-policy-note"><Icon name="shield" /> Approved exemption days extend the assignment deadline internally. These days do not count as Google Play testing days and do not earn daily check-in points.</p>
           </article>
         </section>
 
-        <section className="admin-panel medical-audit-panel"><div className="admin-panel-heading"><h2><Icon name="clock" /> Recent Decisions</h2><span className="admin-panel-link">Demo Log</span></div><div className="medical-audit-items">{requests.filter((request) => request.status !== "pending").slice(0,3).map((request) => <div key={request.id}><span className={"medical-audit-icon " + request.status}><Icon name={request.status === "approved" ? "check" : "close"} /></span><span><strong>{request.status === "approved" ? "تمت الApprove على الطلب" : "تم Reject الطلب"} · {request.tester}</strong><small>{request.reviewedAt}</small></span></div>)}</div></section>
+        <section className="admin-panel medical-audit-panel"><div className="admin-panel-heading"><h2><Icon name="clock" /> Recent Decisions</h2><span className="admin-panel-link">Demo Log</span></div><div className="medical-audit-items">{requests.filter((request) => request.status !== "pending").slice(0,3).map((request) => <div key={request.id}><span className={"medical-audit-icon " + request.status}><Icon name={request.status === "approved" ? "check" : "close"} /></span><span><strong>{request.status === "approved" ? "Request approved" : "Request rejected"} · {request.tester}</strong><small>{request.reviewedAt}</small></span></div>)}</div></section>
       </div>
     </section>
   </main>;
