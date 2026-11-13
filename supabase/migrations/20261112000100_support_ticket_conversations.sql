@@ -59,7 +59,7 @@ with check (
   and exists (
     select 1 from public.support_tickets t
     where t.id = support_ticket_messages.ticket_id
-      and t.status <> 'closed'
+      and t.status not in ('closed')
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
   )
 );
@@ -117,22 +117,11 @@ create table if not exists public.support_ticket_events (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references public.support_tickets(id) on delete cascade,
   actor_id uuid references public.profiles(id) on delete set null,
-  event_type text not null check (event_type in ('created','status_changed','priority_changed')),
+  event_type text not null check (event_type in ('created','status_changed')),
   old_status text,
   new_status text,
-  old_priority text,
-  new_priority text,
   created_at timestamptz not null default now()
 );
-
-alter table public.support_ticket_events
-  add column if not exists old_priority text,
-  add column if not exists new_priority text;
-alter table public.support_ticket_events
-  drop constraint if exists support_ticket_events_event_type_check;
-alter table public.support_ticket_events
-  add constraint support_ticket_events_event_type_check
-  check (event_type in ('created','status_changed','priority_changed'));
 
 create index if not exists support_ticket_events_ticket_created_idx
   on public.support_ticket_events(ticket_id, created_at asc);
@@ -183,18 +172,6 @@ begin
     insert into public.support_ticket_events(ticket_id, actor_id, event_type, old_status, new_status)
     values (new.id, (select auth.uid()), 'status_changed', old.status, new.status);
   end if;
-
-  if new.priority is distinct from old.priority then
-    if not (select private.is_support_staff()) then
-      raise exception 'Only authorized support staff can change ticket priority'
-        using errcode = '42501';
-    end if;
-
-    new.updated_at := now();
-    insert into public.support_ticket_events(ticket_id, actor_id, event_type, old_priority, new_priority)
-    values (new.id, (select auth.uid()), 'priority_changed', old.priority, new.priority);
-  end if;
-
   return new;
 end;
 $function$;
@@ -208,11 +185,10 @@ for each row execute function private.audit_support_ticket_changes();
 
 drop trigger if exists support_tickets_audit_status_update on public.support_tickets;
 create trigger support_tickets_audit_status_update
-before update of status, priority on public.support_tickets
+before update of status on public.support_tickets
 for each row execute function private.audit_support_ticket_changes();
 
 drop policy if exists support_tickets_select_owner_or_admin on public.support_tickets;
-drop policy if exists support_tickets_select_owner_or_support on public.support_tickets;
 create policy support_tickets_select_owner_or_support
 on public.support_tickets for select to authenticated
 using (user_id = (select auth.uid()) or (select private.is_support_staff()));
@@ -245,11 +221,7 @@ with check (
   and (storage.foldername(name))[2] = (select auth.uid())::text
   and exists (
     select 1 from public.support_tickets t
-    where t.id = case
-      when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-      then ((storage.foldername(name))[1])::uuid
-      else null
-    end
+    where t.id = ((storage.foldername(name))[1])::uuid
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
       and t.status <> 'closed'
   )
@@ -263,11 +235,7 @@ using (
   and (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
   and exists (
     select 1 from public.support_tickets t
-    where t.id = case
-      when (storage.foldername(name))[1] ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-      then ((storage.foldername(name))[1])::uuid
-      else null
-    end
+    where t.id = ((storage.foldername(name))[1])::uuid
       and (t.user_id = (select auth.uid()) or (select private.is_support_staff()))
   )
 );
