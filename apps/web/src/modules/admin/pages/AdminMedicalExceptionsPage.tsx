@@ -69,15 +69,15 @@ export default function AdminMedicalExceptionsPage() {
   return <main className="admin-dashboard admin-medical-page" dir="ltr">
     <aside className="admin-sidebar">
       <Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link>
-      <div className="admin-sidebar-label keep-sidebar-label">الإدارة</div>
+      <div className="admin-sidebar-label keep-sidebar-label">Administration</div>
       <AdminSidebar activePath="/admin/medical-exceptions" locale="en" />
-      <div className="admin-sidebar-footer"><span className="admin-avatar">مش</span><div><strong>المشرف</strong><small>Platform Administrator</small></div><span className="admin-online" /></div>
+      <div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform Administrator</small></div><span className="admin-online" /></div>
     </aside>
 
     <section className="admin-main">
       <header className="admin-topbar">
         <label className="admin-search"><AdminIcon name="search" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by tester or request ID..." /></label>
-        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">مش</span><span>المشرف</span></div></div>
+        <div className="admin-top-actions"><button type="button" className="admin-icon-button" aria-label="Notifications"><AdminIcon name="bell" /><span>3</span></button><div className="admin-user-menu"><span className="admin-avatar">AD</span><span>Admin</span></div></div>
       </header>
 
       <div className="admin-content medical-content">
@@ -92,11 +92,11 @@ export default function AdminMedicalExceptionsPage() {
         <section className="medical-stats" aria-label="Request Summary">
           <article><span className="medical-stat-icon blue"><Icon name="file" size={23} /></span><div><strong>{counts.all}</strong><small>Total Requests</small></div></article>
           <article><span className="medical-stat-icon amber"><Icon name="clock" size={23} /></span><div><strong>{counts.pending}</strong><small>Pending Review</small></div></article>
-          <article><span className="medical-stat-icon green"><Icon name="check" size={23} /></span><div><strong>{counts.approved}</strong><small>تمت الموافقة</small></div></article>
-          <article><span className="medical-stat-icon red"><Icon name="close" size={23} /></span><div><strong>{counts.rejected}</strong><small>تم الرفض</small></div></article>
+          <article><span className="medical-stat-icon green"><Icon name="check" size={23} /></span><div><strong>{counts.approved}</strong><small>Approved</small></div></article>
+          <article><span className="medical-stat-icon red"><Icon name="close" size={23} /></span><div><strong>{counts.rejected}</strong><small>Rejected</small></div></article>
         </section>
 
-        {notice && <div className="medical-notice" role="status">{notice}<button type="button" onClick={() => setNotice("")} aria-label="إغلاق">×</button></div>}
+        {notice && <div className="medical-notice" role="status">{notice}<button type="button" onClick={() => setNotice("")} aria-label="Close">×</button></div>}
 
         <section className="medical-workspace">
           <article className="admin-panel medical-list-panel">
@@ -113,7 +113,7 @@ export default function AdminMedicalExceptionsPage() {
 
           <article className="admin-panel medical-detail-panel">
             <div className="admin-panel-heading"><h2><Icon name="file" /> Exception Request Details</h2><span className={"medical-status " + selected.status}>{statusText[selected.status]}</span></div>
-            <div className="medical-profile"><span className="medical-profile-avatar">{selected.initials}</span><div><strong>{selected.tester}</strong><small>مختبر · {selected.assignment}</small><small>{selected.test}</small></div></div>
+            <div className="medical-profile"><span className="medical-profile-avatar">{selected.initials}</span><div><strong>{selected.tester}</strong><small>Tester · {selected.assignment}</small><small>{selected.test}</small></div></div>
             <div className="medical-meta-grid"><div><small>Submitted</small><strong>{selected.submittedAt}</strong></div><div><small>Requested Duration</small><strong>{selected.dates.length} day</strong></div></div>
             <section className="medical-detail-block"><h3><Icon name="calendar" /> Requested Exemption Dates</h3><div className="medical-date-chips">{selected.dates.map((date) => <span key={date}>{formatDate(date)}</span>)}</div></section>
             <section className="medical-detail-block"><h3><Icon name="file" /> Reason Provided by Tester</h3><blockquote>{selected.reason}</blockquote></section>
