@@ -27,6 +27,10 @@ create table public.assignment_submissions (
 create index assignment_submissions_test_status_idx
   on public.assignment_submissions(test_id, status, submitted_at desc);
 
+alter table public.assignment_submissions
+  add constraint assignment_submissions_id_assignment_test_tester_key
+  unique (id, assignment_id, test_id, tester_id);
+
 create table public.assignment_submission_attachments (
   id uuid primary key default gen_random_uuid(),
   submission_id uuid not null references public.assignment_submissions(id) on delete restrict,
@@ -43,10 +47,6 @@ create table public.assignment_submission_attachments (
     references public.assignment_submissions(id, assignment_id, test_id, tester_id)
     on delete restrict
 );
-
-alter table public.assignment_submissions
-  add constraint assignment_submissions_id_assignment_test_tester_key
-  unique (id, assignment_id, test_id, tester_id);
 
 alter table public.assignment_submission_attachments enable row level security;
 alter table public.assignment_submissions enable row level security;
