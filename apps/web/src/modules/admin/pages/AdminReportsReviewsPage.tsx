@@ -15,7 +15,6 @@ const seed:Report[]=[
 {id:"TR-242",title:"UI/UX feedback",version:"v1.0.7",developer:"Karim Ait Ahmed",tester:"Rami Bensalem",test:"Usability",status:"Pending",score:85,date:"Nov 19, 2026 · 18:10",summary:"Feedback covers navigation clarity, form labels and mobile layout."},
 {id:"TR-241",title:"Calculation error",version:"v1.0.6",developer:"Yacine Hadjout",tester:"Nadia Khelifi",test:"Logic",status:"Approved",score:75,date:"Nov 19, 2026 · 15:50",summary:"The calculation result was checked against expected test cases."}];
 const filters=["All Reports","Pending","Approved","Rejected","Needs Revision"] as const;
-const nav=[["Overview","/admin"],["Users","/admin/users"],["Developers","/admin/developers"],["Testers","/admin/testers"],["Tests Management","/admin/tests"],["Assignments","/admin/assignments"],["Cohorts","/admin/cohorts"],["Apps Management","/admin/apps"],["Reports & Reviews","/admin/reports"],["Financial","/admin/financial"],["Medical Exceptions","/admin/medical-exceptions"],["Support Center","/admin/support"],["Audit Trail","/admin/audit-trail"],["Admin Settings","/admin/settings"]];
 const cls=(s:Status)=>s.toLowerCase().replaceAll(" ","-");
 export default function AdminReportsReviewsPage(){
 const [rows,setRows]=useState(seed),[filter,setFilter]=useState<(typeof filters)[number]>("All Reports"),[q,setQ]=useState(""),[id,setId]=useState("TR-248"),[tab,setTab]=useState("content"),[note,setNote]=useState(""),[notice,setNotice]=useState("");
