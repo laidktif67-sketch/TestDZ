@@ -87,7 +87,110 @@ The 96 route declarations include the wildcard route and a redirect alias; they 
 
 An earlier local typecheck was reported on a different local commit (`5ec6d68`) with 20 TS6133 unused-variable errors. That result is historical and must not be represented as the result for remote SHA `77be729...`.
 
-## 5. Required local baseline commands
+## 5. Route declaration inventory from source (96)
+
+The following is the exact declaration order extracted from the reviewed `App.tsx`. It is the **source baseline**. A live browser/runtime comparison was not possible in this checkpoint, so runtime parity remains an open gate rather than a passed check.
+
+1. `/`
+2. `/terms`
+3. `/privacy`
+4. `/auth`
+5. `/signup-success`
+6. `/auth/callback`
+7. `/verify-email`
+8. `/forgot-password`
+9. `/reset-password`
+10. `/password-reset-success`
+11. `/invalid-otp`
+12. `/onboarding`
+13. `/interests`
+14. `/complete-profile`
+15. `/assignments/:id`
+16. `/assignments/:id/progress`
+17. `/assignments/:id/submit`
+18. `/assignments/:id/summary`
+19. `/profile`
+20. `/feedback-history`
+21. `/submit-feedback`
+22. `/report-problem`
+23. `/wallet-rewards`
+24. `/withdrawal-request`
+25. `/withdrawal-status`
+26. `/help`
+27. `/support`
+28. `/support/:id`
+29. `/live-chat`
+30. `/help-support`
+31. `/settings`
+32. `/notification-preferences`
+33. `/active-sessions`
+34. `/tester/security-history`
+35. `/notifications`
+36. `/admin`
+37. `/admin/analytics`
+38. `/admin/leaderboard`
+39. `/admin/apps`
+40. `/admin/reports`
+41. `/admin/notifications`
+42. `/admin/monitoring`
+43. `/admin/logs`
+44. `/admin/financial`
+45. `/admin/tester-withdrawals`
+46. `/admin/tester-withdrawals/:id`
+47. `/admin/withdrawal-failed/:id`
+48. `/admin/rewards`
+49. `/admin/transactions-ledger`
+50. `/admin/developer-payments`
+51. `/admin/developer-payments/:id`
+52. `/admin/invoices/:invoiceId`
+53. `/admin/medical-exceptions`
+54. `/admin/support`
+55. `/admin/users`
+56. `/admin/developers`
+57. `/admin/developers/:id`
+58. `/admin/testers`
+59. `/admin/testers/:id`
+60. `/admin/tests`
+61. `/admin/assignments`
+62. `/admin/cohorts`
+63. `/admin/settings`
+64. `/admin/audit-trail`
+65. `/dashboard`
+66. `/tester-dashboard`
+67. `/my-tests`
+68. `/assignments/:id/reward`
+69. `/leaderboard`
+70. `/tester/language-appearance`
+71. `/tester/privacy`
+72. `/check-in-history`
+73. `/activity-history`
+74. `/referral-program`
+75. `/referral-history`
+76. `/discover-tests`
+77. `/tests/:id`
+78. `/developer-dashboard`
+79. `/developer/tests`
+80. `/developer/tests/:id`
+81. `/developer/tests/:id/monitoring`
+82. `/developer/tests/new`
+83. `/developer/settings`
+84. `/developer/subscription`
+85. `/developer/testers`
+86. `/developer/analytics`
+87. `/developer/results`
+88. `/developer/feedback`
+89. `/developer/feedback/:id`
+90. `/developer/notifications`
+91. `/developer/help`
+92. `/developer/support`
+93. `/developer/support/:id`
+94. `/apps`
+95. `/apps/:id`
+96. `*`
+
+**Runtime comparison status:** not run. No app server/browser session was available through the GitHub source inspection. Do not claim that these declarations have been compared to rendered runtime routes until the local app is started and checked.
+
+## 6. Required local baseline commands
 
 Run these in the existing Termux checkout only after reviewing the output; these commands do not modify files:
 
@@ -105,6 +208,6 @@ npm run build
 
 Preserve all output, especially any `?? node_modules/` or other local changes. Do not pull or overwrite local changes until the local branch and remote relationship are understood. If local HEAD differs from the reviewed SHA, rerun the route/source inventory on the actual checkout before changing code.
 
-## 6. Gate decision
+## 7. Gate decision
 
 **Route extraction is not yet authorized by evidence.** The route source is understood at a high level, but the local worktree state, exact-SHA typecheck/build, route behavior tests and dependency-cycle report remain unverified. The first safe completed work should therefore be documentation and baseline recording only. Begin the mechanical route split after these checks are run and failures are understood/classified. No application source, CSS, Supabase migration, RLS, GRANT or RPC file was changed while establishing this baseline.
