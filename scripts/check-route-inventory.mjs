@@ -20,8 +20,8 @@ const requiredPaths = [
   'path="*"',
 ];
 
-const missingPaths = requiredPaths.filter((path) => !source.includes(path));
-const publicRouteIndex = source.indexOf('<Route path="/"');
+const missingPaths = requiredPaths.filter((path) => !allRouteSource.includes(path));
+const publicRouteIndex = publicSource.indexOf('<Route key="public-1" path="/"');
 const authGuardIndex = source.indexOf("<Route element={<AuthGuard");
 const onboardingGuardIndex = source.indexOf("<Route element={<OnboardingGuard");
 const wildcardIndex = source.lastIndexOf('<Route path="*"');
