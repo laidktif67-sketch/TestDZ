@@ -40,8 +40,8 @@ export default function AdminSidebar({ activePath }: AdminSidebarProps) {
     <nav className="admin-nav admin-sidebar-nav" aria-label="Admin navigation">
       <div className="admin-sidebar-section-label">WORKSPACE</div>
       {primaryItems.map(([label, path, icon]) => (
-        <Link key={path} to={path} aria-current={activePath === path ? "page" : undefined}
-          className={"admin-nav-item" + (activePath === path ? " active" : "")}>
+        <Link key={path} to={path} aria-current={(activePath === path || (path !== "/admin" && activePath.startsWith(path + "/"))) ? "page" : undefined}
+          className={"admin-nav-item" + ((activePath === path || (path !== "/admin" && activePath.startsWith(path + "/"))) ? " active" : "")}>
           <span className="admin-sidebar-icon" aria-hidden="true">{icon}</span><span>{label}</span>
         </Link>
       ))}
