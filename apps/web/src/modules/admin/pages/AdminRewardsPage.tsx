@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "../styles/admin-dashboard.css";
 import "../styles/admin-rewards.css";
 import AdminSidebar from "../components/AdminSidebar";
+import AdminIcon from "../components/AdminIcon";
 
 const rewards = [
  {user:"Sara Benali",type:"Achievement",points:500,reward:"Expert Tester Badge",date:"Dec 4, 2026 · 14:32",status:"Completed"},
@@ -23,7 +24,7 @@ export default function AdminRewardsPage(){
  const filtered=useMemo(()=>rewards.filter(r=>(type==="All Types"||r.type===type)&&(status==="All Statuses"||r.status===status)&&[r.user,r.type,r.reward,r.date].some(v=>v.toLowerCase().includes(query.toLowerCase()))),[type,status,query]);
  return <main className="admin-dashboard ar-page">
   <aside className="admin-sidebar"><Link className="admin-brand" to="/admin"><span className="admin-brand-mark">✓</span><span>TestDZ<small>Build · Test · Improve</small></span></Link><div className="admin-sidebar-label">Workspace</div><AdminSidebar activePath="/admin/rewards" /><div className="admin-sidebar-footer"><span className="admin-avatar">AD</span><div><strong>Admin</strong><small>Platform administrator</small></div><span className="admin-online"/></div></aside>
-  <section className="admin-main"><header className="admin-topbar"><label className="admin-search">⌕<input placeholder="Search users, rewards, or transactions..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><span>♧　✉</span><span className="admin-avatar">AD</span></div></header>
+  <section className="admin-main"><header className="admin-topbar"><label className="admin-search"><AdminIcon name="search" size={18}/><input placeholder="Search users, rewards, or transactions..." value={query} onChange={e=>setQuery(e.target.value)}/></label><div className="admin-top-actions"><span className="admin-topbar-icon-pair"><AdminIcon name="bell" size={18}/><AdminIcon name="mail" size={18}/></span><span className="admin-avatar">AD</span></div></header>
    <div className="admin-content ar-content"><section className="ar-hero"><div className="ar-gift">✿</div><div><h1>Rewards Management</h1><p>Manage rewards, points and bonus system</p></div><label className="ar-period">▦ <select aria-label="Rewards reporting period" value={period} onChange={e=>setPeriod(e.target.value)}><option>Last 7 Days</option><option>Last 30 Days</option><option>Last 90 Days</option><option>This Year</option></select></label><button type="button" onClick={()=>window.print()}>Export Report ↓</button></section>
     <div className="ar-demo"><b>PREVIEW DATA</b> All figures, reward rules and records are sample data. No points are issued or balances changed.</div>
     <section className="ar-kpis">{[["248,750","Total Points Awarded","+12.5%","♜","blue"],["12,480","Total Rewards","+8.7%","✿","green"],["3,240","Active Earners","+11.2%","♧","purple"],["750","Pending Rewards","+5.1%","★","orange"]].map(([v,l,t,i,c])=><article className={c} key={l}><i>{i}</i><div><strong>{v}</strong><span>{l}</span><small>↑ {t}</small></div></article>)}</section>
