@@ -407,3 +407,13 @@
 3. الموجة الثالثة: M-10، M-11، M-14 بعد تحديد شاشات M-14 من صاحب المشروع.
 
 لا تبدأ أي موجة لاحقة قبل موافقة صريحة على الموجة السابقة.
+
+
+## 10. Admin dashboard concept — added after Wave 1
+
+- Added static overview mockups: `mockups/admin-dashboard-overview-{ar,fr,en}.html`.
+- The concept expands the future Admin scope with user/developer/tester management, apps and tests, cohorts, assignments, reports, medical exceptions, support, suspensions/appeals, rewards/withdrawals, payments/plans, analytics, leaderboard, notifications, audit trail, monitoring and settings.
+- Summary cards, trend chart, test-status donut, activity feed, top contributors and system-health strip use illustrative mock data only.
+- The withdrawal/rewards, payments, uptime and performance indicators are future concepts, not evidence that those workflows or monitoring services are implemented.
+- This remains a design artifact under `docs/design/`; it does not create an Admin application route, authorization policy, API, database schema, or operational action.
+- The Admin dashboard was added as a separate concept after the originally approved Wave 1 screens. Further Admin detail screens and application implementation require their own approval.
