@@ -38,7 +38,7 @@ begin
         evidence_storage_path is null
         or (
           char_length(evidence_storage_path) between 1 and 1024
-          and evidence_storage_path !~ '(^/|(^|/)\\.\\.(/|$))'
+          and evidence_storage_path !~ '(^/|(^|/)\.\.(/|$))'
         )
       );
   end if;
