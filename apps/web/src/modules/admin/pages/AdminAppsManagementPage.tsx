@@ -18,7 +18,6 @@ const initialApps: AppRecord[] = [
 ];
 const filters = ["All Apps","Pending","Approved","Rejected","Suspended"] as const;
 type Filter = typeof filters[number];
-const nav = [["Overview","⌂","/admin"],["Users Management","♙","/admin/users"],["Developers Management","⌘","/admin/developers"],["Testers Management","♧","/admin/testers"],["Tests Management","▤","/admin/tests"],["Assignments","☷","/admin/assignments"],["Cohorts","▱","/admin/cohorts"],["Financial","▣","/admin/financial"],["Medical Exceptions","♡","/admin/medical-exceptions"],["Support Center","◉","/admin/support"],["Apps Management","◇","/admin/apps"],["Audit Trail","◷","/admin/audit-trail"],["Admin Settings","⚙","/admin/settings"]] as const;
 const statusClass = (status: AppStatus) => status.toLowerCase();
 export default function AdminAppsManagementPage() {
  const [apps,setApps]=useState(initialApps);
