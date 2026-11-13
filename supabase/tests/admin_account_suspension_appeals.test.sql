@@ -1,6 +1,6 @@
 begin;
 
-select plan(14);
+select plan(16);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -115,12 +115,21 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '26000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"26000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 
+select ok(
+  exists (
+    select 1 from public.get_my_account_suspension()
+    where suspension_id is not null
+      and appeal_deadline > now()
+      and reason = 'Repeated verified abuse reports'
+  ),
+  'a banned user can securely retrieve only their own suspension and appeal deadline'
+);
+
 select lives_ok(
-  $$select public.submit_account_suspension_appeal(
-    (select id from public.account_suspensions
-      where user_id = '26000000-0000-4000-8000-000000000002' and status = 'active'),
+  $select public.submit_account_suspension_appeal(
+    (select suspension_id from public.get_my_account_suspension()),
     'I believe this suspension was applied in error and request a review.'
-  )$$,
+  )$,
   'the suspended user can submit an appeal within the seven-day window'
 );
 
@@ -134,6 +143,20 @@ select ok(
   ),
   'appeal is recorded as pending and awaits administrator review'
 );
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '26000000-0000-4000-8000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"26000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+
+select ok(
+  exists (
+    select 1 from public.admin_list_account_suspension_appeals('pending')
+    where user_id = '26000000-0000-4000-8000-000000000002'
+      and appeal_status = 'pending'
+  ),
+  'administrators can retrieve the pending appeal queue through a scoped RPC'
+);
+
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '26000000-0000-4000-8000-000000000001', true);
