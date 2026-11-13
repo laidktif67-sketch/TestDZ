@@ -238,15 +238,15 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001'
 select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
 select throws_ok(
-  $insert into public.developer_feedback_events (feedback_id, actor_id, event_type, old_value, new_value)
-    values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','status_changed','new','resolved')$,
+  $$insert into public.developer_feedback_events (feedback_id, actor_id, event_type, old_value, new_value)
+    values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','status_changed','new','resolved')$$,
   '42501', null,
   'owning developer cannot forge a status audit event directly'
 );
 
 select throws_ok(
-  $insert into public.developer_feedback_events (feedback_id, actor_id, event_type, old_value, new_value)
-    values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','priority_changed','normal','urgent')$,
+  $$insert into public.developer_feedback_events (feedback_id, actor_id, event_type, old_value, new_value)
+    values ('70000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','priority_changed','normal','urgent')$$,
   '42501', null,
   'owning developer cannot forge a priority audit event directly'
 );
