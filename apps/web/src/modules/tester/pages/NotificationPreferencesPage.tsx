@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterNotificationPreferencesProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -64,7 +65,7 @@ export default function NotificationPreferencesPage() {
     ...(isDeveloper ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : [])
   ];
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user || !identityApi.isConfigured()) return;
     let alive = true;
     Promise.all([
       getTesterNotificationPreferencesProfile(user.id),
@@ -86,7 +87,7 @@ export default function NotificationPreferencesPage() {
   const updateType = (key: NoticeKey, value: boolean) => setPrefs(current => ({ ...current, types: { ...current.types, [key]: value } }));
   const updateDelivery = (key: NoticeKey, value: Channel) => setPrefs(current => ({ ...current, delivery: { ...current.delivery, [key]: value } }));
   const save = async () => {
-    if (!supabase || !user) { setError("Sign in to save notification preferences."); return; }
+    if (!identityApi.isConfigured() || !user) { setError("Sign in to save notification preferences."); return; }
     setBusy(true); setMessage(""); setError("");
     const result = await supabase.auth.updateUser({ data: { testdz_notification_center_preferences: prefs } });
     setBusy(false);
@@ -100,7 +101,7 @@ export default function NotificationPreferencesPage() {
   }));
   const activeChannel = prefs.channels[0] || "push";
   return <div className="td-dashboard np-dashboard">
-    <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase} />
+    <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!identityApi.isConfigured()} />
     <main className="td-main np-main">
       <header className="np-topbar">
         <label className="np-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" /></label>

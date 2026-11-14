@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import {
   getPrivacyPageProfile,
   getPrivacyExportProfile,
@@ -81,7 +82,7 @@ export default function PrivacyDataManagementPage() {
   ];
 
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user || !identityApi.isConfigured()) return;
     let alive = true;
     const metadata = user.user_metadata || {};
     const saved = metadata.testdz_privacy_preferences as Partial<PrivacyPreferences> | undefined;
@@ -104,7 +105,7 @@ export default function PrivacyDataManagementPage() {
   const sortedRequests = useMemo(() => [...requests].sort((a,b) => b.createdAt.localeCompare(a.createdAt)), [requests]);
 
   async function savePrivacy(next: PrivacyPreferences) {
-    if (!supabase || !user) { setError("Sign in to save your privacy preferences."); return; }
+    if (!identityApi.isConfigured() || !user) { setError("Sign in to save your privacy preferences."); return; }
     const previous = privacy;
     setPrivacy(next);
     setBusy("privacy"); setMessage(""); setError("");
@@ -115,7 +116,7 @@ export default function PrivacyDataManagementPage() {
   }
 
   async function recordRequest(type: string, status: ExportRequest["status"]) {
-    if (!supabase || !user) return;
+    if (!identityApi.isConfigured() || !user) return;
     const entry: ExportRequest = { id: crypto.randomUUID(), type, createdAt: new Date().toISOString(), status };
     const next = [entry, ...requests].slice(0, 8);
     const result = await supabase.auth.updateUser({ data: { testdz_privacy_export_requests: next } });
@@ -123,7 +124,7 @@ export default function PrivacyDataManagementPage() {
   }
 
   async function requestData() {
-    if (!supabase || !user) return;
+    if (!identityApi.isConfigured() || !user) return;
     setBusy("data"); setMessage(""); setError("");
     const [profile, assignments, checkins, feedback, notifications, ledger] = await Promise.all([
       getPrivacyExportProfile(user.id),
@@ -154,7 +155,7 @@ export default function PrivacyDataManagementPage() {
   }
 
   async function exportActivity() {
-    if (!supabase || !user) return;
+    if (!identityApi.isConfigured() || !user) return;
     setBusy("activity"); setMessage(""); setError("");
     const [assignments, checkins, feedback, ledger] = await Promise.all([
       listPrivacyActivityAssignments(user.id),
@@ -183,7 +184,7 @@ export default function PrivacyDataManagementPage() {
   }
 
   return <div className="td-dashboard pd-dashboard">
-    <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
+    <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!identityApi.isConfigured()}/>
     <main className="td-main pd-main">
       <header className="pd-topbar">
         <label className="pd-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label>
