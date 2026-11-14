@@ -112,3 +112,13 @@ export function listTesterFeedbackRewards(userId: string) {
     .eq("user_id", userId)
     .eq("wallet_type", "earned_points");
 }
+
+
+/** Read-only assignments available for attaching tester feedback. */
+export function listTesterFeedbackAssignments(testerId: string) {
+  return getClient().from("assignments")
+    .select("id,test:tests(title,app:apps(name))")
+    .eq("tester_id", testerId)
+    .in("status", ["active", "completed"])
+    .order("created_at", { ascending: false });
+}

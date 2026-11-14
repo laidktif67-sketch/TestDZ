@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { supabase } from "../../../lib/supabase";
+import { listTesterFeedbackAssignments } from "../../../features/feedback/feedback-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/submit-feedback.css";
@@ -69,11 +70,7 @@ export default function SubmitFeedbackPage() {
     let alive = true;
     const loadAssignments = async () => {
       if (!supabase || !session?.user?.id) { setAssignmentsLoading(false); return; }
-      const { data, error } = await supabase.from("assignments")
-        .select("id,test:tests(title,app:apps(name))")
-        .eq("tester_id", session.user.id)
-        .in("status", ["active", "completed"])
-        .order("created_at", { ascending: false });
+      const { data, error } = await listTesterFeedbackAssignments(session.user.id);
       if (!alive) return;
       if (error) setMessage("We could not load your assigned tests. Please refresh and try again.");
       else {
