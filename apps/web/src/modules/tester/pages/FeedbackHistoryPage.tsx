@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import { listTesterFeedbackHistory, listTesterFeedbackRewards } from "../../../features/feedback/feedback-api";
 import TesterSidebar from "../components/TesterSidebar";
+import { useTesterProfile } from "../hooks/useTesterProfile";
 import { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/feedback-history.css";
@@ -52,8 +52,7 @@ function AppMark({ name, iconUrl }: { name: string; iconUrl?: string | null }) {
 
 export default function FeedbackHistoryPage() {
   const { session, roles = [] } = useIdentity();
-  const [name, setName] = useState("Tester");
-  const [avatar, setAvatar] = useState("");
+  const { name, avatar, firstName } = useTesterProfile();
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [rows, setRows] = useState<FeedbackRow[]>([]);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
@@ -65,7 +64,6 @@ export default function FeedbackHistoryPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
-  const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
     if (!session?.user?.id || !identityApi.isConfigured()) { setLoading(false); return; }
@@ -73,18 +71,11 @@ export default function FeedbackHistoryPage() {
     async function load() {
       setLoading(true);
       setError("");
-      const [profileResult, feedbackResult, ledgerResult] = await Promise.all([
-        getTesterHeaderProfile(session!.user.id),
+      const [feedbackResult, ledgerResult] = await Promise.all([
         listTesterFeedbackHistory(session!.user.id),
         listTesterFeedbackRewards(session!.user.id)
       ]);
       if (!alive) return;
-      if (profileResult.data) {
-        setName(profileResult.data.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
-        setAvatar(profileResult.data.avatar_url || "");
-      } else {
-        setName(session!.user.email?.split("@")[0] || "Tester");
-      }
       if (feedbackResult.error) {
         setError("We couldn't load your feedback history. Please try again.");
         setRows([]);
