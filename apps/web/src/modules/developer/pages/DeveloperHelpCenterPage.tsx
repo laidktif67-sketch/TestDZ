@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
+import DeveloperSidebar from "../components/DeveloperSidebar";
 import "../styles/developer-dashboard.css";
 import "../styles/developer-help-center.css";
 
@@ -32,10 +33,7 @@ export default function DeveloperHelpCenterPage(){
  const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Developer";const initial=name.slice(0,1).toUpperCase();
  const filtered=useMemo(()=>{const q=query.trim().toLowerCase();return articles.filter(a=>(category==="all"||a.category===category)&&(!q||(a.question+" "+a.answer).toLowerCase().includes(q)));},[query,category]);
  return <div className="dd-shell dh-shell">
-  <aside className="dd-sidebar"><Link to="/developer-dashboard" className="dd-brand"><span className="dd-brand-mark">✦</span><strong>TestDZ</strong><small>Test · Learn · Grow</small></Link>
-   <nav className="dd-nav"><Link to="/developer-dashboard" className="dd-nav-link"><span>⌂</span><span>Dashboard</span></Link><span className="dd-nav-label">APPS & WORKSPACE</span><Link to="/apps" className="dd-nav-link"><span>▦</span><span>My Apps</span></Link><Link to="/developer/tests" className="dd-nav-link"><span>✓</span><span>My Tests</span></Link><Link to="/developer/testers" className="dd-nav-link"><span>♙</span><span>Testers</span></Link><Link to="/developer/analytics" className="dd-nav-link"><span>▥</span><span>Analytics</span></Link><span className="dd-nav-label">ACCOUNT</span><Link to="/developer/notifications" className="dd-nav-link"><span>♧</span><span>Notifications</span></Link><Link to="/developer/feedback" className="dd-nav-link"><span>✉</span><span>Feedback</span></Link><Link to="/developer/subscription" className="dd-nav-link"><span>◈</span><span>Subscription</span></Link><Link to="/developer/settings" className="dd-nav-link"><span>⚙</span><span>Settings</span></Link><span className="dd-nav-label">SUPPORT</span><Link to="/developer/help" className="dd-nav-link active"><span>ⓘ</span><span>Help Center</span></Link><Link to="/developer/support" className="dd-nav-link"><span>♧</span><span>Support Tickets</span></Link></nav>
-   <div className="dd-promo"><div className="dd-rocket">✧</div><strong>Need a hand?</strong><p>Our support team is here to help with your developer workspace.</p><Link to="/developer/support">Contact Support →</Link></div><div className="dd-user"><span className="dd-avatar">{initial}</span><span><strong>{name}</strong><small>Developer</small></span></div>
-  </aside>
+  <DeveloperSidebar />
   <main className="dd-main dh-main"><RoleAccessNotice/><header className="dd-topbar"><label className="dd-search">⌕ <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search developer help…" aria-label="Search developer help"/></label><div className="dd-top-actions"><Link to="/developer/notifications" className="dh-top-link">♧</Link><Link to="/profile" className="dd-top-avatar">{initial}</Link></div></header>
    <section className="dd-hero dh-hero"><div className="dd-hero-copy"><span className="dd-hero-kicker">TESTDZ · DEVELOPER RESOURCES</span><h1>Developer Help Center</h1><p>Practical answers to help you launch apps, run better tests and manage your testing workspace.</p><label className="dh-hero-search">⌕ <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search guides, topics or questions…"/></label></div><div className="dh-hero-art"><div className="dh-orbit"/><div className="dh-help-symbol">?</div><div className="dh-code-card"><i/><i/><i/><span>developer.help()</span><b>✓ Ready to build</b></div></div></section>
    <section className="dh-heading"><div><h2>Browse by topic</h2><p>Choose a category to find relevant developer guidance.</p></div><span>{categories.length} topics</span></section>

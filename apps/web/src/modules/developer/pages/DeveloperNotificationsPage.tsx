@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { listDeveloperNotifications, markDeveloperNotificationRead, markAllDeveloperNotificationsRead, setDeveloperNotificationArchived } from "../../../features/notifications/notifications-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
+import DeveloperSidebar from "../components/DeveloperSidebar";
 import "../styles/developer-notifications.css";
 
 type NotificationRow = {
@@ -162,25 +163,7 @@ export default function DeveloperNotificationsPage() {
   const testHref = testId ? "/developer/tests/" + testId + "/monitoring" : "/developer/tests";
 
   return <main className="dn-shell">
-    <aside className="dn-sidebar">
-      <Link to="/developer-dashboard" className="dn-brand"><span className="dn-brand-mark">✓</span><b>TestDZ<small>Build · Test · Improve</small></b></Link>
-      <div className="dn-workspace">⌘ <b>Developer</b><i>Pro</i></div>
-      <nav>
-        <Link to="/developer-dashboard"><Icon name="home"/>Dashboard</Link>
-        <Link to="/apps"><Icon name="apps"/>My Apps</Link>
-        <Link to="/developer/tests"><Icon name="tests"/>My Tests</Link>
-        <Link to="/developer/tests"><Icon name="monitor"/>Test Monitoring</Link>
-        <Link to="/developer/testers"><Icon name="users"/>Testers Management</Link>
-        <Link to="/developer/subscription"><Icon name="mail"/>Subscription</Link>
-        <Link to="/developer/analytics"><Icon name="chart"/>Analytics</Link>
-        <Link to="/developer/results"><Icon name="chart"/>Test Results</Link>
-        <Link to="/developer/feedback"><Icon name="feedback"/>Feedback</Link>
-        <Link className="active" to="/developer/notifications"><Icon name="bell"/>Notifications</Link>
-        <Link to="/developer/settings"><Icon name="settings"/>Settings</Link>
-        <Link to="/developer/help"><Icon name="users"/>Help & Support</Link>
-      </nav>
-      <div className="dn-promo"><div>🚀</div><b>Get more insights with TestDZ Analytics</b><Link to="/developer/subscription">Upgrade Plan <Icon name="arrow" size={14}/></Link></div>
-    </aside>
+    <DeveloperSidebar />
     <section className="dn-main">
       <header className="dn-topbar">
         <label className="dn-search"><Icon name="search" size={22}/><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search notifications..."/></label>

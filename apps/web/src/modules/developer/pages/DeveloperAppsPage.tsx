@@ -7,6 +7,7 @@ import { identityApi } from "../../../features/identity/identity-api";
 import { APP_CATEGORIES, appError } from "../../../lib/app-utils";
 import { createApp, getAppLimit, listApps, uploadAppIcon } from "../../../features/apps/apps-api";
 import { listAppMetricTests, listAppMetricAssignments, listAppMetricFeedback } from "../../../features/analytics/app-metrics-api";
+import DeveloperSidebar from "../components/DeveloperSidebar";
 import "../styles/developer-apps.css";
 
 type Filter = "all" | "published" | "draft" | "paused" | "archived";
@@ -200,24 +201,7 @@ function AppsPage() {
   }
 
   return <main className="dmy-shell">
-    <aside className="dmy-sidebar">
-      <Link to="/developer-dashboard" className="dmy-brand"><span className="dmy-brand-mark"><Glyph name="tests" size={27}/></span><span><strong>TestDZ</strong><small>Build · Test · Improve</small></span></Link>
-      <div className="dmy-module"><Glyph name="code" size={21}/> <span>Developer</span><b>Pro</b></div>
-      <nav className="dmy-nav">
-        <Link to="/developer-dashboard"><Glyph name="home"/>Dashboard</Link>
-        <Link to="/apps" className="active"><Glyph name="apps"/>My Apps</Link>
-        <Link to="/developer/tests/new"><Glyph name="tests"/>Create Test</Link>
-        <Link to="/developer/tests"><Glyph name="tests"/>My Tests</Link>
-        <Link to="/developer/testers"><Glyph name="users"/>Testers</Link>
-        <Link to="/developer/analytics"><Glyph name="chart"/>Analytics</Link>
-        <Link to="/developer/feedback"><Glyph name="feedback"/>Feedback</Link>
-        <Link to="/developer/notifications"><Glyph name="bell"/>Notifications</Link>
-        <Link to="/developer/subscription"><Glyph name="crown"/>Subscription</Link>
-        <Link to="/developer/settings"><Glyph name="settings"/>Settings</Link>
-        <Link to="/developer/help"><Glyph name="help"/>Help & Support</Link>
-      </nav>
-      <div className="dmy-promo"><span className="dmy-promo-rocket">🚀</span><strong>Grow Your Apps<br/>with TestDZ</strong><Link to="/developer/subscription">Upgrade Plan <Glyph name="arrow" size={15}/></Link></div>
-    </aside>
+    <DeveloperSidebar />
 
     <section className="dmy-content">
       <header className="dmy-topbar">

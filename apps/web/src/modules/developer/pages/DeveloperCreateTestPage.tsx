@@ -4,6 +4,7 @@ import type { AppRecord } from "@testdz/types";
 import { listApps } from "../../../features/apps/apps-api";
 import { createTestDraft } from "../../../features/tests/tests-api";
 import { identityApi } from "../../../features/identity/identity-api";
+import DeveloperSidebar from "../components/DeveloperSidebar";
 import "../styles/developer-create-test.css";
 
 const steps = ["Select App", "Test Info", "Testing Period", "Requirements", "Rewards", "Media", "Review", "Publish"];
@@ -129,24 +130,7 @@ export default function DeveloperCreateTestPage() {
   }
 
   return <main className="dct-shell">
-    <aside className="dct-sidebar">
-      <Link to="/developer-dashboard" className="dct-brand"><span className="dct-brand-mark">✓</span><span><strong>TestDZ</strong><small>Build · Test · Improve</small></span></Link>
-      <div className="dct-module"><span>‹/›</span><b>Developer</b><i>Pro</i></div>
-      <nav className="dct-nav">
-        <Link to="/developer-dashboard"><Icon name="home" />Dashboard</Link>
-        <Link to="/apps"><Icon name="apps" />My Apps</Link>
-        <Link to="/developer/tests/new" className="active"><Icon name="tests" />Create Test</Link>
-        <Link to="/developer/tests"><Icon name="tests" />My Tests</Link>
-        <Link to="/developer/testers"><Icon name="users" />Testers</Link>
-        <Link to="/developer/analytics"><Icon name="chart" />Analytics</Link>
-        <Link to="/developer/feedback"><Icon name="feedback" />Feedback</Link>
-        <Link to="/developer/notifications"><Icon name="bell" />Notifications</Link>
-        <Link to="/developer/subscription"><Icon name="crown" />Subscription</Link>
-        <Link to="/developer/settings"><Icon name="settings" />Settings</Link>
-        <Link to="/developer/help"><Icon name="help" />Help & Support</Link>
-      </nav>
-      <div className="dct-promo"><span>🚀</span><strong>Reach more users<br />with TestDZ</strong><Link to="/developer/subscription">Upgrade Plan <Icon name="arrow" size={15} /></Link></div>
-    </aside>
+    <DeveloperSidebar />
 
     <section className="dct-content">
       <header className="dct-topbar"><label className="dct-global-search"><Icon name="search" /><input placeholder="Search..." /></label><div className="dct-user"><span className="dct-bell">♧<i>3</i></span><span className="dct-avatar">DK</span><strong>Developer</strong><span>⌄</span></div></header>

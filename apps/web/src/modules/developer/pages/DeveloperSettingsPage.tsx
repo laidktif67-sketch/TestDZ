@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { getDeveloperSettingsProfile, updateDeveloperSettingsProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import DeveloperSidebar from "../components/DeveloperSidebar";
 import "../styles/developer-settings.css";
 
 type Preferences = { testResults: boolean; feedback: boolean; subscription: boolean; system: boolean };
@@ -138,24 +139,7 @@ export default function DeveloperSettingsPage() {
   const fmt = (value: string) => value ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not available";
 
   return <main className="dset-shell">
-    <aside className="dset-sidebar">
-      <Link to="/developer-dashboard" className="dset-brand"><span className="dset-brand-mark"><Glyph name="check" size={33}/></span><span><strong>TestDZ</strong><small>Build · Test · Improve</small></span></Link>
-      <div className="dset-module"><Glyph name="code" size={21}/><b>Developer</b><i>Pro</i></div>
-      <nav className="dset-nav">
-        <Link to="/developer-dashboard"><Glyph name="home"/>Dashboard</Link>
-        <Link to="/apps"><Glyph name="apps"/>My Apps</Link>
-        <Link to="/developer/tests/new"><Glyph name="tests"/>Create Test</Link>
-        <Link to="/developer/tests"><Glyph name="tests"/>My Tests</Link>
-        <Link to="/developer/testers"><Glyph name="user"/>Testers</Link>
-        <Link to="/developer/analytics"><Glyph name="chart"/>Analytics</Link>
-        <Link to="/developer/feedback"><Glyph name="feedback"/>Feedback</Link>
-        <Link to="/developer/notifications"><Glyph name="bell"/>Notifications</Link>
-        <Link to="/developer/subscription"><Glyph name="crown"/>Subscription</Link>
-        <Link to="/developer/settings" className="active"><Glyph name="settings"/>Settings</Link>
-        <Link to="/developer/help"><Glyph name="help"/>Help &amp; Support</Link>
-      </nav>
-      <div className="dset-promo"><span>🚀</span><strong>Keep building<br/>with TestDZ</strong><Link to="/developer/subscription">Upgrade Plan <Glyph name="arrow" size={15}/></Link></div>
-    </aside>
+    <DeveloperSidebar />
 
     <section className="dset-content">
       <header className="dset-topbar"><label className="dset-global-search"><Glyph name="search"/><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search settings..."/></label><div className="dset-user"><span className="dset-bell"><Glyph name="bell"/><i>3</i></span><span className="dset-avatar">{firstName.slice(0,2).toUpperCase()}</span><strong>{name || "Developer"}</strong><span>⌄</span></div></header>
