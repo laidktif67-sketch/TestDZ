@@ -59,3 +59,25 @@ export function listPrivacyActivityFeedback(userId: string) {
 export function listPrivacyActivityLedger(userId: string) {
   return getClient().from("points_ledger").select("id,wallet_type,amount,reason,created_at").eq("user_id", userId);
 }
+
+/** Full profile row for the Settings page's existing account-data export. */
+export function listSettingsExportProfile(userId: string) {
+  return getClient().from("profiles").select("*").eq("id", userId).maybeSingle();
+}
+
+/** Data-export reads; ownership filters and selected fields match the existing page behavior. */
+export function listSettingsExportNotifications(userId: string) {
+  return getClient().from("notifications").select("*").eq("user_id", userId);
+}
+
+export function listSettingsExportCheckins(userId: string) {
+  return getClient().from("checkins").select("*").eq("tester_id", userId);
+}
+
+export function listSettingsExportFeedback(userId: string) {
+  return getClient().from("feedback").select("*").eq("tester_id", userId);
+}
+
+export function listSettingsExportLedger(userId: string) {
+  return getClient().from("points_ledger").select("*").eq("user_id", userId);
+}
