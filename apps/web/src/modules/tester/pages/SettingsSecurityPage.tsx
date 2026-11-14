@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getTesterAccountSettingsProfile, updateTesterAccountSettingsProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -70,7 +71,7 @@ export default function SettingsSecurityPage() {
     let alive = true;
     const client = supabase;
     Promise.all([
-      client.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle(),
+      getTesterAccountSettingsProfile(user.id),
       client.auth.mfa.listFactors(),
     ]).then(([profile, factors]) => {
       if (!alive) return;
@@ -98,7 +99,7 @@ export default function SettingsSecurityPage() {
     if (!supabase || !user) return;
     if (!name.trim()) { alert("Your display name cannot be empty.", true); return; }
     setBusy(true); alert("");
-    const result = await supabase.from("profiles").update({ display_name: name.trim(), locale }).eq("id", user.id);
+    const result = await updateTesterAccountSettingsProfile(user.id, { display_name: name.trim(), locale });
     setBusy(false);
     if (result.error) alert("Could not save account settings. Please try again.", true);
     else alert("Account settings saved successfully.");

@@ -23,3 +23,16 @@ export function getTesterReferralProfile(userId: string) {
     .select("display_name,avatar_url")
     .eq("id", userId).maybeSingle();
 }
+
+
+/** Read-only account settings fields for the tester settings page. */
+export function getTesterAccountSettingsProfile(userId: string) {
+  return getClient().from("profiles")
+    .select("display_name,avatar_url,locale")
+    .eq("id", userId).maybeSingle();
+}
+
+/** Update only editable tester profile preferences; identity and role fields remain untouched. */
+export function updateTesterAccountSettingsProfile(userId: string, values: { display_name: string; locale: string }) {
+  return getClient().from("profiles").update(values).eq("id", userId);
+}
