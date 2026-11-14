@@ -15,10 +15,6 @@ export function listDiscoverAssignments(userId: string) {
   return getClient().from("assignments").select("id,status").eq("tester_id", userId);
 }
 
-export function countDiscoverUnreadNotifications(userId: string) {
-  return getClient().from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null);
-}
-
 /** Public recruiting opportunities only; the database RLS policy remains authoritative. */
 export function listDiscoverAvailableTests() {
   return getClient().from("tests")

@@ -3,7 +3,8 @@ import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
-import { getDiscoverWallet, listDiscoverAssignments, countDiscoverUnreadNotifications, listDiscoverAvailableTests } from "../../../features/testers/discover-api";
+import { getDiscoverWallet, listDiscoverAssignments, listDiscoverAvailableTests } from "../../../features/testers/discover-api";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -40,7 +41,7 @@ export default function DiscoverTestsPage(){
     getTesterHeaderProfile(userId),
     getDiscoverWallet(userId),
     listDiscoverAssignments(userId),
-    countDiscoverUnreadNotifications(userId),
+    countTesterUnreadNotifications(userId),
     listDiscoverAvailableTests()
    ]);
    if(!alive)return;
