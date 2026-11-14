@@ -11,6 +11,7 @@ export type TestType =
 export type TestConfig = {
   cohort?: { targetTesters?: number; notes?: string | null };
   rules?: { androidVersion?: string; instructions?: string | null };
+  googlePlay?: { track?: "internal" | "closed" | "open"; testerMethod?: "join_link" | "google_groups" | "upload_list"; googleGroup?: string | null; testerEmails?: string[]; appVersion?: string; releaseMode?: "immediately" | "scheduled"; releaseAt?: string | null };
 };
 
 export type CreateTestDraftInput = {
