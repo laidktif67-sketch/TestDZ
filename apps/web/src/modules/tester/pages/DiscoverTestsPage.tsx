@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getDiscoverProfile, getDiscoverWallet, listDiscoverAssignments, countDiscoverUnreadNotifications, listDiscoverAvailableTests } from "../../../features/testers/discover-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -35,11 +36,11 @@ export default function DiscoverTestsPage(){
   const client=supabase;if(!client){setLoading(false);setError("Supabase is not configured.");return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
    const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
-    client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-    client.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
-    client.from("assignments").select("id,status").eq("tester_id",userId),
-    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null),
-    client.from("tests").select("id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category)").in("status",["recruiting","ready"]).order("created_at",{ascending:false}).limit(60)
+    getDiscoverProfile(userId),
+    getDiscoverWallet(userId),
+    listDiscoverAssignments(userId),
+    countDiscoverUnreadNotifications(userId),
+    listDiscoverAvailableTests()
    ]);
    if(!alive)return;
    setName(profile.data?.display_name?.trim()||email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");
