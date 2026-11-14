@@ -11,9 +11,9 @@ import "../styles/developer-create-test-six-step.css";
 const steps = [
   "Choose Test Type",
   "Select App",
+  "Configure Test",
   "Test Details",
-  "Testers & Cohort",
-  "Schedule & Rules",
+  "Schedule & Testers",
   "Review & Publish",
 ] as const;
 
@@ -67,6 +67,14 @@ export default function DeveloperCreateTestSixStepPage() {
   const [endDate, setEndDate] = useState("");
   const [androidVersion, setAndroidVersion] = useState("Any supported version");
   const [instructions, setInstructions] = useState("");
+  const [playTrack, setPlayTrack] = useState<"internal" | "closed" | "open">("internal");
+  const [testerMethod, setTesterMethod] = useState<"join_link" | "google_groups" | "upload_list">("join_link");
+  const [googleGroup, setGoogleGroup] = useState("");
+  const [testerEmails, setTesterEmails] = useState<string[]>([]);
+  const [testerFileName, setTesterFileName] = useState("");
+  const [appVersion, setAppVersion] = useState("latest_available");
+  const [releaseMode, setReleaseMode] = useState<"immediately" | "scheduled">("immediately");
+  const [releaseAt, setReleaseAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
@@ -127,8 +135,8 @@ export default function DeveloperCreateTestSixStepPage() {
     setSaveError("");
     if (step === 1 && !testType) { setSaveError("Choose a test type to continue."); return; }
     if (step === 2 && !selectedApp) { setSaveError("Select an application to continue."); return; }
-    if (step === 3 && title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters."); return; }
-    if (step === 4 && (!Number.isFinite(targetTesters) || targetTesters < 1 || targetTesters > 500)) {
+    if (step === 4 && title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters."); return; }
+    if (step === 5 && (!Number.isFinite(targetTesters) || targetTesters < 1 || targetTesters > 500)) {
       setSaveError("Choose a tester target between 1 and 500.");
       return;
     }
@@ -143,7 +151,7 @@ export default function DeveloperCreateTestSixStepPage() {
     setSaveError("");
     if (!testType) { setStep(1); setSaveError("Choose a test type before saving."); return; }
     if (!selectedApp) { setStep(2); setSaveError("Select an application before saving."); return; }
-    if (title.trim().length < 3) { setStep(3); setSaveError("Enter a test title with at least 3 characters."); return; }
+    if (title.trim().length < 3) { setStep(4); setSaveError("Enter a test title with at least 3 characters."); return; }
     if (startDate && endDate && endDate < startDate) { setStep(5); setSaveError("The end date must be on or after the start date."); return; }
     if (!identityApi.isConfigured() || !selected) {
       setSaveError("The selected application could not be verified. Refresh and try again.");
@@ -164,6 +172,15 @@ export default function DeveloperCreateTestSixStepPage() {
       testConfig: {
         cohort: { targetTesters: Math.max(1, Math.min(500, Math.floor(targetTesters))), notes: cohortNotes.trim() || null },
         rules: { androidVersion, instructions: instructions.trim() || null },
+        googlePlay: {
+          track: playTrack,
+          testerMethod,
+          googleGroup: testerMethod === "google_groups" ? googleGroup.trim() || null : null,
+          testerEmails: testerMethod === "upload_list" ? testerEmails : [],
+          appVersion,
+          releaseMode,
+          releaseAt: releaseMode === "scheduled" ? releaseAt || null : null,
+        },
       },
     });
     if (error) {
@@ -224,13 +241,55 @@ export default function DeveloperCreateTestSixStepPage() {
               <div className="dct-app-info"><span><Icon name="info" size={22} /></span><div><strong>Can’t find your app?</strong><p>Make sure your application is published and accessible in your account.</p></div><Link to="/apps">View My Apps <Icon name="arrow" size={16} /></Link></div>
             </>}
 
-            {step === 3 && <div className="dct-form-grid"><label>Test title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={100} placeholder="e.g. Android usability test" /></label><label className="full">Test description<textarea value={description} onChange={e => setDescription(e.target.value)} maxLength={2000} placeholder="Describe what testers will evaluate and what success looks like…" /></label><p className="dct-field-note">Title and description are saved with the test campaign.</p></div>}
+            {step === 3 && testType === "google_play_closed" && <div className="dct-config-layout">
+              <div className="dct-config-main">
+                <div className="dct-config-title"><span className="dct-play-mark">▶</span><div><h3>Google Play Closed Testing Settings</h3><p>Configure your closed testing campaign for Google Play</p></div></div>
+                <div className="dct-track-panel">
+                  <span className="dct-config-symbol"><Icon name="users" size={25} /></span>
+                  <div className="dct-track-copy"><strong>Testing Track <i>*</i></strong><small>Choose the track for your testing campaign</small></div>
+                  <select value={playTrack} onChange={e => setPlayTrack(e.target.value as typeof playTrack)} aria-label="Testing track"><option value="internal">Internal Testing</option><option value="closed">Closed Testing</option><option value="open">Open Testing</option></select>
+                  <p className="dct-track-hint"><Icon name="info" size={15} />{playTrack === "internal" ? "Internal testing is intended for quick validation with a limited group." : playTrack === "closed" ? "Closed testing lets you manage access to a selected tester group." : "Open testing can make a test available to a broader eligible audience."} TestDZ stores this choice; it does not publish to Google Play.</p>
+                </div>
+                <div className="dct-testers-method">
+                  <div className="dct-config-subtitle"><span className="dct-config-symbol plain"><Icon name="users" size={25} /></span><div><strong>Testers</strong><small>Select how to configure tester access for this campaign</small></div></div>
+                  <div className="dct-method-grid">
+                    <button type="button" className={"dct-method-card " + (testerMethod === "join_link" ? "selected" : "")} onClick={() => setTesterMethod("join_link")}><span className="dct-method-radio"/><span className="dct-method-icon link">↗</span><strong>Join Link</strong><small>Share a link with testers</small></button>
+                    <button type="button" className={"dct-method-card " + (testerMethod === "google_groups" ? "selected" : "")} onClick={() => setTesterMethod("google_groups")}><span className="dct-method-radio"/><span className="dct-method-icon mail">✉</span><strong>Google Groups</strong><small>Use a Google group</small></button>
+                    <button type="button" className={"dct-method-card " + (testerMethod === "upload_list" ? "selected" : "")} onClick={() => setTesterMethod("upload_list")}><span className="dct-method-radio"/><span className="dct-method-icon list">♟</span><strong>Upload List</strong><small>Add testers via CSV</small></button>
+                  </div>
+                  {testerMethod === "google_groups" && <label className="dct-config-field">Google Group email<input value={googleGroup} onChange={e => setGoogleGroup(e.target.value)} type="email" placeholder="testers@googlegroups.com" /></label>}
+                  {testerMethod === "upload_list" && <div className="dct-config-field"><label htmlFor="dct-tester-csv">Tester email CSV</label><input id="dct-tester-csv" type="file" accept=".csv,text/csv" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; setTesterFileName(file.name); const text = await file.text(); const emails = Array.from(new Set((text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) ?? []).map(email => email.toLowerCase()))); setTesterEmails(emails); }} /><small>{testerFileName ? testerEmails.length + " email address(es) read from " + testerFileName + ". Saved as draft configuration only." : "Choose a CSV file. Email addresses are parsed locally and are not invited automatically."}</small></div>}
+                </div>
+                <div className="dct-config-row">
+                  <span className="dct-config-symbol"><Icon name="apps" size={23} /></span><div className="dct-track-copy"><strong>App Version</strong><small>Select the app version to test</small></div>
+                  <select value={appVersion} onChange={e => setAppVersion(e.target.value)} aria-label="App version"><option value="latest_available">Latest available version (not verified)</option><option value="to_be_uploaded">Version to be added later</option></select><span className="dct-ready-label">Draft configuration</span>
+                </div>
+                <div className="dct-release-block">
+                  <div className="dct-config-subtitle"><span className="dct-config-symbol plain">➤</span><div><strong>Release to Track</strong><small>Choose when this campaign is planned to be available</small></div></div>
+                  <div className="dct-release-grid">
+                    <button type="button" className={"dct-release-option " + (releaseMode === "immediately" ? "selected" : "")} onClick={() => setReleaseMode("immediately")}><span className="dct-method-radio"/><span><strong>Immediately</strong><small>Ready for review as soon as the draft is saved</small></span></button>
+                    <button type="button" className={"dct-release-option " + (releaseMode === "scheduled" ? "selected" : "")} onClick={() => setReleaseMode("scheduled")}><span className="dct-method-radio"/><span><strong>Schedule for later</strong><small>Choose a planned date and time</small></span></button>
+                  </div>
+                  {releaseMode === "scheduled" && <label className="dct-config-field">Planned date and time<input type="datetime-local" value={releaseAt} onChange={e => setReleaseAt(e.target.value)} /></label>}
+                  <p className="dct-field-note">This is a TestDZ campaign preference only. No Google Play release is triggered from this screen.</p>
+                </div>
+              </div>
+              <aside className="dct-config-summary">
+                <div className="dct-config-summary-head"><Icon name="info" size={21}/><strong>Testing Type Summary</strong></div>
+                <div className="dct-config-summary-body"><span className="dct-summary-play">▶</span><div><strong>Google Play Closed Testing</strong><p>Prepare a controlled testing campaign before public release.</p></div></div>
+                <ul><li>Choose a testing track</li><li>Configure tester access</li><li>Store campaign settings for review</li></ul>
+                <div className="dct-pro-tip"><span>☼</span><div><strong>Pro Tip</strong><p>Start with internal testing to validate your app with a small group first.</p></div></div>
+                <div className="dct-config-illustration" aria-hidden="true"><span>▶</span><b>✓</b></div>
+              </aside>
+            </div>}
 
-            {step === 4 && <div className="dct-form-grid"><label>Target testers<input type="number" min={1} max={500} value={targetTesters} onChange={e => setTargetTesters(Number(e.target.value))} /></label><label className="full">Cohort preferences (optional)<textarea value={cohortNotes} onChange={e => setCohortNotes(e.target.value)} maxLength={1000} placeholder="Device coverage, tester experience, or cohort notes…" /></label><div className="dct-capability dct-inline-note"><span><Icon name="users" size={22} /></span><div><strong>Target and preferences are saved in test configuration.</strong><p>The platform forms tester cohorts through its separate lifecycle workflow; creating this draft does not assign testers or start recruitment.</p></div></div></div>}
+            {step === 3 && testType !== "google_play_closed" && <div className="dct-form-grid"><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>{selectedType?.title ?? "Testing"} configuration</strong><p>This campaign type uses general configuration for now. Type-specific integrations can be added separately without claiming an external release has occurred.</p></div></div><label>Android version / device rule<select value={androidVersion} onChange={e => setAndroidVersion(e.target.value)}><option>Any supported version</option><option>Android 10 and newer</option><option>Android 12 and newer</option><option>Android 14 and newer</option></select></label></div>}
 
-            {step === 5 && <div className="dct-form-grid"><label>Start date<input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></label><label>End date<input type="date" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} /></label><label className="full">Android version / device rule<select value={androidVersion} onChange={e => setAndroidVersion(e.target.value)}><option>Any supported version</option><option>Android 10 and newer</option><option>Android 12 and newer</option><option>Android 14 and newer</option></select></label><label className="full">Tester instructions<textarea value={instructions} onChange={e => setInstructions(e.target.value)} maxLength={3000} placeholder="Describe the tasks testers should perform and what feedback is useful…" /></label><p className="dct-field-note">These rules are stored as campaign configuration. Dates can be left unset for a draft.</p>{testType === "apk_testing" && <div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>APK upload is a separate storage workflow.</strong><p>This page records the testing mode and instructions; it does not claim an APK has been uploaded or distributed.</p></div></div>}</div>}
+            {step === 4 && <div className="dct-form-grid"><label>Test title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={100} placeholder="e.g. Android usability test" /></label><label className="full">Test description<textarea value={description} onChange={e => setDescription(e.target.value)} maxLength={2000} placeholder="Describe what testers will evaluate and what success looks like…" /></label><p className="dct-field-note">Title and description are saved with the test campaign.</p></div>}
 
-            {step === 6 && <><div className="dct-review"><div><span>Test type</span><strong>{selectedType?.title ?? "Not selected"}</strong></div><div><span>Application</span><strong>{selected?.name ?? "Not selected"}</strong></div><div><span>Test title</span><strong>{title || "Not entered"}</strong></div><div><span>Target testers</span><strong>{targetTesters}</strong></div><div><span>Testing period</span><strong>{startDate || "Not set"} → {endDate || "Not set"}</strong></div><div><span>Android rule</span><strong>{androidVersion}</strong></div><div><span>Campaign status</span><strong className="dct-review-draft">Draft</strong></div></div><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>Review & create draft</strong><p>Saving creates a TestDZ draft. It does not publish to Google Play, upload an APK, or automatically recruit testers.</p></div></div></>}
+            {step === 5 && <div className="dct-form-grid"><label>Target testers<input type="number" min={1} max={500} value={targetTesters} onChange={e => setTargetTesters(Number(e.target.value))} /></label><label>Start date<input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></label><label>End date<input type="date" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} /></label><label className="full">Cohort preferences (optional)<textarea value={cohortNotes} onChange={e => setCohortNotes(e.target.value)} maxLength={1000} placeholder="Device coverage, tester experience, or cohort notes…" /></label><label className="full">Tester instructions<textarea value={instructions} onChange={e => setInstructions(e.target.value)} maxLength={3000} placeholder="Describe the tasks testers should perform and what feedback is useful…" /></label><p className="dct-field-note">These dates, tester targets, and instructions are stored as draft configuration. No tester invitations are sent automatically.</p></div>}
+
+            {step === 6 && <><div className="dct-review"><div><span>Test type</span><strong>{selectedType?.title ?? "Not selected"}</strong></div><div><span>Testing track</span><strong>{playTrack === "internal" ? "Internal Testing" : playTrack === "closed" ? "Closed Testing" : "Open Testing"}</strong></div><div><span>Tester access</span><strong>{testerMethod === "join_link" ? "Join Link" : testerMethod === "google_groups" ? "Google Groups" : "CSV list (" + testerEmails.length + ")"}</strong></div><div><span>Release preference</span><strong>{releaseMode === "immediately" ? "Immediately (draft)" : releaseAt || "Schedule not set"}</strong></div><div><span>Application</span><strong>{selected?.name ?? "Not selected"}</strong></div><div><span>Test title</span><strong>{title || "Not entered"}</strong></div><div><span>Target testers</span><strong>{targetTesters}</strong></div><div><span>Testing period</span><strong>{startDate || "Not set"} → {endDate || "Not set"}</strong></div><div><span>Android rule</span><strong>{androidVersion}</strong></div><div><span>App version preference</span><strong>{appVersion === "latest_available" ? "Latest available (unverified)" : "To be added later"}</strong></div><div><span>Campaign status</span><strong className="dct-review-draft">Draft</strong></div></div><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>Review & create draft</strong><p>Saving creates a TestDZ draft. It does not publish to Google Play, upload an APK, or automatically recruit testers.</p></div></div></>}
 
             {saveError && <div className="dct-error" role="alert">{saveError}</div>}
             <div className="dct-tip"><span>💡</span><p><strong>Pro Tip:</strong> Clear tasks and useful feedback instructions help your campaign produce better results.</p></div>
