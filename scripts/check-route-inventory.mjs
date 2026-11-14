@@ -112,6 +112,7 @@ const expectedPaths = [
   "/developer/support",
   "/developer/support/:id",
   "/apps",
+  "/apps/new",
   "/apps/:id",
   "*"
 ];
@@ -177,11 +178,11 @@ if (
   errors.push("Both tester route groups must be imported and composed inside the appropriate guards.");
 }
 
-if (pathCount !== 96) {
-  errors.push(`Expected 96 explicit path declarations from the captured baseline, found ${pathCount}.`);
+if (pathCount !== 97) {
+  errors.push(`Expected 97 explicit path declarations from the captured baseline, found ${pathCount}.`);
 }
-if (routeElementCount !== 102) {
-  errors.push(`Expected 102 Route elements from the captured baseline, found ${routeElementCount}.`);
+if (routeElementCount !== 103) {
+  errors.push(`Expected 103 Route elements from the captured baseline, found ${routeElementCount}.`);
 }
 if (missingPaths.length > 0) {
   errors.push(`Missing required route declarations: ${missingPaths.join(", ")}.`);
