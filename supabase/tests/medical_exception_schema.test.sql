@@ -111,7 +111,7 @@ select ok(
   ) like '%recipient_role%'
   and pg_get_functiondef(
     'private.review_medical_exception(uuid,text,text)'::regprocedure
-  ) like '%tester%',
+  ) like '%''tester''%',
   'medical review notifications explicitly target the tester feed'
 );
 
