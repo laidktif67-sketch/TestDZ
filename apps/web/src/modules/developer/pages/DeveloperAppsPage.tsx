@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import imageCompression from "browser-image-compression";
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { identityApi } from "../../../features/identity/identity-api";
-import { APP_CATEGORIES, appError } from "../../../lib/app-utils";
-import { createApp, getAppLimit, listApps, uploadAppIcon } from "../../../features/apps/apps-api";
+
+import { getAppLimit, listApps } from "../../../features/apps/apps-api";
 import { listAppMetricTests, listAppMetricAssignments, listAppMetricFeedback } from "../../../features/analytics/app-metrics-api";
 import DeveloperSidebar from "../components/DeveloperSidebar";
 import "../styles/developer-apps.css";
@@ -71,14 +70,6 @@ function AppsPage() {
   const [sort, setSort] = useState<Sort>("latest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [name, setName] = useState("");
-  const [packageName, setPackageName] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("tools");
-  const [icon, setIcon] = useState<File | null>(null);
-  const [preview, setPreview] = useState("");
   const [notice, setNotice] = useState("");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
 
@@ -149,12 +140,6 @@ function AppsPage() {
       if (!data.session) { navigate("/auth", { replace: true }); setLoading(false); }
     });
   }, [userId]);
-  useEffect(() => {
-    if (!icon) { setPreview(""); return; }
-    const url = URL.createObjectURL(icon);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [icon]);
 
   const counts = useMemo(() => ({
     total: apps.length,
@@ -167,38 +152,6 @@ function AppsPage() {
     const matches = !query || (app.name + " " + app.package_name + " " + (app.description ?? "")).toLowerCase().includes(query);
     return matches && (filter === "all" || app.status === filter);
   }).sort((a, b) => sort === "name" ? a.name.localeCompare(b.name) : sort === "oldest" ? a.created_at.localeCompare(b.created_at) : b.created_at.localeCompare(a.created_at)), [apps, filter, search, sort]);
-
-  async function chooseIcon(file?: File) {
-    if (!file) return;
-    if (!["image/png", "image/jpeg"].includes(file.type)) { setError("App icon must be PNG or JPG."); return; }
-    try {
-      const compressed = await imageCompression(file, { maxSizeMB: 0.45, maxWidthOrHeight: 512, useWebWorker: true });
-      setIcon(new File([compressed], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: compressed.type || "image/jpeg" }));
-      setError("");
-    } catch { setError("Could not process this image. Please choose another."); }
-  }
-
-  function resetForm() {
-    setName(""); setPackageName(""); setDescription(""); setCategory("tools"); setIcon(null); setPreview(""); setShowForm(false);
-  }
-
-  async function create(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!identityApi.isConfigured() || !userId) return;
-    if (name.trim().length < 3 || name.trim().length > 50 || description.trim().length < 20 || description.trim().length > 500) { setError("App name must be 3–50 characters and description 20–500 characters."); return; }
-    if (!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(packageName.trim())) { setError("Invalid package name. Example: dz.testdz.myapp"); return; }
-    setBusy(true); setError(""); setNotice("");
-    const { data: appId, error: createError } = await createApp({ name, packageName, description, category });
-    if (createError) { setError(appError(createError.message)); setBusy(false); return; }
-    let warning = "";
-    if (icon) {
-      const { uploadError, updateError } = await uploadAppIcon(userId, String(appId), icon, { name, description, category });
-      if (uploadError || updateError) warning = "The app was created, but its icon could not be fully saved.";
-    }
-    resetForm(); setNotice("Application created as a draft."); await load();
-    if (warning) setError(warning);
-    setBusy(false);
-  }
 
   return <main className="dmy-shell">
     <DeveloperSidebar />
@@ -251,15 +204,7 @@ function AppsPage() {
       </div>
     </section>
 
-    {showForm && <div className="dmy-modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) resetForm(); }}><section className="dmy-modal" role="dialog" aria-modal="true" aria-labelledby="dmy-new-app-title"><div className="dmy-modal-head"><div><small>DEVELOPER WORKSPACE</small><h2 id="dmy-new-app-title">Add New App</h2></div><button type="button" onClick={resetForm} aria-label="Close"><Glyph name="close"/></button></div><form onSubmit={create}>
-      <label>App name<input required minLength={3} maxLength={50} value={name} onChange={e => setName(e.target.value)} placeholder="My Awesome App"/></label>
-      <label>Package name<input required value={packageName} onChange={e => setPackageName(e.target.value)} dir="ltr" placeholder="com.example.myapp"/></label>
-      <label>Description<textarea required minLength={20} maxLength={500} value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe what your app does…"/></label>
-      <label>Category<select value={category} onChange={e => setCategory(e.target.value)}>{APP_CATEGORIES.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-      <label>App icon<input type="file" accept="image/png,image/jpeg" onChange={e => void chooseIcon(e.target.files?.[0])}/></label>
-      {preview && <img src={preview} className="dmy-icon-preview" alt="App icon preview"/>}
-      <div className="dmy-modal-actions"><button type="button" onClick={resetForm}>Cancel</button><button type="submit" disabled={busy}>{busy ? "Creating…" : "Create App"}</button></div>
-    </form></section></div>}
+
   </main>;
 }
 
