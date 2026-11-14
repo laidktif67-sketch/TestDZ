@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getTesterReferralProfile } from "../../../features/profile/profile-api";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/referral-program.css";
 
@@ -17,12 +18,12 @@ export default function ReferralProgramPage() {
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
-    if (!session?.user?.id || !supabase) { setLoading(false); return; }
+    if (!session?.user?.id) { setLoading(false); return; }
     let alive = true;
     const userId = session.user.id;
     Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-      supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
+      getTesterReferralProfile(userId),
+      countTesterUnreadNotifications(userId)
     ]).then(([profile, notification]) => {
       if (!alive) return;
       setName(profile.data?.display_name?.trim() || session.user.email?.split("@")[0] || "Tester");
