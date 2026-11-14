@@ -18,6 +18,7 @@ export function useTesterPageHeader() {
     }
 
     let alive = true;
+    setNotifications(0);
     setLoading(true);
     const userId = session.user.id;
 
