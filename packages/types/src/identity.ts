@@ -14,7 +14,8 @@ export interface IdentitySignUpInput {
 }
 
 export interface IdentityUserMetadataUpdate {
-  username: string;
-  country: string;
-  portfolio_url: string;
+  username?: string;
+  country?: string;
+  portfolio_url?: string;
+  [key: string]: unknown;
 }
