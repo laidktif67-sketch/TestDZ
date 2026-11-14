@@ -5,6 +5,13 @@ function getClient() {
   return supabase;
 }
 
+/** Shared read-only name/avatar query for tester page headers. */
+export function getTesterHeaderProfile(userId: string) {
+  return getClient().from("profiles")
+    .select("display_name,avatar_url")
+    .eq("id", userId).maybeSingle();
+}
+
 /** Read only the profile fields used by developer settings; RLS remains authoritative. */
 export function getDeveloperSettingsProfile(userId: string) {
   return getClient().from("profiles")
@@ -17,12 +24,6 @@ export function updateDeveloperSettingsProfile(userId: string, values: { display
   return getClient().from("profiles").update(values).eq("id", userId);
 }
 
-/** Read-only profile fields for the tester referral-history header. */
-export function getTesterReferralProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url")
-    .eq("id", userId).maybeSingle();
-}
 
 
 /** Read-only account settings fields for the tester settings page. */
@@ -43,16 +44,4 @@ export function updateTesterLanguagePreference(userId: string, locale: string) {
   return getClient().from("profiles").update({ locale }).eq("id", userId);
 }
 
-/** Read-only profile header fields for tester notification preferences. */
-export function getTesterNotificationPreferencesProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url")
-    .eq("id", userId).maybeSingle();
-}
 
-/** Read-only profile header fields for the tester withdrawal status page. */
-export function getTesterWithdrawalStatusProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url")
-    .eq("id", userId).maybeSingle();
-}

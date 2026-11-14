@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterWithdrawalStatusProfile } from "../../../features/profile/profile-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/withdrawal-status.css";
 
@@ -26,7 +26,7 @@ export default function WithdrawalStatusPage() {
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
-        const { data: profile, error } = await getTesterWithdrawalStatusProfile(user.id);
+        const { data: profile, error } = await getTesterHeaderProfile(user.id);
         if (error) throw error;
         if (alive) {
           setName(profile?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
