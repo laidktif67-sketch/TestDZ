@@ -1,5 +1,6 @@
 import { Route } from "react-router-dom";
 import AppsPage from "../modules/developer/pages/DeveloperAppsPage";
+import DeveloperAddAppPage from "../modules/developer/pages/DeveloperAddAppPage";
 import AppDetailPage from "../modules/developer/pages/DeveloperAppDetailPage";
 import DeveloperDashboardPage from "../modules/developer/pages/DeveloperDashboardPage";
 import DeveloperMyTestsPage from "../modules/developer/pages/DeveloperMyTestsPage";
@@ -37,5 +38,6 @@ export const developerRouteElements = [
 <Route key="developer-15" path="/developer/support" element={<DeveloperSupportCenterPage />} />,
 <Route key="developer-16" path="/developer/support/:id" element={<DeveloperSupportTicketDetailsPage />} />,
 <Route key="developer-17" path="/apps" element={<AppsPage />} />,
+<Route key="developer-19" path="/apps/new" element={<DeveloperAddAppPage />} />,
 <Route key="developer-18" path="/apps/:id" element={<AppDetailPage />} />,
 ];
