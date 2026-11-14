@@ -258,16 +258,12 @@ const testerOnlyPaths = [
   "/withdrawal-request",
   "/withdrawal-status",
 ];
-const routePathPattern = (path) =>
-  new RegExp('<Route\\s+(?:key="[^"]+"\\s+)?path="' + path.replace(/[.*+?^${}()|[\\]\\]/g, "\\if (!/<Route element=\{<RoleGuard requiredRole="tester" \/>\}>\s*\{testerSecurityRouteElements\}\s*<\/Route>/.test(sources.authenticated)) {
-  errors.push("Tester security routes must remain nested inside the tester RoleGuard.");
-}
-") + '"');
 for (const path of testerOnlyPaths) {
-  if (!routePathPattern(path).test(sources.tester)) {
+  const routeDeclaration = `path="${path}"`;
+  if (!sources.tester.includes(routeDeclaration)) {
     errors.push(`Tester-only route "${path}" must be declared in testerRoutes.tsx.`);
   }
-  if (routePathPattern(path).test(sources.authenticated)) {
+  if (sources.authenticated.includes(routeDeclaration)) {
     errors.push(`Tester-only route "${path}" must not be declared in the shared authenticated routes.`);
   }
 }
