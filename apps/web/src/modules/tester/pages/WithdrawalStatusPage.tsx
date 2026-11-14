@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { getTesterWithdrawalStatusProfile } from "../../../features/profile/profile-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -18,13 +18,11 @@ export default function WithdrawalStatusPage() {
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
-    const client = supabase;
-    if (!client) { setLoading(false); return; }
-    const db = client;
+    if (!identityApi.isConfigured()) { setLoading(false); return; }
     let alive = true;
     async function load() {
       try {
-        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        const { data: sessionData, error: sessionError } = await identityApi.getSession();
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
