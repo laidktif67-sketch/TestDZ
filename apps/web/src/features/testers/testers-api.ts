@@ -28,9 +28,6 @@ export function listTesterMyTestRoles(userId: string) {
 }
 
 
-export function getTesterMyTestsWallet(userId: string) {
-  return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();
-}
 
 export function listTesterMyAssignments(userId: string) {
   return getClient().from("assignments")

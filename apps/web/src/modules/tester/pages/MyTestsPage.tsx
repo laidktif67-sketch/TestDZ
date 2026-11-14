@@ -3,7 +3,8 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { getTesterMyTestsWallet, listTesterMyAssignments, listTesterMyFeedback, listTesterMyTestRoles } from "../../../features/testers/testers-api";
+import { listTesterMyAssignments, listTesterMyFeedback, listTesterMyTestRoles } from "../../../features/testers/testers-api";
+import { getTesterEarnedPointsWallet } from "../../../features/testers/wallet-rewards-api";
 import { countTesterRoleUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import "../styles/tester-dashboard.css";
@@ -70,7 +71,7 @@ export default function MyTestsPage(){
    const [roleRes,profileRes,walletRes,assignmentRes,feedbackRes,noticeRes]=await Promise.all([
     listTesterMyTestRoles(userId),
     getTesterHeaderProfile(userId),
-    getTesterMyTestsWallet(userId),
+    getTesterEarnedPointsWallet(userId),
     listTesterMyAssignments(userId),
     listTesterMyFeedback(userId),
     countTesterRoleUnreadNotifications(userId)

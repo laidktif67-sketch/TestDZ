@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
-import { getTesterDashboardWallet, listTesterDashboardAssignments, listTesterDashboardAvailableTests } from "../../../features/testers/tester-dashboard-api";
+import { listTesterDashboardAssignments, listTesterDashboardAvailableTests } from "../../../features/testers/tester-dashboard-api";
+import { getTesterEarnedPointsWallet } from "../../../features/testers/wallet-rewards-api";
 import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
@@ -96,7 +97,7 @@ export default function TesterDashboardPage() {
       try {
         const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
         getTesterHeaderProfile(userId),
-        getTesterDashboardWallet(userId),
+        getTesterEarnedPointsWallet(userId),
         listTesterDashboardAssignments(userId),
         listTesterDashboardAvailableTests(),
         countTesterUnreadNotifications(userId)

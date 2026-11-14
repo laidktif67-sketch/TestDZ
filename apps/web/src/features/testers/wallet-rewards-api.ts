@@ -11,6 +11,11 @@ export function getWalletRewardsWallet(userId: string) {
   return getClient().from("wallets").select("earned_points,purchased_credits").eq("user_id", userId).maybeSingle();
 }
 
+/** Read-only earned-points balance shared by tester overview pages. */
+export function getTesterEarnedPointsWallet(userId: string) {
+  return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();
+}
+
 /** Read-only recent ledger history; preserves the original ordering and 1,000-row window. */
 export function listWalletRewardsLedger(userId: string) {
   return getClient().from("points_ledger")

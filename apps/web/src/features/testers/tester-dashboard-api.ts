@@ -5,9 +5,6 @@ function getClient() {
   return supabase;
 }
 
-export function getTesterDashboardWallet(userId: string) {
-  return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();
-}
 
 /** Assignment/check-in data used to derive tester dashboard progress. */
 export function listTesterDashboardAssignments(userId: string) {
