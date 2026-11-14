@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getTesterActivityProfile, listTesterActivityAssignments, listTesterActivityFeedback, listTesterActivityPoints, countTesterActivityUnreadNotifications } from "../../../features/testers/activity-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/activity-history.css";
@@ -87,16 +87,16 @@ export default function ActivityHistoryPage() {
       setName("Laid Ktif");setAssignments(demo);setFeedback([{id:"f1",assignment_id:"demo-1",rating:4.8,quality_status:"accepted",created_at:at(1)},{id:"f2",assignment_id:"demo-2",rating:4.4,quality_status:"accepted",created_at:at(3)},{id:"f3",assignment_id:"demo-3",rating:4.5,quality_status:"accepted",created_at:at(6)}]);
       setLedger([{amount:50,reference_id:"demo-1",wallet_type:"earned_points"},{amount:45,reference_id:"demo-2",wallet_type:"earned_points"},{amount:45,reference_id:"demo-3",wallet_type:"earned_points"}]);setNotifications(3);setLoading(false);return;
     }
-    if(!session?.user?.id||!supabase){setLoading(false);return;}
-    let alive=true;const client=supabase;const userId=session.user.id;const userEmail=session.user.email;
+    if(!session?.user?.id){setLoading(false);return;}
+    let alive=true;const userId=session.user.id;const userEmail=session.user.email;
     async function load(){
       setLoading(true);setError("");
       const [profile,assignmentResult,feedbackResult,ledgerResult,notice]=await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-        client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id",userId).order("created_at",{ascending:false}),
-        client.from("feedback").select("id,assignment_id,rating,quality_status,created_at").eq("tester_id",userId).order("created_at",{ascending:false}),
-        client.from("points_ledger").select("amount,reference_id,wallet_type").eq("user_id",userId).eq("wallet_type","earned_points"),
-        client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
+        getTesterActivityProfile(userId),
+        listTesterActivityAssignments(userId),
+        listTesterActivityFeedback(userId),
+        listTesterActivityPoints(userId),
+        countTesterActivityUnreadNotifications(userId)
       ]);
       if(!alive)return;
       setName(profile.data?.display_name?.trim()||userEmail?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");
