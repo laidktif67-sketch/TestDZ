@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterDashboardProfile, getTesterDashboardWallet, listTesterDashboardAssignments, listTesterDashboardAvailableTests, countTesterDashboardUnreadNotifications } from "../../../features/testers/tester-dashboard-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
@@ -88,8 +88,7 @@ export default function TesterDashboardPage() {
       setLoading(false);
       return;
     }
-    const client = supabase;
-    if (!client) { setLoading(false); return; }
+    if (!identityApi.isConfigured()) { setLoading(false); return; }
     let alive = true;
     const load = async (userId: string, userEmail?: string) => {
       try {
@@ -138,7 +137,7 @@ export default function TesterDashboardPage() {
         if (alive) setLoading(false);
       }
     };
-    client.auth.getSession().then(({ data }) => {
+    identityApi.getSession().then(({ data }) => {
       if (!alive) return;
       if (data.session) void load(data.session.user.id, data.session.user.email);
       else setLoading(false);
@@ -148,7 +147,7 @@ export default function TesterDashboardPage() {
         setLoading(false);
       }
     });
-    const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
+    const { data } = identityApi.onAuthStateChange((_event, nextSession) => {
       if (nextSession) {
         setLoading(true);
         window.setTimeout(() => { if (alive) void load(nextSession.user.id, nextSession.user.email); }, 0);
