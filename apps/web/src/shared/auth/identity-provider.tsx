@@ -1,2 +1,2 @@
-// Compatibility facade. The canonical identity provider lives in features/identity.
+// Compatibility facade. Keep existing app/guard imports stable during migration.
 export { IdentityProvider } from "../../features/identity/identity-provider";
