@@ -32,8 +32,3 @@ export function getActiveAssignmentEarnedPoints(userId: string, assignmentId: st
     .eq("user_id", userId).eq("wallet_type", "earned_points").eq("reference_id", assignmentId);
 }
 
-
-export function listTesterLeaderboardLedger(userIds: string[]) {
-  return getClient().from("points_ledger").select("user_id,amount")
-    .eq("wallet_type", "earned_points").in("user_id", userIds).limit(20000);
-}

@@ -34,6 +34,12 @@ export function listTesterLeaderboardPoints(userIds: string[]) {
     .order("created_at", { ascending: false }).limit(20000);
 }
 
+
+export function listTesterLeaderboardLedger(userIds: string[]) {
+  return getClient().from("points_ledger").select("user_id,amount")
+    .eq("wallet_type", "earned_points").in("user_id", userIds).limit(20000);
+}
+
 export function listTesterLeaderboardCompletedAssignments(userIds: string[]) {
   return getClient().from("assignments")
     .select("tester_id,status").eq("status", "completed").in("tester_id", userIds);
