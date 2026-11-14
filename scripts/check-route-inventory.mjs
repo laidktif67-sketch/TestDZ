@@ -61,23 +61,29 @@ const declaredPaths = [...allRouteSource.matchAll(/<Route\s+(?:key="[^"]+"\s+)?p
 const duplicatePaths = declaredPaths.filter((path, index) => declaredPaths.indexOf(path) !== index);
 
 const moduleContracts = [
-  ["public", "{publicRouteElements}", "export const publicRouteElements"],
-  ["admin", "{adminRouteElements}", "export const adminRouteElements"],
-  ["developer", "{developerRouteElements}", "export const developerRouteElements"],
-  ["authenticated", "{authenticatedRouteElements}", "export const authenticatedRouteElements"],
+  ["public", "{publicRouteElements}", "export const publicRouteElements", 'import { publicRouteElements } from "./routes/publicRoutes";'],
+  ["admin", "{adminRouteElements}", "export const adminRouteElements", 'import { adminRouteElements } from "./routes/adminRoutes";'],
+  ["developer", "{developerRouteElements}", "export const developerRouteElements", 'import { developerRouteElements } from "./routes/developerRoutes";'],
+  ["authenticated", "{authenticatedRouteElements}", "export const authenticatedRouteElements", 'import { authenticatedRouteElements } from "./routes/authenticatedRoutes";'],
 ];
-for (const [name, composition, declaration] of moduleContracts) {
-  if (!sources.app.includes(composition) || !sources[name].includes(declaration)) {
-    errors.push(`The ${name} route module is not correctly composed into AppRoutes.`);
+for (const [name, composition, declaration, importStatement] of moduleContracts) {
+  if (
+    !sources.app.includes(composition) ||
+    !sources[name].includes(declaration) ||
+    !sources.app.includes(importStatement)
+  ) {
+    errors.push(`The ${name} route module is not correctly imported and composed into AppRoutes.`);
   }
 }
 if (
   !sources.app.includes("{testerWorkspaceRouteElements}") ||
+  !sources.app.includes('import { testerWorkspaceRouteElements } from "./routes/testerRoutes";') ||
   !sources.tester.includes("export const testerWorkspaceRouteElements") ||
   !sources.authenticated.includes("{testerSecurityRouteElements}") ||
+  !sources.authenticated.includes('import { testerSecurityRouteElements } from "./testerRoutes";') ||
   !sources.tester.includes("export const testerSecurityRouteElements")
 ) {
-  errors.push("Both tester route groups must be composed inside the appropriate guards.");
+  errors.push("Both tester route groups must be imported and composed inside the appropriate guards.");
 }
 
 if (pathCount !== 96) {
