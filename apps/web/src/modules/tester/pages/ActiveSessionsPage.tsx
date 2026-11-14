@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { identityApi } from "../../../features/identity/identity-api";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listMyActiveSessions } from "../../../features/identity/sessions-api";
@@ -38,7 +39,7 @@ export default function ActiveSessionsPage() {
   useEffect(() => {
     let alive = true;
     async function loadSessions() {
-      if (!supabase) { if (alive) setSessionReady(true); return; }
+      if (!identityApi.isConfigured()) { if (alive) setSessionReady(true); return; }
       const [auth, result] = await Promise.all([supabase.auth.getSession(), listMyActiveSessions()]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
@@ -51,7 +52,7 @@ export default function ActiveSessionsPage() {
   }, []);
 
   async function signOutOtherSessions() {
-    if (!supabase || !hasSession) return;
+    if (!identityApi.isConfigured() || !hasSession) return;
     const confirmed = window.confirm("Sign out all other devices? This device will remain signed in.");
     if (!confirmed) return;
     setBusy(true); setMessage(""); setError("");
@@ -67,7 +68,7 @@ export default function ActiveSessionsPage() {
   const latestSession = sessions.reduce((latest, item) => !latest || item.last_active_at > latest.last_active_at ? item : latest, null as typeof sessions[number] | null);
   const securityGood = Boolean(user?.email_confirmed_at);
   return <div className="td-dashboard as-dashboard">
-    <TesterSidebar nav={nav} name={firstName} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
+    <TesterSidebar nav={nav} name={firstName} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!identityApi.isConfigured()}/>
     <main className="td-main as-main">
       <header className="as-topbar">
         <label className="as-search"><Icon name="search" size={20}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" readOnly/></label>
@@ -97,7 +98,7 @@ export default function ActiveSessionsPage() {
           </section>
 
           <aside className="as-side-column">
-            <section className="as-card as-details-card"><h2><Icon name="shield" size={25}/>Session Details</h2><p>You can keep your account secure by reviewing your signed-in device. If you notice unfamiliar activity, sign out other sessions and update your password.</p><button type="button" className="as-primary" disabled={!hasSession || busy || !supabase} onClick={() => void signOutOtherSessions()}><Icon name="logout" size={21}/>{busy ? "Signing out…" : "Log Out All Other Sessions"}</button><Link to="/settings?tab=security" className="as-secondary">Change Password <Icon name="arrow" size={15}/></Link></section>
+            <section className="as-card as-details-card"><h2><Icon name="shield" size={25}/>Session Details</h2><p>You can keep your account secure by reviewing your signed-in device. If you notice unfamiliar activity, sign out other sessions and update your password.</p><button type="button" className="as-primary" disabled={!hasSession || busy || !identityApi.isConfigured()} onClick={() => void signOutOtherSessions()}><Icon name="logout" size={21}/>{busy ? "Signing out…" : "Log Out All Other Sessions"}</button><Link to="/settings?tab=security" className="as-secondary">Change Password <Icon name="arrow" size={15}/></Link></section>
             <section className="as-card as-tips-card"><h2><Icon name="lightbulb" size={27}/>Security Tips</h2><ul><li><Icon name="check" size={17}/>Use a strong, unique password</li><li><Icon name="check" size={17}/>Enable two-factor authentication (2FA)</li><li><Icon name="check" size={17}/>Sign out from shared devices</li></ul></section>
           </aside>
         </div>
