@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { createDeveloperSupportMessage, createDeveloperSupportAttachment, getDeveloperSupportTicket, listDeveloperSupportAttachments, listDeveloperSupportEvents, listDeveloperSupportMessages } from "../../../features/support/support-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-dashboard.css";
@@ -25,13 +26,13 @@ export default function DeveloperSupportTicketDetailsPage(){
  const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Developer";const initials=name.split(/[\s._-]+/).slice(0,2).map((part: string)=>part[0]).join("").toUpperCase()||"DK";
  const load=useCallback(async()=>{
   if(!supabase||!user||!id){setLoading(false);return;}setLoading(true);setError("");
-  const {data:ticketData,error:ticketError}=await supabase.from("support_tickets").select("id,ticket_number,user_id,requester_role,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by").eq("id",id).eq("requester_role","developer").maybeSingle();
+  const {data:ticketData,error:ticketError}=await getDeveloperSupportTicket(id);
   if(ticketError||!ticketData||ticketData.user_id!==user.id){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setEvents([]);setLoading(false);return;}
   setTicket(ticketData as Ticket);
   const [messageResult,attachmentResult,eventResult]=await Promise.all([
-   supabase.from("support_ticket_messages").select("id,ticket_id,sender_id,body,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
-   supabase.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
-   supabase.from("support_ticket_events").select("id,ticket_id,actor_id,event_type,old_status,new_status,old_priority,new_priority,created_at").eq("ticket_id",id).order("created_at",{ascending:false})
+   listDeveloperSupportMessages(id),
+   listDeveloperSupportAttachments(id),
+   listDeveloperSupportEvents(id)
   ]);
   if(messageResult.error||attachmentResult.error||eventResult.error){setError("Some ticket activity could not be loaded. Please refresh or contact support.");}
   setMessages((messageResult.data||[]) as Message[]);setAttachments((attachmentResult.data||[]) as Attachment[]);setEvents((eventResult.data||[]) as TicketEvent[]);setLoading(false);
@@ -44,14 +45,14 @@ export default function DeveloperSupportTicketDetailsPage(){
   if(selectedFile&&(selectedFile.size>10*1024*1024||!allowedTypes.includes(selectedFile.type))){setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;}
   setSending(true);setError("");setNotice("");
   const body=reply.trim()||(selectedFile?"Attached a file.":"");
-  const {data:messageData,error:insertError}=await supabase.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body}).select("id").single();
+  const {data:messageData,error:insertError}=await createDeveloperSupportMessage({ticket_id:ticket.id,sender_id:user.id,body});
   if(insertError||!messageData){setSending(false);setError("Your reply could not be sent. Please try again.");return;}
   if(selectedFile){
    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
    const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the file upload failed. Please attach it in a new reply.");await load();return;}
-   const {error:metadataError}=await supabase.from("support_ticket_attachments").insert({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
+   const {error:metadataError}=await createDeveloperSupportAttachment({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
    if(metadataError){setSending(false);setReply("");setSelectedFile(null);setError("Your reply was sent, but the attachment record could not be saved.");await load();return;}
   }
   setSending(false);setReply("");setSelectedFile(null);if(fileRef.current)fileRef.current.value="";setNotice("Your reply has been sent.");await load();
