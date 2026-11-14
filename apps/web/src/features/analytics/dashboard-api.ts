@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { getTesterHeaderProfile } from "../profile/profile-api";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -7,9 +8,7 @@ function getClient() {
 
 /** Dashboard-only profile fields; profile visibility remains controlled by RLS. */
 export function getDeveloperDashboardProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url")
-    .eq("id", userId).maybeSingle();
+  return getTesterHeaderProfile(userId);
 }
 
 /** Recent developer tests, preserving dashboard ordering and result limit. */
