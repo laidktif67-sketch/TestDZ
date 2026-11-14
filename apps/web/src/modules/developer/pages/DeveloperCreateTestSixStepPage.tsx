@@ -135,11 +135,14 @@ export default function DeveloperCreateTestSixStepPage() {
     setSaveError("");
     if (step === 1 && !testType) { setSaveError("Choose a test type to continue."); return; }
     if (step === 2 && !selectedApp) { setSaveError("Select an application to continue."); return; }
+    if (step === 3 && testType === "google_play_closed" && testerMethod === "google_groups" && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(googleGroup.trim())) { setSaveError("Enter a valid Google Group email address."); return; }
+    if (step === 3 && testType === "google_play_closed" && releaseMode === "scheduled" && !releaseAt) { setSaveError("Choose a planned date and time, or select Immediately."); return; }
     if (step === 4 && title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters."); return; }
     if (step === 5 && (!Number.isFinite(targetTesters) || targetTesters < 1 || targetTesters > 500)) {
       setSaveError("Choose a tester target between 1 and 500.");
       return;
     }
+    if (step === 5 && testType === "google_play_closed" && playTrack === "internal" && targetTesters > 100) { setSaveError("Internal testing is limited to a target of 100 testers in this configuration."); return; }
     if (step === 5 && startDate && endDate && endDate < startDate) {
       setSaveError("The end date must be on or after the start date.");
       return;
