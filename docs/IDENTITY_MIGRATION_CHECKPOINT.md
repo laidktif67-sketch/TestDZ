@@ -98,3 +98,9 @@ These are fresh owner-reported static checks for the branch state at the time of
 The owner also previously reported successful browser smoke checks for the home page, a protected route, sign-in, refresh persistence, and permissions. The exact role matrix and negative cases were not specified. Sign-out redirect, role-fetch failure/retry, banned-account blocking, and incomplete-onboarding behavior remain **not verified**.
 
 **Gate decision:** do not begin a new identity-dependent domain migration yet. Next, finish the explicitly listed negative-path browser checks using safe test accounts. Mark each outcome as passed, failed, or not tested; do not alter real account roles or suspend real accounts for testing.
+
+## Static guard-contract audit added
+
+A lightweight source-contract audit is available as `npm run audit:identity-guards` (script: `scripts/audit-identity-guard-contracts.mjs`). It checks that critical fail-closed and routing patterns remain present in the identity provider and route guards: stale role requests, role-load errors, sign-out state clearing, unauthenticated redirects, account-status errors and bans, role-error retry, onboarding errors/incomplete onboarding, and guard order.
+
+This is a regression tripwire for source changes, **not** a runtime test, a full authorization proof, or a substitute for Supabase RLS/RPC tests. A passing result must not be recorded as proof that the browser negative paths were exercised.

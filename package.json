@@ -10,6 +10,7 @@
     "dev": "npm run dev --workspace testdz-frontend",
     "build": "npm run build --workspace testdz-frontend",
     "typecheck": "npm run typecheck --workspace testdz-frontend",
-    "check:routes": "node scripts/check-route-inventory.mjs"
+    "check:routes": "node scripts/check-route-inventory.mjs",
+    "audit:identity-guards": "node scripts/audit-identity-guard-contracts.mjs"
   }
 }
