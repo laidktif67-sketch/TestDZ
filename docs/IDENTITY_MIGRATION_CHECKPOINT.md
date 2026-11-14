@@ -77,3 +77,8 @@ A focused source review on the current branch found that `identity-api.ts` accep
 This is a routing/role-contract question, not proof of an authorization bypass. Do not change role grants, guard order, or destination behavior until the intended `support` user journey is confirmed. Add a dedicated support destination only if that is the approved product behavior, and then test both allowed and denied destinations for a support-only account.
 
 Status: **requires product/owner confirmation; no code change made**.
+
+
+## Product decision: support role remains unplanned
+
+The repository owner confirmed that a separate support workspace has not yet been planned. Therefore, do not invent a support-specific page or expand its permissions as part of this migration. Keep the current implementation unchanged and retain the routing observation as a deferred product decision. Revisit only when the support workflow and intended access boundaries are defined.
