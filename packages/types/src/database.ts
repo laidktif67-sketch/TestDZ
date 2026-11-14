@@ -1992,6 +1992,8 @@ export type Database = {
           short_summary: string | null
           start_date: string | null
           status: string
+          test_type: string
+          test_config: Json
           tester_instructions: string | null
           title: string
           updated_at: string
@@ -2012,6 +2014,8 @@ export type Database = {
           short_summary?: string | null
           start_date?: string | null
           status?: string
+          test_type?: string
+          test_config?: Json
           tester_instructions?: string | null
           title: string
           updated_at?: string
@@ -2032,6 +2036,8 @@ export type Database = {
           short_summary?: string | null
           start_date?: string | null
           status?: string
+          test_type?: string
+          test_config?: Json
           tester_instructions?: string | null
           title?: string
           updated_at?: string
