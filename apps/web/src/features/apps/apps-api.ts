@@ -1,7 +1,7 @@
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "../../lib/supabase";
 
-const APP_SELECT = "id,developer_id,name,package_name,description,category,icon_url,status,created_at";
+const APP_SELECT = "id,developer_id,name,package_name,description,category,icon_url,distribution_method,distribution_url,status,created_at";
 
 function client() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -35,6 +35,23 @@ export function createApp(input: {
     p_package_name: input.packageName,
     p_description: input.description,
     p_category: input.category,
+  });
+}
+
+/** Create an app and save its external distribution link atomically through a server-side RPC. */
+export function createAppWithDistribution(input: {
+  name: string;
+  packageName: string;
+  description: string;
+  category: string;
+  distributionUrl: string;
+}) {
+  return client().rpc("create_app_with_distribution", {
+    p_name: input.name,
+    p_package_name: input.packageName,
+    p_description: input.description,
+    p_category: input.category,
+    p_distribution_url: input.distributionUrl,
   });
 }
 
