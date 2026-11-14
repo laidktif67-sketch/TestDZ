@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../../../lib/supabase";
+import { getTesterDashboardProfile, getTesterDashboardWallet, listTesterDashboardAssignments, listTesterDashboardAvailableTests, countTesterDashboardUnreadNotifications } from "../../../features/testers/tester-dashboard-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/tester-dashboard.css";
@@ -93,11 +94,11 @@ export default function TesterDashboardPage() {
     const load = async (userId: string, userEmail?: string) => {
       try {
         const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-        client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
-        client.from("assignments").select("id,status,start_date,created_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id", userId),
-        client.from("tests").select("id,title,status,min_testers,app:apps(name,icon_url)", { count: "exact" }).in("status", ["recruiting","ready","running"]).order("created_at", { ascending: false }).limit(4),
-        client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
+        getTesterDashboardProfile(userId),
+        getTesterDashboardWallet(userId),
+        listTesterDashboardAssignments(userId),
+        listTesterDashboardAvailableTests(),
+        countTesterDashboardUnreadNotifications(userId)
       ]);
       if (!alive) return;
       const assignments = assignmentRes.data ?? [];
