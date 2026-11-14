@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { getTesterFeedbackProfile, listTesterFeedbackHistory, listTesterFeedbackRewards } from "../../../features/feedback/feedback-api";
 import TesterSidebar from "../components/TesterSidebar";
@@ -67,7 +67,7 @@ export default function FeedbackHistoryPage() {
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
-    if (!session?.user?.id || !supabase) { setLoading(false); return; }
+    if (!session?.user?.id || !identityApi.isConfigured()) { setLoading(false); return; }
     let alive = true;
     async function load() {
       setLoading(true);

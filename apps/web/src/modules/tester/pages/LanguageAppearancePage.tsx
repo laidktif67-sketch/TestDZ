@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
+import { getTesterAccountSettingsProfile, updateTesterLanguagePreference } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -60,10 +62,10 @@ export default function LanguageAppearancePage() {
     ...(isDeveloper ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : [])
   ];
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user || !identityApi.isConfigured()) return;
     let alive = true;
     Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle(),
+      getTesterAccountSettingsProfile(user.id),
       Promise.resolve(user.user_metadata?.testdz_language_appearance as Partial<Preferences> | undefined)
     ]).then(([profile, saved]) => {
       if (!alive) return;
@@ -85,9 +87,9 @@ export default function LanguageAppearancePage() {
   }, [prefs.theme, language]);
   const update = <K extends keyof Preferences,>(key: K, value: Preferences[K]) => setPrefs(current => ({ ...current, [key]: value }));
   async function save() {
-    if (!supabase || !user) { setError("Sign in to save your language and appearance preferences."); return; }
+    if (!identityApi.isConfigured() || !user) { setError("Sign in to save your language and appearance preferences."); return; }
     setBusy(true); setMessage(""); setError("");
-    const profileResult = await supabase.from("profiles").update({ locale: language }).eq("id", user.id);
+    const profileResult = await updateTesterLanguagePreference(user.id, language);
     if (profileResult.error) {
       setBusy(false); setError("Your language preference could not be saved. Please try again."); return;
     }
@@ -103,7 +105,7 @@ export default function LanguageAppearancePage() {
   const datePreview = prefs.dateFormat === "DD/MM/YYYY" ? "07/11/2026" : prefs.dateFormat === "YYYY-MM-DD" ? "2026-11-07" : "Nov 07, 2026";
   const timePreview = prefs.timeFormat === "24h" ? "14:30" : "02:30 PM";
   return <div className={`td-dashboard la-dashboard ${prefs.compactMode ? "compact" : ""} ${!prefs.animations ? "no-motion" : ""}`}>
-    <TesterSidebar nav={nav} name={displayName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
+    <TesterSidebar nav={nav} name={displayName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!identityApi.isConfigured()}/>
     <main className="td-main la-main">
       <header className="la-topbar">
         <label className="la-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ"/></label>

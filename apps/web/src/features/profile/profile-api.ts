@@ -38,6 +38,11 @@ export function updateTesterAccountSettingsProfile(userId: string, values: { dis
 }
 
 
+/** Update only the tester language preference; leave all other profile fields untouched. */
+export function updateTesterLanguagePreference(userId: string, locale: string) {
+  return getClient().from("profiles").update({ locale }).eq("id", userId);
+}
+
 /** Read-only profile header fields for tester notification preferences. */
 export function getTesterNotificationPreferencesProfile(userId: string) {
   return getClient().from("profiles")
