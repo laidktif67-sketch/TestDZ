@@ -22,45 +22,10 @@
 .developer-sidebar-promo strong{font-size:12px;line-height:1.4}
 .developer-sidebar-promo>a{min-height:32px;display:flex;align-items:center;justify-content:center;gap:7px;border-radius:20px;background:#fff;color:#0755d9;text-decoration:none;font-size:10px;font-weight:800}
 .developer-sidebar-footer{margin-top:0;min-width:0}
-.dd-shell,.dmy-shell,.dan-shell,.dct-shell,.dmt-shell,.dtr-shell,.df-shell,.dn-shell,.dset-shell,.dsub-shell{grid-template-columns:250px minmax(0,1fr)!important}
+.dd-shell,.dmy-shell,.dan-shell,.dct-shell,.dmt-shell,.dtr-shell,.df-shell,.dn-shell,.dset-shell,.dsub-shell{direction:ltr;grid-template-columns:250px minmax(0,1fr)!important}
 @media(max-width:850px){.dd-shell,.dmy-shell,.dan-shell,.dct-shell,.dmt-shell,.dtr-shell,.df-shell,.dn-shell,.dset-shell,.dsub-shell{grid-template-columns:minmax(0,1fr)!important}.developer-sidebar{position:relative;top:auto;width:100%;height:auto;min-height:0;max-height:none;padding:14px;gap:12px;overflow:visible}.developer-sidebar-brand{padding:0 4px}.developer-sidebar-brand-mark{width:38px;height:38px}.developer-sidebar-brand strong{font-size:21px}.developer-sidebar-workspace{height:40px}.developer-sidebar-nav{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin}.developer-sidebar-nav-item{display:flex;flex:none}.developer-sidebar-section{display:none}.developer-sidebar-nav a{min-height:39px;white-space:nowrap;padding:9px 11px}.developer-sidebar-nav a svg{width:18px;height:18px}.developer-sidebar-promo{display:none}.developer-sidebar-footer{display:none}}
 
-.developer-app-detail-shell{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh;background:#f5f7fb}
+.developer-app-detail-shell{display:grid;direction:ltr;grid-template-columns:250px minmax(0,1fr);min-height:100vh;background:#f5f7fb}
 .developer-app-detail-shell>main{min-width:0}
 @media(max-width:850px){.developer-app-detail-shell{grid-template-columns:minmax(0,1fr)}.developer-app-detail-shell>.loading-screen{min-height:45vh}}
 
-/* Keep sidebar placement tied to the selected language, not a stale inherited direction. */
-:root[lang="en"] .dd-shell,
-:root[lang="en"] .dmy-shell,
-:root[lang="en"] .dan-shell,
-:root[lang="en"] .dct-shell,
-:root[lang="en"] .dmt-shell,
-:root[lang="en"] .dtr-shell,
-:root[lang="en"] .df-shell,
-:root[lang="en"] .dn-shell,
-:root[lang="en"] .dset-shell,
-:root[lang="en"] .dsub-shell,
-:root[lang="en"] .developer-app-detail-shell,
-:root[lang="fr"] .dd-shell,
-:root[lang="fr"] .dmy-shell,
-:root[lang="fr"] .dan-shell,
-:root[lang="fr"] .dct-shell,
-:root[lang="fr"] .dmt-shell,
-:root[lang="fr"] .dtr-shell,
-:root[lang="fr"] .df-shell,
-:root[lang="fr"] .dn-shell,
-:root[lang="fr"] .dset-shell,
-:root[lang="fr"] .dsub-shell,
-:root[lang="fr"] .developer-app-detail-shell { direction:ltr; }
-
-:root[lang="ar"] .dd-shell,
-:root[lang="ar"] .dmy-shell,
-:root[lang="ar"] .dan-shell,
-:root[lang="ar"] .dct-shell,
-:root[lang="ar"] .dmt-shell,
-:root[lang="ar"] .dtr-shell,
-:root[lang="ar"] .df-shell,
-:root[lang="ar"] .dn-shell,
-:root[lang="ar"] .dset-shell,
-:root[lang="ar"] .dsub-shell,
-:root[lang="ar"] .developer-app-detail-shell { direction:rtl; }
