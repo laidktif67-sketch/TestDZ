@@ -1,7 +1,7 @@
 import { useEffect,useMemo,useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getTesterLeaderboardProfile, countTesterLeaderboardUnreadNotifications, countTesterLeaderboardTesters, listTesterLeaderboardTesterIds, listTesterLeaderboardProfiles, listTesterLeaderboardPoints, listTesterLeaderboardCompletedAssignments } from "../../../features/testers/leaderboard-api";
 import TesterSidebar,{Icon} from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/leaderboard.css";
@@ -14,19 +14,19 @@ export default function TesterLeaderboardPage(){
  const {session,roles=[]}=useIdentity();const [name,setName]=useState("Tester"),[avatar,setAvatar]=useState(""),[unread,setUnread]=useState(0),[menuOpen,setMenuOpen]=useState(false);
  const [filter,setFilter]=useState<Filter>("all"),[rows,setRows]=useState<Rank[]>([]),[ledgerRows,setLedgerRows]=useState<Score[]>([]),[totalTesters,setTotalTesters]=useState<number|null>(null),[totalAwarded,setTotalAwarded]=useState<number|null>(null),[loading,setLoading]=useState(true),[dataNotice,setDataNotice]=useState("");
  const [page,setPage]=useState(1);const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
- useEffect(()=>{if(!session?.user?.id||!supabase){setLoading(false);return;}let alive=true;const uid=session.user.id;(async()=>{
+ useEffect(()=>{if(!session?.user?.id){setLoading(false);return;}let alive=true;const uid=session.user.id;(async()=>{
  const [profile,notifications,roleCount,roleRows]=await Promise.all([
- supabase.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
- supabase.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
- supabase.from("user_roles").select("user_id",{count:"exact",head:true}).eq("role","tester"),
- supabase.from("user_roles").select("user_id").eq("role","tester").limit(5000)
+ getTesterLeaderboardProfile(uid),
+ countTesterLeaderboardUnreadNotifications(uid),
+ countTesterLeaderboardTesters(),
+ listTesterLeaderboardTesterIds()
  ]);
  if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notifications.count??0);setTotalTesters(roleCount.count);
  const ids=(roleRows.data??[]).map(x=>x.user_id);if(!ids.length){setRows([]);setTotalAwarded(0);setLoading(false);return;}
  const [profiles,ledger,assignments]=await Promise.all([
- supabase.from("profiles").select("id,display_name,avatar_url").in("id",ids),
- supabase.from("points_ledger").select("user_id,amount,created_at,wallet_type,reason").eq("wallet_type","earned_points").in("user_id",ids).order("created_at",{ascending:false}).limit(20000),
- supabase.from("assignments").select("tester_id,status").eq("status","completed").in("tester_id",ids)
+ listTesterLeaderboardProfiles(ids),
+ listTesterLeaderboardPoints(ids),
+ listTesterLeaderboardCompletedAssignments(ids)
  ]);
  if(!alive)return;
  if(ledger.error||profiles.error){setDataNotice("The public leaderboard data is not available with the current database read permissions. No sample rankings are shown.");setLoading(false);return;}
