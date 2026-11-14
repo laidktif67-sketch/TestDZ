@@ -22,7 +22,7 @@ export function useTesterProfile() {
     setName(user.email?.split("@")[0] || "Tester");
     setAvatar("");
     setLoading(true);
-    getTesterHeaderProfile(user.id)
+    Promise.resolve(getTesterHeaderProfile(user.id))
       .then(({ data }) => {
         if (!alive) return;
         setName(data?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
