@@ -46,9 +46,9 @@ The branches also have different page inventories and data/API modules. Replacin
 
 The six-step branch contains both `DeveloperCreateTestPage.tsx` and `DeveloperCreateTestSixStepPage.tsx`. The current developer route module registers the six-step page at `/developer/tests/new`; it does not register the older page in the route table. This makes the older page a candidate for deprecation, but its imports and any non-route use must be exhaustively checked before deletion. Shared CSS dependencies must also be reviewed.
 
-### 4. Identity provider has a duplicated implementation file — preserve until references are proven
+### 4. Identity compatibility facade is already in place
 
-The branch contains both `apps/web/src/features/identity/identity-provider.tsx` and `apps/web/src/shared/auth/identity-provider.tsx` with the same blob SHA/content. The current `App.tsx` imports the feature-owned provider. The shared auth API/context/hook files are compatibility re-exports into `features/identity`, but the shared provider file remains a full implementation rather than a facade. This is a concrete duplicate-maintenance risk. Before deleting or converting it, search every source file for imports and preserve the single canonical provider contract.
+In the current six-step branch, `apps/web/src/features/identity/identity-provider.tsx` is the canonical implementation and `apps/web/src/shared/auth/identity-provider.tsx` is already a three-line compatibility re-export. The shared `identity-api.ts`, `identity-context.ts`, and `hooks/useIdentity.ts` files are also compatibility facades into `features/identity`. This is intentional transitional compatibility, not a duplicate implementation on this baseline, so no identity-provider change is needed in this audit batch.
 
 ### 5. Page inventory candidates and legacy source folders
 
