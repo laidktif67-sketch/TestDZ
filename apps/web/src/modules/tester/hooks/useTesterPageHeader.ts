@@ -12,11 +12,13 @@ export function useTesterPageHeader() {
 
   useEffect(() => {
     if (!session?.user?.id) {
+      setNotifications(0);
       setLoading(false);
       return;
     }
 
     let alive = true;
+    setLoading(true);
     const userId = session.user.id;
 
     countTesterUnreadNotifications(userId)
