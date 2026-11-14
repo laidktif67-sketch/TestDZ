@@ -1,5 +1,9 @@
 import { Route } from "react-router-dom";
 import TesterDashboardPage from "../modules/tester/pages/TesterDashboardPage";
+import SettingsSecurityPage from "../modules/tester/pages/SettingsSecurityPage";
+import NotificationPreferencesPage from "../modules/tester/pages/NotificationPreferencesPage";
+import ActiveSessionsPage from "../modules/tester/pages/ActiveSessionsPage";
+import NotificationsCenterPage from "../modules/tester/pages/NotificationsCenterPage";
 import AssignmentDetailsPage from "../modules/tester/pages/AssignmentDetailsPage";
 import ActiveAssignmentProgressPage from "../modules/tester/pages/ActiveAssignmentProgressPage";
 import AssignmentSubmissionPage from "../modules/tester/pages/AssignmentSubmissionPage";
@@ -29,6 +33,10 @@ export const testerSecurityRouteElements = [
 ];
 
 export const testerWorkspaceRouteElements = [
+<Route key="tester-workspace-settings-1" path="/settings" element={<SettingsSecurityPage />} />,
+<Route key="tester-workspace-settings-2" path="/notification-preferences" element={<NotificationPreferencesPage />} />,
+<Route key="tester-workspace-settings-3" path="/active-sessions" element={<ActiveSessionsPage />} />,
+<Route key="tester-workspace-settings-4" path="/notifications" element={<NotificationsCenterPage />} />,
 <Route key="tester-workspace-moved-1" path="/assignments/:id" element={<AssignmentDetailsPage />} />,
 <Route key="tester-workspace-moved-2" path="/assignments/:id/progress" element={<ActiveAssignmentProgressPage />} />,
 <Route key="tester-workspace-moved-3" path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />,
