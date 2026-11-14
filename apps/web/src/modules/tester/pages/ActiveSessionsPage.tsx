@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listMyActiveSessions } from "../../../features/identity/sessions-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -40,7 +39,7 @@ export default function ActiveSessionsPage() {
     let alive = true;
     async function loadSessions() {
       if (!identityApi.isConfigured()) { if (alive) setSessionReady(true); return; }
-      const [auth, result] = await Promise.all([supabase!.auth.getSession(), listMyActiveSessions()]);
+      const [auth, result] = await Promise.all([identityApi.getSession(), listMyActiveSessions()]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
       if (result.error) setError("Could not load your active sessions. Please try again.");
@@ -56,7 +55,7 @@ export default function ActiveSessionsPage() {
     const confirmed = window.confirm("Sign out all other devices? This device will remain signed in.");
     if (!confirmed) return;
     setBusy(true); setMessage(""); setError("");
-    const result = await supabase!.auth.signOut({ scope: "others" });
+    const result = await identityApi.signOutOtherSessions();
     if (result.error) { setBusy(false); setError("Could not sign out other sessions. Please try again."); return; }
     const refreshed = await listMyActiveSessions();
     setBusy(false);
