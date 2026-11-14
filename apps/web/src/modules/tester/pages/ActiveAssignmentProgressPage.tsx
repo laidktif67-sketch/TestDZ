@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { countActiveAssignmentFeedback, countActiveAssignmentUnreadNotifications, getActiveAssignmentProfile, getActiveAssignmentRecord, getActiveAssignmentEarnedPoints, listActiveAssignmentCheckIns, listTesterRoleIds, listTesterLeaderboardProfiles, listTesterLeaderboardLedger } from "../../../features/testers/active-assignment-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -24,19 +25,19 @@ export default function ActiveAssignmentProgressPage(){
   if(!session?.user?.id||!id||!supabase){setLoading(false);return;}let alive=true;const client=supabase,uid=session.user.id;
   (async()=>{
    const [profile,notice,a,c,f,l,roleRows]=await Promise.all([
-    client.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
-    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
-    client.from("assignments").select("id,status,start_date,medical_extension_days,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category,play_store_url))").eq("id",id).eq("tester_id",uid).maybeSingle(),
-    client.from("checkins").select("id,checkin_date,evidence_url").eq("assignment_id",id).eq("tester_id",uid).order("checkin_date"),
-    client.from("feedback").select("id",{count:"exact",head:true}).eq("assignment_id",id).eq("tester_id",uid),
-    client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_id",id),
-    client.from("user_roles").select("user_id").eq("role","tester").limit(5000)
+    getActiveAssignmentProfile(uid),
+    countActiveAssignmentUnreadNotifications(uid),
+    getActiveAssignmentRecord(id,uid),
+    listActiveAssignmentCheckIns(id,uid),
+    countActiveAssignmentFeedback(id,uid),
+    getActiveAssignmentEarnedPoints(uid,id),
+    listTesterRoleIds()
    ]);
    if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notice.count??0);
    if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
    setAssignment(a.data as unknown as Assignment);setCheckins((c.data??[]) as Checkin[]);setFeedbackCount(f.count??0);setEarned((l.data??[]).reduce((sum,x)=>sum+Number(x.amount||0),0));
    const ids=(roleRows.data??[]).map(x=>x.user_id);
-   if(ids.length){const [profiles,ledger]=await Promise.all([client.from("profiles").select("id,display_name,avatar_url").in("id",ids),client.from("points_ledger").select("user_id,amount").eq("wallet_type","earned_points").in("user_id",ids).limit(20000)]);
+   if(ids.length){const [profiles,ledger]=await Promise.all([listTesterLeaderboardProfiles(ids),listTesterLeaderboardLedger(ids)]);
     if(!alive)return;if(profiles.error||ledger.error)setLeaderError("Leaderboard rankings are temporarily unavailable.");else{const map=new Map<string,Leader>();for(const p of profiles.data??[])map.set(p.id,{id:p.id,name:p.display_name?.trim()||"TestDZ Tester",avatar:p.avatar_url||null,points:0});for(const x of ledger.data??[]){const row=map.get(x.user_id);if(row)row.points+=Number(x.amount||0);}setLeaders([...map.values()].sort((x,y)=>y.points-x.points).slice(0,3));}}
    setLoading(false);
   })().catch(()=>{if(alive){setError("Unable to load assignment progress.");setLoading(false);}});
