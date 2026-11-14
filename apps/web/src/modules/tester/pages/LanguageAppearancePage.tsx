@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterAccountSettingsProfile, updateTesterLanguagePreference } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
@@ -93,7 +92,7 @@ export default function LanguageAppearancePage() {
     if (profileResult.error) {
       setBusy(false); setError("Your language preference could not be saved. Please try again."); return;
     }
-    const authResult = await supabase!.auth.updateUser({ data: { testdz_language_appearance: prefs, testdz_theme: prefs.theme } });
+    const authResult = await identityApi.updateUserMetadata({ testdz_language_appearance: prefs, testdz_theme: prefs.theme });
     setBusy(false);
     if (authResult.error) setError("Your display preferences could not be saved. Please try again.");
     else setMessage("Your preferences have been saved securely.");
