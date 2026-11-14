@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getTesterAssignmentDetails } from "../../../features/testers/assignments-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/assignment-details.css";
@@ -15,8 +15,7 @@ export default function AssignmentDetailsPage(){
  const preview=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  const name=session?.user?.user_metadata?.display_name||session?.user?.email?.split("@")[0]||"Tester"; const firstName=name.split(/\s+/)[0];
  useEffect(()=>{if(preview){setData({id:"preview-assignment",status:"active",start_date:"2026-11-07",points_awarded:75,test:{id:"preview-test",title:"Performance Testing",description:"Help us test the app’s performance and stability under different conditions. Focus on responsiveness, smoothness, crashes and battery usage.",short_summary:"Test the app performance under different conditions.",start_date:"2026-11-07",end_date:"2026-11-14",app:{name:"PlayStore App",icon_url:null,category:"Android application"}}});setLoading(false);return;}
- if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){if(alive){setError("Database connection is unavailable.");setLoading(false);}return;}
- const a=await supabase.from("assignments").select("id,status,start_date,points_awarded,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category))").eq("id",id).eq("tester_id",session.user.id).maybeSingle();
+ if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{let a;try{a=await getTesterAssignmentDetails(id,session.user.id);}catch{if(alive){setError("Database connection is unavailable.");setLoading(false);}return;}
  if(!alive)return;if(a.error||!a.data)setError(a.error?.message||"This assignment could not be found.");else setData(a.data as unknown as AssignmentDetails);setLoading(false);})();return()=>{alive=false;};},[id,session?.user?.id,preview]);
  if(!preview&&!session)return <Navigate to="/auth" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;
  const test=data?.test;const canStart=data?.status==="active"||data?.status==="pending";
