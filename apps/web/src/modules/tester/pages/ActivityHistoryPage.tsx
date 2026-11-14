@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterActivityProfile, listTesterActivityAssignments, listTesterActivityFeedback, listTesterActivityPoints, countTesterActivityUnreadNotifications } from "../../../features/testers/activity-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
+import { listTesterActivityAssignments, listTesterActivityFeedback, listTesterActivityPoints, countTesterActivityUnreadNotifications } from "../../../features/testers/activity-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/activity-history.css";
@@ -92,7 +93,7 @@ export default function ActivityHistoryPage() {
     async function load(){
       setLoading(true);setError("");
       const [profile,assignmentResult,feedbackResult,ledgerResult,notice]=await Promise.all([
-        getTesterActivityProfile(userId),
+        getTesterHeaderProfile(userId),
         listTesterActivityAssignments(userId),
         listTesterActivityFeedback(userId),
         listTesterActivityPoints(userId),

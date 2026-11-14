@@ -5,13 +5,6 @@ function getClient() {
   return supabase;
 }
 
-/** Read-only data access for the tester activity timeline; existing RLS remains authoritative. */
-export function getTesterActivityProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url")
-    .eq("id", userId).maybeSingle();
-}
-
 export function listTesterActivityAssignments(testerId: string) {
   return getClient().from("assignments")
     .select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)")

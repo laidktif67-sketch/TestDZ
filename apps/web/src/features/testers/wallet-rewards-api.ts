@@ -5,10 +5,6 @@ function getClient() {
   return supabase;
 }
 
-/** Read-only profile fields displayed by Wallet & Rewards. */
-export function getWalletRewardsProfile(userId: string) {
-  return getClient().from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
-}
 
 /** Read-only wallet balances; all financial mutations remain outside this module. */
 export function getWalletRewardsWallet(userId: string) {
