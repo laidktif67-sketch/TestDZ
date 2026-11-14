@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { listTesterSubmissionCheckIns } from "./assignments-api";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -13,8 +14,7 @@ export function getCompletionSummaryAssignment(assignmentId: string, testerId: s
 }
 
 export function listCompletionSummaryCheckins(assignmentId: string, testerId: string) {
-  return getClient().from("checkins").select("id,checkin_date")
-    .eq("assignment_id", assignmentId).eq("tester_id", testerId).order("checkin_date");
+  return listTesterSubmissionCheckIns(assignmentId, testerId);
 }
 
 export function getCompletionSummaryFeedback(assignmentId: string, testerId: string) {
