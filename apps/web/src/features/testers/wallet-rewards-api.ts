@@ -23,8 +23,3 @@ export function listWalletRewardsLedger(userId: string) {
     .eq("user_id", userId).order("created_at", { ascending: false }).range(0, 999);
 }
 
-/** Count unread notifications for the signed-in tester. */
-export function countWalletRewardsUnreadNotifications(userId: string) {
-  return getClient().from("notifications").select("id", { count: "exact", head: true })
-    .eq("user_id", userId).is("read_at", null);
-}
