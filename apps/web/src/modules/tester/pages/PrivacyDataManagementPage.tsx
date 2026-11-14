@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import {
+  getPrivacyPageProfile,
+  getPrivacyExportProfile,
+  listPrivacyExportAssignments,
+  listPrivacyExportCheckins,
+  listPrivacyExportFeedback,
+  listPrivacyExportNotifications,
+  listPrivacyExportLedger,
+  listPrivacyActivityAssignments,
+  listPrivacyActivityCheckins,
+  listPrivacyActivityFeedback,
+  listPrivacyActivityLedger
+} from "../../../features/testers/privacy-data-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -74,7 +87,7 @@ export default function PrivacyDataManagementPage() {
     const saved = metadata.testdz_privacy_preferences as Partial<PrivacyPreferences> | undefined;
     const history = metadata.testdz_privacy_export_requests as ExportRequest[] | undefined;
     Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url,created_at,updated_at").eq("id", user.id).maybeSingle()
+      getPrivacyPageProfile(user.id)
     ]).then(([profile]) => {
       if (!alive) return;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
@@ -113,12 +126,12 @@ export default function PrivacyDataManagementPage() {
     if (!supabase || !user) return;
     setBusy("data"); setMessage(""); setError("");
     const [profile, assignments, checkins, feedback, notifications, ledger] = await Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,subscription_tier,created_at,updated_at").eq("id", user.id).maybeSingle(),
-      supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at,updated_at").eq("tester_id", user.id),
-      supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
-      supabase.from("feedback").select("id,assignment_id,rating,body,category,quality_status,created_at").eq("tester_id", user.id),
-      supabase.from("notifications").select("id,type,title,body,read_at,created_at").eq("user_id", user.id),
-      supabase.from("points_ledger").select("id,wallet_type,amount,reason,reference_type,created_at").eq("user_id", user.id)
+      getPrivacyExportProfile(user.id),
+      listPrivacyExportAssignments(user.id),
+      listPrivacyExportCheckins(user.id),
+      listPrivacyExportFeedback(user.id),
+      listPrivacyExportNotifications(user.id),
+      listPrivacyExportLedger(user.id)
     ]);
     const failed = [profile, assignments, checkins, feedback, notifications, ledger].some(result => result.error);
     if (failed) {
@@ -144,10 +157,10 @@ export default function PrivacyDataManagementPage() {
     if (!supabase || !user) return;
     setBusy("activity"); setMessage(""); setError("");
     const [assignments, checkins, feedback, ledger] = await Promise.all([
-      supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at").eq("tester_id", user.id),
-      supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
-      supabase.from("feedback").select("id,assignment_id,rating,category,quality_status,created_at").eq("tester_id", user.id),
-      supabase.from("points_ledger").select("id,wallet_type,amount,reason,created_at").eq("user_id", user.id)
+      listPrivacyActivityAssignments(user.id),
+      listPrivacyActivityCheckins(user.id),
+      listPrivacyActivityFeedback(user.id),
+      listPrivacyActivityLedger(user.id)
     ]);
     if ([assignments, checkins, feedback, ledger].some(result => result.error)) {
       setBusy(""); setError("Activity history could not be exported. Please try again."); return;
