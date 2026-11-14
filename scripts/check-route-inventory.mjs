@@ -17,17 +17,108 @@ const routeElementCount = (allRouteSource.match(/<Route\b/g) ?? []).length;
 const pathCount = (allRouteSource.match(/<Route\s+(?:key="[^"]+"\s+)?path=/g) ?? []).length;
 const errors = [];
 
-const requiredPaths = [
-  'path="/"',
-  'path="/help-support"',
-  'path="/dashboard"',
-  'path="/admin/medical-exceptions"',
-  'path="/admin/invoices/:invoiceId"',
-  'path="/assignments/:id/submit"',
-  'path="/apps/:id"',
-  'path="*"',
+const expectedPaths = [
+  "/",
+  "/terms",
+  "/privacy",
+  "/auth",
+  "/signup-success",
+  "/auth/callback",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+  "/password-reset-success",
+  "/invalid-otp",
+  "/onboarding",
+  "/interests",
+  "/complete-profile",
+  "/assignments/:id",
+  "/assignments/:id/progress",
+  "/assignments/:id/submit",
+  "/assignments/:id/summary",
+  "/profile",
+  "/feedback-history",
+  "/submit-feedback",
+  "/report-problem",
+  "/wallet-rewards",
+  "/withdrawal-request",
+  "/withdrawal-status",
+  "/help",
+  "/support",
+  "/support/:id",
+  "/live-chat",
+  "/help-support",
+  "/settings",
+  "/notification-preferences",
+  "/active-sessions",
+  "/tester/security-history",
+  "/notifications",
+  "/admin",
+  "/admin/analytics",
+  "/admin/leaderboard",
+  "/admin/apps",
+  "/admin/reports",
+  "/admin/notifications",
+  "/admin/monitoring",
+  "/admin/logs",
+  "/admin/financial",
+  "/admin/tester-withdrawals",
+  "/admin/tester-withdrawals/:id",
+  "/admin/withdrawal-failed/:id",
+  "/admin/rewards",
+  "/admin/transactions-ledger",
+  "/admin/developer-payments",
+  "/admin/developer-payments/:id",
+  "/admin/invoices/:invoiceId",
+  "/admin/medical-exceptions",
+  "/admin/support",
+  "/admin/users",
+  "/admin/developers",
+  "/admin/developers/:id",
+  "/admin/testers",
+  "/admin/testers/:id",
+  "/admin/tests",
+  "/admin/assignments",
+  "/admin/cohorts",
+  "/admin/settings",
+  "/admin/audit-trail",
+  "/dashboard",
+  "/tester-dashboard",
+  "/my-tests",
+  "/assignments/:id/reward",
+  "/leaderboard",
+  "/tester/language-appearance",
+  "/tester/privacy",
+  "/check-in-history",
+  "/activity-history",
+  "/referral-program",
+  "/referral-history",
+  "/discover-tests",
+  "/tests/:id",
+  "/developer-dashboard",
+  "/developer/tests",
+  "/developer/tests/:id",
+  "/developer/tests/:id/monitoring",
+  "/developer/tests/new",
+  "/developer/settings",
+  "/developer/subscription",
+  "/developer/testers",
+  "/developer/analytics",
+  "/developer/results",
+  "/developer/feedback",
+  "/developer/feedback/:id",
+  "/developer/notifications",
+  "/developer/help",
+  "/developer/support",
+  "/developer/support/:id",
+  "/apps",
+  "/apps/:id",
+  "*"
 ];
-const missingPaths = requiredPaths.filter((path) => !allRouteSource.includes(path));
+const expectedPathSet = new Set(expectedPaths);
+const actualPathSet = new Set([...allRouteSource.matchAll(/<Route\\s+(?:key="[^"]+"\\s+)?path="([^"]+)"/g)].map((match) => match[1]));
+const missingPaths = expectedPaths.filter((path) => !actualPathSet.has(path));
+const unexpectedPaths = [...actualPathSet].filter((path) => !expectedPathSet.has(path));
 
 const routeSourceFiles = [
   [routeFile, sources.app],
@@ -94,6 +185,9 @@ if (routeElementCount !== 102) {
 }
 if (missingPaths.length > 0) {
   errors.push(`Missing required route declarations: ${missingPaths.join(", ")}.`);
+}
+if (unexpectedPaths.length > 0) {
+  errors.push(`Unexpected route declarations outside the captured baseline: ${unexpectedPaths.join(", ")}.`);
 }
 
 if (importErrors.length > 0) {
