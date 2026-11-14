@@ -242,6 +242,36 @@ if (!/<Route element=\{<RoleGuard requiredRole="tester" \/>\}>\s*\{testerSecurit
   errors.push("Tester security routes must remain nested inside the tester RoleGuard.");
 }
 
+const testerOnlyPaths = [
+  "/settings",
+  "/notification-preferences",
+  "/active-sessions",
+  "/notifications",
+  "/assignments/:id",
+  "/assignments/:id/progress",
+  "/assignments/:id/submit",
+  "/assignments/:id/summary",
+  "/feedback-history",
+  "/submit-feedback",
+  "/report-problem",
+  "/wallet-rewards",
+  "/withdrawal-request",
+  "/withdrawal-status",
+];
+const routePathPattern = (path) =>
+  new RegExp('<Route\\s+(?:key="[^"]+"\\s+)?path="' + path.replace(/[.*+?^${}()|[\\]\\]/g, "\\if (!/<Route element=\{<RoleGuard requiredRole="tester" \/>\}>\s*\{testerSecurityRouteElements\}\s*<\/Route>/.test(sources.authenticated)) {
+  errors.push("Tester security routes must remain nested inside the tester RoleGuard.");
+}
+") + '"');
+for (const path of testerOnlyPaths) {
+  if (!routePathPattern(path).test(sources.tester)) {
+    errors.push(`Tester-only route "${path}" must be declared in testerRoutes.tsx.`);
+  }
+  if (routePathPattern(path).test(sources.authenticated)) {
+    errors.push(`Tester-only route "${path}" must not be declared in the shared authenticated routes.`);
+  }
+}
+
 if (errors.length > 0) {
   console.error("Route inventory check failed:");
   for (const error of errors) console.error(`- ${error}`);
