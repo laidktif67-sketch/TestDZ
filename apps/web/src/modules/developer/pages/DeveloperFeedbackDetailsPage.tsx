@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { createDeveloperFeedbackMessage, createDeveloperFeedbackReview, createFeedbackAttachmentMetadata, getDeveloperFeedbackAttachmentUrl, getDeveloperFeedbackDetails, getDeveloperFeedbackReview, listDeveloperFeedbackAttachments, listDeveloperFeedbackEvents, listDeveloperFeedbackMessages, updateDeveloperFeedbackReview, uploadDeveloperFeedbackAttachment } from "../../../features/feedback/feedback-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
@@ -41,7 +41,7 @@ export default function DeveloperFeedbackDetailsPage(){
  const {id=""}=useParams();const navigate=useNavigate();const {roles}=useIdentity();const allowed=roles.includes("developer")||roles.includes("admin");
  const [currentUserId,setCurrentUserId]=useState("");const [feedback,setFeedback]=useState<Feedback|null>(null),[messages,setMessages]=useState<Message[]>([]),[attachments,setAttachments]=useState<Attachment[]>([]),[events,setEvents]=useState<Event[]>([]);
  const [status,setStatus]=useState<ReviewStatus>("new"),[priority,setPriority]=useState<Priority>("normal"),[reply,setReply]=useState(""),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(""),[tab,setTab]=useState<"conversation"|"details"|"attachments"|"activity">("conversation"),[files,setFiles]=useState<File[]>([]);
- const load=useCallback(async()=>{if(!supabase){setError("Supabase is not configured.");setLoading(false);return}const {data:s}=await supabase.auth.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return}
+ const load=useCallback(async()=>{if(!identityApi.isConfigured()){setError("Supabase is not configured.");setLoading(false);return}const {data:s}=await identityApi.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return}
  setCurrentUserId(user.id);const {data:f,error:e}=await getDeveloperFeedbackDetails(id,user.id);
  if(e||!f){setError("Feedback not found or you do not have access to it.");setLoading(false);return}setFeedback(f as unknown as Feedback);
  const [r,m,a,v]=await Promise.all([
@@ -58,7 +58,7 @@ export default function DeveloperFeedbackDetailsPage(){
  useEffect(()=>{void load()},[load]);
  const app=feedback?.assignment?.test?.app;const test=feedback?.assignment?.test;
  const number=useMemo(()=>id.replaceAll("-","").slice(0,8).toUpperCase(),[id]);
- const updateReview=async(field:"status"|"priority",value:string)=>{if(!supabase||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
+ const updateReview=async(field:"status"|"priority",value:string)=>{if(!identityApi.isConfigured()||!feedback)return;setBusy(true);setError("");const {data:s}=await identityApi.getCurrentUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
  const {data:existing,error:readError}=await getDeveloperFeedbackReview(id,{includeId:true});if(readError){setError("Could not load the current feedback review.");setBusy(false);return}
  const result=existing
  ?field==="status"
@@ -71,7 +71,7 @@ export default function DeveloperFeedbackDetailsPage(){
  if(field==="status")setStatus(value as ReviewStatus);else setPriority(value as Priority);
  await load();setBusy(false)
  };
- const sendReply=async(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!supabase||!reply.trim()||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
+ const sendReply=async(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!identityApi.isConfigured()||!reply.trim()||!feedback)return;setBusy(true);setError("");const {data:s}=await identityApi.getCurrentUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
  const {data:msg,error:e1}=await createDeveloperFeedbackMessage({feedback_id:id,sender_id:uid,body:reply.trim()});if(e1||!msg){setError("Your reply could not be sent.");setBusy(false);return}
  for(const file of files){const ext=file.name.split(".").pop()?.toLowerCase()||"bin";const path=id+"/"+uid+"/"+crypto.randomUUID()+"."+ext;const upload=await uploadDeveloperFeedbackAttachment(path,file);if(upload.error){setError("Reply sent, but "+file.name+" could not be uploaded.");continue}
  const saved=await createFeedbackAttachmentMetadata({feedback_id:id,message_id:msg.id,uploaded_by:uid,storage_path:path,original_filename:file.name,mime_type:file.type,size_bytes:file.size});if(saved.error)setError("Reply sent, but attachment metadata could not be saved.");
@@ -79,7 +79,7 @@ export default function DeveloperFeedbackDetailsPage(){
  }
  setReply("");setFiles([]);await load();setBusy(false)
  };
- const openAttachment=async(file:Attachment)=>{if(!supabase)return;const {data,error:e}=await getDeveloperFeedbackAttachmentUrl(file.storage_path);if(e||!data?.signedUrl){setError("Could not open this attachment.");return}window.open(data.signedUrl,"_blank","noopener,noreferrer")};
+ const openAttachment=async(file:Attachment)=>{if(!identityApi.isConfigured())return;const {data,error:e}=await getDeveloperFeedbackAttachmentUrl(file.storage_path);if(e||!data?.signedUrl){setError("Could not open this attachment.");return}window.open(data.signedUrl,"_blank","noopener,noreferrer")};
  const addFiles=(list:FileList|null)=>{if(!list)return;const accepted=Array.from(list).filter(f=>["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(f.type)&&f.size<=10485760);setFiles(old=>[...old,...accepted].slice(0,5))};
  if(!allowed)return <RoleAccessNotice/>;
  return <main className="df-shell"><aside className="df-sidebar"><Link to="/developer-dashboard" className="df-brand"><span>✓</span><b>TestDZ<small>Build · Test · Improve</small></b></Link><div className="df-module">‹/› <b>Developer</b><i>Pro</i></div><nav><Link to="/developer-dashboard">⌂ Dashboard</Link><Link to="/apps">◇ My Apps</Link><Link to="/developer/tests">♟ My Tests</Link><Link to="/developer/analytics">▥ Analytics</Link><Link to="/developer/results">▤ Test Results</Link><Link to="/developer/notifications">♧ Notifications</Link><Link className="active" to="/developer/feedback"><Glyph name="feedback"/>Feedback</Link><Link to="/developer/help">◉ Help & Support</Link><Link to="/developer/settings">⚙ Settings</Link></nav><div className="df-promo">🚀<b>Upgrade your plan<br/>for more powerful<br/>testing features</b><Link to="/developer/subscription">Upgrade Plan →</Link></div></aside>

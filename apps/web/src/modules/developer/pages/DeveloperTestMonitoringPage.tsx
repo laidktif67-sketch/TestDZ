@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getDeveloperTestMonitoring, listTestMonitoringAssignments } from "../../../features/tests/tests-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
@@ -17,7 +17,7 @@ export default function DeveloperTestMonitoringPage(){
  const {id=""}=useParams();const navigate=useNavigate();const {roles}=useIdentity();
  const [test,setTest]=useState<TestInfo|null>(null);const [assignments,setAssignments]=useState<Assignment[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState("");
  const developer=roles.includes("developer")||roles.includes("admin");
- useEffect(()=>{let live=true;const load=async()=>{if(!supabase){setError("Supabase is not configured.");setLoading(false);return;}const {data:session}=await supabase.auth.getSession();const user=session.session?.user;if(!user){navigate("/auth",{replace:true});return;}const {data:testData,error:testError}=await getDeveloperTestMonitoring(id,user.id);if(!live)return;if(testError||!testData){setError("This test could not be found in your developer workspace.");setLoading(false);return;}setTest(testData as unknown as TestInfo);const {data:assignmentData,error:assignmentError}=await listTestMonitoringAssignments(id);if(!live)return;if(assignmentError)setError("Test loaded, but tester activity could not be retrieved.");else setAssignments((assignmentData??[]) as Assignment[]);setLoading(false);};void load();return()=>{live=false}},[id,navigate]);
+ useEffect(()=>{let live=true;const load=async()=>{if(!identityApi.isConfigured()){setError("Supabase is not configured.");setLoading(false);return;}const {data:session}=await identityApi.getSession();const user=session.session?.user;if(!user){navigate("/auth",{replace:true});return;}const {data:testData,error:testError}=await getDeveloperTestMonitoring(id,user.id);if(!live)return;if(testError||!testData){setError("This test could not be found in your developer workspace.");setLoading(false);return;}setTest(testData as unknown as TestInfo);const {data:assignmentData,error:assignmentError}=await listTestMonitoringAssignments(id);if(!live)return;if(assignmentError)setError("Test loaded, but tester activity could not be retrieved.");else setAssignments((assignmentData??[]) as Assignment[]);setLoading(false);};void load();return()=>{live=false}},[id,navigate]);
  const completed=assignments.filter(a=>a.status.toLowerCase()==="completed").length;
  const active=assignments.filter(a=>["active","running","in_progress","in-progress"].includes(a.status.toLowerCase())).length;
  const remaining=Math.max(0,assignments.length-completed);
