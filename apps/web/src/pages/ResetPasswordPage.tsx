@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { identityApi } from "../shared/auth/identity-api";
+import { identityApi } from "../features/identity/identity-api";
 import "../styles/reset-password.css";
 
 export default function ResetPasswordPage() {

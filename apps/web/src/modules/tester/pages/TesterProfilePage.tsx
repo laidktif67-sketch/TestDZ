@@ -4,7 +4,7 @@ import imageCompression from "browser-image-compression";
 import { Link, useNavigate } from "react-router-dom";
 import type { AvatarMimeType } from "@testdz/types";
 import { profilesApi } from "../../../features/profiles/profiles-api";
-import { identityApi } from "../../../shared/auth/identity-api";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 
