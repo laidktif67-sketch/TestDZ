@@ -11,6 +11,7 @@ export type TestType =
 export type TestConfig = {
   cohort?: { targetTesters?: number; notes?: string | null };
   rules?: { androidVersion?: string; instructions?: string | null };
+  schedule?: { durationDays?: number | null; allowMoreTesters?: boolean; joiningMethod?: "google_play_link" | "closed_group" | "upload_list" | "open_testing"; collectFeedback?: boolean; enableBugReports?: boolean };
   googlePlay?: { track?: "internal" | "closed" | "open"; testerMethod?: "join_link" | "google_groups" | "upload_list"; googleGroup?: string | null; testerEmails?: string[]; appVersion?: string; releaseMode?: "immediately" | "scheduled"; releaseAt?: string | null };
 };
 
