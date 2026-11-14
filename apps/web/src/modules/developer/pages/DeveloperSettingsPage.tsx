@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getDeveloperSettingsProfile, updateDeveloperSettingsProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import "../styles/developer-settings.css";
 
@@ -52,7 +53,7 @@ export default function DeveloperSettingsPage() {
     let active = true;
     const client = supabase;
     void Promise.all([
-      client.from("profiles").select("display_name,avatar_url,locale,bio").eq("id", user.id).maybeSingle(),
+      getDeveloperSettingsProfile(user.id),
       client.auth.mfa.listFactors()
     ]).then(([profileResult, factors]) => {
       if (!active) return;
@@ -73,7 +74,7 @@ export default function DeveloperSettingsPage() {
   async function saveProfile() {
     if (!supabase || !user || !name.trim()) { setError("Enter a valid display name."); return; }
     setBusy(true); setError(""); setMessage("");
-    const result = await supabase.from("profiles").update({ display_name: name.trim(), locale }).eq("id", user.id);
+    const result = await updateDeveloperSettingsProfile(user.id, { display_name: name.trim(), locale });
     setBusy(false);
     if (result.error) setError("Could not save profile settings. Please try again.");
     else { setProfile(current => ({ ...current, display_name: name.trim(), locale })); setEditing(false); setMessage("Profile settings saved."); }
@@ -169,7 +170,7 @@ export default function DeveloperSettingsPage() {
             <div className="dset-profile-stats"><span><Glyph name="tests"/><b>Developer</b><small>Workspace</small></span><span><Glyph name="apps"/><b>TestDZ</b><small>Platform</small></span><span><Glyph name="shield"/><b>{activity.emailVerified ? "Verified" : "Pending"}</b><small>Email status</small></span></div>
           </section>
 
-          <section className="dset-card dset-preferences-card"><div className="dset-card-heading"><span className="dset-card-icon"><Glyph name="palette" size={25}/></span><div><h2>Preferences</h2><p>Personalize your TestDZ experience</p></div></div><div className="dset-preference-layout"><div className="dset-preference-fields"><label>Language<select value={locale} onChange={event => { setLocale(event.target.value); if (user && supabase) void supabase.from("profiles").update({ locale: event.target.value }).eq("id", user.id).then(({error:err}) => err ? setError("Could not save language preference.") : setMessage("Language preference saved.")); }}><option value="en-DZ">🇺🇸　English</option><option value="fr-DZ">🇫🇷　Français</option><option value="ar-DZ">🇩🇿　العربية</option></select></label><label>Theme<select value={theme} onChange={event => void saveTheme(event.target.value)}><option value="light">☀️　Light</option><option value="dark">🌙　Dark</option><option value="system">◐　System</option></select></label><label>Timezone<span className="dset-readonly">◷　(UTC+01) Algiers</span></label></div><div className="dset-preference-art"><span>✓</span><strong>Your preferences</strong><small>are saved automatically</small></div></div></section>
+          <section className="dset-card dset-preferences-card"><div className="dset-card-heading"><span className="dset-card-icon"><Glyph name="palette" size={25}/></span><div><h2>Preferences</h2><p>Personalize your TestDZ experience</p></div></div><div className="dset-preference-layout"><div className="dset-preference-fields"><label>Language<select value={locale} onChange={event => { setLocale(event.target.value); if (user && supabase) void updateDeveloperSettingsProfile(user.id, { locale: event.target.value }).then(({error:err}) => err ? setError("Could not save language preference.") : setMessage("Language preference saved.")); }}><option value="en-DZ">🇺🇸　English</option><option value="fr-DZ">🇫🇷　Français</option><option value="ar-DZ">🇩🇿　العربية</option></select></label><label>Theme<select value={theme} onChange={event => void saveTheme(event.target.value)}><option value="light">☀️　Light</option><option value="dark">🌙　Dark</option><option value="system">◐　System</option></select></label><label>Timezone<span className="dset-readonly">◷　(UTC+01) Algiers</span></label></div><div className="dset-preference-art"><span>✓</span><strong>Your preferences</strong><small>are saved automatically</small></div></div></section>
 
           <section className="dset-card dset-integrations-card"><div className="dset-card-heading"><span className="dset-card-icon"><Glyph name="puzzle" size={25}/></span><div><h2>Integrations</h2><p>Connect your favorite tools</p></div><span className="dset-coming">Integration management</span></div><div className="dset-integrations"><article><span className="dset-integration-logo"><BrandIcon name="github"/></span><strong>GitHub</strong><small>Repository access</small><span className="dset-connected">Available in project workspace</span></article><article><span className="dset-integration-logo"><BrandIcon name="gitlab"/></span><strong>GitLab</strong><small>Source control</small><span className="dset-unavailable">Not connected</span></article><article><span className="dset-integration-logo"><BrandIcon name="figma"/></span><strong>Figma</strong><small>Design workflow</small><span className="dset-unavailable">Not connected</span></article><article><span className="dset-integration-logo"><BrandIcon name="slack"/></span><strong>Slack</strong><small>Team notifications</small><span className="dset-unavailable">Not connected</span></article></div></section>
 
