@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { getTesterAccountSettingsProfile, updateTesterAccountSettingsProfile } from "../../../features/profile/profile-api";
-import { listSettingsExportProfile, listSettingsExportNotifications, listSettingsExportCheckins, listSettingsExportFeedback, listSettingsExportLedger } from "../../../features/testers/privacy-data-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -173,11 +172,11 @@ export default function SettingsSecurityPage() {
     if (!supabase || !user) return;
     setBusy(true);
     const [profile, notices, checkins, feedback, ledger] = await Promise.all([
-      listSettingsExportProfile(user.id),
-      listSettingsExportNotifications(user.id),
-      listSettingsExportCheckins(user.id),
-      listSettingsExportFeedback(user.id),
-      listSettingsExportLedger(user.id)
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      supabase.from("notifications").select("*").eq("user_id", user.id),
+      supabase.from("checkins").select("*").eq("tester_id", user.id),
+      supabase.from("feedback").select("*").eq("tester_id", user.id),
+      supabase.from("points_ledger").select("*").eq("user_id", user.id)
     ]);
     setBusy(false);
     const payload = { exported_at: new Date().toISOString(), account: { id: user.id, email: user.email }, profile: profile.data, notifications: notices.data || [], checkins: checkins.data || [], feedback: feedback.data || [], points_ledger: ledger.data || [] };

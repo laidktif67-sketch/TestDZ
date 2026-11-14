@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getWalletRewardsProfile, getWalletRewardsWallet } from "../../../features/testers/wallet-rewards-api";
 import TesterSidebar from "../components/TesterSidebar";
 import "../styles/withdrawal-request.css";
 
@@ -53,8 +54,8 @@ export default function WithdrawalRequestPage() {
         const user = sessionData.session?.user;
         if (!user) { if (alive) setLoading(false); return; }
         const [profileRes, walletRes] = await Promise.all([
-          supabase.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle(),
-          supabase.from("wallets").select("earned_points,purchased_credits").eq("user_id", user.id).maybeSingle()
+          getWalletRewardsProfile(user.id),
+          getWalletRewardsWallet(user.id)
         ]);
         if (!alive) return;
         setName(profileRes.data?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
