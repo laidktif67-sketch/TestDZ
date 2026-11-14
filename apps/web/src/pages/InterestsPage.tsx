@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
 import { profilesApi } from "../features/profiles/profiles-api";
-import { useIdentity } from "../shared/auth/hooks/useIdentity";
+import { useIdentity } from "../features/identity/hooks/useIdentity";
 import { useLenis } from "../hooks/useLenis";
 import "../styles/interests.css";
 
