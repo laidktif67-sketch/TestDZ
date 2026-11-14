@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listTesterFeedbackHistory, listTesterFeedbackRewards } from "../../../features/feedback/feedback-api";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import { useTesterProfile } from "../hooks/useTesterProfile";
 import "../styles/tester-dashboard.css";
@@ -61,8 +62,19 @@ export default function FeedbackHistoryPage() {
   const [range, setRange] = useState<RangeKey>("30");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
+
+  useEffect(() => {
+    let alive = true;
+    setUnreadCount(0);
+    if (!session?.user?.id || !identityApi.isConfigured()) return () => { alive = false; };
+    void countTesterUnreadNotifications(session.user.id).then(({ count, error }) => {
+      if (alive && !error) setUnreadCount(count ?? 0);
+    }).catch(() => { if (alive) setUnreadCount(0); });
+    return () => { alive = false; };
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (!session?.user?.id || !identityApi.isConfigured()) { setLoading(false); return; }
@@ -133,7 +145,7 @@ export default function FeedbackHistoryPage() {
     <main className="td-main fh-main">
       <header className="td-topbar fh-topbar">
         <label className="td-search"><Icon name="search" size={20}/><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search in feedback history…"/></label>
-        <div className="td-top-actions"><button className="td-notification" type="button" aria-label="Notifications"><Icon name="bell" size={21}/></button><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div>
+        <div className="td-top-actions"><Link className="td-notification" to="/notifications" aria-label={unreadCount>0?`Notifications, ${unreadCount} unread`:"Notifications"}><Icon name="bell" size={21}/>{unreadCount>0&&<span className="ad-notification-count">{unreadCount>9?"9+":unreadCount}</span>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div>
       </header>
       <div className="fh-content">
         <section className="fh-heading">
