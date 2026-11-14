@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { listTesterFeedbackAssignments, getTesterFeedbackForAssignment, createTesterFeedback } from "../../../features/feedback/feedback-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -69,7 +69,7 @@ export default function SubmitFeedbackPage() {
   useEffect(() => {
     let alive = true;
     const loadAssignments = async () => {
-      if (!supabase || !session?.user?.id) { setAssignmentsLoading(false); return; }
+      if (!identityApi.isConfigured() || !session?.user?.id) { setAssignmentsLoading(false); return; }
       const { data, error } = await listTesterFeedbackAssignments(session.user.id);
       if (!alive) return;
       if (error) setMessage("We could not load your assigned tests. Please refresh and try again.");
@@ -104,7 +104,7 @@ export default function SubmitFeedbackPage() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!supabase || !session?.user?.id) { setMessage("Please sign in again before submitting feedback."); return; }
+    if (!identityApi.isConfigured() || !session?.user?.id) { setMessage("Please sign in again before submitting feedback."); return; }
     if (!assignmentId) { setMessage("Choose the test this feedback belongs to."); return; }
     const combined = [
       title.trim() ? "Title: " + title.trim() : "",
