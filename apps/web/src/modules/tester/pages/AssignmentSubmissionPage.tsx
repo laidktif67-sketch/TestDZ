@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, CSSProperties, ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { countTesterSubmissionFeedback, getTesterSubmissionAssignment, listTesterSubmissionCheckIns } from "../../../features/testers/assignments-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -61,8 +61,7 @@ export default function AssignmentSubmissionPage() {
     if (!session?.user?.id || !id) { setLoading(false); return; }
     let alive = true;
     (async () => {
-      const client = supabase;
-      if (!client) { if (alive) { setLoadError("The database connection is unavailable."); setLoading(false); } return; }
+      if (!identityApi.isConfigured()) { if (alive) { setLoadError("The database connection is unavailable."); setLoading(false); } return; }
       const [a, c, f] = await Promise.all([
         getTesterSubmissionAssignment(id, session.user.id),
         listTesterSubmissionCheckIns(id, session.user.id),
