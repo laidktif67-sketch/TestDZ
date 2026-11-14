@@ -120,6 +120,8 @@ export default function DeveloperCreateTestPage() {
       startDate: startDate || null,
       endDate: endDate || null,
       minTesters: Math.max(1, Math.min(1000, Math.floor(minTesters))),
+      testType: "custom",
+      testConfig: { cohort: { targetTesters: Math.max(1, Math.min(1000, Math.floor(minTesters))) } },
     });
     if (error) {
       setSaveError(error.message.includes("cohort") ? "This test could not be created because the current testing setup is incomplete." : "Could not save your test. Please check the details and try again.");
