@@ -3,6 +3,7 @@ import type { FormEvent, ChangeEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getTesterSupportTicket, listTesterSupportMessages, listTesterSupportAttachments, createTesterSupportMessage, createTesterSupportAttachment } from "../../../features/support/support-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/support-ticket-details.css";
@@ -25,12 +26,12 @@ export default function SupportTicketDetailsPage(){
  const load=useCallback(async()=>{
   if(!supabase||!user||!id){setLoading(false);return;}
   setLoading(true);setError("");
-  const {data:ticketData,error:ticketError}=await supabase.from("support_tickets").select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by").eq("id",id).maybeSingle();
+  const {data:ticketData,error:ticketError}=await getTesterSupportTicket(id);
   if(ticketError||!ticketData){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setLoading(false);return;}
   setTicket(ticketData);
   const [messageResult,attachmentResult]=await Promise.all([
-   supabase.from("support_ticket_messages").select("id,ticket_id,sender_id,body,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
-   supabase.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at").eq("ticket_id",id).order("created_at",{ascending:true})
+   listTesterSupportMessages(id),
+   listTesterSupportAttachments(id)
   ]);
   if(messageResult.error||attachmentResult.error){setError("Ticket details are available, but conversation or attachment storage is not ready yet. The database migration must be applied after review.");setMessages([]);setAttachments([]);}
   else {setMessages(messageResult.data ?? []);setAttachments(attachmentResult.data ?? []);}
@@ -45,14 +46,14 @@ export default function SupportTicketDetailsPage(){
   if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
    setSending(false);setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
   }
-  const {data:messageData,error:insertError}=await supabase.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()}).select("id").single();
+  const {data:messageData,error:insertError}=await createTesterSupportMessage({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()});
   if(insertError||!messageData){setSending(false);setError("Your reply could not be sent. Please try again after support messaging is enabled.");return;}
   if(selectedFile){
    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
    const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
-   const {error:metadataError}=await supabase.from("support_ticket_attachments").insert({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
+   const {error:metadataError}=await createTesterSupportAttachment({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
    if(metadataError){setSending(false);setReply("");setSelectedFile(null);await load();setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");return;}
   }
   setSending(false);setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();

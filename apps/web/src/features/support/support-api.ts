@@ -84,3 +84,65 @@ export function createDeveloperSupportAttachment(values: {
     .from("support_ticket_attachments")
     .insert(values);
 }
+
+/** Tester support ticket queries. Existing row-level security remains authoritative. */
+export function listTesterSupportTickets(userId: string) {
+  return getClient().from("support_tickets")
+    .select("id,ticket_number,subject,category,priority,status,created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(30);
+}
+
+export function createTesterSupportTicket(values: {
+  user_id: string;
+  subject: string;
+  category: string;
+  priority: string;
+  description: string;
+}) {
+  return getClient().from("support_tickets")
+    .insert(values)
+    .select("id,ticket_number,subject,category,priority,status,created_at")
+    .single();
+}
+
+export function getTesterSupportTicket(ticketId: string) {
+  return getClient().from("support_tickets")
+    .select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by")
+    .eq("id", ticketId)
+    .maybeSingle();
+}
+
+export function listTesterSupportMessages(ticketId: string) {
+  return getClient().from("support_ticket_messages")
+    .select("id,ticket_id,sender_id,body,created_at")
+    .eq("ticket_id", ticketId)
+    .order("created_at", { ascending: true });
+}
+
+export function listTesterSupportAttachments(ticketId: string) {
+  return getClient().from("support_ticket_attachments")
+    .select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at")
+    .eq("ticket_id", ticketId)
+    .order("created_at", { ascending: true });
+}
+
+export function createTesterSupportMessage(values: { ticket_id: string; sender_id: string; body: string }) {
+  return getClient().from("support_ticket_messages")
+    .insert(values)
+    .select("id")
+    .single();
+}
+
+export function createTesterSupportAttachment(values: {
+  ticket_id: string;
+  message_id: string;
+  uploaded_by: string;
+  storage_path: string;
+  original_filename: string;
+  mime_type: string;
+  size_bytes: number;
+}) {
+  return getClient().from("support_ticket_attachments").insert(values);
+}
