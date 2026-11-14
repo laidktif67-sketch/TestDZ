@@ -334,7 +334,7 @@ export default function DeveloperCreateTestSixStepPage() {
   </div>
   <aside className="dct-details-summary">
     <div className="dct-details-summary-head"><Icon name="info" size={21}/><strong>Campaign Summary</strong></div>
-    <div className="dct-details-app"><AppIcon app={selected} /><div><strong>{selected?.name ?? "Selected application"}</strong><small dir="ltr">{selected?.package_name ?? "Choose an app in step 2"}</small><span className="dct-details-chip">{selectedType?.title ?? "Test type not selected"}</span></div></div>
+    <div className="dct-details-app">{selected ? <AppIcon app={selected} /> : <span className="dct-app-icon">▦</span>}<div><strong>{selected?.name ?? "Selected application"}</strong><small dir="ltr">{selected?.package_name ?? "Choose an app in step 2"}</small><span className="dct-details-chip">{selectedType?.title ?? "Test type not selected"}</span></div></div>
     <div className="dct-details-summary-list">
       <div><span>Campaign</span><strong>{title.trim() || "Not named yet"}</strong></div>
       <div><span>Objective</span><strong>{({stability_bugs:"Stability & Bug Discovery",usability:"Usability & User Experience",compatibility:"Device Compatibility",performance:"Performance",release_readiness:"Release Readiness",custom:"Custom Objective"} as Record<string,string>)[testingObjective]}</strong></div>
