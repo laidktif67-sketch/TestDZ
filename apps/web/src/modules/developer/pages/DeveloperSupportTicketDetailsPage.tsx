@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { createDeveloperSupportMessage, createDeveloperSupportAttachment, getDeveloperSupportAttachmentUrl, getDeveloperSupportTicket, listDeveloperSupportAttachments, listDeveloperSupportEvents, listDeveloperSupportMessages, uploadDeveloperSupportAttachment } from "../../../features/support/support-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
@@ -25,7 +25,7 @@ export default function DeveloperSupportTicketDetailsPage(){
  const fileRef=useRef<HTMLInputElement>(null);
  const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Developer";const initials=name.split(/[\s._-]+/).slice(0,2).map((part: string)=>part[0]).join("").toUpperCase()||"DK";
  const load=useCallback(async()=>{
-  if(!supabase||!user||!id){setLoading(false);return;}setLoading(true);setError("");
+  if(!identityApi.isConfigured()||!user||!id){setLoading(false);return;}setLoading(true);setError("");
   const {data:ticketData,error:ticketError}=await getDeveloperSupportTicket(id);
   if(ticketError||!ticketData||ticketData.user_id!==user.id){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setEvents([]);setLoading(false);return;}
   setTicket(ticketData as Ticket);
@@ -41,7 +41,7 @@ export default function DeveloperSupportTicketDetailsPage(){
  const canReply=!!ticket&&ticket.status!=="closed"&&ticket.status!=="resolved"&&ticket.user_id===user?.id;
  const initialMessage=useMemo(()=>({id:"initial",ticket_id:id,sender_id:ticket?.user_id||"",body:ticket?.description||"",created_at:ticket?.created_at||""}),[id,ticket]);
  async function sendReply(event:FormEvent<HTMLFormElement>){
-  event.preventDefault();if(!supabase||!user||!ticket||(!reply.trim()&&!selectedFile))return;
+  event.preventDefault();if(!identityApi.isConfigured()||!user||!ticket||(!reply.trim()&&!selectedFile))return;
   if(selectedFile&&(selectedFile.size>10*1024*1024||!allowedTypes.includes(selectedFile.type))){setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;}
   setSending(true);setError("");setNotice("");
   const body=reply.trim()||(selectedFile?"Attached a file.":"");
@@ -58,7 +58,7 @@ export default function DeveloperSupportTicketDetailsPage(){
   setSending(false);setReply("");setSelectedFile(null);if(fileRef.current)fileRef.current.value="";setNotice("Your reply has been sent.");await load();
  }
  async function openAttachment(item:Attachment){
-  if(!supabase)return;const {data,error:storageError}=await getDeveloperSupportAttachmentUrl(item.storage_path);
+  if(!identityApi.isConfigured())return;const {data,error:storageError}=await getDeveloperSupportAttachmentUrl(item.storage_path);
   if(storageError||!data?.signedUrl){setError("This attachment is unavailable or you do not have permission to access it.");return;}
   window.open(data.signedUrl,"_blank","noopener,noreferrer");
  }
