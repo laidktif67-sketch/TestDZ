@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getTestPreviewProfile, countTestPreviewUnreadNotifications, getTestPreviewTest, getTestPreviewAssignment } from "../../../features/testers/test-preview-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -26,10 +27,10 @@ export default function TestPreviewPage(){
   if(identityLoading)return;const client=supabase;if(!session||!id||!client){setLoading(false);return;}let alive=true;
   const load=async()=>{
    const [profile,notifications,testResult,assignmentResult]=await Promise.all([
-    client.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
-    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
-    client.from("tests").select("id,app_id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category,play_store_url,description)").eq("id",id).maybeSingle(),
-    client.from("assignments").select("id,status").eq("test_id",id).eq("tester_id",session.user.id).maybeSingle()
+    getTestPreviewProfile(session.user.id),
+    countTestPreviewUnreadNotifications(session.user.id),
+    getTestPreviewTest(id),
+    getTestPreviewAssignment(id,session.user.id)
    ]);
    if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notifications.count??0);
    if(testResult.error||!testResult.data)setError("This test could not be found or is no longer available.");else setTest(testResult.data as unknown as TestPreview);
