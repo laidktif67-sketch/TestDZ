@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import imageCompression from "browser-image-compression";
 import type { AppLimit, AppRecord } from "@testdz/types";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { APP_CATEGORIES, appError } from "../../../lib/app-utils";
 import { createApp, getAppLimit, listApps, uploadAppIcon } from "../../../features/apps/apps-api";
 import { listAppMetricTests, listAppMetricAssignments, listAppMetricFeedback } from "../../../features/analytics/analytics-api";
@@ -47,7 +47,7 @@ function Glyph({ name, size = 20 }: { name: string; size?: number }) {
 
 function useUserId() {
   const [id, setId] = useState<string | null>(null);
-  useEffect(() => { void supabase?.auth.getUser().then(({ data }) => setId(data.user?.id ?? null)); }, []);
+  useEffect(() => { void identityApi.getCurrentUser().then(({ data }) => setId(data.user?.id ?? null)); }, []);
   return id;
 }
 
@@ -82,7 +82,7 @@ function AppsPage() {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
 
   async function load() {
-    if (!supabase) { setError("Supabase is not configured."); setLoading(false); return; }
+    if (!identityApi.isConfigured()) { setError("Supabase is not configured."); setLoading(false); return; }
     setLoading(true); setError("");
     const [{ data: rows, error: appsError }, { data: limits, error: limitError }] = await Promise.all([listApps(), getAppLimit()]);
     const appRows = (rows ?? []) as AppRecord[];
@@ -142,9 +142,9 @@ function AppsPage() {
   }
 
   useEffect(() => {
-    if (!supabase) { setError("Supabase is not configured."); setLoading(false); return; }
+    if (!identityApi.isConfigured()) { setError("Supabase is not configured."); setLoading(false); return; }
     if (userId) void load();
-    else void supabase.auth.getSession().then(({ data }) => {
+    else void identityApi.getSession().then(({ data }) => {
       if (!data.session) { navigate("/auth", { replace: true }); setLoading(false); }
     });
   }, [userId]);
@@ -183,7 +183,7 @@ function AppsPage() {
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!supabase || !userId) return;
+    if (!identityApi.isConfigured() || !userId) return;
     if (name.trim().length < 3 || name.trim().length > 50 || description.trim().length < 20 || description.trim().length > 500) { setError("App name must be 3–50 characters and description 20–500 characters."); return; }
     if (!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(packageName.trim())) { setError("Invalid package name. Example: dz.testdz.myapp"); return; }
     setBusy(true); setError(""); setNotice("");

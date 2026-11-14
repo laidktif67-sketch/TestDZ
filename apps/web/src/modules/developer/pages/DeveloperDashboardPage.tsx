@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AppRecord } from "@testdz/types";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import { getAppLimit, listApps } from "../../../features/apps/apps-api";
@@ -177,11 +177,10 @@ export default function DeveloperDashboardPage() {
       const demoTests:DeveloperTest[]=Array.from({length:9},(_,i)=>({id:"preview-test-"+i,title:["React Advanced","Python Basics","UI Accessibility","Android Performance"][i%4],status:i<7?"completed":i===7?"running":"recruiting",created_at:new Date(now-(i+1)*86400000).toISOString(),app:{name:sample[i%sample.length].name,icon_url:null}}));
       setDashboardTests(demoTests);setTestCount(28);setCompletedTestCount(22);setTesterCount(1200);setAverageRating(4.35);setLoading(false);return;
     }
-    const client=supabase;
-    if(!client){setError("Supabase is not configured.");setLoading(false);return;}
+    if(!identityApi.isConfigured()){setError("Supabase is not configured.");setLoading(false);return;}
     let alive=true;
     const load=async()=>{
-      const {data:sessionData}=await client.auth.getSession();
+      const {data:sessionData}=await identityApi.getSession();
       if(!alive)return;
       const user=sessionData.session?.user;
       if(!user){setLoading(false);return;}
@@ -261,7 +260,7 @@ export default function DeveloperDashboardPage() {
       </nav>
       <div className="dd-promo"><div className="dd-rocket"><Icon name="rocket" size={43}/></div><strong>{t.promoTitle}</strong><p>{t.promoBody}</p><Link to="/apps">{t.promoCta}<Icon name="arrow" size={15}/></Link></div>
       <div className="dd-user-menu-wrap"><button type="button" className="dd-user dd-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><span className="dd-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</span><span><strong>{name}</strong><small>{t.account}</small></span><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="dd-workspace-menu"><Link to="/developer/settings" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>{t.settings}</span></Link>{canTester&&<><span className="dd-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span></Link><Link to="/developer-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span><Icon name="check" size={14}/></Link></>}</div>}</div>
-      {previewMode?<div className="dd-preview-note">{t.preview}</div>:<button className="dd-signout" onClick={async()=>{await supabase?.auth.signOut();}}><Icon name="arrow" size={17}/>Sign Out</button>}
+      {previewMode?<div className="dd-preview-note">{t.preview}</div>:<button className="dd-signout" onClick={async()=>{await identityApi.signOut();}}><Icon name="arrow" size={17}/>Sign Out</button>}
     </aside>
 
     <main className="dd-main">
