@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { listMyActiveSessions } from "../../../features/identity/sessions-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/active-sessions.css";
@@ -38,7 +39,7 @@ export default function ActiveSessionsPage() {
     let alive = true;
     async function loadSessions() {
       if (!supabase) { if (alive) setSessionReady(true); return; }
-      const [auth, result] = await Promise.all([supabase.auth.getSession(), supabase.rpc("get_my_active_sessions")]);
+      const [auth, result] = await Promise.all([supabase.auth.getSession(), listMyActiveSessions()]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
       if (result.error) setError("Could not load your active sessions. Please try again.");
@@ -56,7 +57,7 @@ export default function ActiveSessionsPage() {
     setBusy(true); setMessage(""); setError("");
     const result = await supabase.auth.signOut({ scope: "others" });
     if (result.error) { setBusy(false); setError("Could not sign out other sessions. Please try again."); return; }
-    const refreshed = await supabase.rpc("get_my_active_sessions");
+    const refreshed = await listMyActiveSessions();
     setBusy(false);
     if (refreshed.error) setError("Other sessions were signed out, but the session list could not be refreshed.");
     else { setSessions((refreshed.data || []) as typeof sessions); setMessage("Other sessions have been signed out. This device remains connected."); }
