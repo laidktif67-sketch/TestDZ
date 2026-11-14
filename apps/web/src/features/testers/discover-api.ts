@@ -5,11 +5,6 @@ function getClient() {
   return supabase;
 }
 
-/** Read-only profile summary for the Discover Tests workspace. */
-export function getDiscoverProfile(userId: string) {
-  return getClient().from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
-}
-
 /** Read-only points summary; wallet writes and financial rules remain elsewhere. */
 export function getDiscoverWallet(userId: string) {
   return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();

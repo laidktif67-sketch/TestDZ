@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { getDiscoverProfile, getDiscoverWallet, listDiscoverAssignments, countDiscoverUnreadNotifications, listDiscoverAvailableTests } from "../../../features/testers/discover-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
+import { getDiscoverWallet, listDiscoverAssignments, countDiscoverUnreadNotifications, listDiscoverAvailableTests } from "../../../features/testers/discover-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -36,7 +37,7 @@ export default function DiscoverTestsPage(){
   if(!identityApi.isConfigured()){setLoading(false);setError("Supabase is not configured.");return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
    const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
-    getDiscoverProfile(userId),
+    getTesterHeaderProfile(userId),
     getDiscoverWallet(userId),
     listDiscoverAssignments(userId),
     countDiscoverUnreadNotifications(userId),
