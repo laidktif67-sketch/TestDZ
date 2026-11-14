@@ -143,3 +143,16 @@ export function createTesterFeedback(values: {
 }) {
   return getClient().from("feedback").insert(values);
 }
+
+/** Upload a developer feedback attachment to the existing private bucket. */
+export function uploadDeveloperFeedbackAttachment(storagePath: string, file: File) {
+  return getClient().storage.from("developer-feedback-attachments").upload(storagePath, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+}
+
+/** Create a short-lived URL after the existing storage policy checks. */
+export function getDeveloperFeedbackAttachmentUrl(storagePath: string) {
+  return getClient().storage.from("developer-feedback-attachments").createSignedUrl(storagePath, 300);
+}

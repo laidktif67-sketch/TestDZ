@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { createDeveloperFeedbackMessage, createDeveloperFeedbackReview, createFeedbackAttachmentMetadata, getDeveloperFeedbackDetails, getDeveloperFeedbackReview, listDeveloperFeedbackAttachments, listDeveloperFeedbackEvents, listDeveloperFeedbackMessages, updateDeveloperFeedbackReview } from "../../../features/feedback/feedback-api";
+import { createDeveloperFeedbackMessage, createDeveloperFeedbackReview, createFeedbackAttachmentMetadata, getDeveloperFeedbackAttachmentUrl, getDeveloperFeedbackDetails, getDeveloperFeedbackReview, listDeveloperFeedbackAttachments, listDeveloperFeedbackEvents, listDeveloperFeedbackMessages, updateDeveloperFeedbackReview, uploadDeveloperFeedbackAttachment } from "../../../features/feedback/feedback-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-feedback.css";
@@ -73,13 +73,13 @@ export default function DeveloperFeedbackDetailsPage(){
  };
  const sendReply=async(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!supabase||!reply.trim()||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
  const {data:msg,error:e1}=await createDeveloperFeedbackMessage({feedback_id:id,sender_id:uid,body:reply.trim()});if(e1||!msg){setError("Your reply could not be sent.");setBusy(false);return}
- for(const file of files){const ext=file.name.split(".").pop()?.toLowerCase()||"bin";const path=id+"/"+uid+"/"+crypto.randomUUID()+"."+ext;const upload=await supabase.storage.from("developer-feedback-attachments").upload(path,file,{contentType:file.type,upsert:false});if(upload.error){setError("Reply sent, but "+file.name+" could not be uploaded.");continue}
+ for(const file of files){const ext=file.name.split(".").pop()?.toLowerCase()||"bin";const path=id+"/"+uid+"/"+crypto.randomUUID()+"."+ext;const upload=await uploadDeveloperFeedbackAttachment(path,file);if(upload.error){setError("Reply sent, but "+file.name+" could not be uploaded.");continue}
  const saved=await createFeedbackAttachmentMetadata({feedback_id:id,message_id:msg.id,uploaded_by:uid,storage_path:path,original_filename:file.name,mime_type:file.type,size_bytes:file.size});if(saved.error)setError("Reply sent, but attachment metadata could not be saved.");
  
  }
  setReply("");setFiles([]);await load();setBusy(false)
  };
- const openAttachment=async(file:Attachment)=>{if(!supabase)return;const {data,error:e}=await supabase.storage.from("developer-feedback-attachments").createSignedUrl(file.storage_path,300);if(e||!data?.signedUrl){setError("Could not open this attachment.");return}window.open(data.signedUrl,"_blank","noopener,noreferrer")};
+ const openAttachment=async(file:Attachment)=>{if(!supabase)return;const {data,error:e}=await getDeveloperFeedbackAttachmentUrl(file.storage_path);if(e||!data?.signedUrl){setError("Could not open this attachment.");return}window.open(data.signedUrl,"_blank","noopener,noreferrer")};
  const addFiles=(list:FileList|null)=>{if(!list)return;const accepted=Array.from(list).filter(f=>["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(f.type)&&f.size<=10485760);setFiles(old=>[...old,...accepted].slice(0,5))};
  if(!allowed)return <RoleAccessNotice/>;
  return <main className="df-shell"><aside className="df-sidebar"><Link to="/developer-dashboard" className="df-brand"><span>✓</span><b>TestDZ<small>Build · Test · Improve</small></b></Link><div className="df-module">‹/› <b>Developer</b><i>Pro</i></div><nav><Link to="/developer-dashboard">⌂ Dashboard</Link><Link to="/apps">◇ My Apps</Link><Link to="/developer/tests">♟ My Tests</Link><Link to="/developer/analytics">▥ Analytics</Link><Link to="/developer/results">▤ Test Results</Link><Link to="/developer/notifications">♧ Notifications</Link><Link className="active" to="/developer/feedback"><Glyph name="feedback"/>Feedback</Link><Link to="/developer/help">◉ Help & Support</Link><Link to="/developer/settings">⚙ Settings</Link></nav><div className="df-promo">🚀<b>Upgrade your plan<br/>for more powerful<br/>testing features</b><Link to="/developer/subscription">Upgrade Plan →</Link></div></aside>

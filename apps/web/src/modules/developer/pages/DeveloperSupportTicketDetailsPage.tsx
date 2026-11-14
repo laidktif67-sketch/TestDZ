@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { createDeveloperSupportMessage, createDeveloperSupportAttachment, getDeveloperSupportTicket, listDeveloperSupportAttachments, listDeveloperSupportEvents, listDeveloperSupportMessages } from "../../../features/support/support-api";
+import { createDeveloperSupportMessage, createDeveloperSupportAttachment, getDeveloperSupportAttachmentUrl, getDeveloperSupportTicket, listDeveloperSupportAttachments, listDeveloperSupportEvents, listDeveloperSupportMessages, uploadDeveloperSupportAttachment } from "../../../features/support/support-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-dashboard.css";
@@ -50,7 +50,7 @@ export default function DeveloperSupportTicketDetailsPage(){
   if(selectedFile){
    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
-   const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
+   const {error:uploadError}=await uploadDeveloperSupportAttachment(storagePath,selectedFile);
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the file upload failed. Please attach it in a new reply.");await load();return;}
    const {error:metadataError}=await createDeveloperSupportAttachment({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
    if(metadataError){setSending(false);setReply("");setSelectedFile(null);setError("Your reply was sent, but the attachment record could not be saved.");await load();return;}
@@ -58,7 +58,7 @@ export default function DeveloperSupportTicketDetailsPage(){
   setSending(false);setReply("");setSelectedFile(null);if(fileRef.current)fileRef.current.value="";setNotice("Your reply has been sent.");await load();
  }
  async function openAttachment(item:Attachment){
-  if(!supabase)return;const {data,error:storageError}=await supabase.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
+  if(!supabase)return;const {data,error:storageError}=await getDeveloperSupportAttachmentUrl(item.storage_path);
   if(storageError||!data?.signedUrl){setError("This attachment is unavailable or you do not have permission to access it.");return;}
   window.open(data.signedUrl,"_blank","noopener,noreferrer");
  }

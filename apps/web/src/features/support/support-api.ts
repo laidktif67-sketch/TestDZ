@@ -159,3 +159,16 @@ export function uploadTesterSupportAttachment(storagePath: string, file: File) {
 export function getTesterSupportAttachmentUrl(storagePath: string) {
   return getClient().storage.from("support-attachments").createSignedUrl(storagePath, 60);
 }
+
+/** Upload a developer support attachment to the existing private bucket. */
+export function uploadDeveloperSupportAttachment(storagePath: string, file: File) {
+  return getClient().storage.from("support-attachments").upload(storagePath, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+}
+
+/** Create a short-lived URL after the existing storage policy checks. */
+export function getDeveloperSupportAttachmentUrl(storagePath: string) {
+  return getClient().storage.from("support-attachments").createSignedUrl(storagePath, 60);
+}
