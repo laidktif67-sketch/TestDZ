@@ -6,11 +6,6 @@ function getClient() {
 }
 
 /** Read-only leaderboard queries; database policies remain authoritative. */
-export function getTesterLeaderboardProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url").eq("id", userId).maybeSingle();
-}
-
 export function countTesterLeaderboardUnreadNotifications(userId: string) {
   return getClient().from("notifications")
     .select("id", { count: "exact", head: true })

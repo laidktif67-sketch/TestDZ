@@ -1,7 +1,8 @@
 import { useEffect,useMemo,useState } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterLeaderboardProfile, countTesterLeaderboardUnreadNotifications, countTesterLeaderboardTesters, listTesterLeaderboardTesterIds, listTesterLeaderboardProfiles, listTesterLeaderboardPoints, listTesterLeaderboardCompletedAssignments } from "../../../features/testers/leaderboard-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
+import { countTesterLeaderboardUnreadNotifications, countTesterLeaderboardTesters, listTesterLeaderboardTesterIds, listTesterLeaderboardProfiles, listTesterLeaderboardPoints, listTesterLeaderboardCompletedAssignments } from "../../../features/testers/leaderboard-api";
 import TesterSidebar,{Icon} from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/leaderboard.css";
@@ -16,7 +17,7 @@ export default function TesterLeaderboardPage(){
  const [page,setPage]=useState(1);const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  useEffect(()=>{if(!session?.user?.id){setLoading(false);return;}let alive=true;const uid=session.user.id;(async()=>{
  const [profile,notifications,roleCount,roleRows]=await Promise.all([
- getTesterLeaderboardProfile(uid),
+ getTesterHeaderProfile(uid),
  countTesterLeaderboardUnreadNotifications(uid),
  countTesterLeaderboardTesters(),
  listTesterLeaderboardTesterIds()
