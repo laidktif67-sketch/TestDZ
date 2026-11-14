@@ -55,7 +55,7 @@ function AppIcon({ name, url }: { name: string; url: string | null }) {
 
 export default function CheckInHistoryPage() {
   const { session, roles = [] } = useIdentity();
-  const { name, avatar, firstName } = useTesterProfile();
+  const { name, avatar, firstName, loading: profileLoading } = useTesterProfile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState(0);
   const [rows, setRows] = useState<CheckinRow[]>([]);
@@ -72,6 +72,7 @@ export default function CheckInHistoryPage() {
   const now = new Date();
   const [fromDate, setFromDate] = useState(dateValue(new Date(now.getFullYear(), now.getMonth(), 1)));
   const [toDate, setToDate] = useState(dateValue(new Date(now.getFullYear(), now.getMonth() + 1, 0)));
+  const isLoading = loading || profileLoading;
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
 
@@ -234,7 +235,7 @@ export default function CheckInHistoryPage() {
               <table className="cih-table">
                 <thead><tr><th>#</th><th>Test</th><th>App</th><th>Check-in date</th><th>Test status</th><th>Points</th><th>Details</th></tr></thead>
                 <tbody>
-                  {loading ? <tr><td colSpan={7} className="cih-empty"><span className="cih-loader"/>Loading your check-ins...</td></tr> :
+                  {isLoading ? <tr><td colSpan={7} className="cih-empty"><span className="cih-loader"/>Loading your check-ins...</td></tr> :
                     visibleRows.length === 0 ? <tr><td colSpan={7} className="cih-empty"><Icon name="search" size={25}/><strong>No check-ins found</strong><span>Try changing the date range or clearing some filters.</span><button onClick={clearFilters}>Clear filters</button></td></tr> :
                     visibleRows.map((row, index) => {
                       const test = row.assignment?.test;
@@ -259,7 +260,7 @@ export default function CheckInHistoryPage() {
               })()}
             </div>
             <div className="cih-mobile-list">
-              {loading ? <p className="cih-empty">Loading your check-ins...</p> : visibleRows.length === 0 ? <div className="cih-empty"><Icon name="search" size={24}/><strong>No check-ins found</strong><button onClick={clearFilters}>Clear filters</button></div> : visibleRows.map((row, index) => {
+              {isLoading ? <p className="cih-empty">Loading your check-ins...</p> : visibleRows.length === 0 ? <div className="cih-empty"><Icon name="search" size={24}/><strong>No check-ins found</strong><button onClick={clearFilters}>Clear filters</button></div> : visibleRows.map((row, index) => {
                 const test = row.assignment?.test;
                 const app = test?.app;
                 const expanded = expandedId === row.id;
