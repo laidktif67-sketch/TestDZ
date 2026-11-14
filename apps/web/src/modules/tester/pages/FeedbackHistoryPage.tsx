@@ -145,7 +145,7 @@ export default function FeedbackHistoryPage() {
     <main className="td-main fh-main">
       <header className="td-topbar fh-topbar">
         <label className="td-search"><Icon name="search" size={20}/><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search in feedback history…"/></label>
-        <div className="td-top-actions"><Link className="td-notification" to="/notifications" aria-label={unreadCount>0?`Notifications, ${unreadCount} unread`:"Notifications"}><Icon name="bell" size={21}/>{unreadCount>0&&<span className="ad-notification-count">{unreadCount>9?"9+":unreadCount}</span>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div>
+        <div className="td-top-actions"><Link className="td-notification" to="/notifications" aria-label={unreadCount>0?`Notifications, ${unreadCount} unread`:"Notifications"}><Icon name="bell" size={21}/>{unreadCount>0&&<i>{unreadCount>9?"9+":unreadCount}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div>
       </header>
       <div className="fh-content">
         <section className="fh-heading">
