@@ -14,7 +14,7 @@ export default function TestCompletionRewardPage(){
  const [assignment,setAssignment]=useState<Assignment|null>(null),[entries,setEntries]=useState<Entry[]>([]),[checks,setChecks]=useState<string[]>([]),[feedback,setFeedback]=useState(""),[name,setName]=useState("Tester"),[avatar,setAvatar]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menu,setMenu]=useState(false);
  const preview=import.meta.env.DEV&&new URLSearchParams(location.search).get("preview")==="1";
  useEffect(()=>{if(preview){setAssignment({id,status:"completed",completed_at:"2026-11-12T13:32:00Z",test:{title:"UI Testing Assignment",app:{name:"DemoApp"}}});setEntries([{id:"demo",amount:50,reason:"Test completion reward",created_at:"2026-11-12T13:32:00Z"}]);setChecks(Array.from({length:14},(_,i)=>String(i)));setFeedback("accepted");setName("John Doe");setLoading(false);return;}
- if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}const c=supabase;
+ if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}
  const [a,ch,f,l,p]=await Promise.all([
  getCompletionRewardAssignment(id,session.user.id),
  listCompletionRewardCheckins(id,session.user.id),
