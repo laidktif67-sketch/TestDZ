@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
-import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
+import { useTesterPageHeader } from "../hooks/useTesterPageHeader";
 import "../styles/referral-history.css";
 type ReferralRecord={id:string;invited_email:string;status:"successful"|"pending"|"expired";created_at:string;reward_points:number;detail:string};
 export default function ReferralHistoryPage(){
- const {session,roles=[]}=useIdentity();const [name,setName]=useState("Tester");const [avatar,setAvatar]=useState("");const [notifications,setNotifications]=useState(0);const [menuOpen,setMenuOpen]=useState(false);const [status,setStatus]=useState("All");const [period,setPeriod]=useState("6");const [selected,setSelected]=useState<ReferralRecord|null>(null);const [records]=useState<ReferralRecord[]>([]);const [loading,setLoading]=useState(true);
- const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer"),firstName=name.split(/\s+/)[0]||"Tester";
- useEffect(()=>{if(!session?.user?.id){setLoading(false);return;}let alive=true;const id=session.user.id;Promise.all([getTesterHeaderProfile(id),countTesterUnreadNotifications(id)]).then(([p,n])=>{if(!alive)return;setName(p.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(p.data?.avatar_url||"");setNotifications(n.count??0);setLoading(false);}).catch(()=>{if(alive)setLoading(false);});return()=>{alive=false;};},[session?.user?.id]);
+ const {roles,name,avatar,notifications,loading,firstName}=useTesterPageHeader();const [menuOpen,setMenuOpen]=useState(false);const [status,setStatus]=useState("All");const [period,setPeriod]=useState("6");const [selected,setSelected]=useState<ReferralRecord|null>(null);const [records]=useState<ReferralRecord[]>([]);
+ const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
+
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Activity & History",icon:"chart",href:"/activity-history"},{label:"Check-in History",icon:"calendar",href:"/check-in-history"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Referral Program",icon:"users",href:"/referral-program",active:true},{label:"Profile",icon:"user",href:"/profile"},{label:"Help & Support",icon:"help",href:"/help-support"},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
  const filtered=records.filter(r=>status==="All"||r.status===status.toLowerCase()),successful=records.filter(r=>r.status==="successful").length,points=records.reduce((n,r)=>n+(r.status==="successful"?r.reward_points:0),0),rate=records.length?Math.round(successful/records.length*100):0;
  const exportHistory=()=>{if(!filtered.length)return;const rows=[["Date","Invited User","Status","Reward Points","Details"],...filtered.map(r=>[r.created_at,r.invited_email,r.status,String(r.reward_points),r.detail])];const csv=rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="testdz-referral-history.csv";a.click();URL.revokeObjectURL(url);};
