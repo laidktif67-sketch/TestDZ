@@ -20,7 +20,7 @@ const checks = [
   ["missing session redirects protected routes to auth", () => /if \(!session \|\| !user\)[\s\S]*?<Navigate[\s\S]*?to="\/auth"/.test(source.auth)],
   ["account-status lookup errors fail closed", () => /currentAccountStatus === "error"/.test(source.auth) && /Access remains blocked until your account status can be confirmed/.test(source.auth)],
   ["banned accounts render the suspension screen instead of the protected outlet", () => {
-    const bannedBranch = source.auth.match(/if \(currentAccountStatus === "banned"\) \{([\\s\\S]*?)\\n  \\}\\n\\n  return <Outlet \\/>;/)?.[1] ?? "";
+    const bannedBranch = source.auth.match(/if \(currentAccountStatus === "banned"\) \{([\s\S]*?)\n  \}\n\n  return <Outlet \/>;/)?.[1] ?? "";
     return bannedBranch.length > 0 && /Account suspended/.test(bannedBranch) && /return \(/.test(bannedBranch) && !/Outlet/.test(bannedBranch);
   }],
   ["role-query errors display a retry path before granting workspace access", () => /if \(rolesError\) return <RoleLoadError retry=/.test(source.roles) && /roles\.includes\(requiredRole\) \|\| roles\.includes\("admin"\)/.test(source.roles)],
