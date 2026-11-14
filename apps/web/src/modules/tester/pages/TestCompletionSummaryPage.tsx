@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/completion-summary.css";
