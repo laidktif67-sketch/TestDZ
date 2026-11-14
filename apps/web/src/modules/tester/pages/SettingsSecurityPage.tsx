@@ -70,7 +70,7 @@ export default function SettingsSecurityPage() {
   useEffect(() => {
     if (!user || !identityApi.isConfigured()) return;
     let alive = true;
-    if (!client) return;
+
     Promise.all([
       getTesterAccountSettingsProfile(user.id),
       identityApi.listMfaFactors(),
