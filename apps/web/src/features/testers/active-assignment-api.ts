@@ -35,13 +35,6 @@ export function getActiveAssignmentEarnedPoints(userId: string, assignmentId: st
     .eq("user_id", userId).eq("wallet_type", "earned_points").eq("reference_id", assignmentId);
 }
 
-export function listTesterRoleIds() {
-  return getClient().from("user_roles").select("user_id").eq("role", "tester").limit(5000);
-}
-
-export function listTesterLeaderboardProfiles(profileIds: string[]) {
-  return getClient().from("profiles").select("id,display_name,avatar_url").in("id", profileIds);
-}
 
 export function listTesterLeaderboardLedger(userIds: string[]) {
   return getClient().from("points_ledger").select("user_id,amount")

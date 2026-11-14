@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { countActiveAssignmentFeedback, countActiveAssignmentUnreadNotifications, getActiveAssignmentProfile, getActiveAssignmentRecord, getActiveAssignmentEarnedPoints, listActiveAssignmentCheckIns, listTesterRoleIds, listTesterLeaderboardProfiles, listTesterLeaderboardLedger } from "../../../features/testers/active-assignment-api";
+import { countActiveAssignmentFeedback, countActiveAssignmentUnreadNotifications, getActiveAssignmentProfile, getActiveAssignmentRecord, getActiveAssignmentEarnedPoints, listActiveAssignmentCheckIns, listTesterLeaderboardLedger } from "../../../features/testers/active-assignment-api";
+import { listTesterLeaderboardTesterIds, listTesterLeaderboardProfiles } from "../../../features/testers/leaderboard-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -31,7 +32,7 @@ export default function ActiveAssignmentProgressPage(){
     listActiveAssignmentCheckIns(id,uid),
     countActiveAssignmentFeedback(id,uid),
     getActiveAssignmentEarnedPoints(uid,id),
-    listTesterRoleIds()
+    listTesterLeaderboardTesterIds()
    ]);
    if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notice.count??0);
    if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
