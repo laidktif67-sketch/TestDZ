@@ -18,6 +18,11 @@ export function getAppLimit() {
   return client().rpc("get_app_limit");
 }
 
+/** Read tests linked to an app; RLS remains authoritative for test visibility. */
+export function listAppTests(appId: string) {
+  return client().from("tests").select("id,title,status,created_at,start_date,end_date").eq("app_id", appId).order("created_at", { ascending: false }).limit(100);
+}
+
 /** Read one application; access remains enforced by the existing RLS policies. */
 export function getAppById(id: string) {
   return client().from("apps").select(APP_SELECT).eq("id", id).single();
