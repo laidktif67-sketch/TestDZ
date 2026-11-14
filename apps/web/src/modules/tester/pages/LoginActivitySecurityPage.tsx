@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -25,7 +24,7 @@ export default function LoginActivitySecurityPage() {
   useEffect(() => {
     let alive = true;
     async function loadActivity() {
-      if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }
+      if (!identityApi.isConfigured() || !user) { if (alive) setLoadingActivity(false); return; }
       setLoadingActivity(true);
       const result = await identityApi.getMySecurityActivity(30);
       if (!alive) return;
@@ -59,7 +58,7 @@ export default function LoginActivitySecurityPage() {
     ...(roles.includes("developer") ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : [])
   ];
   async function refreshActivity() {
-    if (!supabase || !user) { setNotice("Sign in to load your account security history."); return; }
+    if (!identityApi.isConfigured() || !user) { setNotice("Sign in to load your account security history."); return; }
     setRefreshing(true); setNotice("");
     const result = await identityApi.getMySecurityActivity(30);
     setRefreshing(false);
@@ -68,7 +67,7 @@ export default function LoginActivitySecurityPage() {
   }
   const rows = activity.map(item => ({ id: item.id, date: new Date(item.occurred_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }), device: "Not recorded", browser: "Not recorded", location: "Not provided", ip: item.ip_address || "Not available", status: item.event }));
   return <div className="td-dashboard las-dashboard">
-    <TesterSidebar nav={nav} name={firstName} firstName={firstName} avatar="" roles={roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
+    <TesterSidebar nav={nav} name={firstName} firstName={firstName} avatar="" roles={roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!identityApi.isConfigured()}/>
     <main className="td-main las-main">
       <header className="las-topbar"><label className="las-search"><Icon name="search" size={20}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" readOnly/></label><div className="las-user"><Link to="/profile"><b>{firstName.slice(0,2).toUpperCase()}</b><span>{firstName}</span><Icon name="chevron" size={16}/></Link></div></header>
       <div className="las-content">
