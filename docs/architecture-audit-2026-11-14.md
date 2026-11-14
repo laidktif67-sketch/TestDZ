@@ -92,7 +92,7 @@ The current `AppRoutes.tsx` composes public routes outside the authenticated rou
 
 The current `RoleGuard` allows an admin through tester/developer guards as well as the requested role. Whether that is desired admin workspace access or a role-separation exception is a product policy decision; do not silently change it during a refactor. Server/database RLS and RPC authorization remain the actual data boundary.
 
-Sidebar links, notification destinations, and the complete set of route/page references still need a branch-wide automated inventory and browser-level verification. No page should be deleted based only on its filename or lack of a direct route.
+The tester notification list currently renders each notification as a button whose handler calls only `markRead(row)`; it does not inspect `row.data` or navigate to a destination. The `NotificationRow` type includes `data`, but the UI has no destination resolver. This is a confirmed UX gap, not a reason to guess route semantics: inspect the server-side notification payload producers and define an allow-listed destination contract before implementing click-through navigation. Developer notifications expose a related-test link when a test ID is available, but that flow should be verified separately. Sidebar links, notification destinations, and the complete set of route/page references still need a branch-wide automated inventory and browser-level verification. No page should be deleted based only on its filename or lack of a direct route.
 
 ## Incremental repair plan
 
