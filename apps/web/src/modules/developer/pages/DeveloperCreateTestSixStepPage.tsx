@@ -30,7 +30,11 @@ type Stage = 1 | 2 | 3 | 4 | 5 | 6;
 
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
-    search: <><circle cx="10.8" cy="10.8" r="7" /><path d="m16 16 4.5 4.5" /></>,\n    details: <><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6M8 10h8M8 14h8M8 18h5"/></>,\n    target: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></>,\n    flag: <><path d="M5 21V4m0 0h12l-2 4 2 4H5"/></>,\n    scope: <><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></>,
+    search: <><circle cx="10.8" cy="10.8" r="7" /><path d="m16 16 4.5 4.5" /></>,
+    details: <><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6M8 10h8M8 14h8M8 18h5"/></>,
+    target: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></>,
+    flag: <><path d="M5 21V4m0 0h12l-2 4 2 4H5"/></>,
+    scope: <><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></>,
     refresh: <><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></>,
     check: <path d="m5 12 4 4L19 6" />,
     arrow: <><path d="M4 12h15m-6-6 6 6-6 6" /></>,
@@ -147,7 +151,9 @@ export default function DeveloperCreateTestSixStepPage() {
     if (step === 2 && !selectedApp) { setSaveError("Select an application to continue."); return; }
     if (step === 3 && testType === "google_play_closed" && testerMethod === "google_groups" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(googleGroup.trim())) { setSaveError("Enter a valid Google Group email address."); return; }
     if (step === 3 && testType === "google_play_closed" && releaseMode === "scheduled" && !releaseAt) { setSaveError("Choose a planned date and time, or select Immediately."); return; }
-    if (step === 4 && title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters."); return; }\n    if (step === 4 && testingScope.length === 0) { setSaveError("Select at least one testing scope."); return; }\n    if (step === 4 && (!Number.isFinite(minimumCompletionRate) || minimumCompletionRate < 1 || minimumCompletionRate > 100)) { setSaveError("Set a minimum completion rate between 1% and 100%."); return; }
+    if (step === 4 && title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters."); return; }
+    if (step === 4 && testingScope.length === 0) { setSaveError("Select at least one testing scope."); return; }
+    if (step === 4 && (!Number.isFinite(minimumCompletionRate) || minimumCompletionRate < 1 || minimumCompletionRate > 100)) { setSaveError("Set a minimum completion rate between 1% and 100%."); return; }
     if (step === 5 && (!Number.isFinite(targetTesters) || targetTesters < 1 || targetTesters > 500)) {
       setSaveError("Choose a tester target between 1 and 500.");
       return;
@@ -184,7 +190,8 @@ export default function DeveloperCreateTestSixStepPage() {
       testType,
       testConfig: {
         cohort: { targetTesters: Math.max(1, Math.min(500, Math.floor(targetTesters))), notes: cohortNotes.trim() || null },
-        rules: { androidVersion, instructions: instructions.trim() || null },\n        details: { testingObjective, priority, testingScope, successCriteria: successCriteria.trim() || null, minimumCompletionRate },
+        rules: { androidVersion, instructions: instructions.trim() || null },
+        details: { testingObjective, priority, testingScope, successCriteria: successCriteria.trim() || null, minimumCompletionRate },
         schedule: { durationDays: durationDays === "custom" ? null : Number(durationDays), allowMoreTesters, joiningMethod, collectFeedback, enableBugReports },
         googlePlay: {
           track: playTrack,
