@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listTesterNotifications, markTesterNotificationRead, markAllTesterNotificationsRead, listTesterRecentEarnedPoints, listTesterUpcomingAssignments } from "../../../features/notifications/notifications-api";
@@ -19,6 +19,14 @@ type NotificationRow = {
 type Category = "all" | "unread" | "tests" | "rewards" | "system";
 type Preferences = { tests: boolean; feedback: boolean; rewards: boolean; security: boolean };
 const defaults: Preferences = { tests: true, feedback: true, rewards: true, security: true };
+
+function destinationFor(row: NotificationRow): string | null {
+  const type = row.type.toLowerCase();
+  if (type !== "medical_exception_approved" && type !== "medical_exception_rejected") return null;
+  const assignmentId = row.data?.assignment_id;
+  if (typeof assignmentId !== "string" || !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(assignmentId)) return null;
+  return "/assignments/" + assignmentId;
+}
 
 function categoryFor(type: string): Exclude<Category, "all" | "unread"> {
   const value = type.toLowerCase();
@@ -47,6 +55,7 @@ function preferenceKey(userId: string) { return "testdz-notification-preferences
 
 export default function NotificationsCenterPage() {
   const { user, roles = [] } = useIdentity();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<NotificationRow[]>([]);
   const [filter, setFilter] = useState<Category>("all");
   const [search, setSearch] = useState("");
@@ -124,14 +133,22 @@ export default function NotificationsCenterPage() {
     return (row.title + " " + row.body).toLowerCase().includes(search.toLowerCase());
   }), [rows, filter, search]);
 
-  async function markRead(row: NotificationRow) {
-    if (row.read_at || !identityApi.isConfigured() || !user?.id) return;
+  async function openNotification(row: NotificationRow) {
+    const destination = destinationFor(row);
+    const marked = await markRead(row);
+    if (destination && marked) navigate(destination);
+  }
+
+  async function markRead(row: NotificationRow): Promise<boolean> {
+    if (row.read_at) return true;
+    if (!identityApi.isConfigured() || !user?.id) return false;
     setBusyId(row.id); setNotice(""); setError("");
     const readAt = new Date().toISOString();
     const result = await markTesterNotificationRead(row.id, user.id, readAt);
     setBusyId("");
-    if (result.error) { setError("Could not update this notification. Please try again."); return; }
+    if (result.error) { setError("Could not update this notification. Please try again."); return false; }
     setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
+    return true;
   }
   async function markAllRead() {
     if (!identityApi.isConfigured() || !user?.id || unread === 0) return;
@@ -191,7 +208,7 @@ export default function NotificationsCenterPage() {
             {loading ? <div className="nc-empty"><span className="nc-spinner"/><strong>Loading notifications…</strong></div> :
               filtered.length ? filtered.map(row => {
                 const category = categoryFor(row.type);
-                return <button type="button" key={row.id} className={"nc-item " + (!row.read_at ? "unread" : "")} onClick={() => void markRead(row)} disabled={busyId === row.id}>
+                return <button type="button" key={row.id} className={"nc-item " + (!row.read_at ? "unread" : "")} onClick={() => void openNotification(row)} disabled={busyId === row.id}>
                   <span className={"nc-item-icon " + category}><Icon name={iconFor(row.type)} size={31}/></span>
                   <span className="nc-item-copy"><strong>{row.title}</strong><small>{row.body}</small></span>
                   <span className="nc-item-time"><i className={!row.read_at ? "blue-dot" : category === "rewards" ? "green-dot" : "muted-dot"}/>{timeAgo(row.created_at)}</span>

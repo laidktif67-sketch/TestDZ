@@ -1,6 +1,6 @@
 begin;
 
-select plan(10);
+select plan(11);
 
 select ok(
   exists (
@@ -103,6 +103,16 @@ select ok(
     'private.review_medical_exception(uuid,text,text)'::regprocedure
   ) like '%notifications%',
   'medical review decisions retain audit logging and tester notifications'
+);
+
+select ok(
+  pg_get_functiondef(
+    'private.review_medical_exception(uuid,text,text)'::regprocedure
+  ) like '%recipient_role%'
+  and pg_get_functiondef(
+    'private.review_medical_exception(uuid,text,text)'::regprocedure
+  ) like '%''tester''%',
+  'medical review notifications explicitly target the tester feed'
 );
 
 select * from finish();
