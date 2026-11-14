@@ -3,9 +3,8 @@ import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listTesterFeedbackHistory, listTesterFeedbackRewards } from "../../../features/feedback/feedback-api";
-import TesterSidebar from "../components/TesterSidebar";
+import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import { useTesterProfile } from "../hooks/useTesterProfile";
-import { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/feedback-history.css";
 
