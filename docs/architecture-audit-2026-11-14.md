@@ -109,3 +109,16 @@ The tester notification list currently renders each notification as a button who
 - Updated `scripts/check-route-inventory.mjs` to include the existing `/apps/new` route and its corresponding route counts.
 - No source page, API, permission policy, schema, or migration was deleted or changed.
 - The route-inventory script has not been executed in a local Node environment by this audit. Its expected counts were checked against the route source files through GitHub; runtime verification remains pending.
+
+## Evidence update — 2026-11-15
+
+### Fresh CI attempts
+- PR #34 route-inventory run [43651415355](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43651415355) was retried (attempt 2) and failed again. The job exposes zero steps; the job-log endpoint returns `BlobNotFound`. The route-check script therefore still has no confirmed runtime result.
+- Follow-up PR #35 was opened as a separate Draft against `feat/developer-create-test-six-step`. On head `1ff5037e9be58feeb257fdbdba2cf94557dfa168`, web CI run [43653172385](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43653172385) and migration regression run [43653172362](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43653172362) were each retried (attempt 2) and failed with no visible job steps. Log retrieval returned `BlobNotFound` for both jobs.
+- These results establish that GitHub Actions did not expose executed steps in these attempts. They do **not** establish the underlying cause, and they do not prove a TypeScript, build, SQL, or route-inventory test failure. No runtime validation can be claimed.
+- Vercel continues to report a build-rate-limit status, which is not a build result.
+
+### Notification contract finding and follow-up
+- The latest migration defining `private.review_medical_exception` inserts into `public.notifications` without `recipient_role`, although migration `20261112191021_separate_notification_recipient_roles.sql` later makes that column mandatory. This can cause future medical-exception review transactions to fail when they try to create the notification.
+- A separate follow-up is tracked in [PR #35](https://github.com/laidktif67-sketch/TestDZ/pull/35). Its forward-only migration is based on the latest requested-dates function definition and explicitly sets `recipient_role = 'tester'`; it also adds a schema-test assertion and allow-listed navigation from medical-exception notifications to the existing `/assignments/:id` route.
+- PR #35 remains Draft/open and unmerged. Its SQL regression, TypeScript, build, and browser behavior remain unverified because the CI jobs did not expose any executed steps.
