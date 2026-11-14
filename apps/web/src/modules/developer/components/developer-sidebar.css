@@ -28,3 +28,39 @@
 .developer-app-detail-shell{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh;background:#f5f7fb}
 .developer-app-detail-shell>main{min-width:0}
 @media(max-width:850px){.developer-app-detail-shell{grid-template-columns:minmax(0,1fr)}.developer-app-detail-shell>.loading-screen{min-height:45vh}}
+
+/* Keep sidebar placement tied to the selected language, not a stale inherited direction. */
+:root[lang="en"] .dd-shell,
+:root[lang="en"] .dmy-shell,
+:root[lang="en"] .dan-shell,
+:root[lang="en"] .dct-shell,
+:root[lang="en"] .dmt-shell,
+:root[lang="en"] .dtr-shell,
+:root[lang="en"] .df-shell,
+:root[lang="en"] .dn-shell,
+:root[lang="en"] .dset-shell,
+:root[lang="en"] .dsub-shell,
+:root[lang="en"] .developer-app-detail-shell,
+:root[lang="fr"] .dd-shell,
+:root[lang="fr"] .dmy-shell,
+:root[lang="fr"] .dan-shell,
+:root[lang="fr"] .dct-shell,
+:root[lang="fr"] .dmt-shell,
+:root[lang="fr"] .dtr-shell,
+:root[lang="fr"] .df-shell,
+:root[lang="fr"] .dn-shell,
+:root[lang="fr"] .dset-shell,
+:root[lang="fr"] .dsub-shell,
+:root[lang="fr"] .developer-app-detail-shell { direction:ltr; }
+
+:root[lang="ar"] .dd-shell,
+:root[lang="ar"] .dmy-shell,
+:root[lang="ar"] .dan-shell,
+:root[lang="ar"] .dct-shell,
+:root[lang="ar"] .dmt-shell,
+:root[lang="ar"] .dtr-shell,
+:root[lang="ar"] .df-shell,
+:root[lang="ar"] .dn-shell,
+:root[lang="ar"] .dset-shell,
+:root[lang="ar"] .dsub-shell,
+:root[lang="ar"] .developer-app-detail-shell { direction:rtl; }
