@@ -13,13 +13,6 @@ export function listTesterCheckIns(testerId: string) {
     .order("checkin_date", { ascending: false });
 }
 
-export function countUnreadTesterNotifications(userId: string) {
-  return getClient().from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .is("read_at", null);
-}
-
 export function listCheckInRewardLedger(userId: string, checkInIds: string[]) {
   if (!checkInIds.length) return Promise.resolve({ data: [], error: null });
   return getClient().from("points_ledger")
