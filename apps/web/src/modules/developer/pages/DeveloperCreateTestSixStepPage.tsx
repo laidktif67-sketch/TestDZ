@@ -205,8 +205,8 @@ export default function DeveloperCreateTestSixStepPage() {
       </header>
       <div className="dct-page">
         <section className={"dct-hero " + (step === 2 ? "dct-hero-select-app" : "")}>
-          <div><span className="dct-hero-kicker">TESTDZ · DEVELOPER SPACE</span><h1>{step === 2 ? <>Select Your <em>App</em></> : <>Create New <em>Test</em></>}</h1><p>{step === 2 ? "Choose the application you want to test." : "Choose the right testing flow for your application."}</p></div>
-          {step === 2 && <button type="button" className="dct-hero-back" onClick={() => { setSaveError(""); setStep(1); }}><span aria-hidden="true">←</span> Back to Test Types</button>}
+          <div><span className="dct-hero-kicker">TESTDZ · DEVELOPER SPACE</span><h1>{step === 2 ? <>Select Your <em>App</em></> : step === 3 ? <>Configure <em>Test</em></> : <>Create New <em>Test</em></>}</h1><p>{step === 2 ? "Choose the application you want to test." : step === 3 ? "Set up the details for your testing campaign." : "Choose the right testing flow for your application."}</p></div>
+          {step === 3 && selectedType && <span className="dct-hero-type-pill">{selectedType.title}</span>}{step === 2 && <button type="button" className="dct-hero-back" onClick={() => { setSaveError(""); setStep(1); }}><span aria-hidden="true">←</span> Back to Test Types</button>}
           <div className="dct-hero-art" aria-hidden="true"><span className="dct-android">♟</span><span className="dct-hero-phone">✓</span><span className="dct-hero-checklist">☑<br />☑<br />☑</span></div>
         </section>
 
