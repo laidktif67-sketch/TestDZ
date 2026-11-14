@@ -24,7 +24,3 @@ export function listTesterDashboardAvailableTests() {
     .order("created_at", { ascending: false }).limit(4);
 }
 
-export function countTesterDashboardUnreadNotifications(userId: string) {
-  return getClient().from("notifications").select("id", { count: "exact", head: true })
-    .eq("user_id", userId).is("read_at", null);
-}

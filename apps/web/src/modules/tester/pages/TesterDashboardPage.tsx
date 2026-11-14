@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
-import { getTesterDashboardWallet, listTesterDashboardAssignments, listTesterDashboardAvailableTests, countTesterDashboardUnreadNotifications } from "../../../features/testers/tester-dashboard-api";
+import { getTesterDashboardWallet, listTesterDashboardAssignments, listTesterDashboardAvailableTests } from "../../../features/testers/tester-dashboard-api";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/tester-dashboard.css";
@@ -98,7 +99,7 @@ export default function TesterDashboardPage() {
         getTesterDashboardWallet(userId),
         listTesterDashboardAssignments(userId),
         listTesterDashboardAvailableTests(),
-        countTesterDashboardUnreadNotifications(userId)
+        countTesterUnreadNotifications(userId)
       ]);
       if (!alive) return;
       const assignments = assignmentRes.data ?? [];
