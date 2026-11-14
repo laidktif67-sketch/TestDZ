@@ -116,7 +116,7 @@ const expectedPaths = [
   "*"
 ];
 const expectedPathSet = new Set(expectedPaths);
-const actualPathSet = new Set([...allRouteSource.matchAll(/<Route\\s+(?:key="[^"]+"\\s+)?path="([^"]+)"/g)].map((match) => match[1]));
+const actualPathSet = new Set([...allRouteSource.matchAll(/<Route\s+(?:key="[^"]+"\\s+)?path="([^"]+)"/g)].map((match) => match[1]));
 const missingPaths = expectedPaths.filter((path) => !actualPathSet.has(path));
 const unexpectedPaths = [...actualPathSet].filter((path) => !expectedPathSet.has(path));
 
