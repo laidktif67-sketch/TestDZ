@@ -82,3 +82,19 @@ Status: **requires product/owner confirmation; no code change made**.
 ## Product decision: support role remains unplanned
 
 The repository owner confirmed that a separate support workspace has not yet been planned. Therefore, do not invent a support-specific page or expand its permissions as part of this migration. Keep the current implementation unchanged and retain the routing observation as a deferred product decision. Revisit only when the support workflow and intended access boundaries are defined.
+
+## Follow-up validation recorded on 2026-11-14
+
+The repository owner pulled the branch through commit `e159d87ba06d65b326eacf36fa86a42313ed7c3d` and reported the following local Termux commands completed successfully after the pull:
+
+| Command | Result reported |
+|---|---|
+| `npm run typecheck` | Passed |
+| `npm run check:routes` | Passed: 102 Route elements and 96 explicit path declarations |
+| `node scripts/audit-identity-boundary.mjs` | Completed: 134 source files scanned; 68 matched identity imports; 0 direct consumers of the legacy identity API/context/provider/hook modules; 0 feature-to-`shared/auth` imports |
+
+These are fresh owner-reported static checks for the branch state at the time of execution. The commands do not constitute a fresh production build or additional browser runtime tests.
+
+The owner also previously reported successful browser smoke checks for the home page, a protected route, sign-in, refresh persistence, and permissions. The exact role matrix and negative cases were not specified. Sign-out redirect, role-fetch failure/retry, banned-account blocking, and incomplete-onboarding behavior remain **not verified**.
+
+**Gate decision:** do not begin a new identity-dependent domain migration yet. Next, finish the explicitly listed negative-path browser checks using safe test accounts. Mark each outcome as passed, failed, or not tested; do not alter real account roles or suspend real accounts for testing.
