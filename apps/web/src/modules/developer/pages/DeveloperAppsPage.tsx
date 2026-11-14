@@ -6,6 +6,7 @@ import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "../../../lib/supabase";
 import { APP_CATEGORIES, appError } from "../../../lib/app-utils";
 import { createApp, getAppLimit, listApps, uploadAppIcon } from "../../../features/apps/apps-api";
+import { listAppMetricTests, listAppMetricAssignments, listAppMetricFeedback } from "../../../features/analytics/analytics-api";
 import "../styles/developer-apps.css";
 
 type Filter = "all" | "published" | "draft" | "paused" | "archived";
@@ -91,7 +92,7 @@ function AppsPage() {
 
     if (!appsError && appRows.length) {
       const appIds = appRows.map(app => app.id);
-      const { data: tests, error: testsError } = await supabase.from("tests").select("id,app_id").in("app_id", appIds);
+      const { data: tests, error: testsError } = await listAppMetricTests(appIds);
       if (!testsError) {
         const testRows = (tests ?? []) as { id: string; app_id: string }[];
         const testToApp = new Map(testRows.map(test => [test.id, test.app_id]));
@@ -99,9 +100,7 @@ function AppsPage() {
         appIds.forEach(id => { next[id] = { tests: 0, testers: 0, rating: null }; });
         testRows.forEach(test => { if (next[test.app_id]) next[test.app_id].tests += 1; });
         if (testRows.length) {
-          const { data: assignments, error: assignmentsError } = await supabase
-            .from("assignments").select("id,test_id,tester_id")
-            .in("test_id", testRows.map(test => test.id));
+          const { data: assignments, error: assignmentsError } = await listAppMetricAssignments(testRows.map(test => test.id));
           if (!assignmentsError) {
             const assignmentRows = (assignments ?? []) as { id: string; test_id: string; tester_id: string }[];
             const testersByApp = new Map<string, Set<string>>();
@@ -115,10 +114,7 @@ function AppsPage() {
             });
             testersByApp.forEach((testers, appId) => { next[appId].testers = testers.size; });
             if (assignmentRows.length) {
-              const { data: feedback, error: feedbackError } = await supabase
-                .from("feedback").select("assignment_id,rating")
-                .in("assignment_id", assignmentRows.map(assignment => assignment.id))
-                .not("rating", "is", null);
+              const { data: feedback, error: feedbackError } = await listAppMetricFeedback(assignmentRows.map(assignment => assignment.id));
               if (!feedbackError) {
                 const ratingsByApp = new Map<string, number[]>();
                 (feedback ?? []).forEach(item => {
