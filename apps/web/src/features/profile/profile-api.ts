@@ -16,3 +16,10 @@ export function getDeveloperSettingsProfile(userId: string) {
 export function updateDeveloperSettingsProfile(userId: string, values: { display_name?: string; locale?: string }) {
   return getClient().from("profiles").update(values).eq("id", userId);
 }
+
+/** Read-only profile fields for the tester referral-history header. */
+export function getTesterReferralProfile(userId: string) {
+  return getClient().from("profiles")
+    .select("display_name,avatar_url")
+    .eq("id", userId).maybeSingle();
+}
