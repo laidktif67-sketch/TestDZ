@@ -22,7 +22,7 @@ export function useTesterPageHeader() {
     setLoading(true);
     const userId = session.user.id;
 
-    countTesterUnreadNotifications(userId)
+    Promise.resolve(countTesterUnreadNotifications(userId))
       .then((notification) => {
         if (!alive) return;
         setNotifications(notification.count ?? 0);
