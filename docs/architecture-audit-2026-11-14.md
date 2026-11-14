@@ -32,7 +32,7 @@ This is a transitional feature-based architecture rather than a single fully nor
 
 `scripts/check-route-inventory.mjs` required 96 explicit paths and 102 `Route` elements, while the current route sources declare 97 explicit paths and 103 elements. The additional route is `/apps/new`, registered in `apps/web/src/routes/developerRoutes.tsx` for `DeveloperAddAppPage`.
 
-The route-inventory contract was updated on the audit branch to include `/apps/new` and expect 97 paths / 103 route elements. This change updates the test baseline only; it does not change routing behavior.
+The route-inventory contract was updated on the audit branch to include `/apps/new` and expect 97 paths / 103 route elements. A static re-evaluation of the same route-source contracts now finds 97 declared paths, 103 Route elements, no duplicate paths, no missing/extra paths, and no unresolved relative imports from the route modules. This is a source-level check, not an execution of `npm run check:routes`.
 
 ### 2. Route composition differs across active branches — high integration risk
 
@@ -46,13 +46,23 @@ The branches also have different page inventories and data/API modules. Replacin
 
 The six-step branch contains both `DeveloperCreateTestPage.tsx` and `DeveloperCreateTestSixStepPage.tsx`. The current developer route module registers the six-step page at `/developer/tests/new`; it does not register the older page in the route table. This makes the older page a candidate for deprecation, but its imports and any non-route use must be exhaustively checked before deletion. Shared CSS dependencies must also be reviewed.
 
-### 4. Package scripts and CI coverage
+### 4. Identity provider has a duplicated implementation file — preserve until references are proven
+
+The branch contains both `apps/web/src/features/identity/identity-provider.tsx` and `apps/web/src/shared/auth/identity-provider.tsx` with the same blob SHA/content. The current `App.tsx` imports the feature-owned provider. The shared auth API/context/hook files are compatibility re-exports into `features/identity`, but the shared provider file remains a full implementation rather than a facade. This is a concrete duplicate-maintenance risk. Before deleting or converting it, search every source file for imports and preserve the single canonical provider contract.
+
+### 5. Page inventory candidates and legacy source folders
+
+The current branch tree contains 29 admin, 20 developer, and 33 tester page files under `modules/*/pages`. The route modules directly import all 29 admin pages, 19 of 20 developer pages, and 32 of 33 tester pages. The two not directly imported by route modules are `DeveloperCreateTestPage.tsx` and `TesterSectionPage.tsx`. These are candidates for a usage audit only; neither was deleted because non-route imports and shared CSS dependencies have not been exhaustively ruled out.
+
+Public/authentication pages remain in `src/pages` and shared code remains across `src/components`, `src/hooks`, `src/lib`, `src/shared`, and `src/features`. That mixed layout is evidence of a gradual migration, not sufficient evidence for bulk file moves.
+
+### 6. Package scripts and CI coverage
 
 The root package exposes `dev`, `build`, `typecheck`, `check:routes`, and `audit:identity-guards`. The web workspace exposes `dev`, `build`, `preview`, and `typecheck`. No dedicated `lint` or frontend unit-test script is declared in these package files.
 
 The web CI workflow runs `npm install`, `npm run typecheck`, and `npm run build`. Separate workflows run the route inventory guard and local Supabase migration/storage regression tests. Static source-contract scripts are useful but do not replace browser tests, authenticated end-to-end checks, or database authorization tests.
 
-### 5. CI evidence must be interpreted carefully
+### 7. CI evidence must be interpreted carefully
 
 For PR #33 head `e6a7f8ea27c0c2a4d2f49e6fe9565f23cf741b2b`, the GitHub Actions runs for web CI, route inventory, and migration tests were marked failed at approximately two seconds, with no job steps reported and runner ID 0. This does not establish a source-code failure; the jobs appear not to have reached their first step. Their detailed job logs could not be retrieved through the connected API in this audit.
 
@@ -60,7 +70,7 @@ The Vercel status points to a build-rate-limit page. That is an external preview
 
 For the exact head of PR #31 (`48e73136c37bf4e15ba9aa38256a207e1d4f3cc4`), GitHub reports successful web CI and migration-test workflow runs. Those results apply to that SHA, not to the divergent PR #33 head.
 
-### 6. Migration chain has a possible overlapping app-distribution migration
+### 8. Migration chain has a possible overlapping app-distribution migration
 
 The six-step branch includes both:
 - `20261114000100_app_distribution_links.sql`
@@ -70,7 +80,7 @@ Both add app distribution fields and define `create_app_with_distribution`; thei
 
 This is a database migration risk to reproduce against both a clean database and an upgrade database before deciding on a forward-only corrective migration. Historical migrations should not be edited or removed during the architecture cleanup.
 
-### 7. PR chains are not a single linear integration chain
+### 9. PR chains are not a single linear integration chain
 
 PR #29 -> #30 -> #31 is a stacked tester check-in/report/review chain. PR #33 targets `feature/developer-full-lifecycle`, not the head of PR #31. The comparison between `feat/developer-report-review` and `feat/developer-create-test-six-step` reports diverged histories (632 commits ahead / 134 behind in the compare direction used). This is not safe to solve by merging all branches at once.
 
