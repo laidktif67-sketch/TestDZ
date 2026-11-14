@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { createDeveloperFeedbackReview, getDeveloperFeedbackReview, listDeveloperFeedback, updateDeveloperFeedbackReview } from "../../../features/feedback/feedback-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
@@ -22,7 +22,7 @@ function Icon({name}:{name:string}){const p:Record<string,ReactNode>={home:<><pa
 export default function DeveloperFeedbackPage(){
  const navigate=useNavigate();const {roles}=useIdentity();const allowed=roles.includes("developer")||roles.includes("admin");
  const [rows,setRows]=useState<FeedbackRow[]>([]),[selected,setSelected]=useState<string>(""),[query,setQuery]=useState(""),[statusFilter,setStatusFilter]=useState("all"),[appFilter,setAppFilter]=useState("all"),[range,setRange]=useState("30"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[saving,setSaving]=useState(false),[note,setNote]=useState("");
- const load=async()=>{if(!supabase){setError("Supabase is not configured.");setLoading(false);return}const {data:s}=await supabase.auth.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return}
+ const load=async()=>{if(!identityApi.isConfigured()){setError("Supabase is not configured.");setLoading(false);return}const {data:s}=await identityApi.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return}
  const {data,error:e}=await listDeveloperFeedback(user.id);
  if(e){setError("Could not load feedback. Check that the latest database migration has been applied and try again.");setRows([])}else{const list=(data??[]) as unknown as FeedbackRow[];setRows(list);setSelected(current=>list.some(x=>x.id===current)?current:list[0]?.id||"")}setLoading(false)};
  useEffect(()=>{void load()},[navigate]);
@@ -34,8 +34,8 @@ export default function DeveloperFeedbackPage(){
  const active=rows.find(r=>r.id===selected)||filtered[0]||null;
  const counts={total:rows.length,new:rows.filter(r=>getStatus(r)==="new").length,review:rows.filter(r=>getStatus(r)==="under_review").length,resolved:rows.filter(r=>getStatus(r)==="resolved").length};
  useEffect(()=>{setNote((active?getReview(active)?.resolution_note:null)||"")},[active?.id]);
- const updateStatus=async(next:ReviewStatus)=>{if(!active||!supabase)return;setSaving(true);setError("");
- try{const {data:s}=await supabase.auth.getSession();const uid=s.session?.user?.id;if(!uid){setError("Your session has expired. Please sign in again.");return}
+ const updateStatus=async(next:ReviewStatus)=>{if(!active||!identityApi.isConfigured())return;setSaving(true);setError("");
+ try{const {data:s}=await identityApi.getSession();const uid=s.session?.user?.id;if(!uid){setError("Your session has expired. Please sign in again.");return}
  const payload={feedback_id:active.id,developer_id:uid,status:next,resolution_note:note.trim()||null};
  const existing=await getDeveloperFeedbackReview(active.id);
  let writeFailed=Boolean(existing.error);
