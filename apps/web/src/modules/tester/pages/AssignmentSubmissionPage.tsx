@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, CSSProperties, ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { countTesterSubmissionFeedback, getTesterSubmissionAssignment, listTesterSubmissionCheckIns } from "../../../features/testers/assignments-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -63,9 +64,9 @@ export default function AssignmentSubmissionPage() {
       const client = supabase;
       if (!client) { if (alive) { setLoadError("The database connection is unavailable."); setLoading(false); } return; }
       const [a, c, f] = await Promise.all([
-        client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,start_date,end_date,app:apps(name,icon_url))").eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
-        client.from("checkins").select("id,checkin_date").eq("assignment_id", id).eq("tester_id", session.user.id).order("checkin_date", { ascending: true }),
-        client.from("feedback").select("id", { count: "exact", head: true }).eq("assignment_id", id).eq("tester_id", session.user.id)
+        getTesterSubmissionAssignment(id, session.user.id),
+        listTesterSubmissionCheckIns(id, session.user.id),
+        countTesterSubmissionFeedback(id, session.user.id)
       ]);
       if (!alive) return;
       if (a.error || !a.data) setLoadError(a.error?.message || "This assignment could not be found.");
