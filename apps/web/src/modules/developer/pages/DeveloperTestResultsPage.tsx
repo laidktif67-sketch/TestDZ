@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { listAssignmentFeedback, listDeveloperTestResultAssignments } from "../../../features/tests/tests-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-test-results.css";
@@ -18,7 +19,7 @@ export default function DeveloperTestResultsPage(){
  const navigate=useNavigate(),{roles}=useIdentity(),allowed=roles.includes("developer")||roles.includes("admin");
  const [assignments,setAssignments]=useState<Assignment[]>([]),[feedback,setFeedback]=useState<Feedback[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState("");
  const [query,setQuery]=useState(""),[status,setStatus]=useState<"all"|Status>("all"),[period,setPeriod]=useState("30"),[appFilter,setAppFilter]=useState("all"),[testFilter,setTestFilter]=useState("all");
- useEffect(()=>{let live=true;async function load(){if(!supabase){setError("Supabase is not configured.");setLoading(false);return}const {data:session}=await supabase.auth.getSession();const user=session.session?.user;if(!user){navigate("/auth",{replace:true});return}const {data,error:fetchError}=await supabase.from("assignments").select("id,test_id,tester_id,status,created_at,updated_at,tests!inner(id,title,developer_id,app:apps(name,icon_url))").eq("tests.developer_id",user.id).order("created_at",{ascending:false}).limit(5000);if(!live)return;if(fetchError){setError("Could not load test results. Check your connection and permissions.");setLoading(false);return}const rows=(data??[]) as unknown as Assignment[];setAssignments(rows);if(rows.length){const {data:ratings}=await supabase.from("feedback").select("id,assignment_id,rating,created_at").in("assignment_id",rows.map(x=>x.id)).limit(5000);if(!live)return;setFeedback((ratings??[]) as Feedback[])}setLoading(false)}void load();return()=>{live=false}},[navigate]);
+ useEffect(()=>{let live=true;async function load(){if(!supabase){setError("Supabase is not configured.");setLoading(false);return}const {data:session}=await supabase.auth.getSession();const user=session.session?.user;if(!user){navigate("/auth",{replace:true});return}const {data,error:fetchError}=await listDeveloperTestResultAssignments(user.id);if(!live)return;if(fetchError){setError("Could not load test results. Check your connection and permissions.");setLoading(false);return}const rows=(data??[]) as unknown as Assignment[];setAssignments(rows);if(rows.length){const {data:ratings}=await listAssignmentFeedback(rows.map(x=>x.id));if(!live)return;setFeedback((ratings??[]) as Feedback[])}setLoading(false)}void load();return()=>{live=false}},[navigate]);
  const apps=useMemo(()=>Array.from(new Map(assignments.map(a=>[a.tests?.app?.name||"Unlinked app",a.tests?.app?.name||"Unlinked app"])).values()),[assignments]);
  const tests=useMemo(()=>Array.from(new Map(assignments.map(a=>[a.test_id,a.tests?.title||"Untitled test"])).entries()),[assignments]);
  const cutoff=useMemo(()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(period==="all"?36500:Number(period)));return d},[period]);

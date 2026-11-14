@@ -142,3 +142,51 @@ export function setDeveloperCampaignRecruitment(testId: string, isActive: boolea
     .select("test_id");
 }
 
+/** Fetch a developer-owned test for the monitoring view. */
+export function getDeveloperTestMonitoring(testId: string, developerId: string) {
+  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
+
+  return supabase
+    .from("tests")
+    .select("id,title,status,start_date,end_date,app:apps(name,icon_url)")
+    .eq("id", testId)
+    .eq("developer_id", developerId)
+    .maybeSingle();
+}
+
+/** List recent assignments for the monitoring view. */
+export function listTestMonitoringAssignments(testId: string) {
+  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
+
+  return supabase
+    .from("assignments")
+    .select("id,tester_id,status,created_at,updated_at")
+    .eq("test_id", testId)
+    .order("updated_at", { ascending: false })
+    .limit(500);
+}
+
+/** List assignment results for tests owned by a developer. */
+export function listDeveloperTestResultAssignments(developerId: string) {
+  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
+
+  return supabase
+    .from("assignments")
+    .select("id,test_id,tester_id,status,created_at,updated_at,tests!inner(id,title,developer_id,app:apps(name,icon_url))")
+    .eq("tests.developer_id", developerId)
+    .order("created_at", { ascending: false })
+    .limit(5000);
+}
+
+/** Fetch feedback ratings associated with the given assignment IDs. */
+export function listAssignmentFeedback(assignmentIds: string[]) {
+  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
+  if (assignmentIds.length === 0) return Promise.resolve({ data: [], error: null });
+
+  return supabase
+    .from("feedback")
+    .select("id,assignment_id,rating,created_at")
+    .in("assignment_id", assignmentIds)
+    .limit(5000);
+}
+
