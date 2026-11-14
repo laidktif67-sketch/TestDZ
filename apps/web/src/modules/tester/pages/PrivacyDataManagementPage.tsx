@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { identityApi } from "../../../features/identity/identity-api";
 import {
   getPrivacyPageProfile,
@@ -109,7 +108,7 @@ export default function PrivacyDataManagementPage() {
     const previous = privacy;
     setPrivacy(next);
     setBusy("privacy"); setMessage(""); setError("");
-    const result = await supabase!.auth.updateUser({ data: { testdz_privacy_preferences: next } });
+    const result = await identityApi.updateUserMetadata({ testdz_privacy_preferences: next });
     setBusy("");
     if (result.error) { setPrivacy(previous); setError("Your privacy preferences could not be saved. Please try again."); }
     else setMessage("Your privacy preferences have been saved.");
@@ -119,7 +118,7 @@ export default function PrivacyDataManagementPage() {
     if (!identityApi.isConfigured() || !user) return;
     const entry: ExportRequest = { id: crypto.randomUUID(), type, createdAt: new Date().toISOString(), status };
     const next = [entry, ...requests].slice(0, 8);
-    const result = await supabase!.auth.updateUser({ data: { testdz_privacy_export_requests: next } });
+    const result = await identityApi.updateUserMetadata({ testdz_privacy_export_requests: next });
     if (!result.error) setRequests(next);
   }
 
