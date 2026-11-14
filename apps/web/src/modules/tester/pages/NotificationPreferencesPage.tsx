@@ -69,7 +69,7 @@ export default function NotificationPreferencesPage() {
     let alive = true;
     setUnreadCount(0);
     if (!user?.id || !identityApi.isConfigured()) return () => { alive = false; };
-    void countTesterUnreadNotifications(user.id).then(({ count, error }) => {
+    void Promise.resolve(countTesterUnreadNotifications(user.id)).then(({ count, error }) => {
       if (alive && !error) setUnreadCount(count ?? 0);
     }).catch(() => { if (alive) setUnreadCount(0); });
     return () => { alive = false; };

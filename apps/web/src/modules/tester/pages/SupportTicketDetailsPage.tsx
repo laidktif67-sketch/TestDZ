@@ -40,7 +40,7 @@ export default function SupportTicketDetailsPage(){
   setLoading(false);
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
- useEffect(()=>{let alive=true;setUnreadCount(0);if(!identityApi.isConfigured()||!user?.id)return()=>{alive=false;};void countTesterUnreadNotifications(user.id).then(({count,error})=>{if(alive&&!error)setUnreadCount(count??0);}).catch(()=>{if(alive)setUnreadCount(0);});return()=>{alive=false;};},[user?.id]);
+ useEffect(()=>{let alive=true;setUnreadCount(0);if(!identityApi.isConfigured()||!user?.id)return()=>{alive=false;};void Promise.resolve(countTesterUnreadNotifications(user.id)).then(({count,error})=>{if(alive&&!error)setUnreadCount(count??0);}).catch(()=>{if(alive)setUnreadCount(0);});return()=>{alive=false;};},[user?.id]);
  const canReply=!!ticket&&ticket.status!=="closed"&&(ticket.user_id===user?.id||roles.includes("support")||roles.includes("admin"));
  const customerMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===ticket?.user_id).map(m=>m.id)),[messages,ticket?.user_id]);
  async function sendReply(event:FormEvent<HTMLFormElement>){

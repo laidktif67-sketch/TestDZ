@@ -70,7 +70,7 @@ export default function FeedbackHistoryPage() {
     let alive = true;
     setUnreadCount(0);
     if (!session?.user?.id || !identityApi.isConfigured()) return () => { alive = false; };
-    void countTesterUnreadNotifications(session.user.id).then(({ count, error }) => {
+    void Promise.resolve(countTesterUnreadNotifications(session.user.id)).then(({ count, error }) => {
       if (alive && !error) setUnreadCount(count ?? 0);
     }).catch(() => { if (alive) setUnreadCount(0); });
     return () => { alive = false; };
