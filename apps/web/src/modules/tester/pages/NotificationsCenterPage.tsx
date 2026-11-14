@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listTesterNotifications, markTesterNotificationRead, markAllTesterNotificationsRead, listTesterRecentEarnedPoints, listTesterUpcomingAssignments } from "../../../features/notifications/notifications-api";
