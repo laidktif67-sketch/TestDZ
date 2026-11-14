@@ -30,7 +30,7 @@ type Stage = 1 | 2 | 3 | 4 | 5 | 6;
 
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
-    search: <><circle cx="10.8" cy="10.8" r="7" /><path d="m16 16 4.5 4.5" /></>,
+    search: <><circle cx="10.8" cy="10.8" r="7" /><path d="m16 16 4.5 4.5" /></>,\n    details: <><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6M8 10h8M8 14h8M8 18h5"/></>,\n    target: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></>,\n    flag: <><path d="M5 21V4m0 0h12l-2 4 2 4H5"/></>,\n    scope: <><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></>,
     refresh: <><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></>,
     check: <path d="m5 12 4 4L19 6" />,
     arrow: <><path d="M4 12h15m-6-6 6 6-6 6" /></>,
@@ -61,6 +61,11 @@ export default function DeveloperCreateTestSixStepPage() {
   const [testType, setTestType] = useState<TestType | "">("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [testingObjective, setTestingObjective] = useState("stability_bugs");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("high");
+  const [testingScope, setTestingScope] = useState<string[]>(["core_flows", "performance", "compatibility"]);
+  const [successCriteria, setSuccessCriteria] = useState("No critical bugs; core flows pass");
+  const [minimumCompletionRate, setMinimumCompletionRate] = useState(80);
   const [targetTesters, setTargetTesters] = useState(12);
   const [cohortNotes, setCohortNotes] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -142,7 +147,7 @@ export default function DeveloperCreateTestSixStepPage() {
     if (step === 2 && !selectedApp) { setSaveError("Select an application to continue."); return; }
     if (step === 3 && testType === "google_play_closed" && testerMethod === "google_groups" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(googleGroup.trim())) { setSaveError("Enter a valid Google Group email address."); return; }
     if (step === 3 && testType === "google_play_closed" && releaseMode === "scheduled" && !releaseAt) { setSaveError("Choose a planned date and time, or select Immediately."); return; }
-    if (step === 4 && title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters."); return; }
+    if (step === 4 && title.trim().length < 3) { setSaveError("Enter a test title with at least 3 characters."); return; }\n    if (step === 4 && testingScope.length === 0) { setSaveError("Select at least one testing scope."); return; }\n    if (step === 4 && (!Number.isFinite(minimumCompletionRate) || minimumCompletionRate < 1 || minimumCompletionRate > 100)) { setSaveError("Set a minimum completion rate between 1% and 100%."); return; }
     if (step === 5 && (!Number.isFinite(targetTesters) || targetTesters < 1 || targetTesters > 500)) {
       setSaveError("Choose a tester target between 1 and 500.");
       return;
@@ -179,7 +184,7 @@ export default function DeveloperCreateTestSixStepPage() {
       testType,
       testConfig: {
         cohort: { targetTesters: Math.max(1, Math.min(500, Math.floor(targetTesters))), notes: cohortNotes.trim() || null },
-        rules: { androidVersion, instructions: instructions.trim() || null },
+        rules: { androidVersion, instructions: instructions.trim() || null },\n        details: { testingObjective, priority, testingScope, successCriteria: successCriteria.trim() || null, minimumCompletionRate },
         schedule: { durationDays: durationDays === "custom" ? null : Number(durationDays), allowMoreTesters, joiningMethod, collectFeedback, enableBugReports },
         googlePlay: {
           track: playTrack,
@@ -225,7 +230,7 @@ export default function DeveloperCreateTestSixStepPage() {
         <div className={"dct-workspace dct-workspace-step-" + step}>
           <section className="dct-main-card">
             <div className={"dct-section-heading dct-step-heading-" + step}>
-              <span className="dct-heading-icon"><Icon name={step === 2 ? "apps" : step === 4 ? "users" : step === 5 ? "calendar" : step === 6 ? "check" : "tests"} size={25} /></span>
+              <span className="dct-heading-icon"><Icon name={step === 2 ? "apps" : step === 4 ? "details" : step === 5 ? "calendar" : step === 6 ? "check" : "tests"} size={25} /></span>
               <div><h2>{steps[step - 1]}</h2><p>{[
                 "Choose the testing campaign type that matches your goal.",
                 "Select an application already registered in My Apps.",
@@ -294,7 +299,52 @@ export default function DeveloperCreateTestSixStepPage() {
 
             {step === 3 && testType !== "google_play_closed" && <div className="dct-form-grid"><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>{selectedType?.title ?? "Testing"} configuration</strong><p>This campaign type uses general configuration for now. Type-specific integrations can be added separately without claiming an external release has occurred.</p></div></div><label>Android version / device rule<select value={androidVersion} onChange={e => setAndroidVersion(e.target.value)}><option>Any supported version</option><option>Android 10 and newer</option><option>Android 12 and newer</option><option>Android 14 and newer</option></select></label></div>}
 
-            {step === 4 && <div className="dct-form-grid"><label>Test title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={100} placeholder="e.g. Android usability test" /></label><label className="full">Test description<textarea value={description} onChange={e => setDescription(e.target.value)} maxLength={2000} placeholder="Describe what testers will evaluate and what success looks like…" /></label><p className="dct-field-note">Title and description are saved with the test campaign.</p></div>}
+            {step === 4 && <div className="dct-details-layout">
+  <div className="dct-details-main">
+    <section className="dct-details-section">
+      <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="details" size={24}/></span><div><h3>Campaign Information</h3><p>Basic information about your testing campaign</p></div></div>
+      <label className="dct-details-field">Test Name <i>*</i><input value={title} onChange={e=>setTitle(e.target.value)} maxLength={100} placeholder="e.g. TestDZ Pro — Closed Testing" /></label>
+      <label className="dct-details-field">Test Description<textarea value={description} onChange={e=>setDescription(e.target.value)} maxLength={2000} placeholder="Explain what this campaign should validate before release…" /></label>
+    </section>
+    <section className="dct-details-section">
+      <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="target" size={24}/></span><div><h3>Testing Objective</h3><p>Choose the primary goal and priority for this campaign</p></div></div>
+      <div className="dct-details-two-col">
+        <label className="dct-details-field">Testing Objective<select value={testingObjective} onChange={e=>setTestingObjective(e.target.value)}><option value="stability_bugs">Stability & Bug Discovery</option><option value="usability">Usability & User Experience</option><option value="compatibility">Device Compatibility</option><option value="performance">Performance</option><option value="release_readiness">Release Readiness</option><option value="custom">Custom Objective</option></select></label>
+        <label className="dct-details-field">Priority<select value={priority} onChange={e=>setPriority(e.target.value as typeof priority)}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
+      </div>
+    </section>
+    <section className="dct-details-section">
+      <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="scope" size={24}/></span><div><h3>Testing Scope</h3><p>What should testers focus on?</p></div></div>
+      <div className="dct-scope-grid">
+        {[{id:"core_flows",title:"Core user flows",desc:"Main journeys and key actions"},{id:"performance",title:"Performance",desc:"Speed, responsiveness, stability"},{id:"compatibility",title:"Compatibility",desc:"Devices and Android versions"},{id:"accessibility",title:"Accessibility",desc:"Readability and inclusive use"}].map(item=><label key={item.id} className={"dct-scope-option "+(testingScope.includes(item.id)?"selected":"")}><input type="checkbox" checked={testingScope.includes(item.id)} onChange={e=>setTestingScope(current=>e.target.checked?[...current,item.id]:current.filter(value=>value!==item.id))}/><span className="dct-scope-check">{testingScope.includes(item.id)?"✓":""}</span><span><strong>{item.title}</strong><small>{item.desc}</small></span></label>)}
+      </div>
+    </section>
+    <section className="dct-details-section">
+      <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="users" size={24}/></span><div><h3>Instructions for Testers</h3><p>Give participants a clear task and reporting guidance</p></div></div>
+      <label className="dct-details-field">Tester Instructions<textarea value={instructions} onChange={e=>setInstructions(e.target.value)} maxLength={3000} placeholder="Install the selected build, complete the main user flows, and report reproducible issues with device details…"/></label>
+    </section>
+    <section className="dct-details-section dct-success-section">
+      <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="flag" size={24}/></span><div><h3>Success Criteria</h3><p>Define how you will evaluate the results</p></div></div>
+      <div className="dct-details-two-col">
+        <label className="dct-details-field">Target Outcome<input value={successCriteria} onChange={e=>setSuccessCriteria(e.target.value)} maxLength={300} placeholder="e.g. No critical bugs; core flows pass"/></label>
+        <label className="dct-details-field">Minimum Completion Rate (%)<input type="number" min={1} max={100} value={minimumCompletionRate} onChange={e=>setMinimumCompletionRate(Number(e.target.value))}/></label>
+      </div>
+    </section>
+    <p className="dct-details-note"><Icon name="info" size={17}/> Details are stored in the TestDZ draft. This step does not publish to Google Play or send tester invitations.</p>
+  </div>
+  <aside className="dct-details-summary">
+    <div className="dct-details-summary-head"><Icon name="info" size={21}/><strong>Campaign Summary</strong></div>
+    <div className="dct-details-app"><AppIcon app={selected} /><div><strong>{selected?.name ?? "Selected application"}</strong><small dir="ltr">{selected?.package_name ?? "Choose an app in step 2"}</small><span className="dct-details-chip">{selectedType?.title ?? "Test type not selected"}</span></div></div>
+    <div className="dct-details-summary-list">
+      <div><span>Campaign</span><strong>{title.trim() || "Not named yet"}</strong></div>
+      <div><span>Objective</span><strong>{({stability_bugs:"Stability & Bug Discovery",usability:"Usability & User Experience",compatibility:"Device Compatibility",performance:"Performance",release_readiness:"Release Readiness",custom:"Custom Objective"} as Record<string,string>)[testingObjective]}</strong></div>
+      <div><span>Priority</span><strong className={"dct-priority-"+priority}>{priority.charAt(0).toUpperCase()+priority.slice(1)}</strong></div>
+      <div><span>Testing Scope</span><strong>{testingScope.length} area{testingScope.length===1?"":"s"} selected</strong></div>
+      <div><span>Completion Goal</span><strong>{minimumCompletionRate}%</strong></div>
+    </div>
+    <div className="dct-details-tip"><span>💡</span><div><strong>Pro Tip</strong><p>Specific objectives and clear tasks make feedback easier to evaluate.</p></div></div>
+  </aside>
+</div>}
 
             {step === 5 && <div className="dct-schedule-layout">
   <div className="dct-schedule-main">
@@ -341,7 +391,7 @@ export default function DeveloperCreateTestSixStepPage() {
   </aside>
 </div>}
 
-            {step === 6 && <><div className="dct-review"><div><span>Test type</span><strong>{selectedType?.title ?? "Not selected"}</strong></div><div><span>Testing track</span><strong>{playTrack === "internal" ? "Internal Testing" : playTrack === "closed" ? "Closed Testing" : "Open Testing"}</strong></div><div><span>Tester access</span><strong>{testerMethod === "join_link" ? "Join Link" : testerMethod === "google_groups" ? "Google Groups" : "CSV list (" + testerEmails.length + ")"}</strong></div><div><span>Release preference</span><strong>{releaseMode === "immediately" ? "Immediately (draft)" : releaseAt || "Schedule not set"}</strong></div><div><span>Application</span><strong>{selected?.name ?? "Not selected"}</strong></div><div><span>Test title</span><strong>{title || "Not entered"}</strong></div><div><span>Target testers</span><strong>{targetTesters}{allowMoreTesters ? " (flexible)" : ""}</strong></div><div><span>Testing period</span><strong>{startDate || "Not set"} → {endDate || "Not set"}</strong></div><div><span>Duration</span><strong>{durationDays === "custom" ? "Custom" : durationDays + " days"}</strong></div><div><span>Joining method</span><strong>{joiningMethod === "google_play_link" ? "Google Play Link" : joiningMethod === "closed_group" ? "Closed Group" : joiningMethod === "upload_list" ? "Upload List" : "Open Testing"}</strong></div><div><span>Feedback</span><strong>{collectFeedback ? "Enabled" : "Disabled"}</strong></div><div><span>Bug reports</span><strong>{enableBugReports ? "Enabled" : "Disabled"}</strong></div><div><span>Android rule</span><strong>{androidVersion}</strong></div><div><span>App version preference</span><strong>{appVersion === "latest_available" ? "Latest available (unverified)" : "To be added later"}</strong></div><div><span>Campaign status</span><strong className="dct-review-draft">Draft</strong></div></div><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>Review & create draft</strong><p>Saving creates a TestDZ draft. It does not publish to Google Play, upload an APK, or automatically recruit testers.</p></div></div></>}
+            {step === 6 && <><div className="dct-review"><div><span>Test type</span><strong>{selectedType?.title ?? "Not selected"}</strong></div><div><span>Testing track</span><strong>{playTrack === "internal" ? "Internal Testing" : playTrack === "closed" ? "Closed Testing" : "Open Testing"}</strong></div><div><span>Tester access</span><strong>{testerMethod === "join_link" ? "Join Link" : testerMethod === "google_groups" ? "Google Groups" : "CSV list (" + testerEmails.length + ")"}</strong></div><div><span>Release preference</span><strong>{releaseMode === "immediately" ? "Immediately (draft)" : releaseAt || "Schedule not set"}</strong></div><div><span>Application</span><strong>{selected?.name ?? "Not selected"}</strong></div><div><span>Test title</span><strong>{title || "Not entered"}</strong></div><div><span>Objective</span><strong>{({stability_bugs:"Stability & Bug Discovery",usability:"Usability & User Experience",compatibility:"Device Compatibility",performance:"Performance",release_readiness:"Release Readiness",custom:"Custom Objective"} as Record<string,string>)[testingObjective]}</strong></div><div><span>Priority</span><strong>{priority}</strong></div><div><span>Testing scope</span><strong>{testingScope.length} area(s)</strong></div><div><span>Success criteria</span><strong>{successCriteria || "Not set"} ({minimumCompletionRate}%)</strong></div><div><span>Target testers</span><strong>{targetTesters}{allowMoreTesters ? " (flexible)" : ""}</strong></div><div><span>Testing period</span><strong>{startDate || "Not set"} → {endDate || "Not set"}</strong></div><div><span>Duration</span><strong>{durationDays === "custom" ? "Custom" : durationDays + " days"}</strong></div><div><span>Joining method</span><strong>{joiningMethod === "google_play_link" ? "Google Play Link" : joiningMethod === "closed_group" ? "Closed Group" : joiningMethod === "upload_list" ? "Upload List" : "Open Testing"}</strong></div><div><span>Feedback</span><strong>{collectFeedback ? "Enabled" : "Disabled"}</strong></div><div><span>Bug reports</span><strong>{enableBugReports ? "Enabled" : "Disabled"}</strong></div><div><span>Android rule</span><strong>{androidVersion}</strong></div><div><span>App version preference</span><strong>{appVersion === "latest_available" ? "Latest available (unverified)" : "To be added later"}</strong></div><div><span>Campaign status</span><strong className="dct-review-draft">Draft</strong></div></div><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>Review & create draft</strong><p>Saving creates a TestDZ draft. It does not publish to Google Play, upload an APK, or automatically recruit testers.</p></div></div></>}
 
             {saveError && <div className="dct-error" role="alert">{saveError}</div>}
             <div className="dct-tip"><span>💡</span><p><strong>Pro Tip:</strong> Clear tasks and useful feedback instructions help your campaign produce better results.</p></div>
