@@ -6,6 +6,7 @@ import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import { getAppLimit, listApps } from "../../../features/apps/apps-api";
+import { getDeveloperDashboardProfile, listDeveloperDashboardTests, countDeveloperCompletedTests, listDeveloperDashboardAssignments, listDeveloperDashboardFeedback } from "../../../features/analytics/dashboard-api";
 import "../styles/developer-dashboard.css";
 
 type Language = "en" | "fr" | "ar";
@@ -185,12 +186,12 @@ export default function DeveloperDashboardPage() {
       const user=sessionData.session?.user;
       if(!user){setLoading(false);return;}
       const [profileRes,appsRes,limitRes,testsRes,completedTestsRes,assignmentsRes]=await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
+        getDeveloperDashboardProfile(user.id),
         listApps(),
         getAppLimit(),
-        client.from("tests").select("id,title,status,created_at,app:apps(name,icon_url)",{count:"exact"}).eq("developer_id",user.id).order("created_at",{ascending:false}).limit(100),
-        client.from("tests").select("id",{count:"exact",head:true}).eq("developer_id",user.id).eq("status","completed"),
-        client.from("assignments").select("id,tester_id,tests!inner(developer_id)").eq("tests.developer_id",user.id)
+        listDeveloperDashboardTests(user.id),
+        countDeveloperCompletedTests(user.id),
+        listDeveloperDashboardAssignments(user.id)
       ]);
       if(!alive)return;
       setName(profileRes.data?.display_name?.trim()||user.email?.split("@")[0]||"Developer");
@@ -207,7 +208,7 @@ export default function DeveloperDashboardPage() {
         setTesterCount(new Set(assignmentRows.map(row=>row.tester_id)).size);
         const assignmentIds=assignmentRows.map(row=>row.id);
         if(assignmentIds.length){
-          const feedbackRes=await client.from("feedback").select("rating").in("assignment_id",assignmentIds).not("rating","is",null);
+          const feedbackRes=await listDeveloperDashboardFeedback(assignmentIds);
           if(!alive)return;
           if(!feedbackRes.error){
             const ratings=(feedbackRes.data??[]).map((row:{rating:number|null})=>row.rating).filter((rating):rating is number=>typeof rating==="number");
