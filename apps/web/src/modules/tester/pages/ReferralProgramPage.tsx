@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterReferralProfile } from "../../../features/profile/profile-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/referral-program.css";
@@ -22,7 +22,7 @@ export default function ReferralProgramPage() {
     let alive = true;
     const userId = session.user.id;
     Promise.all([
-      getTesterReferralProfile(userId),
+      getTesterHeaderProfile(userId),
       countTesterUnreadNotifications(userId)
     ]).then(([profile, notification]) => {
       if (!alive) return;
