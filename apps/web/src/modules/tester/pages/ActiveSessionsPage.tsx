@@ -40,7 +40,7 @@ export default function ActiveSessionsPage() {
     let alive = true;
     async function loadSessions() {
       if (!identityApi.isConfigured()) { if (alive) setSessionReady(true); return; }
-      const [auth, result] = await Promise.all([supabase.auth.getSession(), listMyActiveSessions()]);
+      const [auth, result] = await Promise.all([supabase!.auth.getSession(), listMyActiveSessions()]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
       if (result.error) setError("Could not load your active sessions. Please try again.");
@@ -56,7 +56,7 @@ export default function ActiveSessionsPage() {
     const confirmed = window.confirm("Sign out all other devices? This device will remain signed in.");
     if (!confirmed) return;
     setBusy(true); setMessage(""); setError("");
-    const result = await supabase.auth.signOut({ scope: "others" });
+    const result = await supabase!.auth.signOut({ scope: "others" });
     if (result.error) { setBusy(false); setError("Could not sign out other sessions. Please try again."); return; }
     const refreshed = await listMyActiveSessions();
     setBusy(false);
