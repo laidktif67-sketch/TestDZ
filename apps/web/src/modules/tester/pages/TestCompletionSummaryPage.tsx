@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getCompletionSummaryAssignment, listCompletionSummaryCheckins, getCompletionSummaryFeedback, listCompletionSummaryLedger, getCompletionSummaryProfile } from "../../../features/testers/completion-summary-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -17,7 +17,7 @@ export default function TestCompletionSummaryPage(){
  const [name,setName]=useState("Tester"),[avatar,setAvatar]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false);
  const preview=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  useEffect(()=>{if(preview){setName("John Doe");setAssignment({id:"preview-assignment",status:"completed",start_date:"2026-04-14",completed_at:"2026-04-27T14:30:00Z",points_awarded:120,test:{title:"UI Testing Assignment",start_date:"2026-04-14",end_date:"2026-04-27",app:{name:"DemoApp",icon_url:null}}});setCheckins(Array.from({length:14},(_,i)=>String(i)));setFeedback({id:"preview-feedback",body:"The application is great, with minor UI improvements suggested for mobile devices.",quality_status:"accepted",created_at:"2025-04-27T14:30:00Z",reviewed_at:"2025-04-28T10:00:00Z"});setLedger([{id:"p1",amount:120,reason:"Assignment completion",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"},{id:"p2",amount:50,reason:"Completion bonus",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"}]);setLoading(false);return;}
- if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}
+ if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!identityApi.isConfigured()){setError("Database connection is unavailable.");setLoading(false);return;}
  const [a,c,f,l,p]=await Promise.all([
  getCompletionSummaryAssignment(id,session.user.id),
  listCompletionSummaryCheckins(id,session.user.id),
