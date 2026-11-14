@@ -1,8 +1,14 @@
 -- Add explicit, validated campaign type and JSON configuration for the six-step developer wizard.
--- This migration only changes the dedicated TestDZ project schema; it does not create cohorts
--- or start recruitment as a side effect of saving a draft.
+-- Draft is a real pre-recruitment state. Saving a draft never creates cohorts or starts recruitment.
 
 begin;
+
+alter table public.tests
+  drop constraint if exists tests_status_check;
+
+alter table public.tests
+  add constraint tests_status_check
+    check (status in ('draft','recruiting','ready','running','at_risk','completed','failed','cancelled'));
 
 alter table public.tests
   add column test_type text not null default 'google_play_closed'
