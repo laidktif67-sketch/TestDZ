@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { identityApi } from "../features/identity/identity-api";
 import { identityApi } from "../features/identity/identity-api";
 import "../styles/reset-password.css";
 
@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
       setError("The passwords do not match.");
       return;
     }
-    if (!supabase) {
+    if (!identityApi.isConfigured()) {
       setError("Supabase is not configured. Please try again later.");
       return;
     }

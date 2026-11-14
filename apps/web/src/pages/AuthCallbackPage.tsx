@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Brand } from "../shared/components/Brand";
-import { supabase } from "../lib/supabase";
+import { identityApi } from "../features/identity/identity-api";
 import { getPostAuthRoute } from "../lib/auth-routing";
 import { identityApi } from "../features/identity/identity-api";
 
@@ -11,7 +11,7 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     let active = true;
     async function completeCallback() {
-      if (!supabase) { setMessage("إعداد الاتصال غير مكتمل."); return; }
+      if (!identityApi.isConfigured()) { setMessage("إعداد الاتصال غير مكتمل."); return; }
       const hash = new URLSearchParams(window.location.hash.slice(1));
       if (hash.has("error") || hash.has("error_description")) {
         setMessage("تعذر تأكيد الرابط. ارجع لصفحة الدخول واطلب رابطاً جديداً.");

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
-import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { isSupabaseConfigured } from "../lib/supabase";
 import { getPostAuthRoute, translateAuthError } from "../lib/auth-routing";
 import { identityApi } from "../features/identity/identity-api";
 
@@ -114,7 +114,7 @@ function AuthPage() {
     event.preventDefault();
     setMessage("");
     setError("");
-    if (mode === "signin" && !supabase) {
+    if (mode === "signin" && !identityApi.isConfigured()) {
       setError("Demo mode: sign-in is not connected yet. Use Register to preview the signup flow.");
       return;
     }
@@ -130,7 +130,7 @@ function AuthPage() {
       setError("كلمة المرور يجب أن تحتوي على حرف ورقم، وبحد أدنى 8 أحرف.");
       return;
     }
-    if (mode === "signup" && !supabase) {
+    if (mode === "signup" && !identityApi.isConfigured()) {
       navigate(`/signup-success?email=${encodeURIComponent(email.trim())}`, { replace: true });
       return;
     }
@@ -160,7 +160,7 @@ function AuthPage() {
 
   async function socialLogin(provider: "google" | "github" | "azure") {
     setError("");
-    if (!supabase) {
+    if (!identityApi.isConfigured()) {
       setError("الاتصال بقاعدة البيانات غير مضبوط بعد. أضف متغيرات Supabase في ملف البيئة.");
       return;
     }

@@ -6,7 +6,7 @@ import { Brand } from "../shared/components/Brand";
 import { useLenis } from "../hooks/useLenis";
 import { translateAuthError } from "../lib/auth-routing";
 import { identityApi } from "../features/identity/identity-api";
-import { supabase } from "../lib/supabase";
+
 
 export default function VerifyEmailPage() {
   useLenis();
@@ -89,7 +89,7 @@ export default function VerifyEmailPage() {
 
   async function resend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!supabase || !email.trim()) { setError("Enter a valid email address first."); return; }
+    if (!identityApi.isConfigured() || !email.trim()) { setError("Enter a valid email address first."); return; }
     setBusy(true); setMessage(""); setError("");
     try {
       const { error: resendError } = await identityApi.resendSignupVerification(email.trim(), window.location.origin + "/auth/callback");
