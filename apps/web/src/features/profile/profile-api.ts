@@ -44,3 +44,10 @@ export function getTesterNotificationPreferencesProfile(userId: string) {
     .select("display_name,avatar_url")
     .eq("id", userId).maybeSingle();
 }
+
+/** Read-only profile header fields for the tester withdrawal status page. */
+export function getTesterWithdrawalStatusProfile(userId: string) {
+  return getClient().from("profiles")
+    .select("display_name,avatar_url")
+    .eq("id", userId).maybeSingle();
+}

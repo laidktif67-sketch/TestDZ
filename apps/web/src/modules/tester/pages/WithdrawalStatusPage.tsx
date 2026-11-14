@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getTesterWithdrawalStatusProfile } from "../../../features/profile/profile-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/withdrawal-status.css";
 
@@ -27,7 +28,7 @@ export default function WithdrawalStatusPage() {
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
-        const { data: profile, error } = await db.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
+        const { data: profile, error } = await getTesterWithdrawalStatusProfile(user.id);
         if (error) throw error;
         if (alive) {
           setName(profile?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
