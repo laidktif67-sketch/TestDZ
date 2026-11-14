@@ -72,6 +72,7 @@ export default function SettingsSecurityPage() {
     if (!user || !identityApi.isConfigured()) return;
     let alive = true;
     const client = supabase;
+    if (!client) return;
     Promise.all([
       getTesterAccountSettingsProfile(user.id),
       client.auth.mfa.listFactors(),
@@ -110,7 +111,7 @@ export default function SettingsSecurityPage() {
     const previous = preferences;
     setPreferences(next);
     if (!identityApi.isConfigured()) return;
-    const result = await supabase.auth.updateUser({ data: { testdz_notification_preferences: next } });
+    const result = await supabase!.auth.updateUser({ data: { testdz_notification_preferences: next } });
     if (result.error) { setPreferences(previous); alert("Preferences could not be saved. Your previous choices were restored.", true); }
     else alert("Notification preferences saved.");
   }
@@ -118,7 +119,7 @@ export default function SettingsSecurityPage() {
     const previous = theme;
     setTheme(next);
     if (!identityApi.isConfigured()) return;
-    const result = await supabase.auth.updateUser({ data: { testdz_theme: next } });
+    const result = await supabase!.auth.updateUser({ data: { testdz_theme: next } });
     if (result.error) { setTheme(previous); alert("Appearance preference could not be saved. Your previous choice was restored.", true); }
     else alert("Appearance preference saved.");
   }
@@ -126,7 +127,7 @@ export default function SettingsSecurityPage() {
     if (!identityApi.isConfigured() || password.length < 8) { alert("Use a password with at least 8 characters.", true); return; }
     if (password !== confirmPassword) { alert("The password confirmation does not match.", true); return; }
     setBusy(true);
-    const result = await supabase.auth.updateUser({ password });
+    const result = await supabase!.auth.updateUser({ password });
     setBusy(false);
     if (result.error) alert(result.error.message, true);
     else { setPassword(""); setConfirmPassword(""); alert("Password updated successfully."); }
@@ -134,7 +135,7 @@ export default function SettingsSecurityPage() {
   async function changeEmail() {
     if (!identityApi.isConfigured() || !newEmail.includes("@")) { alert("Enter a valid email address.", true); return; }
     setBusy(true);
-    const result = await supabase.auth.updateUser({ email: newEmail.trim() });
+    const result = await supabase!.auth.updateUser({ email: newEmail.trim() });
     setBusy(false);
     if (result.error) alert(result.error.message, true);
     else { setNewEmail(""); alert("Confirmation email sent to your new address. Follow the link to finish the change."); }
@@ -142,7 +143,7 @@ export default function SettingsSecurityPage() {
   async function setupMfa() {
     if (!identityApi.isConfigured()) return;
     setMfaBusy(true); alert("");
-    const result = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "TestDZ authenticator" });
+    const result = await supabase!.auth.mfa.enroll({ factorType: "totp", friendlyName: "TestDZ authenticator" });
     setMfaBusy(false);
     if (result.error) { alert(result.error.message, true); return; }
     setMfaQr(result.data.totp.qr_code);
@@ -152,9 +153,9 @@ export default function SettingsSecurityPage() {
   async function verifyMfa() {
     if (!identityApi.isConfigured() || !mfaFactorId || mfaCode.trim().length < 6) return;
     setMfaBusy(true);
-    const challenge = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+    const challenge = await supabase!.auth.mfa.challenge({ factorId: mfaFactorId });
     if (challenge.error) { setMfaBusy(false); alert(challenge.error.message, true); return; }
-    const verified = await supabase.auth.mfa.verify({ factorId: mfaFactorId, challengeId: challenge.data.id, code: mfaCode.trim() });
+    const verified = await supabase!.auth.mfa.verify({ factorId: mfaFactorId, challengeId: challenge.data.id, code: mfaCode.trim() });
     setMfaBusy(false);
     if (verified.error) { alert(verified.error.message, true); return; }
     setTwoFactor(true); setMfaQr(""); setMfaCode(""); alert("Two-factor authentication enabled.");
@@ -162,10 +163,10 @@ export default function SettingsSecurityPage() {
   async function disableMfa() {
     if (!identityApi.isConfigured()) return;
     setMfaBusy(true);
-    const factors = await supabase.auth.mfa.listFactors();
+    const factors = await supabase!.auth.mfa.listFactors();
     const factor = factors.data?.totp?.find(item => item.status === "verified");
     if (!factor) { setMfaBusy(false); setTwoFactor(false); return; }
-    const result = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+    const result = await supabase!.auth.mfa.unenroll({ factorId: factor.id });
     setMfaBusy(false);
     if (result.error) alert(result.error.message, true);
     else { setTwoFactor(false); alert("Two-factor authentication disabled."); }
