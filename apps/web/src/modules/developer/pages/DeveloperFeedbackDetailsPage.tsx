@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { createDeveloperFeedbackMessage, createDeveloperFeedbackReview, createFeedbackAttachmentMetadata, getDeveloperFeedbackDetails, getDeveloperFeedbackReview, listDeveloperFeedbackAttachments, listDeveloperFeedbackEvents, listDeveloperFeedbackMessages, updateDeveloperFeedbackReview } from "../../../features/feedback/feedback-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-feedback.css";
@@ -41,13 +42,13 @@ export default function DeveloperFeedbackDetailsPage(){
  const [currentUserId,setCurrentUserId]=useState("");const [feedback,setFeedback]=useState<Feedback|null>(null),[messages,setMessages]=useState<Message[]>([]),[attachments,setAttachments]=useState<Attachment[]>([]),[events,setEvents]=useState<Event[]>([]);
  const [status,setStatus]=useState<ReviewStatus>("new"),[priority,setPriority]=useState<Priority>("normal"),[reply,setReply]=useState(""),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(""),[tab,setTab]=useState<"conversation"|"details"|"attachments"|"activity">("conversation"),[files,setFiles]=useState<File[]>([]);
  const load=useCallback(async()=>{if(!supabase){setError("Supabase is not configured.");setLoading(false);return}const {data:s}=await supabase.auth.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return}
- setCurrentUserId(user.id);const {data:f,error:e}=await supabase.from("feedback").select("id,assignment_id,tester_id,rating,body,category,quality_status,created_at,assignment:assignments!inner(test:tests!inner(id,title,developer_id,app:apps(id,name,icon_url,package_name))),tester:profiles!feedback_tester_id_fkey(display_name,avatar_url)").eq("id",id).eq("assignment.test.developer_id",user.id).maybeSingle();
+ setCurrentUserId(user.id);const {data:f,error:e}=await getDeveloperFeedbackDetails(id,user.id);
  if(e||!f){setError("Feedback not found or you do not have access to it.");setLoading(false);return}setFeedback(f as unknown as Feedback);
  const [r,m,a,v]=await Promise.all([
- supabase.from("developer_feedback_reviews").select("status,priority").eq("feedback_id",id).maybeSingle(),
- supabase.from("developer_feedback_messages").select("id,feedback_id,sender_id,body,created_at,sender:profiles!developer_feedback_messages_sender_id_fkey(display_name,avatar_url)").eq("feedback_id",id).order("created_at"),
- supabase.from("developer_feedback_attachments").select("id,message_id,storage_path,original_filename,mime_type,size_bytes,created_at").eq("feedback_id",id).order("created_at",{ascending:false}),
- supabase.from("developer_feedback_events").select("id,actor_id,event_type,old_value,new_value,created_at").eq("feedback_id",id).order("created_at",{ascending:false})
+ getDeveloperFeedbackReview(id),
+ listDeveloperFeedbackMessages(id),
+ listDeveloperFeedbackAttachments(id),
+ listDeveloperFeedbackEvents(id)
  ]);
  if(r.data){setStatus((r.data.status||"new") as ReviewStatus);setPriority((r.data.priority||"normal") as Priority)}
  setMessages((m.data??[]) as unknown as Message[]);setAttachments((a.data??[]) as Attachment[]);setEvents((v.data??[]) as Event[]);
@@ -58,22 +59,22 @@ export default function DeveloperFeedbackDetailsPage(){
  const app=feedback?.assignment?.test?.app;const test=feedback?.assignment?.test;
  const number=useMemo(()=>id.replaceAll("-","").slice(0,8).toUpperCase(),[id]);
  const updateReview=async(field:"status"|"priority",value:string)=>{if(!supabase||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
- const {data:existing,error:readError}=await supabase.from("developer_feedback_reviews").select("id,status,priority").eq("feedback_id",id).maybeSingle();if(readError){setError("Could not load the current feedback review.");setBusy(false);return}
+ const {data:existing,error:readError}=await getDeveloperFeedbackReview(id,{includeId:true});if(readError){setError("Could not load the current feedback review.");setBusy(false);return}
  const result=existing
  ?field==="status"
-  ?await supabase.from("developer_feedback_reviews").update({status:value}).eq("feedback_id",id)
-  :await supabase.from("developer_feedback_reviews").update({priority:value}).eq("feedback_id",id)
+  ?await updateDeveloperFeedbackReview(id,{status:value})
+  :await updateDeveloperFeedbackReview(id,{priority:value})
  :field==="status"
-  ?await supabase.from("developer_feedback_reviews").insert({feedback_id:id,developer_id:uid,status:value})
-  :await supabase.from("developer_feedback_reviews").insert({feedback_id:id,developer_id:uid,priority:value});
+  ?await createDeveloperFeedbackReview({feedback_id:id,developer_id:uid,status:value})
+  :await createDeveloperFeedbackReview({feedback_id:id,developer_id:uid,priority:value});
  if(result.error){setError("Unable to update feedback. Please check your access and try again.");setBusy(false);return}
  if(field==="status")setStatus(value as ReviewStatus);else setPriority(value as Priority);
  await load();setBusy(false)
  };
  const sendReply=async(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!supabase||!reply.trim()||!feedback)return;setBusy(true);setError("");const {data:s}=await supabase.auth.getUser();const uid=s.user?.id;if(!uid){setBusy(false);return}
- const {data:msg,error:e1}=await supabase.from("developer_feedback_messages").insert({feedback_id:id,sender_id:uid,body:reply.trim()}).select("id").single();if(e1||!msg){setError("Your reply could not be sent.");setBusy(false);return}
+ const {data:msg,error:e1}=await createDeveloperFeedbackMessage({feedback_id:id,sender_id:uid,body:reply.trim()});if(e1||!msg){setError("Your reply could not be sent.");setBusy(false);return}
  for(const file of files){const ext=file.name.split(".").pop()?.toLowerCase()||"bin";const path=id+"/"+uid+"/"+crypto.randomUUID()+"."+ext;const upload=await supabase.storage.from("developer-feedback-attachments").upload(path,file,{contentType:file.type,upsert:false});if(upload.error){setError("Reply sent, but "+file.name+" could not be uploaded.");continue}
- const saved=await supabase.from("developer_feedback_attachments").insert({feedback_id:id,message_id:msg.id,uploaded_by:uid,storage_path:path,original_filename:file.name,mime_type:file.type,size_bytes:file.size});if(saved.error)setError("Reply sent, but attachment metadata could not be saved.");
+ const saved=await createFeedbackAttachmentMetadata({feedback_id:id,message_id:msg.id,uploaded_by:uid,storage_path:path,original_filename:file.name,mime_type:file.type,size_bytes:file.size});if(saved.error)setError("Reply sent, but attachment metadata could not be saved.");
  
  }
  setReply("");setFiles([]);await load();setBusy(false)

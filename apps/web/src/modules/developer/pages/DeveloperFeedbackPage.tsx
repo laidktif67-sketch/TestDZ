@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { createDeveloperFeedbackReview, getDeveloperFeedbackReview, listDeveloperFeedback, updateDeveloperFeedbackReview } from "../../../features/feedback/feedback-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-feedback.css";
@@ -22,7 +23,7 @@ export default function DeveloperFeedbackPage(){
  const navigate=useNavigate();const {roles}=useIdentity();const allowed=roles.includes("developer")||roles.includes("admin");
  const [rows,setRows]=useState<FeedbackRow[]>([]),[selected,setSelected]=useState<string>(""),[query,setQuery]=useState(""),[statusFilter,setStatusFilter]=useState("all"),[appFilter,setAppFilter]=useState("all"),[range,setRange]=useState("30"),[loading,setLoading]=useState(true),[error,setError]=useState(""),[saving,setSaving]=useState(false),[note,setNote]=useState("");
  const load=async()=>{if(!supabase){setError("Supabase is not configured.");setLoading(false);return}const {data:s}=await supabase.auth.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return}
- const {data,error:e}=await supabase.from("feedback").select("id,assignment_id,tester_id,rating,body,category,quality_status,created_at,assignment:assignments!inner(test:tests!inner(id,title,developer_id,app:apps(name,icon_url))),developer_review:developer_feedback_reviews(status,resolution_note,updated_at),tester:profiles!feedback_tester_id_fkey(display_name,avatar_url)").eq("assignment.test.developer_id",user.id).order("created_at",{ascending:false}).limit(1000);
+ const {data,error:e}=await listDeveloperFeedback(user.id);
  if(e){setError("Could not load feedback. Check that the latest database migration has been applied and try again.");setRows([])}else{const list=(data??[]) as unknown as FeedbackRow[];setRows(list);setSelected(current=>list.some(x=>x.id===current)?current:list[0]?.id||"")}setLoading(false)};
  useEffect(()=>{void load()},[navigate]);
  const getReview=(r:FeedbackRow)=>Array.isArray(r.developer_review)?r.developer_review[0]:r.developer_review||null;
@@ -36,10 +37,10 @@ export default function DeveloperFeedbackPage(){
  const updateStatus=async(next:ReviewStatus)=>{if(!active||!supabase)return;setSaving(true);setError("");
  try{const {data:s}=await supabase.auth.getSession();const uid=s.session?.user?.id;if(!uid){setError("Your session has expired. Please sign in again.");return}
  const payload={feedback_id:active.id,developer_id:uid,status:next,resolution_note:note.trim()||null};
- const existing=await supabase.from("developer_feedback_reviews").select("id").eq("feedback_id",active.id).maybeSingle();
+ const existing=await getDeveloperFeedbackReview(active.id);
  let writeFailed=Boolean(existing.error);
- if(!writeFailed&&existing.data){const result=await supabase.from("developer_feedback_reviews").update({status:next,resolution_note:payload.resolution_note}).eq("feedback_id",active.id).select("id").maybeSingle();writeFailed=Boolean(result.error||!result.data)}
- else if(!writeFailed){const result=await supabase.from("developer_feedback_reviews").insert(payload).select("id").single();writeFailed=Boolean(result.error||!result.data)}
+ if(!writeFailed&&existing.data){const result=await updateDeveloperFeedbackReview(active.id,{status:next,resolution_note:payload.resolution_note});writeFailed=Boolean(result.error||!result.data)}
+ else if(!writeFailed){const result=await createDeveloperFeedbackReview(payload);writeFailed=Boolean(result.error||!result.data)}
  if(writeFailed)setError("Unable to update this feedback. Verify the migration and access permissions.");else await load();
  }catch{setError("Unable to update this feedback. Please try again.")}finally{setSaving(false)}};
  const exportCsv=()=>{const data=[["Submitted","Tester","App","Test","Rating","Quality status","Developer status","Feedback"],...filtered.map(r=>[r.created_at,"Tester "+r.tester_id.slice(0,5),r.assignment?.test?.app?.name||"",r.assignment?.test?.title||"",r.rating??"",r.quality_status,getStatus(r),r.body])];const csv=data.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(",")).join("\n");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="testdz-feedback.csv";a.click();URL.revokeObjectURL(url)};
