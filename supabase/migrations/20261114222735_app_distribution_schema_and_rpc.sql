@@ -10,7 +10,7 @@ alter table public.apps
 alter table public.apps
   drop constraint if exists apps_distribution_method_check,
   add constraint apps_distribution_method_check
-    check (distribution_method in ('none', 'play_store', 'external_url', 'apk_upload'));
+    check (distribution_method in ('none', 'play_store', 'external_link', 'apk_upload'));
 
 alter table public.apps
   drop constraint if exists apps_distribution_url_check,
@@ -67,7 +67,7 @@ begin
   );
 
   update public.apps
-  set distribution_method = 'external_url',
+  set distribution_method = 'external_link',
       distribution_url = v_distribution_url,
       updated_at = pg_catalog.now()
   where id = v_app_id
