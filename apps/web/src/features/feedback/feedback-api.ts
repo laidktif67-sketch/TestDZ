@@ -122,3 +122,24 @@ export function listTesterFeedbackAssignments(testerId: string) {
     .in("status", ["active", "completed"])
     .order("created_at", { ascending: false });
 }
+
+/** Check whether the tester has already submitted feedback for this assignment. */
+export function getTesterFeedbackForAssignment(assignmentId: string, testerId: string) {
+  return getClient().from("feedback")
+    .select("id")
+    .eq("assignment_id", assignmentId)
+    .eq("tester_id", testerId)
+    .maybeSingle();
+}
+
+/** Create feedback with the existing pending-review defaults. */
+export function createTesterFeedback(values: {
+  assignment_id: string;
+  tester_id: string;
+  rating: null;
+  body: string;
+  category: string;
+  quality_status: "pending";
+}) {
+  return getClient().from("feedback").insert(values);
+}

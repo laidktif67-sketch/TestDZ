@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { supabase } from "../../../lib/supabase";
-import { listTesterFeedbackAssignments } from "../../../features/feedback/feedback-api";
+import { listTesterFeedbackAssignments, getTesterFeedbackForAssignment, createTesterFeedback } from "../../../features/feedback/feedback-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/submit-feedback.css";
@@ -117,7 +117,7 @@ export default function SubmitFeedbackPage() {
     setSubmitting(true);
     setMessage("");
     const category = feedbackType === "Bug" ? "bug" : feedbackType === "UI Issue" ? "usability" : "general";
-    const existing = await supabase.from("feedback").select("id").eq("assignment_id", assignmentId).eq("tester_id", session.user.id).maybeSingle();
+    const existing = await getTesterFeedbackForAssignment(assignmentId, session.user.id);
     if (existing.error) {
       setMessage("We could not verify whether feedback already exists. Please try again.");
       setSubmitting(false);
@@ -128,7 +128,7 @@ export default function SubmitFeedbackPage() {
       setSubmitting(false);
       return;
     }
-    const { error } = await supabase.from("feedback").insert({
+    const { error } = await createTesterFeedback({
       assignment_id: assignmentId,
       tester_id: session.user.id,
       rating: null,

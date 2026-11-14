@@ -3,7 +3,7 @@ import type { FormEvent, ChangeEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterSupportTicket, listTesterSupportMessages, listTesterSupportAttachments, createTesterSupportMessage, createTesterSupportAttachment } from "../../../features/support/support-api";
+import { getTesterSupportTicket, listTesterSupportMessages, listTesterSupportAttachments, createTesterSupportMessage, createTesterSupportAttachment, uploadTesterSupportAttachment, getTesterSupportAttachmentUrl } from "../../../features/support/support-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/support-ticket-details.css";
@@ -51,7 +51,7 @@ export default function SupportTicketDetailsPage(){
   if(selectedFile){
    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
-   const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
+   const {error:uploadError}=await uploadTesterSupportAttachment(storagePath, selectedFile);
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
    const {error:metadataError}=await createTesterSupportAttachment({ticket_id:ticket.id,message_id:messageData.id,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
    if(metadataError){setSending(false);setReply("");setSelectedFile(null);await load();setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");return;}
@@ -60,7 +60,7 @@ export default function SupportTicketDetailsPage(){
  }
  async function openAttachment(item:Attachment){
   if(!supabase){return;}setError("");
-  const {data,error:storageError}=await supabase.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
+  const {data,error:storageError}=await getTesterSupportAttachmentUrl(item.storage_path);
   if(storageError||!data?.signedUrl){setError("This attachment is not available or you do not have permission to access it.");return;}
   window.open(data.signedUrl,"_blank","noopener,noreferrer");
  }

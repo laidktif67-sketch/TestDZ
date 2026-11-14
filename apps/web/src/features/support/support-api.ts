@@ -146,3 +146,16 @@ export function createTesterSupportAttachment(values: {
 }) {
   return getClient().from("support_ticket_attachments").insert(values);
 }
+
+/** Upload a tester support attachment to the existing private bucket. */
+export function uploadTesterSupportAttachment(storagePath: string, file: File) {
+  return getClient().storage.from("support-attachments").upload(storagePath, file, {
+    contentType: file.type,
+    upsert: false,
+  });
+}
+
+/** Create a short-lived URL for an attachment after storage policy checks. */
+export function getTesterSupportAttachmentUrl(storagePath: string) {
+  return getClient().storage.from("support-attachments").createSignedUrl(storagePath, 60);
+}
