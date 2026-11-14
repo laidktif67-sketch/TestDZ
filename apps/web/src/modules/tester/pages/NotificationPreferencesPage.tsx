@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getTesterNotificationPreferencesProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -66,7 +67,7 @@ export default function NotificationPreferencesPage() {
     if (!user || !supabase) return;
     let alive = true;
     Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle(),
+      getTesterNotificationPreferencesProfile(user.id),
       Promise.resolve(user.user_metadata?.testdz_notification_center_preferences as Partial<Preferences> | undefined)
     ]).then(([profile, saved]) => {
       if (!alive) return;

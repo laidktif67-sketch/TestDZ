@@ -36,3 +36,11 @@ export function getTesterAccountSettingsProfile(userId: string) {
 export function updateTesterAccountSettingsProfile(userId: string, values: { display_name: string; locale: string }) {
   return getClient().from("profiles").update(values).eq("id", userId);
 }
+
+
+/** Read-only profile header fields for tester notification preferences. */
+export function getTesterNotificationPreferencesProfile(userId: string) {
+  return getClient().from("profiles")
+    .select("display_name,avatar_url")
+    .eq("id", userId).maybeSingle();
+}
