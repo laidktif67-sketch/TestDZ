@@ -1,5 +1,15 @@
 import { Route } from "react-router-dom";
 import TesterDashboardPage from "../modules/tester/pages/TesterDashboardPage";
+import AssignmentDetailsPage from "../modules/tester/pages/AssignmentDetailsPage";
+import ActiveAssignmentProgressPage from "../modules/tester/pages/ActiveAssignmentProgressPage";
+import AssignmentSubmissionPage from "../modules/tester/pages/AssignmentSubmissionPage";
+import TestCompletionSummaryPage from "../modules/tester/pages/TestCompletionSummaryPage";
+import FeedbackHistoryPage from "../modules/tester/pages/FeedbackHistoryPage";
+import SubmitFeedbackPage from "../modules/tester/pages/SubmitFeedbackPage";
+import ReportProblemPage from "../modules/tester/pages/ReportProblemPage";
+import WalletRewardsPage from "../modules/tester/pages/WalletRewardsPage";
+import WithdrawalRequestPage from "../modules/tester/pages/WithdrawalRequestPage";
+import WithdrawalStatusPage from "../modules/tester/pages/WithdrawalStatusPage";
 import MyTestsPage from "../modules/tester/pages/MyTestsPage";
 import DiscoverTestsPage from "../modules/tester/pages/DiscoverTestsPage";
 import TestPreviewPage from "../modules/tester/pages/TestPreviewPage";
@@ -19,6 +29,16 @@ export const testerSecurityRouteElements = [
 ];
 
 export const testerWorkspaceRouteElements = [
+<Route key="tester-workspace-moved-1" path="/assignments/:id" element={<AssignmentDetailsPage />} />,
+<Route key="tester-workspace-moved-2" path="/assignments/:id/progress" element={<ActiveAssignmentProgressPage />} />,
+<Route key="tester-workspace-moved-3" path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />,
+<Route key="tester-workspace-moved-4" path="/assignments/:id/summary" element={<TestCompletionSummaryPage />} />,
+<Route key="tester-workspace-moved-5" path="/feedback-history" element={<FeedbackHistoryPage />} />,
+<Route key="tester-workspace-moved-6" path="/submit-feedback" element={<SubmitFeedbackPage />} />,
+<Route key="tester-workspace-moved-7" path="/report-problem" element={<ReportProblemPage />} />,
+<Route key="tester-workspace-moved-8" path="/wallet-rewards" element={<WalletRewardsPage />} />,
+<Route key="tester-workspace-moved-9" path="/withdrawal-request" element={<WithdrawalRequestPage />} />,
+<Route key="tester-workspace-moved-10" path="/withdrawal-status" element={<WithdrawalStatusPage />} />,
 <Route key="tester-workspace-1" path="/tester-dashboard" element={<TesterDashboardPage />} />,
 <Route key="tester-workspace-2" path="/my-tests" element={<MyTestsPage />} />,
 <Route key="tester-workspace-3" path="/assignments/:id/reward" element={<TestCompletionRewardPage />} />,
