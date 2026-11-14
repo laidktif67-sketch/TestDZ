@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {Link,useNavigate} from "react-router-dom";
 import {supabase} from "../../../lib/supabase";
-import {useIdentity} from "../../../shared/auth/hooks/useIdentity";
+import {useIdentity} from "../../../features/identity/hooks/useIdentity";
 import {RoleAccessNotice} from "../../../shared/guards/RoleGuard";
 import "../styles/developer-analytics.css";
 type Test={id:string;app_id:string;title:string;status:string;created_at:string};

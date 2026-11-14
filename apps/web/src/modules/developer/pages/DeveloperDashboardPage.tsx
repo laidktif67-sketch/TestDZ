@@ -3,7 +3,7 @@ import type { AppRecord } from "@testdz/types";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import { getAppLimit, listApps } from "../../../features/apps/apps-api";
 import "../styles/developer-dashboard.css";
