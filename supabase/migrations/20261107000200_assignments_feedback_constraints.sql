@@ -1,9 +1,9 @@
 -- ============================================================
 -- Migration: 20261107000200_assignments_feedback_constraints.sql
 -- Phase: 016b / 4
--- Purpose: Update assignments constraints + feedback NOT NULL/UNIQUE
+-- Purpose: Update assignments uniqueness + feedback NOT NULL/UNIQUE; defer FK until 016c data migration
 -- Depends on: migration 016a (cohort_tests table)
--- Data-safety: verified pre-flight (0 feedback, 0 assignments)
+-- Data-safety: validates feedback compatibility; assignment FK is added only after legacy links migrate in 016c
 -- ============================================================
 
 BEGIN;
@@ -66,19 +66,11 @@ ALTER TABLE public.assignments
   ADD CONSTRAINT assignments_cohort_test_tester_unique 
   UNIQUE (cohort_id, test_id, tester_id);
 
--- 1.3 Composite FK: (cohort_id, test_id) → cohort_tests(cohort_id, test_id)
-ALTER TABLE public.assignments 
-  ADD CONSTRAINT assignments_cohort_test_fk 
-  FOREIGN KEY (cohort_id, test_id) 
-  REFERENCES public.cohort_tests(cohort_id, test_id)
-  ON DELETE RESTRICT;
-
--- 1.4 Composite FK: (cohort_id, tester_id) → cohort_tests(cohort_id, developer_id)
-ALTER TABLE public.assignments 
-  ADD CONSTRAINT assignments_cohort_tester_fk 
-  FOREIGN KEY (cohort_id, tester_id) 
-  REFERENCES public.cohort_tests(cohort_id, developer_id)
-  ON DELETE RESTRICT;
+-- 1.3 Composite FK is intentionally deferred to 016c.
+-- 016a creates cohort_tests empty and 016c migrates cohorts.test_id links.
+-- Adding this FK here would reject valid legacy assignments before their
+-- corresponding cohort_tests rows exist. No tester_id -> developer_id FK is
+-- valid: testers are not required to own the test they are assigned to.
 
 -- ============================================================
 -- PHASE 2: feedback constraints
@@ -117,16 +109,14 @@ BEGIN
     RAISE EXCEPTION 'New UNIQUE missing';
   END IF;
   
-  -- FK constraints
-  SELECT COUNT(*) INTO v_count FROM pg_constraint
-  WHERE conrelid='public.assignments'::regclass
-    AND conname IN (
-      'assignments_cohort_test_fk',
-      'assignments_cohort_tester_fk'
-    )
-    AND contype='f';
-  IF v_count != 2 THEN 
-    RAISE EXCEPTION 'assignments FKs: expected 2, got %', v_count; 
+  -- The cohort/test FK is deliberately added by 016c after legacy links
+  -- have been migrated. Never constrain tester_id to a test owner here.
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.assignments'::regclass
+      AND conname='assignments_cohort_tester_fk'
+  ) THEN
+    RAISE EXCEPTION 'Invalid tester-to-developer FK exists';
   END IF;
   
   -- feedback NOT NULL
