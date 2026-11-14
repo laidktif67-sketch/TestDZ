@@ -6,10 +6,6 @@ function getClient() {
 }
 
 
-export function countActiveAssignmentUnreadNotifications(userId: string) {
-  return getClient().from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null);
-}
-
 /** Ownership remains scoped to the authenticated tester ID. */
 export function getActiveAssignmentRecord(assignmentId: string, testerId: string) {
   return getClient().from("assignments")

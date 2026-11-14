@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { countActiveAssignmentFeedback, countActiveAssignmentUnreadNotifications, getActiveAssignmentRecord, getActiveAssignmentEarnedPoints, listActiveAssignmentCheckIns } from "../../../features/testers/active-assignment-api";
+import { countActiveAssignmentFeedback, getActiveAssignmentRecord, getActiveAssignmentEarnedPoints, listActiveAssignmentCheckIns } from "../../../features/testers/active-assignment-api";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import { listTesterLeaderboardTesterIds, listTesterLeaderboardProfiles, listTesterLeaderboardLedger } from "../../../features/testers/leaderboard-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
@@ -28,7 +29,7 @@ export default function ActiveAssignmentProgressPage(){
   (async()=>{
    const [profile,notice,a,c,f,l,roleRows]=await Promise.all([
     getTesterHeaderProfile(uid),
-    countActiveAssignmentUnreadNotifications(uid),
+    countTesterUnreadNotifications(uid),
     getActiveAssignmentRecord(id,uid),
     listActiveAssignmentCheckIns(id,uid),
     countActiveAssignmentFeedback(id,uid),
