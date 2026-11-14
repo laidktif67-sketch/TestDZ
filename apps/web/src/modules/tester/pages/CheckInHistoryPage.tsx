@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import { listTesterCheckIns, countUnreadTesterNotifications, listCheckInRewardLedger } from "../../../features/testers/checkins-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
+import { useTesterProfile } from "../hooks/useTesterProfile";
 import "../styles/tester-dashboard.css";
 import "../styles/check-in-history.css";
 
@@ -55,8 +55,7 @@ function AppIcon({ name, url }: { name: string; url: string | null }) {
 
 export default function CheckInHistoryPage() {
   const { session, roles = [] } = useIdentity();
-  const [name, setName] = useState("Tester");
-  const [avatar, setAvatar] = useState("");
+  const { name, avatar, firstName } = useTesterProfile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState(0);
   const [rows, setRows] = useState<CheckinRow[]>([]);
@@ -75,7 +74,6 @@ export default function CheckInHistoryPage() {
   const [toDate, setToDate] = useState(dateValue(new Date(now.getFullYear(), now.getMonth() + 1, 0)));
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
-  const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
     if (!session?.user?.id || !identityApi.isConfigured()) { setLoading(false); return; }
@@ -84,14 +82,11 @@ export default function CheckInHistoryPage() {
       setLoading(true);
       setRefreshing(true);
       setError("");
-      const [profile, checkins, notice] = await Promise.all([
-        getTesterHeaderProfile(session!.user.id),
+      const [checkins, notice] = await Promise.all([
         listTesterCheckIns(session!.user.id),
         countUnreadTesterNotifications(session!.user.id)
       ]);
       if (!alive) return;
-      setName(profile.data?.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
-      setAvatar(profile.data?.avatar_url || "");
       if (checkins.error) {
         setError("We couldn't load your check-in history. Please refresh and try again.");
         setRows([]);
