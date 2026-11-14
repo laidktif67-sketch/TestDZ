@@ -52,7 +52,7 @@ function AppMark({ name, iconUrl }: { name: string; iconUrl?: string | null }) {
 
 export default function FeedbackHistoryPage() {
   const { session, roles = [] } = useIdentity();
-  const { name, avatar, firstName } = useTesterProfile();
+  const { name, avatar, firstName, loading: profileLoading } = useTesterProfile();
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [rows, setRows] = useState<FeedbackRow[]>([]);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
@@ -127,7 +127,7 @@ export default function FeedbackHistoryPage() {
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
   ];
 
-  if (loading) return <div className="fh-loading"><span className="td-spinner" />Loading your feedback history…</div>;
+  if (loading || profileLoading) return <div className="fh-loading"><span className="td-spinner" />Loading your feedback history…</div>;
 
   return <div className="td-dashboard fh-dashboard">
     <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={workspaceMenuOpen} setWorkspaceMenuOpen={setWorkspaceMenuOpen} previewMode={false} />
