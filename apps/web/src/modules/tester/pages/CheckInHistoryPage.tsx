@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { getTesterCheckInProfile, listTesterCheckIns, countUnreadTesterNotifications, listCheckInRewardLedger } from "../../../features/testers/checkins-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/check-in-history.css";
@@ -84,12 +85,9 @@ export default function CheckInHistoryPage() {
       setRefreshing(true);
       setError("");
       const [profile, checkins, notice] = await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
-        client.from("checkins")
-          .select("id,assignment_id,checkin_date,created_at,note,evidence_url,assignment:assignments(id,status,test:tests(id,title,status,app:apps(name,icon_url)))")
-          .eq("tester_id", session!.user.id)
-          .order("checkin_date", { ascending: false }),
-        client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", session!.user.id).is("read_at", null)
+        getTesterCheckInProfile(session!.user.id),
+        listTesterCheckIns(session!.user.id),
+        countUnreadTesterNotifications(session!.user.id)
       ]);
       if (!alive) return;
       setName(profile.data?.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
@@ -102,11 +100,7 @@ export default function CheckInHistoryPage() {
         const ids = source.map(row => row.id);
         let pointTotals: Record<string, number> = {};
         if (ids.length) {
-          const ledger = await client.from("points_ledger")
-            .select("amount,reference_id")
-            .eq("user_id", session!.user.id)
-            .eq("wallet_type", "earned_points")
-            .in("reference_id", ids);
+          const ledger = await listCheckInRewardLedger(session!.user.id, ids);
           if (ledger.data) {
             pointTotals = ledger.data.reduce((acc, item) => {
               if (item.reference_id) acc[item.reference_id] = (acc[item.reference_id] || 0) + Number(item.amount || 0);
