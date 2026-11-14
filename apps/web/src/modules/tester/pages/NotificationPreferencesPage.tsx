@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -46,6 +47,7 @@ export default function NotificationPreferencesPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const firstName = name.trim().split(/\\s+/)[0] || user?.email?.split("@")[0] || "Tester";
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
@@ -63,6 +65,16 @@ export default function NotificationPreferencesPage() {
     { label: "Settings", icon: "settings", href: "/settings" },
     ...(isDeveloper ? [{ label: "Developer", icon: "code", href: "/developer-dashboard" }] : [])
   ];
+  useEffect(() => {
+    let alive = true;
+    setUnreadCount(0);
+    if (!user?.id || !identityApi.isConfigured()) return () => { alive = false; };
+    void countTesterUnreadNotifications(user.id).then(({ count, error }) => {
+      if (alive && !error) setUnreadCount(count ?? 0);
+    }).catch(() => { if (alive) setUnreadCount(0); });
+    return () => { alive = false; };
+  }, [user?.id]);
+
   useEffect(() => {
     if (!user || !identityApi.isConfigured()) return;
     let alive = true;
@@ -104,7 +116,7 @@ export default function NotificationPreferencesPage() {
     <main className="td-main np-main">
       <header className="np-topbar">
         <label className="np-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" /></label>
-        <div className="np-user"><Link to="/notifications" aria-label="Open notifications"><Icon name="bell" size={25}/><i>3</i></Link><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt="" /> : firstName.slice(0, 2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div>
+        <div className="np-user"><Link to="/notifications" aria-label={unreadCount>0?`Open notifications, ${unreadCount} unread`:"Open notifications"}><Icon name="bell" size={25}/>{unreadCount>0&&<i>{unreadCount>9?"9+":unreadCount}</i>}</Link><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt="" /> : firstName.slice(0, 2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div>
       </header>
       <div className="np-content">
         <Link to="/settings" className="np-back"><Icon name="arrow" size={17}/>Back to Settings</Link>

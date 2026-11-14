@@ -3,6 +3,7 @@ import type { FormEvent, ChangeEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { getTesterSupportTicket, listTesterSupportMessages, listTesterSupportAttachments, createTesterSupportMessage, createTesterSupportAttachment, uploadTesterSupportAttachment, getTesterSupportAttachmentUrl } from "../../../features/support/support-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -20,6 +21,7 @@ export default function SupportTicketDetailsPage(){
  const [ticket,setTicket]=useState<Ticket|null>(null),[messages,setMessages]=useState<Message[]>([]),[attachments,setAttachments]=useState<Attachment[]>([]);
  const [loading,setLoading]=useState(true),[sending,setSending]=useState(false),[reply,setReply]=useState(""),[selectedFile,setSelectedFile]=useState<File|null>(null),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [menuOpen,setMenuOpen]=useState(false);
+ const [unreadCount,setUnreadCount]=useState(0);
  const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Tester";
  const firstName=name.split(/[\s._-]+/)[0]||"Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
@@ -38,6 +40,7 @@ export default function SupportTicketDetailsPage(){
   setLoading(false);
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
+ useEffect(()=>{let alive=true;setUnreadCount(0);if(!identityApi.isConfigured()||!user?.id)return()=>{alive=false;};void countTesterUnreadNotifications(user.id).then(({count,error})=>{if(alive&&!error)setUnreadCount(count??0);}).catch(()=>{if(alive)setUnreadCount(0);});return()=>{alive=false;};},[user?.id]);
  const canReply=!!ticket&&ticket.status!=="closed"&&(ticket.user_id===user?.id||roles.includes("support")||roles.includes("admin"));
  const customerMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===ticket?.user_id).map(m=>m.id)),[messages,ticket?.user_id]);
  async function sendReply(event:FormEvent<HTMLFormElement>){
@@ -67,7 +70,7 @@ export default function SupportTicketDetailsPage(){
  return <div className="td-dashboard std-dashboard">
   <TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/>
   <main className="td-main std-main">
-   <header className="td-topbar std-topbar"><label className="td-search std-search"><Icon name="search" size={20}/><input placeholder="Search in TestDZ…" aria-label="Search in TestDZ"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
+   <header className="td-topbar std-topbar"><label className="td-search std-search"><Icon name="search" size={20}/><input placeholder="Search in TestDZ…" aria-label="Search in TestDZ"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label={unreadCount>0?`Notifications, ${unreadCount} unread`:"Notifications"}><Icon name="bell" size={21}/>{unreadCount>0&&<i>{unreadCount>9?"9+":unreadCount}</i>}</Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
    <div className="std-content">
     <Link to="/support" className="std-back">← Back to Support</Link>
     {loading?<section className="std-state"><Icon name="refresh" size={26}/>Loading ticket details…</section>:!ticket?<section className="std-state"><Icon name="alert" size={28}/><h2>Ticket unavailable</h2><p>{error||"We could not find this support ticket."}</p><Link to="/support">Return to Support Center</Link></section>:<>
