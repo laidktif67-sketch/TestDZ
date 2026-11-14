@@ -1,5 +1,18 @@
 import { supabase } from "../../lib/supabase";
 
+export type TestType =
+  | "google_play_closed"
+  | "apk_testing"
+  | "bug_discovery"
+  | "usability"
+  | "compatibility"
+  | "custom";
+
+export type TestConfig = {
+  cohort?: { targetTesters?: number; notes?: string | null };
+  rules?: { androidVersion?: string; instructions?: string | null };
+};
+
 export type CreateTestDraftInput = {
   appId: string;
   developerId: string;
@@ -8,6 +21,8 @@ export type CreateTestDraftInput = {
   startDate: string | null;
   endDate: string | null;
   minTesters: number;
+  testType: TestType;
+  testConfig: TestConfig;
 };
 
 /**
@@ -28,6 +43,8 @@ export function createTestDraft(input: CreateTestDraftInput) {
       start_date: input.startDate,
       end_date: input.endDate,
       min_testers: input.minTesters,
+      test_type: input.testType,
+      test_config: input.testConfig,
       status: "draft",
     })
     .select("id")
@@ -63,7 +80,7 @@ export function getDeveloperCampaign(testId: string, developerId: string) {
 
   return supabase
     .from("tests")
-    .select("id,title,description,status,created_at,start_date,end_date,min_testers,app:apps(id,name,package_name,icon_url,category)")
+    .select("id,title,description,status,created_at,start_date,end_date,min_testers,test_type,test_config,app:apps(id,name,package_name,icon_url,category)")
     .eq("id", testId)
     .eq("developer_id", developerId)
     .maybeSingle();
@@ -189,4 +206,3 @@ export function listAssignmentFeedback(assignmentIds: string[]) {
     .in("assignment_id", assignmentIds)
     .limit(5000);
 }
-
