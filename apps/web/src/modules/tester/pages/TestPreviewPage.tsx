@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getTestPreviewProfile, countTestPreviewUnreadNotifications, getTestPreviewTest, getTestPreviewAssignment } from "../../../features/testers/test-preview-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
@@ -24,7 +24,7 @@ export default function TestPreviewPage(){
  const previewMode=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");const firstName=name.split(/\s+/)[0];
  useEffect(()=>{
-  if(identityLoading)return;const client=supabase;if(!session||!id||!client){setLoading(false);return;}let alive=true;
+  if(identityLoading)return;if(!session||!id||!identityApi.isConfigured()){setLoading(false);return;}let alive=true;
   const load=async()=>{
    const [profile,notifications,testResult,assignmentResult]=await Promise.all([
     getTestPreviewProfile(session.user.id),
