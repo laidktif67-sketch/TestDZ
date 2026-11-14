@@ -5,11 +5,16 @@ function getClient() {
   return supabase;
 }
 
-/** Shared read-only name/avatar query for tester page headers. */
-export function getTesterHeaderProfile(userId: string) {
+/** Shared read-only query for the common profile header fields; it does not encode a user role. */
+export function getProfileHeaderFields(userId: string) {
   return getClient().from("profiles")
     .select("display_name,avatar_url")
     .eq("id", userId).maybeSingle();
+}
+
+/** Read-only name/avatar query used by tester page headers. */
+export function getTesterHeaderProfile(userId: string) {
+  return getProfileHeaderFields(userId);
 }
 
 /** Read only the profile fields used by developer settings; RLS remains authoritative. */
@@ -43,5 +48,3 @@ export function updateTesterAccountSettingsProfile(userId: string, values: { dis
 export function updateTesterLanguagePreference(userId: string, locale: string) {
   return getClient().from("profiles").update({ locale }).eq("id", userId);
 }
-
-
