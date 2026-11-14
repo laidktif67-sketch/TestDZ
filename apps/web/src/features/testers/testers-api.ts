@@ -20,3 +20,33 @@ export function listDeveloperTesterProfiles(profileIds: string[]) {
   if (!profileIds.length) return Promise.resolve({ data: [], error: null });
   return getClient().from("profiles").select("id,display_name,avatar_url").in("id", profileIds);
 }
+
+
+/** Data queries for the tester's My Tests overview. Auth/session handling stays in the page. */
+export function listTesterMyTestRoles(userId: string) {
+  return getClient().from("user_roles").select("role").eq("user_id", userId);
+}
+
+export function getTesterMyTestsProfile(userId: string) {
+  return getClient().from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
+}
+
+export function getTesterMyTestsWallet(userId: string) {
+  return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();
+}
+
+export function listTesterMyAssignments(userId: string) {
+  return getClient().from("assignments")
+    .select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)")
+    .eq("tester_id", userId).order("created_at", { ascending: false });
+}
+
+export function listTesterMyFeedback(userId: string) {
+  return getClient().from("feedback").select("id,quality_status,created_at,assignment_id")
+    .eq("tester_id", userId).order("created_at", { ascending: false });
+}
+
+export function countTesterMyUnreadNotifications(userId: string) {
+  return getClient().from("notifications").select("id", { count: "exact", head: true })
+    .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null);
+}
