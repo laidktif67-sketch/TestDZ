@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterNotificationPreferencesProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
@@ -89,7 +88,7 @@ export default function NotificationPreferencesPage() {
   const save = async () => {
     if (!identityApi.isConfigured() || !user) { setError("Sign in to save notification preferences."); return; }
     setBusy(true); setMessage(""); setError("");
-    const result = await supabase!.auth.updateUser({ data: { testdz_notification_center_preferences: prefs } });
+    const result = await identityApi.updateUserMetadata({ testdz_notification_center_preferences: prefs });
     setBusy(false);
     if (result.error) setError("Your preferences could not be saved. Please try again.");
     else setMessage("Your notification preferences have been saved.");
