@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-notifications.css";
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-subscription.css";
 type Plan={id:string;code:string;name:string;price_dzd:number;billing_period:string;limits:Record<string,number>;features:Record<string,unknown>};

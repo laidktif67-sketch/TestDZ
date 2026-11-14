@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-dashboard.css";
 import "../styles/developer-support-ticket-details.css";
