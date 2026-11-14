@@ -3,7 +3,7 @@
 
 **Purpose:** factual checkpoint for the controlled architecture migration.  
 **Remote branch:** `refactor/feature-based-architecture`  
-**Reviewed commit:** `9bbf14392504224ae14e541dae450a945b826cab`  
+**Reviewed commit:** `09dd9f6f6b76f3ecc7f9dc4f439abd5b2ef9cb67`  
 **PR:** PR state for this branch has not been verified in this checkpoint.  
 **Important:** this is a remote GitHub source snapshot, not a claim that the local Termux worktree has been inspected.
 
@@ -12,7 +12,7 @@
 | Check | Evidence/result | Status |
 |---|---|---|
 | Remote branch | `refactor/feature-based-architecture` | Verified remotely |
-| Remote HEAD reviewed for route source/checker updates | `9bbf14392504224ae14e541dae450a945b826cab` | Verified remotely |
+| Remote HEAD reviewed for route source/checker updates | `09dd9f6f6b76f3ecc7f9dc4f439abd5b2ef9cb67` | Verified remotely |
 | PR state for this branch | Not verified in this checkpoint | Not verified |
 | Local current branch and HEAD | Not readable through the GitHub repository API | Not verified in this checkpoint |
 | Local `git status --short` | Not readable through the GitHub repository API | Not verified in this checkpoint |
@@ -214,6 +214,6 @@ Preserve all output, especially any `?? node_modules/` or other local changes. D
 - `adminRoutes.tsx`, `developerRoutes.tsx`, and `testerRoutes.tsx` — role-specific route declarations.
 - `AppRoutes.tsx` — composition and parent guard nesting.
 
-The source inventory currently reports 96 explicit `path` declarations and 102 `Route` elements across the route modules. `scripts/check-route-inventory.mjs` is intended to enforce this inventory, module composition, redirects, guard ordering, relative-import resolution, and duplicate path detection; it has **not yet been executed against this commit**. TypeScript, production build, route smoke tests, and dependency-cycle checks are also still unverified on this exact SHA.
+The source inventory reports 96 explicit `path` declarations and 102 `Route` elements across the route modules. `npm run check:routes` passed on this commit, and the user reports a successful production build. The exact-SHA TypeScript result, browser/runtime route smoke tests, and dependency-cycle checks remain unconfirmed.
 
 Do not merge to `main`, deploy, or claim runtime parity until the route check, typecheck, build, and available route smoke tests have been run and their outputs reviewed. Preserve local changes and the untracked `node_modules/` directory.

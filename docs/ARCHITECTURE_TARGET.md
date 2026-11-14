@@ -3,7 +3,7 @@
 
 **Status:** approved target direction; migration not yet complete  
 **Repository:** `laidktif67-sketch/TestDZ`  
-**Current migration ref:** `refactor/feature-based-architecture` at `9bbf14392504224ae14e541dae450a945b826cab` (remote source inspection; local validation pending)  
+**Current migration ref:** `refactor/feature-based-architecture` at `09dd9f6f6b76f3ecc7f9dc4f439abd5b2ef9cb67` (route inventory check passed; user reports production build passed; typecheck result for this exact commit not yet confirmed here)  
 **Scope:** architecture and controlled migration plan only. This document does not authorize a rewrite, database changes, production deployment, or merge to `main`.
 
 ## 1. Architectural decision
@@ -151,7 +151,7 @@ The mappings below refer to files/directories that exist at the reviewed ref. Th
 
 | Existing source | Proposed destination | Rule |
 |---|---|---|
-| `apps/web/src/AppRoutes.tsx` plus `apps/web/src/routes/*` | Keep `AppRoutes.tsx` as composition root initially; consider moving under `app/router/` only after validation. | Route modules exist on the migration branch; exact-SHA typecheck/build and runtime route checks are pending. |
+| `apps/web/src/AppRoutes.tsx` plus `apps/web/src/routes/*` | Keep `AppRoutes.tsx` as composition root initially; consider moving under `app/router/` only after validation. | Route modules exist on the migration branch; route inventory check passed and the user reports a successful build on this commit. Exact-SHA typecheck and browser/runtime route checks remain unconfirmed. |
 | `apps/web/src/main.tsx` | Keep at current path initially | It mounts StrictMode, BrowserRouter and global styles; move only if a real app-entry convention is needed. |
 | `apps/web/src/pages/LandingPage.tsx`, `AuthPage.tsx`, `AuthCallbackPage.tsx`, `SignupSuccessPage.tsx`, `ForgotPasswordPage.tsx`, `ResetPasswordPage.tsx`, `PasswordResetSuccessPage.tsx`, `InvalidOtpPage.tsx`, `VerifyEmailPage.tsx`, `LegalPage.tsx` | Keep in `pages/` initially | Public/auth/legal screens. Auth logic must continue to call the canonical identity API. |
 | `apps/web/src/pages/OnboardingPage.tsx`, `InterestsPage.tsx`, `ProfileCompletionPage.tsx` | Keep in `pages/` initially; profile-owned logic may later move to `features/profiles` | Keep current onboarding routes and guard exceptions unchanged. |
