@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getDeveloperSettingsProfile, updateDeveloperSettingsProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import "../styles/developer-settings.css";
@@ -49,12 +49,11 @@ export default function DeveloperSettingsPage() {
   const [activity, setActivity] = useState<{ created: string; lastSignIn: string; emailVerified: boolean }>({ created: "", lastSignIn: "", emailVerified: false });
 
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user || !identityApi.isConfigured()) return;
     let active = true;
-    const client = supabase;
     void Promise.all([
       getDeveloperSettingsProfile(user.id),
-      client.auth.mfa.listFactors()
+      identityApi.listMfaFactors()
     ]).then(([profileResult, factors]) => {
       if (!active) return;
       const data = (profileResult.data ?? {}) as Profile;
@@ -72,7 +71,7 @@ export default function DeveloperSettingsPage() {
   }, [user?.id]);
 
   async function saveProfile() {
-    if (!supabase || !user || !name.trim()) { setError("Enter a valid display name."); return; }
+    if (!identityApi.isConfigured() || !user || !name.trim()) { setError("Enter a valid display name."); return; }
     setBusy(true); setError(""); setMessage("");
     const result = await updateDeveloperSettingsProfile(user.id, { display_name: name.trim(), locale });
     setBusy(false);
@@ -81,50 +80,50 @@ export default function DeveloperSettingsPage() {
   }
 
   async function savePreferences(next: Preferences) {
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     const previous = preferences;
     setPreferences(next); setSavingPrefs(true); setError(""); setMessage("");
-    const result = await supabase.auth.updateUser({ data: { testdz_developer_notifications: next } });
+    const result = await identityApi.updateUserMetadata({ testdz_developer_notifications: next });
     setSavingPrefs(false);
     if (result.error) { setPreferences(previous); setError("Notification preferences could not be saved."); }
     else setMessage("Notification preferences saved automatically.");
   }
 
   async function saveTheme(next: string) {
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     const previous = theme; setTheme(next); setError(""); setMessage("");
-    const result = await supabase.auth.updateUser({ data: { testdz_theme: next } });
+    const result = await identityApi.updateUserMetadata({ testdz_theme: next });
     if (result.error) { setTheme(previous); setError("Theme preference could not be saved."); }
     else setMessage("Theme preference saved.");
   }
 
   async function setupMfa() {
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     setBusy(true); setError("");
-    const result = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "TestDZ Developer authenticator" });
+    const result = await identityApi.enrollTotp("TestDZ Developer authenticator");
     setBusy(false);
     if (result.error) { setError(result.error.message); return; }
     setQr(result.data.totp.qr_code); setFactorId(result.data.id);
   }
 
   async function verifyMfa() {
-    if (!supabase || !factorId || code.trim().length < 6) return;
+    if (!identityApi.isConfigured() || !factorId || code.trim().length < 6) return;
     setBusy(true);
-    const challenge = await supabase.auth.mfa.challenge({ factorId });
+    const challenge = await identityApi.challengeMfaFactor(factorId);
     if (challenge.error) { setBusy(false); setError(challenge.error.message); return; }
-    const result = await supabase.auth.mfa.verify({ factorId, challengeId: challenge.data.id, code: code.trim() });
+    const result = await identityApi.verifyMfaFactor(factorId, challenge.data.id, code.trim());
     setBusy(false);
     if (result.error) setError(result.error.message);
     else { setTwoFactor(true); setQr(""); setCode(""); setMessage("Two-factor authentication enabled."); }
   }
 
   async function disableMfa() {
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     setBusy(true);
-    const factors = await supabase.auth.mfa.listFactors();
+    const factors = await identityApi.listMfaFactors();
     const factor = factors.data?.totp?.find(item => item.status === "verified");
     if (!factor) { setBusy(false); setTwoFactor(false); return; }
-    const result = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+    const result = await identityApi.removeMfaFactor(factor.id);
     setBusy(false);
     if (result.error) setError(result.error.message);
     else { setTwoFactor(false); setMessage("Two-factor authentication disabled."); }
@@ -170,7 +169,7 @@ export default function DeveloperSettingsPage() {
             <div className="dset-profile-stats"><span><Glyph name="tests"/><b>Developer</b><small>Workspace</small></span><span><Glyph name="apps"/><b>TestDZ</b><small>Platform</small></span><span><Glyph name="shield"/><b>{activity.emailVerified ? "Verified" : "Pending"}</b><small>Email status</small></span></div>
           </section>
 
-          <section className="dset-card dset-preferences-card"><div className="dset-card-heading"><span className="dset-card-icon"><Glyph name="palette" size={25}/></span><div><h2>Preferences</h2><p>Personalize your TestDZ experience</p></div></div><div className="dset-preference-layout"><div className="dset-preference-fields"><label>Language<select value={locale} onChange={event => { setLocale(event.target.value); if (user && supabase) void updateDeveloperSettingsProfile(user.id, { locale: event.target.value }).then(({error:err}) => err ? setError("Could not save language preference.") : setMessage("Language preference saved.")); }}><option value="en-DZ">🇺🇸　English</option><option value="fr-DZ">🇫🇷　Français</option><option value="ar-DZ">🇩🇿　العربية</option></select></label><label>Theme<select value={theme} onChange={event => void saveTheme(event.target.value)}><option value="light">☀️　Light</option><option value="dark">🌙　Dark</option><option value="system">◐　System</option></select></label><label>Timezone<span className="dset-readonly">◷　(UTC+01) Algiers</span></label></div><div className="dset-preference-art"><span>✓</span><strong>Your preferences</strong><small>are saved automatically</small></div></div></section>
+          <section className="dset-card dset-preferences-card"><div className="dset-card-heading"><span className="dset-card-icon"><Glyph name="palette" size={25}/></span><div><h2>Preferences</h2><p>Personalize your TestDZ experience</p></div></div><div className="dset-preference-layout"><div className="dset-preference-fields"><label>Language<select value={locale} onChange={event => { setLocale(event.target.value); if (user && identityApi.isConfigured()) void updateDeveloperSettingsProfile(user.id, { locale: event.target.value }).then(({error:err}) => err ? setError("Could not save language preference.") : setMessage("Language preference saved.")); }}><option value="en-DZ">🇺🇸　English</option><option value="fr-DZ">🇫🇷　Français</option><option value="ar-DZ">🇩🇿　العربية</option></select></label><label>Theme<select value={theme} onChange={event => void saveTheme(event.target.value)}><option value="light">☀️　Light</option><option value="dark">🌙　Dark</option><option value="system">◐　System</option></select></label><label>Timezone<span className="dset-readonly">◷　(UTC+01) Algiers</span></label></div><div className="dset-preference-art"><span>✓</span><strong>Your preferences</strong><small>are saved automatically</small></div></div></section>
 
           <section className="dset-card dset-integrations-card"><div className="dset-card-heading"><span className="dset-card-icon"><Glyph name="puzzle" size={25}/></span><div><h2>Integrations</h2><p>Connect your favorite tools</p></div><span className="dset-coming">Integration management</span></div><div className="dset-integrations"><article><span className="dset-integration-logo"><BrandIcon name="github"/></span><strong>GitHub</strong><small>Repository access</small><span className="dset-connected">Available in project workspace</span></article><article><span className="dset-integration-logo"><BrandIcon name="gitlab"/></span><strong>GitLab</strong><small>Source control</small><span className="dset-unavailable">Not connected</span></article><article><span className="dset-integration-logo"><BrandIcon name="figma"/></span><strong>Figma</strong><small>Design workflow</small><span className="dset-unavailable">Not connected</span></article><article><span className="dset-integration-logo"><BrandIcon name="slack"/></span><strong>Slack</strong><small>Team notifications</small><span className="dset-unavailable">Not connected</span></article></div></section>
 
