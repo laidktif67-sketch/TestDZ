@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { listDeveloperTesterTests, listDeveloperTesterAssignments, listDeveloperTesterProfiles } from "../../../features/testers/testers-api";
+import { listDeveloperTesterTests, listDeveloperTesterAssignments, listDeveloperTesterProfiles } from "../../../features/developer/developer-testers-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-my-tests.css";
