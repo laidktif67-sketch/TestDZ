@@ -27,11 +27,11 @@ const testTypes: { id: TestType; title: string; description: string; icon: strin
 ];
 
 type Stage = 1 | 2 | 3 | 4 | 5 | 6;
-type AppFilter = "all" | "published" | "draft";
 
 function Icon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, React.ReactNode> = {
     search: <><circle cx="10.8" cy="10.8" r="7" /><path d="m16 16 4.5 4.5" /></>,
+    refresh: <><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></>,
     check: <path d="m5 12 4 4L19 6" />,
     arrow: <><path d="M4 12h15m-6-6 6 6-6 6" /></>,
     apps: <><rect x="3" y="3" width="8" height="8" rx="2" /><rect x="13" y="3" width="8" height="8" rx="2" /><rect x="3" y="13" width="8" height="8" rx="2" /><rect x="13" y="13" width="8" height="8" rx="2" /></>,
@@ -57,7 +57,6 @@ export default function DeveloperCreateTestSixStepPage() {
   const [loadError, setLoadError] = useState("");
   const [selectedApp, setSelectedApp] = useState("");
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<AppFilter>("all");
   const [step, setStep] = useState<Stage>(1);
   const [testType, setTestType] = useState<TestType | "">("");
   const [title, setTitle] = useState("");
@@ -88,7 +87,7 @@ export default function DeveloperCreateTestSixStepPage() {
       if (!alive) return;
       if (error) setLoadError("Could not load your applications. Please refresh and try again.");
       else {
-        const available = ((data ?? []) as AppRecord[]).filter(app => app.status !== "archived");
+        const available = ((data ?? []) as AppRecord[]).filter(app => app.status === "published");
         setApps(available);
         if (available.length === 1) setSelectedApp(available[0].id);
       }
@@ -102,9 +101,27 @@ export default function DeveloperCreateTestSixStepPage() {
   const selectedType = testTypes.find(item => item.id === testType);
   const visibleApps = useMemo(() => apps.filter(app => {
     const q = search.trim().toLowerCase();
-    return (!q || (app.name + " " + app.package_name).toLowerCase().includes(q))
-      && (filter === "all" || app.status === filter);
-  }), [apps, search, filter]);
+    return !q || (app.name + " " + app.package_name + " " + (app.description ?? "")).toLowerCase().includes(q);
+  }), [apps, search]);
+
+  async function refreshApps() {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const { data, error } = await listApps();
+      if (error) {
+        setLoadError("Could not refresh your applications. Please try again.");
+        return;
+      }
+      const available = ((data ?? []) as AppRecord[]).filter(app => app.status === "published");
+      setApps(available);
+      setSelectedApp(current => available.some(app => app.id === current) ? current : available.length === 1 ? available[0].id : "");
+    } catch {
+      setLoadError("Could not refresh your applications. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function next() {
     setSaveError("");
@@ -167,8 +184,9 @@ export default function DeveloperCreateTestSixStepPage() {
         <div className="dct-user"><span className="dct-bell">♧<i>3</i></span><span className="dct-avatar">D</span><strong>Developer</strong></div>
       </header>
       <div className="dct-page">
-        <section className="dct-hero">
-          <div><span className="dct-hero-kicker">TESTDZ · DEVELOPER SPACE</span><h1>Create New <em>Test</em></h1><p>Choose the right testing flow for your application.</p></div>
+        <section className={"dct-hero " + (step === 2 ? "dct-hero-select-app" : "")}>
+          <div><span className="dct-hero-kicker">TESTDZ · DEVELOPER SPACE</span><h1>{step === 2 ? <>Select Your <em>App</em></> : <>Create New <em>Test</em></>}</h1><p>{step === 2 ? "Choose the application you want to test." : "Choose the right testing flow for your application."}</p></div>
+          {step === 2 && <button type="button" className="dct-hero-back" onClick={() => { setSaveError(""); setStep(1); }}><span aria-hidden="true">←</span> Back to Test Types</button>}
           <div className="dct-hero-art" aria-hidden="true"><span className="dct-android">♟</span><span className="dct-hero-phone">✓</span><span className="dct-hero-checklist">☑<br />☑<br />☑</span></div>
         </section>
 
@@ -197,9 +215,13 @@ export default function DeveloperCreateTestSixStepPage() {
             </button>)}</div>}
 
             {step === 2 && <>
-              <div className="dct-app-controls"><label className="dct-app-search"><Icon name="search" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search your apps..." /></label><select value={filter} onChange={e => setFilter(e.target.value as AppFilter)} aria-label="Filter applications"><option value="all">All Apps</option><option value="published">Published</option><option value="draft">Draft</option></select></div>
-              {loadError && <div className="dct-error">{loadError}</div>}
-              {loading ? <div className="dct-loading">Loading your applications…</div> : visibleApps.length ? <div className="dct-app-grid">{visibleApps.map(app => <button type="button" key={app.id} className={"dct-app-card " + (selectedApp === app.id ? "selected" : "")} onClick={() => setSelectedApp(app.id)}><span className="dct-selected-check"><Icon name="check" size={15} /></span><AppIcon app={app} /><strong>{app.name}</strong><small dir="ltr">{app.package_name}</small><span className={"dct-status " + app.status}><i />{app.status === "published" ? "Published" : "Draft"}</span></button>)}</div> : <div className="dct-empty"><Icon name="apps" size={35} /><strong>{apps.length ? "No apps match your search" : "No applications yet"}</strong><p>{apps.length ? "Try another search or filter." : "Add an application before creating a test campaign."}</p><Link to="/apps">Go to My Apps <Icon name="arrow" size={15} /></Link></div>}
+              <div className="dct-app-toolbar">
+                <div className="dct-app-toolbar-title"><span className="dct-heading-icon"><Icon name="apps" size={24} /></span><div><h3>Your Applications</h3><p>Select an app from your published applications</p></div></div>
+                <div className="dct-app-controls"><label className="dct-app-search"><Icon name="search" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search for an app..." aria-label="Search published apps" /></label><button type="button" className="dct-refresh" onClick={() => void refreshApps()} disabled={loading}><Icon name="refresh" size={17} />{loading ? "Refreshing…" : "Refresh"}</button></div>
+              </div>
+              {loadError && <div className="dct-error" role="alert">{loadError}</div>}
+              {loading ? <div className="dct-loading">Loading your published applications…</div> : visibleApps.length ? <div className="dct-app-grid dct-app-grid-select">{visibleApps.map(app => <button type="button" key={app.id} className={"dct-app-card dct-app-card-select " + (selectedApp === app.id ? "selected" : "")} onClick={() => setSelectedApp(app.id)} aria-pressed={selectedApp === app.id}><span className="dct-selected-check"><Icon name="check" size={15} /></span><AppIcon app={app} /><span className="dct-app-card-copy"><strong>{app.name}</strong><small dir="ltr">{app.package_name}</small><span className="dct-app-description">{app.description || "Application registered in your TestDZ workspace."}</span><span className="dct-status published"><i />Published</span></span></button>)}</div> : <div className="dct-empty dct-published-empty"><Icon name="apps" size={35} /><strong>{apps.length ? "No apps match your search" : "No published apps found"}</strong><p>{apps.length ? "Try another search term." : "Make sure your application is published and accessible in your account."}</p><Link to="/apps">View My Apps <Icon name="arrow" size={15} /></Link></div>}
+              <div className="dct-app-info"><span><Icon name="info" size={22} /></span><div><strong>Can’t find your app?</strong><p>Make sure your application is published and accessible in your account.</p></div><Link to="/apps">View My Apps <Icon name="arrow" size={16} /></Link></div>
             </>}
 
             {step === 3 && <div className="dct-form-grid"><label>Test title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={100} placeholder="e.g. Android usability test" /></label><label className="full">Test description<textarea value={description} onChange={e => setDescription(e.target.value)} maxLength={2000} placeholder="Describe what testers will evaluate and what success looks like…" /></label><p className="dct-field-note">Title and description are saved with the test campaign.</p></div>}
