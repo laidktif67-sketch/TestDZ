@@ -1,6 +1,7 @@
 import {useEffect,useState} from "react";
 import {Link,Navigate,useParams} from "react-router-dom";
 import {supabase} from "../../../lib/supabase";
+import { getCompletionRewardAssignment, listCompletionRewardCheckins, getCompletionRewardFeedback, listCompletionRewardLedger, getCompletionRewardProfile } from "../../../features/testers/completion-reward-api";
 import {useIdentity} from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar,{Icon} from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -15,11 +16,11 @@ export default function TestCompletionRewardPage(){
  useEffect(()=>{if(preview){setAssignment({id,status:"completed",completed_at:"2026-11-12T13:32:00Z",test:{title:"UI Testing Assignment",app:{name:"DemoApp"}}});setEntries([{id:"demo",amount:50,reason:"Test completion reward",created_at:"2026-11-12T13:32:00Z"}]);setChecks(Array.from({length:14},(_,i)=>String(i)));setFeedback("accepted");setName("John Doe");setLoading(false);return;}
  if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}const c=supabase;
  const [a,ch,f,l,p]=await Promise.all([
- c.from("assignments").select("id,status,completed_at,test:tests(title,app:apps(name))").eq("id",id).eq("tester_id",session.user.id).maybeSingle(),
- c.from("checkins").select("checkin_date").eq("assignment_id",id).eq("tester_id",session.user.id),
- c.from("feedback").select("quality_status").eq("assignment_id",id).eq("tester_id",session.user.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
- c.from("points_ledger").select("id,amount,reason,created_at").eq("user_id",session.user.id).eq("wallet_type","earned_points").eq("reference_id",id).order("created_at",{ascending:false}),
- c.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle()
+ getCompletionRewardAssignment(id,session.user.id),
+ listCompletionRewardCheckins(id,session.user.id),
+ getCompletionRewardFeedback(id,session.user.id),
+ listCompletionRewardLedger(id,session.user.id),
+ getCompletionRewardProfile(session.user.id)
  ]);if(!alive)return;if(a.error||!a.data)setError("This assignment could not be found.");else setAssignment(a.data as unknown as Assignment);setChecks((ch.data??[]).map(x=>x.checkin_date));setFeedback(f.data?.quality_status??"");setEntries((l.data??[]) as Entry[]);setName(p.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(p.data?.avatar_url||"");if(ch.error||f.error||l.error)setError("Some reward details could not be loaded.");setLoading(false);})().catch(()=>{if(alive){setError("Unable to load reward details.");setLoading(false);}});return()=>{alive=false;};},[id,session?.user?.id,preview]);
  if(!preview&&!session)return <Navigate to="/auth" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;
  const first=name.split(/\s+/)[0]||"Tester",total=entries.reduce((s,e)=>s+e.amount,0),bonus=entries.filter(e=>e.amount>0&&/bonus/i.test(e.reason)).reduce((s,e)=>s+e.amount,0),base=entries.filter(e=>e.amount>0&&!/bonus/i.test(e.reason)).reduce((s,e)=>s+e.amount,0),added=entries.some(e=>e.amount>0),completed=assignment?.status==="completed";
