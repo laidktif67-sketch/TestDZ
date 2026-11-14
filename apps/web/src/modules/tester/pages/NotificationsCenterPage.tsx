@@ -135,18 +135,20 @@ export default function NotificationsCenterPage() {
 
   async function openNotification(row: NotificationRow) {
     const destination = destinationFor(row);
-    await markRead(row);
-    if (destination) navigate(destination);
+    const marked = await markRead(row);
+    if (destination && marked) navigate(destination);
   }
 
-  async function markRead(row: NotificationRow) {
-    if (row.read_at || !identityApi.isConfigured() || !user?.id) return;
+  async function markRead(row: NotificationRow): Promise<boolean> {
+    if (row.read_at) return true;
+    if (!identityApi.isConfigured() || !user?.id) return false;
     setBusyId(row.id); setNotice(""); setError("");
     const readAt = new Date().toISOString();
     const result = await markTesterNotificationRead(row.id, user.id, readAt);
     setBusyId("");
-    if (result.error) { setError("Could not update this notification. Please try again."); return; }
+    if (result.error) { setError("Could not update this notification. Please try again."); return false; }
     setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
+    return true;
   }
   async function markAllRead() {
     if (!identityApi.isConfigured() || !user?.id || unread === 0) return;
