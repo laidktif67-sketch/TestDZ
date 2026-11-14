@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import type { AppRecord } from "@testdz/types";
 import { listApps } from "../../../features/apps/apps-api";
 import { createTestDraft } from "../../../features/tests/tests-api";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import "../styles/developer-create-test.css";
 
 const steps = ["Select App", "Test Info", "Testing Period", "Requirements", "Rewards", "Media", "Review", "Publish"];
@@ -60,8 +60,8 @@ export default function DeveloperCreateTestPage() {
   useEffect(() => {
     let alive = true;
     async function load() {
-      if (!supabase) { setLoadError("Supabase is not configured."); setLoading(false); return; }
-      const { data: session } = await supabase.auth.getSession();
+      if (!identityApi.isConfigured()) { setLoadError("Supabase is not configured."); setLoading(false); return; }
+      const { data: session } = await identityApi.getSession();
       if (!session.session) { navigate("/auth", { replace: true }); return; }
       const { data, error } = await listApps();
       if (!alive) return;
@@ -107,8 +107,8 @@ export default function DeveloperCreateTestPage() {
   }
 
   async function publishDraft() {
-    if (!supabase || !selected) return;
-    const { data: auth } = await supabase.auth.getUser();
+    if (!identityApi.isConfigured() || !selected) return;
+    const { data: auth } = await identityApi.getCurrentUser();
     if (!auth.user) { navigate("/auth", { replace: true }); return; }
     setSaving(true); setSaveError("");
     const { data, error } = await createTestDraft({
