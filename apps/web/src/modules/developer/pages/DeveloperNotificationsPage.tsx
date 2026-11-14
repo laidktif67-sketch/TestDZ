@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { listDeveloperNotifications, markDeveloperNotificationRead, markAllDeveloperNotificationsRead, setDeveloperNotificationArchived } from "../../../features/notifications/notifications-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-notifications.css";
@@ -85,14 +85,9 @@ export default function DeveloperNotificationsPage() {
   useEffect(() => {
     let alive = true;
     async function load() {
-      if (!supabase || !user?.id) { setLoading(false); return; }
+      if (!user?.id) { setLoading(false); return; }
       setLoading(true); setError("");
-      const result = await supabase.from("notifications")
-        .select("id,user_id,type,title,body,data,read_at,archived_at,created_at")
-        .eq("user_id", user.id)
-        .eq("recipient_role", "developer")
-        .order("created_at", { ascending: false })
-        .limit(500);
+      const result = await listDeveloperNotifications(user.id);
       if (!alive) return;
       if (result.error) {
         setError("Could not load notifications. Refresh the page and try again.");
@@ -132,28 +127,28 @@ export default function DeveloperNotificationsPage() {
 
   useEffect(() => { setPage(1); }, [filter, range, search, showArchived]);
   async function markRead(row: NotificationRow) {
-    if (!supabase || !user?.id || row.read_at) return;
+    if (!user?.id || row.read_at) return;
     setBusy(true); setError("");
     const readAt = new Date().toISOString();
-    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("id", row.id).eq("user_id", user.id).eq("recipient_role", "developer");
+    const result = await markDeveloperNotificationRead(row.id, user.id, readAt);
     if (result.error) setError("Could not mark this notification as read.");
     else setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
     setBusy(false);
   }
   async function markAllRead() {
-    if (!supabase || !user?.id || unread === 0) return;
+    if (!user?.id || unread === 0) return;
     setBusy(true); setError("");
     const readAt = new Date().toISOString();
-    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("user_id", user.id).eq("recipient_role", "developer").is("read_at", null).is("archived_at", null);
+    const result = await markAllDeveloperNotificationsRead(user.id, readAt);
     if (result.error) setError("Could not mark all notifications as read.");
     else setRows(current => current.map(item => !item.archived_at && !item.read_at ? { ...item, read_at: readAt } : item));
     setBusy(false);
   }
   async function archive(row: NotificationRow) {
-    if (!supabase || !user?.id) return;
+    if (!user?.id) return;
     setBusy(true); setError("");
     const archivedAt = row.archived_at ? null : new Date().toISOString();
-    const result = await supabase.from("notifications").update({ archived_at: archivedAt }).eq("id", row.id).eq("user_id", user.id);
+    const result = await setDeveloperNotificationArchived(row.id, user.id, archivedAt);
     if (result.error) setError("Could not update the archive state. Please try again.");
     else {
       setRows(current => current.map(item => item.id === row.id ? { ...item, archived_at: archivedAt } : item));
