@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { identityApi } from "../auth/identity-api";
-import { useIdentity } from "../auth/hooks/useIdentity";
+import { identityApi } from "../../features/identity/identity-api";
+import { useIdentity } from "../../features/identity/hooks/useIdentity";
 import "./route-guards.css";
 
 type AccountStatus = "loading" | "active" | "banned" | "error";

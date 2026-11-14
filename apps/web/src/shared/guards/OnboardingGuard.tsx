@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useIdentity } from "../auth/hooks/useIdentity";
+import { useIdentity } from "../../features/identity/hooks/useIdentity";
 import { profilesApi } from "../../features/profiles/profiles-api";
 import { getHomePath } from "./RoleGuard";
 import "./route-guards.css";

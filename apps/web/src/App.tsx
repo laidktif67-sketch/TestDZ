@@ -1,4 +1,4 @@
-import { IdentityProvider } from "./shared/auth/identity-provider";
+import { IdentityProvider } from "./features/identity/identity-provider";
 import AppRoutes from "./AppRoutes";
 
 export default function App() {
