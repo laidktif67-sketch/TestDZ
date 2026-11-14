@@ -34,6 +34,10 @@ export const identityApi = {
     return getClient().auth.signOut();
   },
 
+  signOutOtherSessions() {
+    return getClient().auth.signOut({ scope: "others" });
+  },
+
   getCurrentUser() {
     return getClient().auth.getUser();
   },
