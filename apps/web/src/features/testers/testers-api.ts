@@ -16,9 +16,13 @@ export function listDeveloperTesterAssignments(testIds: string[]) {
     .in("test_id", testIds).order("updated_at", { ascending: false }).limit(3000);
 }
 
+export function listTesterProfilesByIds(profileIds: string[]) {
+  return getClient().from("profiles").select("id,display_name,avatar_url").in("id", profileIds);
+}
+
 export function listDeveloperTesterProfiles(profileIds: string[]) {
   if (!profileIds.length) return Promise.resolve({ data: [], error: null });
-  return getClient().from("profiles").select("id,display_name,avatar_url").in("id", profileIds);
+  return listTesterProfilesByIds(profileIds);
 }
 
 

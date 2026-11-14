@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { listTesterProfilesByIds } from "./testers-api";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -17,8 +18,7 @@ export function listTesterLeaderboardTesterIds() {
 }
 
 export function listTesterLeaderboardProfiles(userIds: string[]) {
-  return getClient().from("profiles")
-    .select("id,display_name,avatar_url").in("id", userIds);
+  return listTesterProfilesByIds(userIds);
 }
 
 export function listTesterLeaderboardPoints(userIds: string[]) {
