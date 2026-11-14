@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
+import { listTesterNotifications, markTesterNotificationRead, markAllTesterNotificationsRead } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/notifications-center.css";
@@ -91,7 +92,7 @@ export default function NotificationsCenterPage() {
       setLoading(true); setError("");
       const since = new Date(Date.now() - 30 * 86400000).toISOString();
       const [notificationResult, rewardsResult, assignmentResult] = await Promise.all([
-        supabase.from("notifications").select("id,type,title,body,data,read_at,created_at").eq("user_id", user.id).eq("recipient_role", "tester").order("created_at", { ascending: false }).limit(100),
+        listTesterNotifications(user.id),
         supabase.from("points_ledger").select("amount").eq("user_id", user.id).eq("wallet_type", "earned_points").gt("created_at", since),
         supabase.from("assignments").select("id,test:tests(end_date)").eq("tester_id", user.id)
       ]);
@@ -127,7 +128,7 @@ export default function NotificationsCenterPage() {
     if (row.read_at || !supabase || !user?.id) return;
     setBusyId(row.id); setNotice(""); setError("");
     const readAt = new Date().toISOString();
-    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("id", row.id).eq("user_id", user.id);
+    const result = await markTesterNotificationRead(row.id, user.id, readAt);
     setBusyId("");
     if (result.error) { setError("Could not update this notification. Please try again."); return; }
     setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
@@ -136,7 +137,7 @@ export default function NotificationsCenterPage() {
     if (!supabase || !user?.id || unread === 0) return;
     setSaving(true); setNotice(""); setError("");
     const readAt = new Date().toISOString();
-    const result = await supabase.from("notifications").update({ read_at: readAt }).eq("user_id", user.id).is("read_at", null);
+    const result = await markAllTesterNotificationsRead(user.id, readAt);
     setSaving(false);
     if (result.error) { setError("Could not mark all notifications as read. Please try again."); return; }
     setRows(current => current.map(item => item.read_at ? item : { ...item, read_at: readAt }));

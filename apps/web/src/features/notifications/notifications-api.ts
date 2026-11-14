@@ -28,3 +28,21 @@ export function setDeveloperNotificationArchived(notificationId: string, userId:
   return getClient().from("notifications").update({ archived_at: archivedAt })
     .eq("id", notificationId).eq("user_id", userId);
 }
+
+/** Data access for the tester notification inbox; existing RLS remains authoritative. */
+export function listTesterNotifications(userId: string) {
+  return getClient().from("notifications")
+    .select("id,type,title,body,data,read_at,created_at")
+    .eq("user_id", userId).eq("recipient_role", "tester")
+    .order("created_at", { ascending: false }).limit(100);
+}
+
+export function markTesterNotificationRead(notificationId: string, userId: string, readAt: string) {
+  return getClient().from("notifications").update({ read_at: readAt })
+    .eq("id", notificationId).eq("user_id", userId);
+}
+
+export function markAllTesterNotificationsRead(userId: string, readAt: string) {
+  return getClient().from("notifications").update({ read_at: readAt })
+    .eq("user_id", userId).is("read_at", null);
+}
