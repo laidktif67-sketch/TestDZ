@@ -33,3 +33,26 @@ export function createTestDraft(input: CreateTestDraftInput) {
     .select("id")
     .single();
 }
+
+
+/** List the signed-in developer's tests; existing RLS remains authoritative. */
+export function listDeveloperTests(developerId: string) {
+  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
+
+  return supabase
+    .from("tests")
+    .select("id,title,status,created_at,start_date,end_date,app:apps(name,icon_url)")
+    .eq("developer_id", developerId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+}
+
+/** List assignment summaries for tests owned by the developer. */
+export function listDeveloperTestAssignments(developerId: string) {
+  if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
+
+  return supabase
+    .from("assignments")
+    .select("test_id,tester_id,status,tests!inner(developer_id)")
+    .eq("tests.developer_id", developerId);
+}

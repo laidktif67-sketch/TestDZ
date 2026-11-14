@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { listDeveloperTests, listDeveloperTestAssignments } from "../../../features/tests/tests-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/developer-my-tests.css";
@@ -12,7 +13,7 @@ function Icon({name}:{name:string}){const p:Record<string,React.ReactNode>={home
 export default function DeveloperMyTestsPage(){
  const {roles}=useIdentity(); const navigate=useNavigate(); const [rows,setRows]=useState<TestRow[]>([]); const [assignments,setAssignments]=useState<{test_id:string;tester_id:string;status:string}[]>([]); const [loading,setLoading]=useState(true); const [error,setError]=useState(""); const [query,setQuery]=useState(""); const [filter,setFilter]=useState("all");
  const developer=roles.includes("developer")||roles.includes("admin");
- useEffect(()=>{let alive=true;const load=async()=>{if(!supabase){setError("Supabase is not configured.");setLoading(false);return;}const {data:s}=await supabase.auth.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return;}const [testsRes,assignRes]=await Promise.all([supabase.from("tests").select("id,title,status,created_at,start_date,end_date,app:apps(name,icon_url)").eq("developer_id",user.id).order("created_at",{ascending:false}).limit(200),supabase.from("assignments").select("test_id,tester_id,status,tests!inner(developer_id)").eq("tests.developer_id",user.id)]);if(!alive)return;if(testsRes.error)setError("Could not load your tests. Check your connection and permissions.");else setRows((testsRes.data??[]) as unknown as TestRow[]);if(!assignRes.error)setAssignments((assignRes.data??[]) as unknown as {test_id:string;tester_id:string;status:string}[]);setLoading(false);};void load();return()=>{alive=false}},[navigate]);
+ useEffect(()=>{let alive=true;const load=async()=>{if(!supabase){setError("Supabase is not configured.");setLoading(false);return;}const {data:s}=await supabase.auth.getSession();const user=s.session?.user;if(!user){navigate("/auth",{replace:true});return;}const [testsRes,assignRes]=await Promise.all([listDeveloperTests(user.id),listDeveloperTestAssignments(user.id)]);if(!alive)return;if(testsRes.error)setError("Could not load your tests. Check your connection and permissions.");else setRows((testsRes.data??[]) as unknown as TestRow[]);if(!assignRes.error)setAssignments((assignRes.data??[]) as unknown as {test_id:string;tester_id:string;status:string}[]);setLoading(false);};void load();return()=>{alive=false}},[navigate]);
  const counts=useMemo(()=>({all:rows.length,running:rows.filter(r=>statusOf(r.status)==="running").length,recruiting:rows.filter(r=>statusOf(r.status)==="recruiting").length,completed:rows.filter(r=>statusOf(r.status)==="completed").length,failed:rows.filter(r=>statusOf(r.status)==="failed").length}),[rows]);
  const uniqueTesters=useMemo(()=>new Set(assignments.map(a=>a.tester_id).filter(Boolean)).size,[assignments]);
  const completedRatio=rows.length?Math.round(counts.completed/rows.length*100):0;
