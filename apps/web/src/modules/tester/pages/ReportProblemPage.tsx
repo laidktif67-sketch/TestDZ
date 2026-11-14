@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { FormEvent, DragEvent } from "react";
 import { Link } from "react-router-dom";
-import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/report-problem.css";
