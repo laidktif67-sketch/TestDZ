@@ -74,8 +74,8 @@ The 96 route declarations include the wildcard route and a redirect alias; they 
 |---|---|
 | GitHub tree and route-source inspection | Completed at the remote SHA above |
 | Local branch/HEAD/worktree inspection | Not available through the remote GitHub API; must run in Termux |
-| Local TypeScript command on this exact SHA | Not run in this checkpoint |
-| Local build on this exact SHA | Not run in this checkpoint |
+| Local TypeScript command on this exact SHA | Not confirmed in this checkpoint |
+| Local build on this exact SHA | User reports successful production build on this SHA; raw output not captured here |
 | SQL tests on a controlled test database | Not run in this checkpoint |
 | Route/browser smoke tests | Not run in this checkpoint |
 | Import/dependency-cycle graph | Not generated in this checkpoint |
