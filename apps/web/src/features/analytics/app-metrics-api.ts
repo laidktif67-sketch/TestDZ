@@ -1,4 +1,8 @@
 import { supabase } from "../../lib/supabase";
+import {
+  listDeveloperAnalyticsAssignments,
+  listDeveloperAnalyticsFeedback,
+} from "./analytics-api";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -11,11 +15,9 @@ export function listAppMetricTests(appIds: string[]) {
 }
 
 export function listAppMetricAssignments(testIds: string[]) {
-  if (!testIds.length) return Promise.resolve({ data: [], error: null });
-  return getClient().from("assignments").select("id,test_id,tester_id,status,created_at,updated_at").in("test_id", testIds).limit(5000);
+  return listDeveloperAnalyticsAssignments(testIds);
 }
 
 export function listAppMetricFeedback(assignmentIds: string[]) {
-  if (!assignmentIds.length) return Promise.resolve({ data: [], error: null });
-  return getClient().from("feedback").select("id,assignment_id,rating,created_at").in("assignment_id", assignmentIds).limit(5000);
+  return listDeveloperAnalyticsFeedback(assignmentIds);
 }
