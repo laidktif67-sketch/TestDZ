@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Brand } from "../shared/components/Brand";
 import { identityApi } from "../features/identity/identity-api";
 import { getPostAuthRoute } from "../lib/auth-routing";
-import { identityApi } from "../features/identity/identity-api";
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();

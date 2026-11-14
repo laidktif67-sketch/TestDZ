@@ -218,7 +218,7 @@ export default function DeveloperDashboardPage() {
       if(alive)setLoading(false);
     };
     void load();
-    const {data}=client.auth.onAuthStateChange(()=>{void load();});
+    const {data}=identityApi.onAuthStateChange(()=>{void load();});
     return()=>{alive=false;data.subscription.unsubscribe();};
   },[previewMode]);
 
