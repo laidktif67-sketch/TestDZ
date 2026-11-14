@@ -68,3 +68,12 @@ Continue with focused negative-path runtime validation before moving another dom
 6. Record each check as passed, failed, or not tested; never infer a pass from code inspection alone.
 
 Until those checks are evidenced, classify identity as **static/build validated and basic successful-path smoke-tested; negative-path runtime validation pending**.
+
+
+## Follow-up source-review observation (not yet classified as a defect)
+
+A focused source review on the current branch found that `identity-api.ts` accepts the `support` role in its allowlist, while `RoleGuard` only defines guarded workspaces for `tester`, `developer`, and `admin`. `getHomePath()` falls back to `/profile` when no recognized workspace role is present, and `/profile` currently renders `TesterProfilePage`.
+
+This is a routing/role-contract question, not proof of an authorization bypass. Do not change role grants, guard order, or destination behavior until the intended `support` user journey is confirmed. Add a dedicated support destination only if that is the approved product behavior, and then test both allowed and denied destinations for a support-only account.
+
+Status: **requires product/owner confirmation; no code change made**.
