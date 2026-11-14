@@ -1,4 +1,5 @@
 export type AppStatus = "draft" | "published" | "paused" | "archived";
+export type AppDistributionMethod = "external_link" | "apk_upload";
 
 export interface AppRecord {
   id: string;
@@ -8,6 +9,8 @@ export interface AppRecord {
   description: string | null;
   category: string;
   icon_url: string | null;
+  distribution_method?: AppDistributionMethod;
+  distribution_url?: string | null;
   status: AppStatus;
   created_at: string;
 }
