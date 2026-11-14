@@ -72,8 +72,8 @@ export default function DeveloperAddAppPage() {
   async function chooseIcon(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setError("Choose a PNG, JPG, or WebP image.");
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      setError("Choose a PNG or JPG image.");
       return;
     }
     try {
@@ -176,7 +176,7 @@ export default function DeveloperAddAppPage() {
           <section className="daa-panel">
             <div className="daa-panel-title"><span><Icon name="box" size={25}/></span><div><h2>Application Information</h2><p>Provide the basic information about your application</p></div></div>
             <div className="daa-form-grid">
-              <div className="daa-field daa-icon-field"><label htmlFor="daa-icon">App Icon <em>*</em></label><label className="daa-upload" htmlFor="daa-icon">{preview ? <img src={preview} alt="App icon preview"/> : <><Icon name="upload" size={30}/><strong>Upload Icon</strong><small>PNG, JPG or WebP (512 × 512 px)</small></>}<input id="daa-icon" type="file" accept="image/png,image/jpeg,image/webp" onChange={event => void chooseIcon(event)} /></label></div>
+              <div className="daa-field daa-icon-field"><label htmlFor="daa-icon">App Icon <em>*</em></label><label className="daa-upload" htmlFor="daa-icon">{preview ? <img src={preview} alt="App icon preview"/> : <><Icon name="upload" size={30}/><strong>Upload Icon</strong><small>PNG or JPG (512 × 512 px)</small></>}<input id="daa-icon" type="file" accept="image/png,image/jpeg" onChange={event => void chooseIcon(event)} /></label></div>
               <label className="daa-field">App Name <em>*</em><input required minLength={3} maxLength={50} value={name} onChange={event => setName(event.target.value)} placeholder="Enter application name..." /><small className="daa-count">{name.length}/50</small></label>
               <label className="daa-field">Package ID <em>*</em><input required dir="ltr" value={packageName} onChange={event => setPackageName(event.target.value)} placeholder="e.g. com.example.myapp" /><small>Use the unique Android application ID.</small></label>
               <label className="daa-field">Category <em>*</em><select value={category} onChange={event => setCategory(event.target.value as Category)}>{categories.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
