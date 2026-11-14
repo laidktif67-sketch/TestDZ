@@ -25,9 +25,15 @@ export function getDeveloperFeedbackDetails(feedbackId: string, developerId: str
 
 export function getDeveloperFeedbackReview(feedbackId: string, options?: { includeId?: boolean }) {
   const query = getClient().from("developer_feedback_reviews");
-  return options?.includeId
+  const result = options?.includeId
     ? query.select("id,status,priority").eq("feedback_id", feedbackId).maybeSingle()
     : query.select("status,priority").eq("feedback_id", feedbackId).maybeSingle();
+
+  // Keep the runtime-selected review fields typed while generated DB types catch up.
+  return result as unknown as {
+    data: { id?: string; status?: string | null; priority?: string | null } | null;
+    error: { message?: string } | null;
+  };
 }
 
 export function listDeveloperFeedbackMessages(feedbackId: string) {
