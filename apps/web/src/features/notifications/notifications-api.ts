@@ -53,3 +53,14 @@ export function countTesterUnreadNotifications(userId: string) {
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId).is("read_at", null);
 }
+
+/** Earned-point ledger rows from the requested time window for the tester inbox summary. */
+export function listTesterRecentEarnedPoints(userId: string, since: string) {
+  return getClient().from("points_ledger").select("amount")
+    .eq("user_id", userId).eq("wallet_type", "earned_points").gt("created_at", since);
+}
+
+/** Tester assignments and related test end dates used for upcoming-deadline counts. */
+export function listTesterUpcomingAssignments(userId: string) {
+  return getClient().from("assignments").select("id,test:tests(end_date)").eq("tester_id", userId);
+}

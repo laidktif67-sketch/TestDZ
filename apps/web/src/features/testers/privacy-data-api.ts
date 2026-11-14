@@ -59,3 +59,28 @@ export function listPrivacyActivityFeedback(userId: string) {
 export function listPrivacyActivityLedger(userId: string) {
   return getClient().from("points_ledger").select("id,wallet_type,amount,reason,created_at").eq("user_id", userId);
 }
+
+/** Full profile row used by the existing settings data export. */
+export function listSettingsExportProfile(userId: string) {
+  return getClient().from("profiles").select("*").eq("id", userId).maybeSingle();
+}
+
+/** Notification rows included in the existing settings data export. */
+export function listSettingsExportNotifications(userId: string) {
+  return getClient().from("notifications").select("*").eq("user_id", userId);
+}
+
+/** Check-in rows included in the existing settings data export. */
+export function listSettingsExportCheckins(userId: string) {
+  return getClient().from("checkins").select("*").eq("tester_id", userId);
+}
+
+/** Feedback rows included in the existing settings data export. */
+export function listSettingsExportFeedback(userId: string) {
+  return getClient().from("feedback").select("*").eq("tester_id", userId);
+}
+
+/** Ledger rows included in the existing settings data export. */
+export function listSettingsExportLedger(userId: string) {
+  return getClient().from("points_ledger").select("*").eq("user_id", userId);
+}

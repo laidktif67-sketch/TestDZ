@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { listTesterNotifications, markTesterNotificationRead, markAllTesterNotificationsRead } from "../../../features/notifications/notifications-api";
+import { listTesterNotifications, markTesterNotificationRead, markAllTesterNotificationsRead, listTesterRecentEarnedPoints, listTesterUpcomingAssignments } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/notifications-center.css";
@@ -93,8 +93,8 @@ export default function NotificationsCenterPage() {
       const since = new Date(Date.now() - 30 * 86400000).toISOString();
       const [notificationResult, rewardsResult, assignmentResult] = await Promise.all([
         listTesterNotifications(user.id),
-        supabase.from("points_ledger").select("amount").eq("user_id", user.id).eq("wallet_type", "earned_points").gt("created_at", since),
-        supabase.from("assignments").select("id,test:tests(end_date)").eq("tester_id", user.id)
+        listTesterRecentEarnedPoints(user.id, since),
+        listTesterUpcomingAssignments(user.id)
       ]);
       if (!alive) return;
       if (notificationResult.error) setError("Could not load your notifications. Please refresh and try again.");
