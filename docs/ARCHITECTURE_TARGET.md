@@ -3,7 +3,7 @@
 
 **Status:** approved target direction; migration not yet complete  
 **Repository:** `laidktif67-sketch/TestDZ`  
-**Current migration ref:** `refactor/feature-based-architecture` at `09dd9f6f6b76f3ecc7f9dc4f439abd5b2ef9cb67` (route inventory check passed; user reports production build passed; typecheck result for this exact commit not yet confirmed here)  
+**Identity-boundary baseline reviewed:** `207e6e0bf181648e572473e20985cf88c6250eed` (identity import inventory run locally; source migration below requires local typecheck/build validation)  
 **Scope:** architecture and controlled migration plan only. This document does not authorize a rewrite, database changes, production deployment, or merge to `main`.
 
 ## 1. Architectural decision
@@ -91,12 +91,13 @@ This is a target map, not a claim that these directories all exist today. Create
 
 ## 3. Identity, authentication and authorization: one source of truth
 
-The current canonical implementation is under `apps/web/src/shared/auth/`; run `node scripts/audit-identity-boundary.mjs` from the repository root to inventory direct consumers before changing ownership:
+The canonical identity implementation now belongs to `apps/web/src/features/identity/`:
 
 - `identity-api.ts`: Supabase Auth/session access and account/role reads.
 - `identity-provider.tsx`, `identity-context.ts`, `hooks/useIdentity.ts`: session, user, role state and its React context.
-- `shared/guards/AuthGuard.tsx`, `OnboardingGuard.tsx`, `RoleGuard.tsx`: route access and redirects.
-- `features/identity/identity-api.ts`, `identity-context.ts`, and `identity-provider.tsx` currently re-export the canonical shared implementation. They are compatibility facades, not a second identity service; retain them until the import graph proves they have no consumers and a migration removes them safely.
+- `shared/auth/identity-api.ts`, `identity-context.ts`, `identity-provider.tsx`, and `hooks/useIdentity.ts` are compatibility facades that re-export the feature implementation. Existing consumers remain on their current imports for now.
+- `shared/guards/AuthGuard.tsx`, `OnboardingGuard.tsx`, `RoleGuard.tsx` remain in place and continue to use the compatibility paths.
+- The ownership inversion preserves one provider/session implementation; it does not add a second auth listener or change backend contracts.
 
 Target policy:
 
@@ -186,8 +187,8 @@ The source tree contains 29 admin page files, 18 developer page files, 33 tester
 ## 8. Files and boundaries to leave in place for now
 
 - `apps/web/src/main.tsx` and global CSS imports.
-- `apps/web/src/shared/auth/` as the canonical identity implementation.
-- `apps/web/src/shared/guards/` and `apps/web/src/features/identity/` compatibility re-exports.
+- `apps/web/src/shared/auth/` compatibility facades and `apps/web/src/shared/guards/`.
+- The canonical identity implementation under `apps/web/src/features/identity/`.
 - `apps/web/src/components/ui/Card.tsx` and `apps/web/src/shared/components/ui/Card.tsx`.
 - `apps/web/src/lib/supabase.ts`, existing feature API files and all Supabase database types.
 - All existing page and module CSS until its owner moves in an isolated change.
@@ -214,8 +215,9 @@ No existing folder is declared “unnecessary” solely because it is absent fro
 - Gate: typecheck, build, route inventory diff (expected zero route differences), guard/redirect tests, and a manual smoke test for public, tester, developer and admin paths. Stop on any unexplained difference.
 
 ### Stage 2 — Canonical identity boundary
-- Run `node scripts/audit-identity-boundary.mjs` to inventory direct imports and feature-to-shared edges for `shared/auth` and `features/identity`; preserve compatibility exports while consumers are migrated.
-- Decide the final canonical path only after consumer counts and test coverage are known.
+- Inventory imports with `node scripts/audit-identity-boundary.mjs`; the initial report showed 52 direct consumers of the shared hook and 11 of the shared API.
+- Make `features/identity` canonical while keeping `shared/auth` compatibility re-exports so existing consumers do not all need to change in one pass.
+- Migrate consumers in small batches later; remove compatibility files only after a repository-wide search proves there are no old-path imports.
 - Gate: one provider/session source, role loading/error and banned-account behavior preserved, and no changes to Supabase authorization contracts.
 
 ### Stage 3 — Shared UI and icons
