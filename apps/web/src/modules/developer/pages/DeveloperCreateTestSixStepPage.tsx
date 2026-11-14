@@ -196,9 +196,9 @@ export default function DeveloperCreateTestSixStepPage() {
           </button>)}
         </nav>
 
-        <div className="dct-workspace">
+        <div className={"dct-workspace dct-workspace-step-" + step}>
           <section className="dct-main-card">
-            <div className="dct-section-heading">
+            <div className={"dct-section-heading dct-step-heading-" + step}>
               <span className="dct-heading-icon"><Icon name={step === 2 ? "apps" : step === 4 ? "users" : step === 5 ? "calendar" : step === 6 ? "check" : "tests"} size={25} /></span>
               <div><h2>{steps[step - 1]}</h2><p>{[
                 "Choose the testing campaign type that matches your goal.",
