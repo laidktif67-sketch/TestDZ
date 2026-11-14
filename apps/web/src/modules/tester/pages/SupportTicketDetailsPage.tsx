@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { getTesterSupportTicket, listTesterSupportMessages, listTesterSupportAttachments, createTesterSupportMessage, createTesterSupportAttachment, uploadTesterSupportAttachment, getTesterSupportAttachmentUrl } from "../../../features/support/support-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -24,7 +24,7 @@ export default function SupportTicketDetailsPage(){
  const firstName=name.split(/[\s._-]+/)[0]||"Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
  const load=useCallback(async()=>{
-  if(!supabase||!user||!id){setLoading(false);return;}
+  if(!identityApi.isConfigured()||!user||!id){setLoading(false);return;}
   setLoading(true);setError("");
   const {data:ticketData,error:ticketError}=await getTesterSupportTicket(id);
   if(ticketError||!ticketData){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setLoading(false);return;}
@@ -41,7 +41,7 @@ export default function SupportTicketDetailsPage(){
  const canReply=!!ticket&&ticket.status!=="closed"&&(ticket.user_id===user?.id||roles.includes("support")||roles.includes("admin"));
  const customerMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===ticket?.user_id).map(m=>m.id)),[messages,ticket?.user_id]);
  async function sendReply(event:FormEvent<HTMLFormElement>){
-  event.preventDefault();if(!supabase||!user||!ticket||!reply.trim())return;
+  event.preventDefault();if(!identityApi.isConfigured()||!user||!ticket||!reply.trim())return;
   setSending(true);setError("");setNotice("");
   if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
    setSending(false);setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
@@ -59,7 +59,7 @@ export default function SupportTicketDetailsPage(){
   setSending(false);setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
  }
  async function openAttachment(item:Attachment){
-  if(!supabase){return;}setError("");
+  if(!identityApi.isConfigured()){return;}setError("");
   const {data,error:storageError}=await getTesterSupportAttachmentUrl(item.storage_path);
   if(storageError||!data?.signedUrl){setError("This attachment is not available or you do not have permission to access it.");return;}
   window.open(data.signedUrl,"_blank","noopener,noreferrer");
