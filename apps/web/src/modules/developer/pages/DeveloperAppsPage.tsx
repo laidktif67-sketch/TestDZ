@@ -6,7 +6,7 @@ import type { AppLimit, AppRecord } from "@testdz/types";
 import { identityApi } from "../../../features/identity/identity-api";
 import { APP_CATEGORIES, appError } from "../../../lib/app-utils";
 import { createApp, getAppLimit, listApps, uploadAppIcon } from "../../../features/apps/apps-api";
-import { listAppMetricTests, listAppMetricAssignments, listAppMetricFeedback } from "../../../features/analytics/analytics-api";
+import { listAppMetricTests, listAppMetricAssignments, listAppMetricFeedback } from "../../../features/analytics/app-metrics-api";
 import "../styles/developer-apps.css";
 
 type Filter = "all" | "published" | "draft" | "paused" | "archived";
