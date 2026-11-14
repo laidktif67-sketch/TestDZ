@@ -84,3 +84,27 @@ export function createFeedbackAttachmentMetadata(values: { feedback_id: string; 
     .from("developer_feedback_attachments")
     .insert(values);
 }
+
+/** Tester profile fields used by the feedback-history header. */
+export function getTesterFeedbackProfile(userId: string) {
+  return getClient().from("profiles")
+    .select("display_name,avatar_url")
+    .eq("id", userId)
+    .maybeSingle();
+}
+
+/** Feedback rows and related test/app display data for a tester's own history. */
+export function listTesterFeedbackHistory(testerId: string) {
+  return getClient().from("feedback")
+    .select("id,assignment_id,rating,body,category,quality_status,reviewed_at,created_at,assignment:assignments(id,test:tests(id,title,app:apps(name,icon_url)))")
+    .eq("tester_id", testerId)
+    .order("created_at", { ascending: false });
+}
+
+/** Existing earned-points ledger rows used to display feedback rewards. */
+export function listTesterFeedbackRewards(userId: string) {
+  return getClient().from("points_ledger")
+    .select("amount,reference_id,reference_type")
+    .eq("user_id", userId)
+    .eq("wallet_type", "earned_points");
+}
