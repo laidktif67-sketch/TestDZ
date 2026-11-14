@@ -20,6 +20,8 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          distribution_method: string
+          distribution_url: string | null
           developer_id: string
           icon_url: string | null
           id: string
@@ -34,6 +36,8 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          distribution_method?: string
+          distribution_url?: string | null
           developer_id: string
           icon_url?: string | null
           id?: string
@@ -48,6 +52,8 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          distribution_method?: string
+          distribution_url?: string | null
           developer_id?: string
           icon_url?: string | null
           id?: string
@@ -1992,6 +1998,8 @@ export type Database = {
           short_summary: string | null
           start_date: string | null
           status: string
+          test_type: string
+          test_config: Json
           tester_instructions: string | null
           title: string
           updated_at: string
@@ -2012,6 +2020,8 @@ export type Database = {
           short_summary?: string | null
           start_date?: string | null
           status?: string
+          test_type?: string
+          test_config?: Json
           tester_instructions?: string | null
           title: string
           updated_at?: string
@@ -2032,6 +2042,8 @@ export type Database = {
           short_summary?: string | null
           start_date?: string | null
           status?: string
+          test_type?: string
+          test_config?: Json
           tester_instructions?: string | null
           title?: string
           updated_at?: string
@@ -2138,6 +2150,16 @@ export type Database = {
           p_description: string
           p_name: string
           p_package_name: string
+        }
+        Returns: string
+      }
+      create_app_with_distribution: {
+        Args: {
+          p_category: string
+          p_description: string
+          p_name: string
+          p_package_name: string
+          p_distribution_url: string
         }
         Returns: string
       }
