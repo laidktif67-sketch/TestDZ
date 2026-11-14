@@ -75,6 +75,11 @@ export default function DeveloperCreateTestSixStepPage() {
   const [appVersion, setAppVersion] = useState("latest_available");
   const [releaseMode, setReleaseMode] = useState<"immediately" | "scheduled">("immediately");
   const [releaseAt, setReleaseAt] = useState("");
+  const [durationDays, setDurationDays] = useState<"7" | "14" | "30" | "custom">("14");
+  const [allowMoreTesters, setAllowMoreTesters] = useState(true);
+  const [joiningMethod, setJoiningMethod] = useState<"google_play_link" | "closed_group" | "upload_list" | "open_testing">("google_play_link");
+  const [collectFeedback, setCollectFeedback] = useState(true);
+  const [enableBugReports, setEnableBugReports] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
@@ -175,6 +180,7 @@ export default function DeveloperCreateTestSixStepPage() {
       testConfig: {
         cohort: { targetTesters: Math.max(1, Math.min(500, Math.floor(targetTesters))), notes: cohortNotes.trim() || null },
         rules: { androidVersion, instructions: instructions.trim() || null },
+        schedule: { durationDays: durationDays === "custom" ? null : Number(durationDays), allowMoreTesters, joiningMethod, collectFeedback, enableBugReports },
         googlePlay: {
           track: playTrack,
           testerMethod,
@@ -290,9 +296,52 @@ export default function DeveloperCreateTestSixStepPage() {
 
             {step === 4 && <div className="dct-form-grid"><label>Test title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={100} placeholder="e.g. Android usability test" /></label><label className="full">Test description<textarea value={description} onChange={e => setDescription(e.target.value)} maxLength={2000} placeholder="Describe what testers will evaluate and what success looks like…" /></label><p className="dct-field-note">Title and description are saved with the test campaign.</p></div>}
 
-            {step === 5 && <div className="dct-form-grid"><label>Target testers<input type="number" min={1} max={500} value={targetTesters} onChange={e => setTargetTesters(Number(e.target.value))} /></label><label>Start date<input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></label><label>End date<input type="date" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} /></label><label className="full">Cohort preferences (optional)<textarea value={cohortNotes} onChange={e => setCohortNotes(e.target.value)} maxLength={1000} placeholder="Device coverage, tester experience, or cohort notes…" /></label><label className="full">Tester instructions<textarea value={instructions} onChange={e => setInstructions(e.target.value)} maxLength={3000} placeholder="Describe the tasks testers should perform and what feedback is useful…" /></label><p className="dct-field-note">These dates, tester targets, and instructions are stored as draft configuration. No tester invitations are sent automatically.</p></div>}
+            {step === 5 && <div className="dct-schedule-layout">
+  <div className="dct-schedule-main">
+    <section className="dct-schedule-section">
+      <div className="dct-schedule-heading"><span className="dct-schedule-big-icon"><Icon name="calendar" size={27} /></span><div><h3>Test Duration</h3><p>Choose how long your test will run</p></div></div>
+      <div className="dct-duration-row">
+        <label className="dct-duration-select"><Icon name="calendar" size={21}/><select aria-label="Test duration" value={durationDays} onChange={e => { const next=e.target.value as typeof durationDays; setDurationDays(next); if(next !== "custom" && startDate) { const end=new Date(startDate+"T12:00:00"); end.setDate(end.getDate()+Number(next)); setEndDate(end.toISOString().slice(0,10)); } }}><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="custom">Custom duration</option></select></label>
+        <div className="dct-date-range"><Icon name="calendar" size={19}/><span>{startDate || "Choose start date"} – {endDate || "Choose end date"}</span></div>
+      </div>
+      <div className="dct-date-fields"><label>Start date<input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); if(durationDays !== "custom" && e.target.value) { const end=new Date(e.target.value+"T12:00:00"); end.setDate(end.getDate()+Number(durationDays)); setEndDate(end.toISOString().slice(0,10)); } }} /></label><label>End date<input type="date" value={endDate} min={startDate || undefined} onChange={e => { setEndDate(e.target.value); setDurationDays("custom"); }} /></label></div>
+    </section>
+    <section className="dct-schedule-section">
+      <div className="dct-schedule-heading"><span className="dct-schedule-big-icon"><Icon name="users" size={27}/></span><div><h3>Testers</h3><p>Select how many testers will participate</p></div></div>
+      <div className="dct-tester-count-row"><label className="dct-tester-count"><Icon name="users" size={23}/><span><strong>{targetTesters <= 100 ? "Up to " + targetTesters + " testers" : targetTesters + " testers"}</strong><small>Recommended: 20–100 testers</small></span><select aria-label="Target testers" value={targetTesters} onChange={e => setTargetTesters(Number(e.target.value))}>{[10,20,30,50,75,100,150,200,300,500].map(n=><option key={n} value={n}>{n} testers</option>)}</select></label><label className="dct-allow-more"><input type="checkbox" checked={allowMoreTesters} onChange={e => setAllowMoreTesters(e.target.checked)}/><span><strong>Allow more testers</strong><small>If needed</small></span></label></div>
+    </section>
+    <section className="dct-schedule-section">
+      <div className="dct-schedule-heading"><span className="dct-schedule-big-icon"><Icon name="arrow" size={27}/></span><div><h3>Joining Method</h3><p>Choose how testers will join your test</p></div></div>
+      <div className="dct-join-grid">
+        <button type="button" className={"dct-join-card "+(joiningMethod==="google_play_link"?"selected":"")} onClick={()=>setJoiningMethod("google_play_link")}><span className="dct-join-check">{joiningMethod==="google_play_link"?"✓":""}</span><span className="dct-join-symbol play">▶</span><strong>Google Play Link</strong><small>Share a link</small></button>
+        <button type="button" className={"dct-join-card "+(joiningMethod==="closed_group"?"selected":"")} onClick={()=>setJoiningMethod("closed_group")}><span className="dct-join-check">{joiningMethod==="closed_group"?"✓":""}</span><span className="dct-join-symbol group"><Icon name="users" size={29}/></span><strong>Closed Group</strong><small>Invite specific testers</small></button>
+        <button type="button" className={"dct-join-card "+(joiningMethod==="upload_list"?"selected":"")} onClick={()=>setJoiningMethod("upload_list")}><span className="dct-join-check">{joiningMethod==="upload_list"?"✓":""}</span><span className="dct-join-symbol upload">☁</span><strong>Upload List</strong><small>Add testers via CSV</small></button>
+        <button type="button" className={"dct-join-card "+(joiningMethod==="open_testing"?"selected":"")} onClick={()=>setJoiningMethod("open_testing")}><span className="dct-join-check">{joiningMethod==="open_testing"?"✓":""}</span><span className="dct-join-symbol globe">◎</span><strong>Open Testing</strong><small>Anyone with link</small></button>
+      </div>
+    </section>
+    <section className="dct-schedule-section dct-extra-settings">
+      <div className="dct-schedule-heading"><span className="dct-schedule-big-icon"><span aria-hidden="true">⚙</span></span><div><h3>Additional Settings</h3><p>Configure extra options for your test</p></div></div>
+      <div className="dct-toggle-grid"><label className="dct-toggle-option"><input type="checkbox" checked={collectFeedback} onChange={e=>setCollectFeedback(e.target.checked)}/><span className="dct-toggle-track"></span><span><strong>Collect Feedback</strong><small>Ask testers for feedback after testing</small></span></label><label className="dct-toggle-option"><input type="checkbox" checked={enableBugReports} onChange={e=>setEnableBugReports(e.target.checked)}/><span className="dct-toggle-track"></span><span><strong>Enable Bug Reports</strong><small>Allow testers to report bugs</small></span></label></div>
+    </section>
+    <label className="dct-cohort-notes">Cohort preferences (optional)<textarea value={cohortNotes} onChange={e=>setCohortNotes(e.target.value)} maxLength={1000} placeholder="Device coverage, tester experience, or cohort notes…"/></label>
+    <label className="dct-cohort-notes">Tester instructions<textarea value={instructions} onChange={e=>setInstructions(e.target.value)} maxLength={3000} placeholder="Describe the tasks testers should perform and what feedback is useful…"/></label>
+    <p className="dct-field-note">These settings are saved as draft configuration. TestDZ does not send invitations or publish to Google Play automatically.</p>
+  </div>
+  <aside className="dct-schedule-summary">
+    <div className="dct-schedule-summary-head"><Icon name="info" size={22}/><strong>Test Summary</strong></div>
+    <div className="dct-summary-app"><span className="dct-summary-play">▶</span><div><strong>{selectedType?.title ?? "Testing campaign"}</strong><p>Coordinate eligible testers before public release.</p></div></div>
+    <div className="dct-summary-list">
+      <div><Icon name="calendar" size={20}/><span>Duration</span><strong>{durationDays==="custom"?"Custom":durationDays+" days"}<small>{startDate||"Start date"} – {endDate||"End date"}</small></strong></div>
+      <div><Icon name="users" size={20}/><span>Testers</span><strong>{allowMoreTesters?"Up to ":""}{targetTesters} testers</strong></div>
+      <div><Icon name="arrow" size={20}/><span>Joining Method</span><strong>{joiningMethod==="google_play_link"?"Google Play Link":joiningMethod==="closed_group"?"Closed Group":joiningMethod==="upload_list"?"Upload List":"Open Testing"}</strong></div>
+      <div><Icon name="info" size={20}/><span>Feedback</span><strong>{collectFeedback?"Enabled":"Disabled"}</strong></div>
+      <div><Icon name="tests" size={20}/><span>Bug Reports</span><strong>{enableBugReports?"Enabled":"Disabled"}</strong></div>
+    </div>
+    <div className="dct-schedule-tip"><span>💡</span><div><strong>Pro Tip</strong><p>A good test duration is 1–2 weeks to gather meaningful feedback.</p></div></div>
+  </aside>
+</div>}
 
-            {step === 6 && <><div className="dct-review"><div><span>Test type</span><strong>{selectedType?.title ?? "Not selected"}</strong></div><div><span>Testing track</span><strong>{playTrack === "internal" ? "Internal Testing" : playTrack === "closed" ? "Closed Testing" : "Open Testing"}</strong></div><div><span>Tester access</span><strong>{testerMethod === "join_link" ? "Join Link" : testerMethod === "google_groups" ? "Google Groups" : "CSV list (" + testerEmails.length + ")"}</strong></div><div><span>Release preference</span><strong>{releaseMode === "immediately" ? "Immediately (draft)" : releaseAt || "Schedule not set"}</strong></div><div><span>Application</span><strong>{selected?.name ?? "Not selected"}</strong></div><div><span>Test title</span><strong>{title || "Not entered"}</strong></div><div><span>Target testers</span><strong>{targetTesters}</strong></div><div><span>Testing period</span><strong>{startDate || "Not set"} → {endDate || "Not set"}</strong></div><div><span>Android rule</span><strong>{androidVersion}</strong></div><div><span>App version preference</span><strong>{appVersion === "latest_available" ? "Latest available (unverified)" : "To be added later"}</strong></div><div><span>Campaign status</span><strong className="dct-review-draft">Draft</strong></div></div><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>Review & create draft</strong><p>Saving creates a TestDZ draft. It does not publish to Google Play, upload an APK, or automatically recruit testers.</p></div></div></>}
+            {step === 6 && <><div className="dct-review"><div><span>Test type</span><strong>{selectedType?.title ?? "Not selected"}</strong></div><div><span>Testing track</span><strong>{playTrack === "internal" ? "Internal Testing" : playTrack === "closed" ? "Closed Testing" : "Open Testing"}</strong></div><div><span>Tester access</span><strong>{testerMethod === "join_link" ? "Join Link" : testerMethod === "google_groups" ? "Google Groups" : "CSV list (" + testerEmails.length + ")"}</strong></div><div><span>Release preference</span><strong>{releaseMode === "immediately" ? "Immediately (draft)" : releaseAt || "Schedule not set"}</strong></div><div><span>Application</span><strong>{selected?.name ?? "Not selected"}</strong></div><div><span>Test title</span><strong>{title || "Not entered"}</strong></div><div><span>Target testers</span><strong>{targetTesters}{allowMoreTesters ? " (flexible)" : ""}</strong></div><div><span>Testing period</span><strong>{startDate || "Not set"} → {endDate || "Not set"}</strong></div><div><span>Duration</span><strong>{durationDays === "custom" ? "Custom" : durationDays + " days"}</strong></div><div><span>Joining method</span><strong>{joiningMethod === "google_play_link" ? "Google Play Link" : joiningMethod === "closed_group" ? "Closed Group" : joiningMethod === "upload_list" ? "Upload List" : "Open Testing"}</strong></div><div><span>Feedback</span><strong>{collectFeedback ? "Enabled" : "Disabled"}</strong></div><div><span>Bug reports</span><strong>{enableBugReports ? "Enabled" : "Disabled"}</strong></div><div><span>Android rule</span><strong>{androidVersion}</strong></div><div><span>App version preference</span><strong>{appVersion === "latest_available" ? "Latest available (unverified)" : "To be added later"}</strong></div><div><span>Campaign status</span><strong className="dct-review-draft">Draft</strong></div></div><div className="dct-capability dct-inline-note"><span><Icon name="info" size={22} /></span><div><strong>Review & create draft</strong><p>Saving creates a TestDZ draft. It does not publish to Google Play, upload an APK, or automatically recruit testers.</p></div></div></>}
 
             {saveError && <div className="dct-error" role="alert">{saveError}</div>}
             <div className="dct-tip"><span>💡</span><p><strong>Pro Tip:</strong> Clear tasks and useful feedback instructions help your campaign produce better results.</p></div>
