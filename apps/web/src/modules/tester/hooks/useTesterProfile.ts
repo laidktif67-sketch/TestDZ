@@ -19,6 +19,8 @@ export function useTesterProfile() {
     }
 
     let alive = true;
+    setName(user.email?.split("@")[0] || "Tester");
+    setAvatar("");
     setLoading(true);
     getTesterHeaderProfile(user.id)
       .then(({ data }) => {
