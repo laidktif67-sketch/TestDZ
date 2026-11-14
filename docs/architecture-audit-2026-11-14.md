@@ -64,7 +64,7 @@ The web CI workflow runs `npm install`, `npm run typecheck`, and `npm run build`
 
 ### 7. CI evidence must be interpreted carefully
 
-For PR #33 head `e6a7f8ea27c0c2a4d2f49e6fe9565f23cf741b2b`, the GitHub Actions runs for web CI, route inventory, and migration tests were marked failed at approximately two seconds, with no job steps reported and runner ID 0. This does not establish a source-code failure; the jobs appear not to have reached their first step. Their detailed job logs could not be retrieved through the connected API in this audit.
+For PR #33 head `e6a7f8ea27c0c2a4d2f49e6fe9565f23cf741b2b`, the GitHub Actions runs for web CI, route inventory, and migration tests were marked failed at approximately two seconds, with no job steps reported and runner ID 0. The route-inventory job for this audit PR (#34) was also retried once (run `43651143604`, attempt 2) and again failed in about two seconds with no steps and runner ID 0. This does not establish a source-code failure; these jobs appear not to have reached their first step. Detailed job logs could not be retrieved through the connected API in this audit.
 
 The Vercel status points to a build-rate-limit page. That is an external preview/build limitation, not proof that the app builds successfully or unsuccessfully. Do not report typecheck/build/SQL tests as passed on the current PR #33 head without a completed run.
 
