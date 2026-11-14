@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { countTesterSubmissionFeedback } from "./assignments-api";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -19,8 +20,7 @@ export function listActiveAssignmentCheckIns(assignmentId: string, testerId: str
 }
 
 export function countActiveAssignmentFeedback(assignmentId: string, testerId: string) {
-  return getClient().from("feedback").select("id", { count: "exact", head: true })
-    .eq("assignment_id", assignmentId).eq("tester_id", testerId);
+  return countTesterSubmissionFeedback(assignmentId, testerId);
 }
 
 export function getActiveAssignmentEarnedPoints(userId: string, assignmentId: string) {
