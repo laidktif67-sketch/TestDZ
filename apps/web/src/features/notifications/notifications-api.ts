@@ -26,7 +26,7 @@ export function markAllDeveloperNotificationsRead(userId: string, readAt: string
 
 export function setDeveloperNotificationArchived(notificationId: string, userId: string, archivedAt: string | null) {
   return getClient().from("notifications").update({ archived_at: archivedAt })
-    .eq("id", notificationId).eq("user_id", userId);
+    .eq("id", notificationId).eq("user_id", userId).eq("recipient_role", "developer");
 }
 
 /** Data access for the tester notification inbox; existing RLS remains authoritative. */
@@ -39,12 +39,12 @@ export function listTesterNotifications(userId: string) {
 
 export function markTesterNotificationRead(notificationId: string, userId: string, readAt: string) {
   return getClient().from("notifications").update({ read_at: readAt })
-    .eq("id", notificationId).eq("user_id", userId);
+    .eq("id", notificationId).eq("user_id", userId).eq("recipient_role", "tester");
 }
 
 export function markAllTesterNotificationsRead(userId: string, readAt: string) {
   return getClient().from("notifications").update({ read_at: readAt })
-    .eq("user_id", userId).is("read_at", null);
+    .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null);
 }
 
 /** Count unread notifications specifically addressed to the tester role. */
