@@ -34,6 +34,5 @@ export function useTesterPageHeader() {
     };
   }, [session?.user?.id]);
 
-  const firstName = name.split(/\s+/)[0] || "Tester";
-  return { roles, name, avatar, notifications, loading, firstName };
+  return { roles, name, avatar, notifications, loading: loading || profileLoading, firstName };
 }
