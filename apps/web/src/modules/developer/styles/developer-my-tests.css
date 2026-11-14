@@ -44,7 +44,7 @@
 .dmt-table-wrap td:first-child b,.dmt-table-wrap td:first-child small{display:block}.dmt-table-wrap td:first-child b{font-size:13px;color:#10275e}.dmt-table-wrap td:first-child small{color:#8190a9;margin-top:4px;font-size:11px}
 .dmt-table-wrap tbody tr:hover{background:#f8faff}
 .dmt-pill{padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800;text-transform:capitalize;display:inline-flex;align-items:center;gap:5px}
-.dmt-pill.running{background:#ddf7e9;color:#087b4b}.dmt-pill.recruiting{background:#e6efff;color:#1455c5}.dmt-pill.completed{background:#eee5ff;color:#6a37c8}.dmt-pill.failed{background:#ffe5e9;color:#c62945}
+.dmt-pill.running{background:#ddf7e9;color:#087b4b}.dmt-pill.recruiting{background:#e6efff;color:#1455c5}.dmt-pill.completed{background:#eee5ff;color:#6a37c8}.dmt-pill.failed{background:#ffe5e9;color:#c62945}.dmt-pill.draft{background:#f0f2f7;color:#536176}.dmt-pill.paused{background:#fff0d9;color:#9a5b00}.dmt-pill.unknown{background:#f0f2f7;color:#536176}
 .dmt-progress{display:inline-block;vertical-align:middle;width:90px;height:9px;background:#e7ecf8;border-radius:9px;overflow:hidden;margin-right:7px}.dmt-progress i{display:block;height:100%;background:linear-gradient(90deg,#0cb56e,#07864d);border-radius:9px}
 .dmt-action{border:0;background:#edf2ff;border-radius:9px;color:#0b4ec4;padding:7px 10px;cursor:pointer;font-weight:900}.dmt-action:hover{background:#dce8ff}
 .dmt-bottom{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:13px;margin-top:13px}
