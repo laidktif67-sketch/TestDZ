@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
-import { supabase } from "../lib/supabase";
+import { identityApi } from "../features/identity/identity-api";
 import { profilesApi } from "../features/profiles/profiles-api";
 import { useIdentity } from "../features/identity/hooks/useIdentity";
 import { useLenis } from "../hooks/useLenis";
@@ -137,8 +137,8 @@ export default function InterestsPage(){
 
   useEffect(()=>{document.documentElement.lang=language;document.documentElement.dir=language==="ar"?"rtl":"ltr";window.localStorage.setItem("testdz-landing-language",language);},[language]);
   useEffect(()=>{
-    if(!supabase)return;
-    supabase.auth.getSession().then(({data})=>{
+    if(!identityApi.isConfigured())return;
+    identityApi.getSession().then(({data})=>{
       if(!data.session){navigate("/auth",{replace:true});return;}
       const savedRole=data.session.user.user_metadata?.account_type;
       if(!roleFromState&&(savedRole==="tester"||savedRole==="developer"||savedRole==="both"))setRole(savedRole);
@@ -151,7 +151,7 @@ export default function InterestsPage(){
   }
   function clearAll(){setTesting([]);setSkills([]);setOther([]);}
   async function finish(skip=false){
-    if(!supabase){setError(t.config);return;}
+    if(!identityApi.isConfigured()){setError(t.config);return;}
     setBusy(true);setError("");
     const roles=role==="both"?["tester","developer"]:[role];
     const interests=skip?[]:selected;

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { identityApi } from "../features/identity/identity-api";
 const BlurText = lazy(() => import("../components/react-bits/BlurText"));
 import { useLenis } from "../hooks/useLenis";
 import "../styles/onboarding.css";
@@ -182,8 +182,8 @@ export default function OnboardingPage() {
   }, [language]);
 
   useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => {
+    if (!identityApi.isConfigured()) return;
+    identityApi.getSession().then(({ data }) => {
       if (!data.session) {
         navigate("/auth", { replace: true });
         return;
