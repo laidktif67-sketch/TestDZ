@@ -225,8 +225,21 @@ if (!sources.app.includes('<RoleHomeRedirect />')) {
 if (!sources.authenticated.includes('requiredRole="tester"')) {
   errors.push("Tester security routes must remain protected by the tester RoleGuard.");
 }
-if (!sources.app.includes('requiredRole="admin"') || !sources.app.includes('requiredRole="developer"')) {
-  errors.push("Admin and developer route groups must remain protected by their role guards.");
+const guardedRouteContracts = [
+  ["admin", /<Route element=\{<RoleGuard requiredRole="admin" \/>\}>\s*\{adminRouteElements\}\s*<\/Route>/],
+  ["tester workspace", /<Route element=\{<RoleGuard requiredRole="tester" \/>\}>\s*\{testerWorkspaceRouteElements\}\s*<\/Route>/],
+  ["developer", /<Route element=\{<RoleGuard requiredRole="developer" \/>\}>\s*\{developerRouteElements\}\s*<\/Route>/],
+];
+for (const [name, contract] of guardedRouteContracts) {
+  if (!contract.test(sources.app)) {
+    errors.push(`The ${name} route group must remain nested directly inside its matching RoleGuard.`);
+  }
+}
+if (!/<Route element=\{<AuthGuard \/>\}>\s*<Route element=\{<OnboardingGuard \/>\}>\s*\{authenticatedRouteElements\}/.test(sources.app)) {
+  errors.push("Authenticated routes must remain nested under AuthGuard then OnboardingGuard.");
+}
+if (!/<Route element=\{<RoleGuard requiredRole="tester" \/>\}>\s*\{testerSecurityRouteElements\}\s*<\/Route>/.test(sources.authenticated)) {
+  errors.push("Tester security routes must remain nested inside the tester RoleGuard.");
 }
 
 if (errors.length > 0) {
