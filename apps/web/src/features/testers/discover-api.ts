@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { getTesterEarnedPointsWallet } from "./wallet-rewards-api";
 
 function getClient() {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -7,7 +8,7 @@ function getClient() {
 
 /** Read-only points summary; wallet writes and financial rules remain elsewhere. */
 export function getDiscoverWallet(userId: string) {
-  return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();
+  return getTesterEarnedPointsWallet(userId);
 }
 
 /** Read-only assignment list used to count completed tests for this tester. */
