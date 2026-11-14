@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listTesterNotifications, markTesterNotificationRead, markAllTesterNotificationsRead, listTesterRecentEarnedPoints, listTesterUpcomingAssignments } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -88,7 +89,7 @@ export default function NotificationsCenterPage() {
   useEffect(() => {
     let alive = true;
     async function load() {
-      if (!supabase || !user?.id) { setLoading(false); return; }
+      if (!identityApi.isConfigured() || !user?.id) { setLoading(false); return; }
       setLoading(true); setError("");
       const since = new Date(Date.now() - 30 * 86400000).toISOString();
       const [notificationResult, rewardsResult, assignmentResult] = await Promise.all([
@@ -125,7 +126,7 @@ export default function NotificationsCenterPage() {
   }), [rows, filter, search]);
 
   async function markRead(row: NotificationRow) {
-    if (row.read_at || !supabase || !user?.id) return;
+    if (row.read_at || !identityApi.isConfigured() || !user?.id) return;
     setBusyId(row.id); setNotice(""); setError("");
     const readAt = new Date().toISOString();
     const result = await markTesterNotificationRead(row.id, user.id, readAt);
@@ -134,7 +135,7 @@ export default function NotificationsCenterPage() {
     setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
   }
   async function markAllRead() {
-    if (!supabase || !user?.id || unread === 0) return;
+    if (!identityApi.isConfigured() || !user?.id || unread === 0) return;
     setSaving(true); setNotice(""); setError("");
     const readAt = new Date().toISOString();
     const result = await markAllTesterNotificationsRead(user.id, readAt);
@@ -154,7 +155,7 @@ export default function NotificationsCenterPage() {
   }
 
   return <div className="td-dashboard nc-dashboard">
-    <TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
+    <TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!identityApi.isConfigured()}/>
     <main className="td-main nc-main">
       <header className="td-topbar nc-topbar">
         <label className="td-search"><Icon name="search" size={20}/><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search notifications…"/></label>

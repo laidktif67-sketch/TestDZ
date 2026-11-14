@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getDiscoverProfile, getDiscoverWallet, listDiscoverAssignments, countDiscoverUnreadNotifications, listDiscoverAvailableTests } from "../../../features/testers/discover-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
@@ -33,7 +33,7 @@ export default function DiscoverTestsPage(){
  const previewMode=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  useEffect(()=>{
-  const client=supabase;if(!client){setLoading(false);setError("Supabase is not configured.");return;}let alive=true;
+  if(!identityApi.isConfigured()){setLoading(false);setError("Supabase is not configured.");return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
    const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
     getDiscoverProfile(userId),
@@ -49,8 +49,8 @@ export default function DiscoverTestsPage(){
    if(profile.error||wallet.error||assignments.error||notifications.error||testRows.error)setError("Some information could not be loaded. You can still explore the available tests.");
    setLoading(false);
   };
-  client.auth.getSession().then(({data,error:sessionError})=>{if(!alive)return;if(sessionError){setError("We couldn’t verify your session. Refresh and try again.");setLoading(false);return;}setSession(data.session);if(data.session)void load(data.session.user.id,data.session.user.email);else setLoading(false);}).catch(()=>{if(alive){setError("We couldn’t verify your session.");setLoading(false);}});
-  const {data}=client.auth.onAuthStateChange((_event,next)=>{if(!alive)return;setSession(next);if(next){setLoading(true);window.setTimeout(()=>{if(alive)void load(next.user.id,next.user.email);},0);}else{setTests([]);setLoading(false);}});
+  identityApi.getSession().then(({data,error:sessionError})=>{if(!alive)return;if(sessionError){setError("We couldn’t verify your session. Refresh and try again.");setLoading(false);return;}setSession(data.session);if(data.session)void load(data.session.user.id,data.session.user.email);else setLoading(false);}).catch(()=>{if(alive){setError("We couldn’t verify your session.");setLoading(false);}});
+  const {data}=identityApi.onAuthStateChange((_event,next)=>{if(!alive)return;setSession(next);if(next){setLoading(true);window.setTimeout(()=>{if(alive)void load(next.user.id,next.user.email);},0);}else{setTests([]);setLoading(false);}});
   return()=>{alive=false;data.subscription.unsubscribe();};
  },[]);
  const visible=useMemo(()=>{const q=query.trim().toLowerCase();const rows=tests.filter(t=>{const text=[t.title,t.description,t.short_summary,t.app?.name,t.app?.category].filter(Boolean).join(" ").toLowerCase();return(!q||text.includes(q))&&(category==="all"||categoryOf(t.app?.category)===category);});if(sort==="title")rows.sort((a,b)=>a.title.localeCompare(b.title));if(sort==="closing")rows.sort((a,b)=>(a.end_date||"9999").localeCompare(b.end_date||"9999"));return rows;},[tests,query,category,sort]);

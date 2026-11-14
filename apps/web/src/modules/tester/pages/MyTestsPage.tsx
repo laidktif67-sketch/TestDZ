@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { countTesterMyUnreadNotifications, getTesterMyTestsProfile, getTesterMyTestsWallet, listTesterMyAssignments, listTesterMyFeedback, listTesterMyTestRoles } from "../../../features/testers/testers-api";
 import "../styles/tester-dashboard.css";
 import "../../../styles/my-tests.css";
@@ -62,7 +62,7 @@ export default function MyTestsPage(){
     {id:"a3",kind:"checkin",title:"You completed a test check-in",detail:"Web Development Basics",date:iso(start)+"T08:00:00Z"}
    ]);setLoading(false);return;
   }
-  const client=supabase;if(!client){setLoading(false);return;}let alive=true;
+  if(!identityApi.isConfigured()){setLoading(false);return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
    try{
    const [roleRes,profileRes,walletRes,assignmentRes,feedbackRes,noticeRes]=await Promise.all([
@@ -89,7 +89,7 @@ export default function MyTestsPage(){
     if(alive)setLoading(false);
    }
   };
-  client.auth.getSession().then(({data,error:sessionError})=>{
+  identityApi.getSession().then(({data,error:sessionError})=>{
    if(!alive)return;
    if(sessionError){setError("We couldn’t verify your session. Refresh and try again.");setLoading(false);return;}
    setSession(data.session);
@@ -98,7 +98,7 @@ export default function MyTestsPage(){
    console.error("[MyTestsPage] Failed to get session",reason);
    if(alive){setError("We couldn’t verify your session. Check your connection and retry.");setLoading(false);}
   });
-  const {data}=client.auth.onAuthStateChange((_event,next)=>{
+  const {data}=identityApi.onAuthStateChange((_event,next)=>{
    if(!alive)return;
    setSession(next);
    if(next){setLoading(true);window.setTimeout(()=>{if(alive)void load(next.user.id,next.user.email);},0);}

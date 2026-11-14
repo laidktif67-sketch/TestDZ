@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { getTesterAccountSettingsProfile, updateTesterAccountSettingsProfile } from "../../../features/profile/profile-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { listSettingsExportProfile, listSettingsExportNotifications, listSettingsExportCheckins, listSettingsExportFeedback, listSettingsExportLedger } from "../../../features/testers/privacy-data-api";
@@ -68,7 +69,7 @@ export default function SettingsSecurityPage() {
   ];
 
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user || !identityApi.isConfigured()) return;
     let alive = true;
     const client = supabase;
     Promise.all([
@@ -97,7 +98,7 @@ export default function SettingsSecurityPage() {
 
   const alert = (text: string, isError = false) => { setMessage(isError ? "" : text); setError(isError ? text : ""); };
   async function saveProfile() {
-    if (!supabase || !user) return;
+    if (!identityApi.isConfigured() || !user) return;
     if (!name.trim()) { alert("Your display name cannot be empty.", true); return; }
     setBusy(true); alert("");
     const result = await updateTesterAccountSettingsProfile(user.id, { display_name: name.trim(), locale });
@@ -108,7 +109,7 @@ export default function SettingsSecurityPage() {
   async function savePreferences(next: Preferences) {
     const previous = preferences;
     setPreferences(next);
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     const result = await supabase.auth.updateUser({ data: { testdz_notification_preferences: next } });
     if (result.error) { setPreferences(previous); alert("Preferences could not be saved. Your previous choices were restored.", true); }
     else alert("Notification preferences saved.");
@@ -116,13 +117,13 @@ export default function SettingsSecurityPage() {
   async function saveTheme(next: string) {
     const previous = theme;
     setTheme(next);
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     const result = await supabase.auth.updateUser({ data: { testdz_theme: next } });
     if (result.error) { setTheme(previous); alert("Appearance preference could not be saved. Your previous choice was restored.", true); }
     else alert("Appearance preference saved.");
   }
   async function changePassword() {
-    if (!supabase || password.length < 8) { alert("Use a password with at least 8 characters.", true); return; }
+    if (!identityApi.isConfigured() || password.length < 8) { alert("Use a password with at least 8 characters.", true); return; }
     if (password !== confirmPassword) { alert("The password confirmation does not match.", true); return; }
     setBusy(true);
     const result = await supabase.auth.updateUser({ password });
@@ -131,7 +132,7 @@ export default function SettingsSecurityPage() {
     else { setPassword(""); setConfirmPassword(""); alert("Password updated successfully."); }
   }
   async function changeEmail() {
-    if (!supabase || !newEmail.includes("@")) { alert("Enter a valid email address.", true); return; }
+    if (!identityApi.isConfigured() || !newEmail.includes("@")) { alert("Enter a valid email address.", true); return; }
     setBusy(true);
     const result = await supabase.auth.updateUser({ email: newEmail.trim() });
     setBusy(false);
@@ -139,7 +140,7 @@ export default function SettingsSecurityPage() {
     else { setNewEmail(""); alert("Confirmation email sent to your new address. Follow the link to finish the change."); }
   }
   async function setupMfa() {
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     setMfaBusy(true); alert("");
     const result = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "TestDZ authenticator" });
     setMfaBusy(false);
@@ -149,7 +150,7 @@ export default function SettingsSecurityPage() {
     setTab("security");
   }
   async function verifyMfa() {
-    if (!supabase || !mfaFactorId || mfaCode.trim().length < 6) return;
+    if (!identityApi.isConfigured() || !mfaFactorId || mfaCode.trim().length < 6) return;
     setMfaBusy(true);
     const challenge = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
     if (challenge.error) { setMfaBusy(false); alert(challenge.error.message, true); return; }
@@ -159,7 +160,7 @@ export default function SettingsSecurityPage() {
     setTwoFactor(true); setMfaQr(""); setMfaCode(""); alert("Two-factor authentication enabled.");
   }
   async function disableMfa() {
-    if (!supabase) return;
+    if (!identityApi.isConfigured()) return;
     setMfaBusy(true);
     const factors = await supabase.auth.mfa.listFactors();
     const factor = factors.data?.totp?.find(item => item.status === "verified");
@@ -170,7 +171,7 @@ export default function SettingsSecurityPage() {
     else { setTwoFactor(false); alert("Two-factor authentication disabled."); }
   }
   async function downloadData() {
-    if (!supabase || !user) return;
+    if (!identityApi.isConfigured() || !user) return;
     setBusy(true);
     const [profile, notices, checkins, feedback, ledger] = await Promise.all([
       listSettingsExportProfile(user.id),
@@ -199,7 +200,7 @@ export default function SettingsSecurityPage() {
   const tabsView = <div className="ss-tabs-wrap"><div className="ss-tabs" role="tablist">{matchingTabs.map(item => <button type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? "active" : ""} key={item.id} onClick={() => { setTab(item.id); setSearchTerm(""); }}><Icon name={item.icon} size={19}/>{item.label}</button>)}</div>{searchTerm.trim() && matchingTabs.length === 0 && <p className="ss-search-empty">No settings section matches “{searchTerm}”. Try account, security, privacy or notifications.</p>}</div>;
 
   return <div className="td-dashboard ss-dashboard">
-    <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!supabase}/>
+    <TesterSidebar nav={nav} name={name || firstName} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={!identityApi.isConfigured()}/>
     <main className="td-main ss-main">
       <header className="ss-topbar"><label className="ss-global-search"><Icon name="search" size={21}/><input value={searchTerm} onChange={event => setSearchTerm(event.target.value)} placeholder="Search settings..." aria-label="Search settings"/></label><div className="ss-top-user"><button type="button" aria-label="Notifications" onClick={() => setTab("notifications")}><Icon name="bell" size={23}/></button><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt=""/> : firstName.slice(0,2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div></header>
       <div className="ss-content">
