@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getCompletionSummaryAssignment, listCompletionSummaryCheckins, getCompletionSummaryFeedback, listCompletionSummaryLedger, getCompletionSummaryProfile } from "../../../features/testers/completion-summary-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -17,12 +18,12 @@ export default function TestCompletionSummaryPage(){
  const preview=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  useEffect(()=>{if(preview){setName("John Doe");setAssignment({id:"preview-assignment",status:"completed",start_date:"2026-04-14",completed_at:"2026-04-27T14:30:00Z",points_awarded:120,test:{title:"UI Testing Assignment",start_date:"2026-04-14",end_date:"2026-04-27",app:{name:"DemoApp",icon_url:null}}});setCheckins(Array.from({length:14},(_,i)=>String(i)));setFeedback({id:"preview-feedback",body:"The application is great, with minor UI improvements suggested for mobile devices.",quality_status:"accepted",created_at:"2025-04-27T14:30:00Z",reviewed_at:"2025-04-28T10:00:00Z"});setLedger([{id:"p1",amount:120,reason:"Assignment completion",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"},{id:"p2",amount:50,reason:"Completion bonus",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"}]);setLoading(false);return;}
  if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}
- const client=supabase;const [a,c,f,l,p]=await Promise.all([
- client.from("assignments").select("id,status,start_date,completed_at,points_awarded,test:tests(title,start_date,end_date,app:apps(name,icon_url))").eq("id",id).eq("tester_id",session.user.id).maybeSingle(),
- client.from("checkins").select("id,checkin_date").eq("assignment_id",id).eq("tester_id",session.user.id).order("checkin_date"),
- client.from("feedback").select("id,body,quality_status,created_at,reviewed_at").eq("assignment_id",id).eq("tester_id",session.user.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
- client.from("points_ledger").select("id,amount,reason,reference_id,reference_type,created_at").eq("user_id",session.user.id).eq("wallet_type","earned_points").eq("reference_id",id).order("created_at"),
- client.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle()
+ const [a,c,f,l,p]=await Promise.all([
+ getCompletionSummaryAssignment(id,session.user.id),
+ listCompletionSummaryCheckins(id,session.user.id),
+ getCompletionSummaryFeedback(id,session.user.id),
+ listCompletionSummaryLedger(id,session.user.id),
+ getCompletionSummaryProfile(session.user.id)
  ]);
  if(!alive)return;if(a.error||!a.data)setError("This assignment could not be found.");else setAssignment(a.data as unknown as Assignment);
  setCheckins((c.data??[]).map(x=>x.checkin_date));setFeedback(f.data as Feedback|null);setLedger((l.data??[]) as Ledger[]);
