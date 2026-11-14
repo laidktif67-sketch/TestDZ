@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterFeedbackProfile, listTesterFeedbackHistory, listTesterFeedbackRewards } from "../../../features/feedback/feedback-api";
+import { getTesterHeaderProfile, listTesterFeedbackHistory, listTesterFeedbackRewards } from "../../../features/profile/profile-api";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -73,7 +73,7 @@ export default function FeedbackHistoryPage() {
       setLoading(true);
       setError("");
       const [profileResult, feedbackResult, ledgerResult] = await Promise.all([
-        getTesterFeedbackProfile(session!.user.id),
+        getTesterHeaderProfile(session!.user.id),
         listTesterFeedbackHistory(session!.user.id),
         listTesterFeedbackRewards(session!.user.id)
       ]);

@@ -89,13 +89,6 @@ export function createFeedbackAttachmentMetadata(values: { feedback_id: string; 
     .insert(values);
 }
 
-/** Tester profile fields used by the feedback-history header. */
-export function getTesterFeedbackProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url")
-    .eq("id", userId)
-    .maybeSingle();
-}
 
 /** Feedback rows and related test/app display data for a tester's own history. */
 export function listTesterFeedbackHistory(testerId: string) {

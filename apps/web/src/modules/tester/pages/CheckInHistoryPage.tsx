@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterCheckInProfile, listTesterCheckIns, countUnreadTesterNotifications, listCheckInRewardLedger } from "../../../features/testers/checkins-api";
+import { getTesterHeaderProfile, listTesterCheckIns, countUnreadTesterNotifications, listCheckInRewardLedger } from "../../../features/profile/profile-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/check-in-history.css";
@@ -84,7 +84,7 @@ export default function CheckInHistoryPage() {
       setRefreshing(true);
       setError("");
       const [profile, checkins, notice] = await Promise.all([
-        getTesterCheckInProfile(session!.user.id),
+        getTesterHeaderProfile(session!.user.id),
         listTesterCheckIns(session!.user.id),
         countUnreadTesterNotifications(session!.user.id)
       ]);

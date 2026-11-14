@@ -5,12 +5,6 @@ function getClient() {
   return supabase;
 }
 
-export function getTesterCheckInProfile(userId: string) {
-  return getClient().from("profiles")
-    .select("display_name,avatar_url")
-    .eq("id", userId)
-    .maybeSingle();
-}
 
 export function listTesterCheckIns(testerId: string) {
   return getClient().from("checkins")
