@@ -72,7 +72,6 @@ export default function FeedbackHistoryPage() {
     async function load() {
       setLoading(true);
       setError("");
-      const client = supabase!;
       const [profileResult, feedbackResult, ledgerResult] = await Promise.all([
         getTesterFeedbackProfile(session!.user.id),
         listTesterFeedbackHistory(session!.user.id),

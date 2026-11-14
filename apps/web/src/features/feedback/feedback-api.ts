@@ -24,12 +24,10 @@ export function getDeveloperFeedbackDetails(feedbackId: string, developerId: str
 }
 
 export function getDeveloperFeedbackReview(feedbackId: string, options?: { includeId?: boolean }) {
-  const columns = options?.includeId ? "id,status,priority" : "status,priority";
-  return getClient()
-    .from("developer_feedback_reviews")
-    .select(columns)
-    .eq("feedback_id", feedbackId)
-    .maybeSingle();
+  const query = getClient().from("developer_feedback_reviews");
+  return options?.includeId
+    ? query.select("id,status,priority").eq("feedback_id", feedbackId).maybeSingle()
+    : query.select("status,priority").eq("feedback_id", feedbackId).maybeSingle();
 }
 
 export function listDeveloperFeedbackMessages(feedbackId: string) {

@@ -79,7 +79,6 @@ export default function CheckInHistoryPage() {
   useEffect(() => {
     if (!session?.user?.id || !supabase) { setLoading(false); return; }
     let alive = true;
-    const client = supabase;
     async function load() {
       setLoading(true);
       setRefreshing(true);

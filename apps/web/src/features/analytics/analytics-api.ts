@@ -22,3 +22,17 @@ export function listDeveloperAnalyticsFeedback(assignmentIds: string[]) {
   if (!assignmentIds.length) return Promise.resolve({ data: [], error: null });
   return getClient().from("feedback").select("id,assignment_id,rating,created_at").in("assignment_id", assignmentIds).limit(5000);
 }
+
+/** App-level metrics used by the developer applications overview. */
+export function listAppMetricTests(appIds: string[]) {
+  if (!appIds.length) return Promise.resolve({ data: [], error: null });
+  return getClient().from("tests").select("id,app_id").in("app_id", appIds).limit(5000);
+}
+
+export function listAppMetricAssignments(testIds: string[]) {
+  return listDeveloperAnalyticsAssignments(testIds);
+}
+
+export function listAppMetricFeedback(assignmentIds: string[]) {
+  return listDeveloperAnalyticsFeedback(assignmentIds);
+}
