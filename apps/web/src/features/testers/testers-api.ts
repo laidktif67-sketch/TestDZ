@@ -27,9 +27,6 @@ export function listTesterMyTestRoles(userId: string) {
   return getClient().from("user_roles").select("role").eq("user_id", userId);
 }
 
-export function getTesterMyTestsProfile(userId: string) {
-  return getClient().from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
-}
 
 export function getTesterMyTestsWallet(userId: string) {
   return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();

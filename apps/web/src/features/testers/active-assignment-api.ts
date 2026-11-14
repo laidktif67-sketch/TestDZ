@@ -5,9 +5,6 @@ function getClient() {
   return supabase;
 }
 
-export function getActiveAssignmentProfile(userId: string) {
-  return getClient().from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
-}
 
 export function countActiveAssignmentUnreadNotifications(userId: string) {
   return getClient().from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null);

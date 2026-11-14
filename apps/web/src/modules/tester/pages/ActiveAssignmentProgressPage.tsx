@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { countActiveAssignmentFeedback, countActiveAssignmentUnreadNotifications, getActiveAssignmentProfile, getActiveAssignmentRecord, getActiveAssignmentEarnedPoints, listActiveAssignmentCheckIns, listTesterLeaderboardLedger } from "../../../features/testers/active-assignment-api";
+import { countActiveAssignmentFeedback, countActiveAssignmentUnreadNotifications, getActiveAssignmentRecord, getActiveAssignmentEarnedPoints, listActiveAssignmentCheckIns, listTesterLeaderboardLedger } from "../../../features/testers/active-assignment-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import { listTesterLeaderboardTesterIds, listTesterLeaderboardProfiles } from "../../../features/testers/leaderboard-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -26,7 +27,7 @@ export default function ActiveAssignmentProgressPage(){
   if(!session?.user?.id||!id||!identityApi.isConfigured()){setLoading(false);return;}let alive=true;const uid=session.user.id;
   (async()=>{
    const [profile,notice,a,c,f,l,roleRows]=await Promise.all([
-    getActiveAssignmentProfile(uid),
+    getTesterHeaderProfile(uid),
     countActiveAssignmentUnreadNotifications(uid),
     getActiveAssignmentRecord(id,uid),
     listActiveAssignmentCheckIns(id,uid),
