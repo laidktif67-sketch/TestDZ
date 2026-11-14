@@ -43,7 +43,3 @@ export function listTesterMyFeedback(userId: string) {
     .eq("tester_id", userId).order("created_at", { ascending: false });
 }
 
-export function countTesterMyUnreadNotifications(userId: string) {
-  return getClient().from("notifications").select("id", { count: "exact", head: true })
-    .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null);
-}

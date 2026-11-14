@@ -47,6 +47,12 @@ export function markAllTesterNotificationsRead(userId: string, readAt: string) {
     .eq("user_id", userId).is("read_at", null);
 }
 
+/** Count unread notifications specifically addressed to the tester role. */
+export function countTesterRoleUnreadNotifications(userId: string) {
+  return getClient().from("notifications").select("id", { count: "exact", head: true })
+    .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null);
+}
+
 /** Count unread notifications for the signed-in tester UI; RLS remains authoritative. */
 export function countTesterUnreadNotifications(userId: string) {
   return getClient().from("notifications")

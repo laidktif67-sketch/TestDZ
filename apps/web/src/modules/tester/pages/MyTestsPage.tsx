@@ -3,7 +3,8 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { countTesterMyUnreadNotifications, getTesterMyTestsWallet, listTesterMyAssignments, listTesterMyFeedback, listTesterMyTestRoles } from "../../../features/testers/testers-api";
+import { getTesterMyTestsWallet, listTesterMyAssignments, listTesterMyFeedback, listTesterMyTestRoles } from "../../../features/testers/testers-api";
+import { countTesterRoleUnreadNotifications } from "../../../features/notifications/notifications-api";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import "../styles/tester-dashboard.css";
 import "../../../styles/my-tests.css";
@@ -72,7 +73,7 @@ export default function MyTestsPage(){
     getTesterMyTestsWallet(userId),
     listTesterMyAssignments(userId),
     listTesterMyFeedback(userId),
-    countTesterMyUnreadNotifications(userId)
+    countTesterRoleUnreadNotifications(userId)
    ]);
    if(!alive)return;
    setRoles((roleRes.data??[]).map((r:{role:string})=>r.role));setName(profileRes.data?.display_name?.trim()||email?.split("@")[0]||"there");setAvatar(profileRes.data?.avatar_url||"");
