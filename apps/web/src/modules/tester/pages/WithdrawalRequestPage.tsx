@@ -2,7 +2,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getWalletRewardsProfile, getWalletRewardsWallet } from "../../../features/testers/wallet-rewards-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
+import { getWalletRewardsWallet } from "../../../features/testers/wallet-rewards-api";
 import TesterSidebar from "../components/TesterSidebar";
 import "../styles/withdrawal-request.css";
 
@@ -54,7 +55,7 @@ export default function WithdrawalRequestPage() {
         const user = sessionData.session?.user;
         if (!user) { if (alive) setLoading(false); return; }
         const [profileRes, walletRes] = await Promise.all([
-          getWalletRewardsProfile(user.id),
+          getTesterHeaderProfile(user.id),
           getWalletRewardsWallet(user.id)
         ]);
         if (!alive) return;
