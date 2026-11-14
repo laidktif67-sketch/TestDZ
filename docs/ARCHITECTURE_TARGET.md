@@ -95,7 +95,7 @@ The canonical identity implementation now belongs to `apps/web/src/features/iden
 
 - `identity-api.ts`: Supabase Auth/session access and account/role reads.
 - `identity-provider.tsx`, `identity-context.ts`, `hooks/useIdentity.ts`: session, user, role state and its React context.
-- `shared/auth/identity-api.ts`, `identity-context.ts`, `identity-provider.tsx`, and `hooks/useIdentity.ts` are compatibility facades that re-export the feature implementation. Existing consumers remain on their current imports for now.
+- `shared/auth/identity-api.ts`, `identity-context.ts`, `identity-provider.tsx`, and `hooks/useIdentity.ts` remain compatibility facades that re-export the feature implementation. The direct-consumer audit at checkpoint `1b48e337fced0bc42154e75461f685856167f5bb` reported zero consumers for all four legacy paths; all application consumers now import the canonical feature modules.
 - `shared/guards/AuthGuard.tsx`, `OnboardingGuard.tsx`, `RoleGuard.tsx` remain in place and continue to use the compatibility paths.
 - The ownership inversion preserves one provider/session implementation; it does not add a second auth listener or change backend contracts.
 
@@ -174,7 +174,7 @@ The mappings below refer to files/directories that exist at the reviewed ref. Th
 | Admin users/testers/developers and detail pages | `features/profiles/` or the relevant user/developer domain; keep admin-specific composition at the edge | No role, suspension or account mutation changes in a file move. |
 | Admin support and medical-exceptions pages | `features/support/` and `features/trust-safety/` | Treat existing demo data and backend integration status separately. |
 | Admin financial, withdrawals, transactions ledger, developer payments, invoice and rewards pages | `features/payments/` and `features/rewards/` based on verified ownership | No database, RPC, grant, RLS or financial rule edits in this migration. |
-| `apps/web/src/shared/auth/*` and `apps/web/src/shared/guards/*` | Keep canonical paths initially; later move guards to `app/guards/` only with import and behavior snapshots | `features/identity/*` are verified re-export facades and must not be deleted prematurely. |
+| `apps/web/src/shared/auth/*` and `apps/web/src/shared/guards/*` | Keep the shared/auth compatibility facades until a separate removal change is justified; later move guards to `app/guards/` only with import and behavior snapshots | `features/identity/*` contains the canonical implementation. Direct consumers of the four legacy identity paths are zero at checkpoint `1b48e337`; do not delete facades until alias-aware import checks and runtime auth/role smoke tests confirm it is safe. |
 | `apps/web/src/components/ui/Card.tsx` | Keep as facade until all imports are verified | It re-exports `shared/components/ui/Card.tsx`. |
 | `apps/web/src/shared/components/ui/Card.tsx`, `apps/web/src/styles/tokens.css`, `apps/web/src/styles.css` | Shared UI/design-system ownership; move only in a dedicated mechanical change | No global style redesign in the same PR. |
 | `apps/web/src/modules/{admin,developer,tester}/styles/` | Move styles beside their feature only as each feature moves | Keep selectors and visual output stable; no blanket CSS movement. |
