@@ -104,4 +104,9 @@ export const identityApi = {
   getSession() {
     return getClient().auth.getSession();
   },
+
+  /** Calls the database-owned security activity RPC for the current authenticated user. */
+  getMySecurityActivity(limit = 30) {
+    return getClient().rpc("get_my_security_activity", { p_limit: limit });
+  },
 };

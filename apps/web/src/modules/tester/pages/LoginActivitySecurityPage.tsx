@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -26,7 +27,7 @@ export default function LoginActivitySecurityPage() {
     async function loadActivity() {
       if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }
       setLoadingActivity(true);
-      const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
+      const result = await identityApi.getMySecurityActivity(30);
       if (!alive) return;
       if (result.error) setNotice("Login history is temporarily unavailable. Please try again.");
       else setActivity((result.data || []) as typeof activity);
@@ -60,7 +61,7 @@ export default function LoginActivitySecurityPage() {
   async function refreshActivity() {
     if (!supabase || !user) { setNotice("Sign in to load your account security history."); return; }
     setRefreshing(true); setNotice("");
-    const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
+    const result = await identityApi.getMySecurityActivity(30);
     setRefreshing(false);
     if (result.error) setNotice("Could not refresh login history. Please try again.");
     else { setActivity((result.data || []) as typeof activity); setNotice("Login history refreshed."); }

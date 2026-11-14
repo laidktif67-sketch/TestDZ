@@ -53,14 +53,3 @@ export function countTesterUnreadNotifications(userId: string) {
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId).is("read_at", null);
 }
-
-/** Recent earned-point ledger entries shown in the tester notification summary. */
-export function listTesterRecentEarnedPoints(userId: string, since: string) {
-  return getClient().from("points_ledger").select("amount")
-    .eq("user_id", userId).eq("wallet_type", "earned_points").gt("created_at", since);
-}
-
-/** Assignments and their test end dates used to count upcoming deadlines. */
-export function listTesterUpcomingAssignments(userId: string) {
-  return getClient().from("assignments").select("id,test:tests(end_date)").eq("tester_id", userId);
-}
