@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
+import { identityApi } from "../../../features/identity/identity-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { getWalletRewardsProfile, getWalletRewardsWallet } from "../../../features/testers/wallet-rewards-api";
 import TesterSidebar from "../components/TesterSidebar";
@@ -47,9 +47,9 @@ export default function WithdrawalRequestPage() {
   useEffect(() => {
     let alive = true;
     async function load() {
-      if (!supabase) { if (alive) setLoading(false); return; }
+      if (!identityApi.isConfigured()) { if (alive) setLoading(false); return; }
       try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await identityApi.getSession();
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) { if (alive) setLoading(false); return; }
