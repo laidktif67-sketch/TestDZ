@@ -70,7 +70,6 @@ function AppsPage() {
   const [sort, setSort] = useState<Sort>("latest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
 
   async function load() {
@@ -168,7 +167,6 @@ function AppsPage() {
           <div className="dmy-hero-art" aria-hidden="true"><div className="dmy-orbit"/><span className="dmy-platform apple"><Glyph name="apple" size={37}/></span><span className="dmy-platform android"><Glyph name="android" size={38}/></span><div className="dmy-laptop"><span className="dmy-shield">✓</span><b>TestDZ</b></div><div className="dmy-phone"><span className="dmy-shield">✓</span></div></div>
         </section>
 
-        {notice && <div className="dmy-notice success">{notice}</div>}
         {error && <div className="dmy-notice error">{error}</div>}
 
         <section className="dmy-stats" aria-label="Application statistics">
