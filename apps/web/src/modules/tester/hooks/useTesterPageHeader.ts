@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
 import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
+import { useTesterProfile } from "./useTesterProfile";
 
 /** Shared read-only header data for tester pages; backend RLS remains authoritative. */
 export function useTesterPageHeader() {
   const { session, roles = [] } = useIdentity();
-  const [name, setName] = useState("Tester");
-  const [avatar, setAvatar] = useState("");
+  const { name, avatar, firstName, loading: profileLoading } = useTesterProfile();
   const [notifications, setNotifications] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -20,18 +19,9 @@ export function useTesterPageHeader() {
     let alive = true;
     const userId = session.user.id;
 
-    Promise.all([
-      getTesterHeaderProfile(userId),
-      countTesterUnreadNotifications(userId),
-    ])
-      .then(([profile, notification]) => {
+    countTesterUnreadNotifications(userId)
+      .then((notification) => {
         if (!alive) return;
-        setName(
-          profile.data?.display_name?.trim() ||
-            session.user.email?.split("@")[0] ||
-            "Tester",
-        );
-        setAvatar(profile.data?.avatar_url || "");
         setNotifications(notification.count ?? 0);
         setLoading(false);
       })
