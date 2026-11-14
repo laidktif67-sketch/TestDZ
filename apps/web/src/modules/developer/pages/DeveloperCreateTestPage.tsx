@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { AppRecord } from "@testdz/types";
 import { listApps } from "../../../features/apps/apps-api";
+import { createTestDraft } from "../../../features/tests/tests-api";
 import { supabase } from "../../../lib/supabase";
 import "../styles/developer-create-test.css";
 
@@ -110,16 +111,15 @@ export default function DeveloperCreateTestPage() {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) { navigate("/auth", { replace: true }); return; }
     setSaving(true); setSaveError("");
-    const { data, error } = await supabase.from("tests").insert({
-      app_id: selected.id,
-      developer_id: auth.user.id,
+    const { data, error } = await createTestDraft({
+      appId: selected.id,
+      developerId: auth.user.id,
       title: title.trim(),
       description: description.trim() || null,
-      start_date: startDate || null,
-      end_date: endDate || null,
-      min_testers: Math.max(1, Math.min(1000, Math.floor(minTesters))),
-      status: "draft",
-    }).select("id").single();
+      startDate: startDate || null,
+      endDate: endDate || null,
+      minTesters: Math.max(1, Math.min(1000, Math.floor(minTesters))),
+    });
     if (error) {
       setSaveError(error.message.includes("cohort") ? "This test could not be created because the current testing setup is incomplete." : "Could not save your test. Please check the details and try again.");
       setSaving(false);
