@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { identityApi } from "../../../features/identity/identity-api";
-import { getCompletionSummaryAssignment, listCompletionSummaryCheckins, getCompletionSummaryFeedback, listCompletionSummaryLedger, getCompletionSummaryProfile } from "../../../features/testers/completion-summary-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
+import { getCompletionSummaryAssignment, listCompletionSummaryCheckins, getCompletionSummaryFeedback, listCompletionSummaryLedger } from "../../../features/testers/completion-summary-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -23,7 +24,7 @@ export default function TestCompletionSummaryPage(){
  listCompletionSummaryCheckins(id,session.user.id),
  getCompletionSummaryFeedback(id,session.user.id),
  listCompletionSummaryLedger(id,session.user.id),
- getCompletionSummaryProfile(session.user.id)
+ getTesterHeaderProfile(session.user.id)
  ]);
  if(!alive)return;if(a.error||!a.data)setError("This assignment could not be found.");else setAssignment(a.data as unknown as Assignment);
  setCheckins((c.data??[]).map(x=>x.checkin_date));setFeedback(f.data as Feedback|null);setLedger((l.data??[]) as Ledger[]);

@@ -3,7 +3,8 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { identityApi } from "../../../features/identity/identity-api";
-import { getTesterDashboardProfile, getTesterDashboardWallet, listTesterDashboardAssignments, listTesterDashboardAvailableTests, countTesterDashboardUnreadNotifications } from "../../../features/testers/tester-dashboard-api";
+import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
+import { getTesterDashboardWallet, listTesterDashboardAssignments, listTesterDashboardAvailableTests, countTesterDashboardUnreadNotifications } from "../../../features/testers/tester-dashboard-api";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/tester-dashboard.css";
@@ -93,7 +94,7 @@ export default function TesterDashboardPage() {
     const load = async (userId: string, userEmail?: string) => {
       try {
         const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
-        getTesterDashboardProfile(userId),
+        getTesterHeaderProfile(userId),
         getTesterDashboardWallet(userId),
         listTesterDashboardAssignments(userId),
         listTesterDashboardAvailableTests(),

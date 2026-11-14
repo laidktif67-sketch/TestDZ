@@ -32,7 +32,3 @@ export function listCompletionSummaryLedger(assignmentId: string, userId: string
     .eq("reference_id", assignmentId).order("created_at");
 }
 
-export function getCompletionSummaryProfile(userId: string) {
-  return getClient().from("profiles").select("display_name,avatar_url")
-    .eq("id", userId).maybeSingle();
-}

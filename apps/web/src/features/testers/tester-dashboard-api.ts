@@ -5,11 +5,6 @@ function getClient() {
   return supabase;
 }
 
-/** Dashboard profile data for the signed-in tester. */
-export function getTesterDashboardProfile(userId: string) {
-  return getClient().from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
-}
-
 export function getTesterDashboardWallet(userId: string) {
   return getClient().from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();
 }
