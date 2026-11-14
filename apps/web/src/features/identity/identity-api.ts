@@ -97,6 +97,10 @@ export const identityApi = {
     return getClient().auth.updateUser({ password });
   },
 
+  updateUserEmail(email: string) {
+    return getClient().auth.updateUser({ email });
+  },
+
   updateUserMetadata(data: IdentityUserMetadataUpdate) {
     return getClient().auth.updateUser({ data });
   },
