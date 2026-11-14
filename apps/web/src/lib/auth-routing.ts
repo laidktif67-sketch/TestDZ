@@ -1,5 +1,5 @@
 import { profilesApi } from "../features/profiles/profiles-api";
-import { identityApi } from "../shared/auth/identity-api";
+import { identityApi } from "../features/identity/identity-api";
 
 export function translateAuthError(message: string) {
   const value = message.toLowerCase();
