@@ -91,7 +91,7 @@ This is a target map, not a claim that these directories all exist today. Create
 
 ## 3. Identity, authentication and authorization: one source of truth
 
-The canonical implementation is currently under `apps/web/src/shared/auth/`:
+The current canonical implementation is under `apps/web/src/shared/auth/`; run `node scripts/audit-identity-boundary.mjs` from the repository root to inventory direct consumers before changing ownership:
 
 - `identity-api.ts`: Supabase Auth/session access and account/role reads.
 - `identity-provider.tsx`, `identity-context.ts`, `hooks/useIdentity.ts`: session, user, role state and its React context.
@@ -214,7 +214,7 @@ No existing folder is declared “unnecessary” solely because it is absent fro
 - Gate: typecheck, build, route inventory diff (expected zero route differences), guard/redirect tests, and a manual smoke test for public, tester, developer and admin paths. Stop on any unexplained difference.
 
 ### Stage 2 — Canonical identity boundary
-- Generate an import graph for `shared/auth` and `features/identity`; preserve compatibility exports while consumers are migrated.
+- Run `node scripts/audit-identity-boundary.mjs` to inventory direct imports and feature-to-shared edges for `shared/auth` and `features/identity`; preserve compatibility exports while consumers are migrated.
 - Decide the final canonical path only after consumer counts and test coverage are known.
 - Gate: one provider/session source, role loading/error and banned-account behavior preserved, and no changes to Supabase authorization contracts.
 
