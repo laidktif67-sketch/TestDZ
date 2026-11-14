@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useIdentity } from "../../../features/identity/hooks/useIdentity";
 import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
-import { listTesterActivityAssignments, listTesterActivityFeedback, listTesterActivityPoints, countTesterActivityUnreadNotifications } from "../../../features/testers/activity-api";
+import { listTesterActivityAssignments, listTesterActivityFeedback, listTesterActivityPoints } from "../../../features/testers/activity-api";
+import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/activity-history.css";
@@ -97,7 +98,7 @@ export default function ActivityHistoryPage() {
         listTesterActivityAssignments(userId),
         listTesterActivityFeedback(userId),
         listTesterActivityPoints(userId),
-        countTesterActivityUnreadNotifications(userId)
+        countTesterUnreadNotifications(userId)
       ]);
       if(!alive)return;
       setName(profile.data?.display_name?.trim()||userEmail?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");

@@ -23,8 +23,3 @@ export function listTesterActivityPoints(userId: string) {
     .eq("user_id", userId).eq("wallet_type", "earned_points");
 }
 
-export function countTesterActivityUnreadNotifications(userId: string) {
-  return getClient().from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId).is("read_at", null);
-}
