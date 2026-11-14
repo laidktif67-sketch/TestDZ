@@ -1,38 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useIdentity } from "../../../features/identity/hooks/useIdentity";
-import { getTesterHeaderProfile } from "../../../features/profile/profile-api";
-import { countTesterUnreadNotifications } from "../../../features/notifications/notifications-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
+import { useTesterPageHeader } from "../hooks/useTesterPageHeader";
 import "../styles/referral-program.css";
 
 export default function ReferralProgramPage() {
-  const { session, roles = [] } = useIdentity();
-  const [name, setName] = useState("Tester");
-  const [avatar, setAvatar] = useState("");
-  const [notifications, setNotifications] = useState(0);
+  const { roles, name, avatar, notifications, loading, firstName } = useTesterPageHeader();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
-  const firstName = name.split(/\s+/)[0] || "Tester";
 
-  useEffect(() => {
-    if (!session?.user?.id) { setLoading(false); return; }
-    let alive = true;
-    const userId = session.user.id;
-    Promise.all([
-      getTesterHeaderProfile(userId),
-      countTesterUnreadNotifications(userId)
-    ]).then(([profile, notification]) => {
-      if (!alive) return;
-      setName(profile.data?.display_name?.trim() || session.user.email?.split("@")[0] || "Tester");
-      setAvatar(profile.data?.avatar_url || "");
-      setNotifications(notification.count ?? 0);
-      setLoading(false);
-    }).catch(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, [session?.user?.id]);
+
 
   const nav = [
     { label: "Dashboard", icon: "home", href: "/tester-dashboard" },
