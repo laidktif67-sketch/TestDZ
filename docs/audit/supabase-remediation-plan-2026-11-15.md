@@ -152,3 +152,44 @@ runtime or security sign-off.
 - Live database changes: none.
 - Runtime migration/RLS validation: pending.
 - Production readiness: not established.
+
+
+## Follow-up reconciliation evidence (read-only, 2026-11-15)
+
+The latest Supabase migration ledger query returned **42 recorded entries**. The
+latest feature branch tree contains **52 migration files**. The ledger's newest
+entries are `app_distribution_schema_and_rpc`,
+`align_app_distribution_method`, `test_type_and_config`, and
+`allow_test_drafts` (versions `20261114222735` through
+`20261114222935`). This confirms the count/version mismatch remains; it does
+not by itself establish that every unlisted file is unapplied because deployed
+migration names may have been renamed.
+
+A second read-only catalog query confirmed:
+- `public.support_tickets`, `public.support_ticket_messages`,
+  `public.support_ticket_attachments`, and developer-feedback conversation
+  tables exist. The live support attachment relation is the composite FK
+  `(ticket_id, message_id) -> support_ticket_messages(ticket_id, id)`.
+- `developer_feedback_attachments` still has separate foreign keys for
+  `feedback_id` and `message_id`, rather than the composite feedback/message
+  relationship proposed by one branch migration.
+- None of the candidate FK index names checked by the query were present,
+  including `developer_feedback_attachments_message_idx` and the eight names
+  from `20261112232000_index_remaining_foreign_keys.sql`.
+- The expected pause-policy validation trigger is still absent; only
+  `cohorts.trg_cohorts_sync_is_active` matched the cohort-active trigger check.
+- Neither `public.account_suspensions` nor
+  `public.account_suspension_appeals` exists in the inspected live project.
+  Therefore the account suspension/appeals migration is not reflected by
+  those expected tables in this database. Do not infer safety to apply it:
+  its dependencies and complete RPC/policy behavior still need isolated tests.
+
+### Updated decision
+
+Do **not** apply the candidate migrations to the live project. The most
+actionable next step is to build a disposable PostgreSQL 17/Supabase-compatible
+test target and reconcile migration history against object definitions there.
+The available local PostgreSQL database is not Supabase-compatible, and the
+current hosted projects have not been confirmed as disposable. The absence of
+the suspension tables and candidate indexes is recorded as schema drift evidence,
+not as authorization for a live repair.
