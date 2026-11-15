@@ -1,4 +1,4 @@
-export type AppStatus = "draft" | "published" | "paused" | "archived";
+export type AppStatus = "draft" | "submitted" | "published" | "paused" | "archived" | "rejected";
 
 export interface AppRecord {
   id: string;
