@@ -112,7 +112,7 @@ export default function AssignmentSubmissionPage() {
   }, [id, session?.user?.id, previewMode]);
 
   const progress = assignment?.status === "completed" ? 100 : Math.min(100, Math.round(((Math.min(checkins.length, 14) / 14) * 70) + (feedbackCount > 0 ? 15 : 0) + (evidence.length > 0 ? 15 : 0)));
-  const points = assignment?.points_awarded ?? 0;
+  const points = assignment?.points_awarded ?? null;
   const draftKey = `testdz:assignment-submission:${session?.user?.id || "preview"}:${id}`;
   const appName = assignment?.test?.app?.name || "Assigned app";
   const dateRange = assignment?.test?.start_date && assignment?.test?.end_date
@@ -268,7 +268,7 @@ export default function AssignmentSubmissionPage() {
         <Link to={`/assignments/${id}`} className="as-back"><span>←</span> Back to Assignment Details</Link>
         <section className="as-hero">
           <div className="as-hero-icon"><GaugeIcon/></div>
-          <div className="as-hero-copy"><div className="as-title-line"><h1>{assignment?.test?.title || "Performance Testing"}</h1><span className={`as-status ${assignment?.status === "completed" ? "done" : "live"}`}><i/>{completedLabel}</span></div><p>Test the app performance under different conditions.</p><div className="as-meta"><span><Icon name="smartphone" size={16}/>{appName}</span><span><Icon name="calendar" size={16}/>{dateRange}</span><span><Icon name="star" size={16}/>+{points || 50} Points</span></div></div>
+          <div className="as-hero-copy"><div className="as-title-line"><h1>{assignment?.test?.title || "Performance Testing"}</h1><span className={`as-status ${assignment?.status === "completed" ? "done" : "live"}`}><i/>{completedLabel}</span></div><p>Test the app performance under different conditions.</p><div className="as-meta"><span><Icon name="smartphone" size={16}/>{appName}</span><span><Icon name="calendar" size={16}/>{dateRange}</span><span><Icon name="star" size={16}/>{points===null?"Reward not available":"+"+points+" Points"}</span></div></div>
           <div className="as-hero-art" aria-hidden="true"><div className="as-art-phone"><GaugeIcon/><span>✓</span></div><i/><b/></div>
         </section>
 
@@ -280,7 +280,7 @@ export default function AssignmentSubmissionPage() {
                 <div><Icon name="chart" size={28}/><span>Check-ins Completed</span><strong>{checkins.length}<small> / 14</small></strong></div>
                 <div><Icon name="receipt" size={28}/><span>Feedback Submitted</span><strong>{feedbackCount}</strong></div>
                 <div><Icon name="clock" size={28}/><span>Assignment Status</span><strong className="as-status-text">{completedLabel}</strong></div>
-                <div><Icon name="star" size={28}/><span>Points Awarded</span><strong className="as-points">+{points}</strong></div>
+                <div><Icon name="star" size={28}/><span>Points Awarded</span><strong className="as-points">{points===null?"Not available":"+"+points}</strong></div>
               </div></div>
               <div className="as-section"><Step n={2}>Test Results Report</Step><textarea className="as-comments as-report" maxLength={2000} value={report} onChange={event => setReport(event.target.value)} placeholder="Summarize what you tested, the results, issues found, and the overall outcome..." aria-label="Test results report"/><div className="as-char-count">{report.length} / 2000</div></div>
               <div className="as-section"><Step n={3}>Upload Evidence</Step>
@@ -299,7 +299,7 @@ export default function AssignmentSubmissionPage() {
               <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => { if (previewMode || !session?.user?.id) { setNotice("Draft saving is unavailable in preview mode."); return; } try { window.localStorage.setItem(draftKey, JSON.stringify({ report, comments, savedAt: new Date().toISOString() })); setNotice("Draft saved on this device. Attached files are not saved and must be selected again."); } catch { setNotice("Could not save the draft on this device. Check available browser storage."); } }}><Icon name="file" size={19}/>Save as Draft</button><button type="button" className="as-submit-btn" disabled={!canSubmit || !report.trim() || (isTesterWorkflowV2Enabled && submitting)} onClick={() => { if (isTesterWorkflowV2Enabled) void handleFinalSubmit(); else setNotice("Your report is ready, but secure final submission is not enabled in this environment. No report or files have been sent."); }}><Icon name="send" size={19}/>{submitting ? "Submitting…" : canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
             </section>
             <aside className="as-side">
-              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Submission Readiness</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
+              <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Submission Readiness</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> {points===null?"Reward pending":"+"+points+" Points"}</b></div></div></section>
               <section className="as-side-card as-details-card"><h2><Icon name="receipt" size={22}/>Submission Details</h2><div><Icon name="calendar" size={20}/><span>Assignment Started<strong>{dateTime(assignment.start_date)}</strong></span></div><div><Icon name="calendar" size={20}/><span>Last Updated<strong>{dateTime(assignment.completed_at || assignment.created_at)}</strong></span></div><div><Icon name="clock" size={20}/><span>Status<strong className="as-detail-status">{completedLabel}</strong></span></div><div><Icon name="info" size={20}/><span>Assignment ID<strong className="as-id">{assignment.id.slice(0, 13)}…</strong></span></div></section>
               <section className="as-success-card"><span>✓</span><div><strong>{assignment.status === "completed" ? "Assignment completed" : "You're making progress!"}</strong><p>{assignment.status === "completed" ? "Your assignment is marked as completed." : "Keep your evidence and comments ready before final submission."}</p></div></section>
             </aside>
