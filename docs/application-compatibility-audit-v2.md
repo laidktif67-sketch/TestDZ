@@ -67,7 +67,7 @@ The application route tree in `apps/web/src/App.tsx` includes public Auth/verifi
 | Support | Direct inserts into support_tickets, support_ticket_messages, support_ticket_attachments; upload to support-attachments; signed URL reads | support_tickets, support_ticket_messages, support_ticket_attachments, support_ticket_events, private Storage | Candidate RPCs now cover ticket creation, public replies, and attachment metadata. Support owner/staff visibility and object path access tested; frontend still needs migration to RPCs. |
 | Notifications | Reads own notifications; currently direct update of read_at for one/all | notifications | Candidate has owner-scoped `mark_notification_read` and `mark_all_notifications_read` RPCs. The frontend must switch from direct updates to these RPCs. |
 | Active sessions | `get_my_active_sessions()` RPC | Supabase Auth sessions | Self-only RPC implemented; `devices` remains separate. Device registration/revocation still needs its own contract. |
-| Login/security history | `get_my_security_activity(p_limit)` RPC | devices, audit_events, events | RPC missing. Define exactly which events are visible to the account owner and keep security metadata private. |
+| Login/security history | `get_my_security_activity(p_limit)` RPC | Supabase Auth audit entries | Self-only, bounded RPC implemented in `004_identity_sessions.sql`; it reads Auth audit entries rather than exposing the candidate-wide audit log. |
 | Leaderboard | Directly enumerates all tester user_roles, profiles, points_ledger rows, and completed assignments | user_roles, profiles, wallet_ledger, assignments | **Privacy/compatibility blocker.** Candidate RLS intentionally restricts profiles and roles to self/admin and ledger to owner/financial/admin, so the current client-side cross-user query must not be enabled. Design a safe aggregate leaderboard RPC/view with explicit opt-in/visibility rules and no email/private profile fields. |
 | Referrals | Referral pages currently show no referral table/RPC reads in reviewed source | referrals, coupons, coupon_redemptions | Candidate tables exist but UI is not connected. Define referral code generation, attribution, abuse controls and reward posting before connecting. |
 | Privacy export | Exports profiles, assignments, checkins, feedback, notifications, points_ledger; asks for profiles.subscription_tier | profiles, assignments, checkins, feedback, notifications, wallet_ledger, subscriptions/plans | Map points_ledger to wallet_ledger and derive subscription tier from subscription/plan state; candidate profiles has no subscription_tier. Export must not include other users' or staff-only data. |
@@ -188,10 +188,10 @@ This is still not a substitute for the complete role matrix. Synthetic tester, d
 
 ## Next steps (single branch, no production changes)
 
-1. Finish a complete inventory of all direct `.from()`, `.rpc()`, and Storage calls in every route/module, including admin/developer flows.
+1. Finish the remaining inventory of direct `.from()`, `.rpc()`, and Storage calls in unreviewed admin/developer routes.
 2. Decide canonical field semantics for points ledger, assignment lifecycle dates/rewards, check-in evidence, and subscription display.
-3. Implement only the missing RPCs/policies proven necessary by the application contract; keep all privileged financial state server-owned and idempotent.
-4. Add a Storage plan for existing buckets without deleting or renaming any production bucket/object.
+3. Implement the remaining proven contracts for reports/check-in submission, developer-feedback attachments, leaderboard aggregation, and admin/financial workflows; keep all privileged financial state server-owned and idempotent.
+4. Complete synthetic-user Storage tests for avatars, app icons, developer-feedback attachments, and test evidence without changing production buckets or objects.
 5. Run TypeScript typecheck/build and a disposable schema replay, then real synthetic-user RLS tests for tester/developer/support/financial/admin.
 6. Require verified restorable backup and explicit cutover approval before production changes.
 
@@ -201,7 +201,7 @@ This is still not a substitute for the complete role matrix. Synthetic tester, d
 - Candidate currently contains 43 tables, 13 exposed application RPCs, five Storage buckets, and 14 Storage object policies in FixLab.
 - The two correlated-policy defects described above were fixed in the candidate and source SQL; the strengthened security contract test passed after the fix.
 - All six source scripts replayed into temporary isolated schemas: 43 tables, 43 forced-RLS tables, 44 table policies, 13 authenticated RPCs, 14 Storage policies, and zero direct authenticated table write grants. Replay schemas and replay-only policies were removed.
-- Two synthetic Auth users were used for a real RLS isolation test in FixLab and fully cleaned up; no synthetic users remain.
+- Multiple synthetic Auth users were used for tester isolation, developer app lifecycle, onboarding, support staff/customer separation, and attachment Storage tests in FixLab. All synthetic users, tickets, apps, notifications, objects, and test plans were cleaned up; no synthetic users or objects remain.
 - Production Storage inventory was read-only confirmed: five existing buckets and zero objects. Matching candidate bucket settings and v2 policies exist only in FixLab; production was not changed.
 - Candidate schema and SQL now preserve the production app quota fields `plans.limits` and `apps.archived_from_status`; the full replay passed.
 - Existing production contracts for app lifecycle, onboarding, active sessions, security history, and Storage were inspected read-only. Candidate RPCs cover app lifecycle, onboarding, sessions, security history, support create/reply/attachment metadata, and notification read-state. Frontend API-schema integration, remaining Storage bucket tests, points/assignment compatibility, and leaderboard privacy remain.
