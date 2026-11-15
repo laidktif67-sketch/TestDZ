@@ -227,3 +227,34 @@ Remaining verification:
 - GitHub Actions run `43747281313` for this head concluded `failure`; the `web` job `132913259268` again returned `steps: null` and no logs URL.
 - The repeated pre-step failure still does not establish a source-level failure. TypeScript/build remain pending. Vercel build-rate-limit remains unresolved.
 - No production database, FixLab database, Auth, Storage, SQL, migration, Vercel settings, environment variables, or PR #18 were changed during this frontend-only pass.
+
+### Tester settings, privacy, support, and security route audit — 2026-11-15
+
+Read-only source review at branch head `7d844a6afb9224a68670530d441cc4650674caa1`. No source, database, Storage, Auth, Production, or deployment changes were made in this audit pass.
+
+Confirmed V2 integration gaps requiring a follow-up adapter/decision before enabling the feature flag for a complete tester experience:
+
+- `PrivacyDataManagementPage` has no V2 branch. Its profile, assignments, check-ins, feedback, notifications, and points export queries use the legacy public schema; it queries `public.points_ledger`, while the candidate schema exposes `rebuild_v2.wallet_ledger` with a different contract. Both JSON and CSV exports therefore remain legacy-only and will not represent the V2 dataset accurately. Privacy preferences and export-request history are stored in Auth user metadata; these are separate from the relational V2 records.
+- `SettingsSecurityPage` and `LanguageAppearancePage` read/update `public.profiles`. V2 defines a separate `rebuild_v2.profiles` table. Auth password/email/MFA operations and user-metadata preferences are Supabase Auth operations, but profile display-name/avatar/locale reads and locale/profile writes need an explicit V2 path or a documented shared-profile strategy.
+- `SupportCenterPage` and `SupportTicketDetailsPage` still read/write legacy `public.support_tickets`, `public.support_ticket_messages`, and `public.support_ticket_attachments`. Candidate V2 equivalents exist under `rebuild_v2` and have a distinct `requester_role` field and composite attachment-to-message relationship. The details page also uploads to the `support-attachments` bucket and creates signed URLs directly; V2 Storage bucket/policy/helper compatibility was not established in this source review. Do not switch these Storage operations merely by changing the database schema qualifier.
+- `ActiveSessionsPage` and `LoginActivitySecurityPage` call `public.get_my_active_sessions` and `public.get_my_security_activity`. The inspected V2 workflow client exposes the `rebuild_v2` schema; no V2 equivalents for these RPCs were verified in the inspected candidate workflow SQL. Supabase Auth sign-out/password/MFA methods are separate and remain Auth operations.
+- `ReferralProgramPage` and `ReferralHistoryPage` still use legacy profile/notification queries for surrounding account UI. Their referral records are currently local/empty presentation rather than a verified V2 referral workflow; do not present these pages as a live V2 referral system.
+- `WithdrawalRequestPage` was checked separately: it returns an explicit “Withdrawals are not enabled” state before rendering the legacy form whenever the V2 feature flag is enabled, and its legacy wallet query is skipped in that mode. This guard is present and was not changed.
+
+Route wiring:
+- `App.tsx` wires the settings, privacy, active-session, security-history, support, withdrawal, and tester workflow pages under the authenticated route tree. Tester-only pages are additionally wrapped in `RoleGuard requiredRole="tester"`; the account settings route itself is authenticated but not tester-role restricted.
+- `/tester/privacy`, `/tester/security-history`, `/active-sessions`, `/support`, `/support/:id`, and `/withdrawal-request` are therefore reachable routes, not merely unused components.
+- `supabase-v2.ts` still requires `VITE_TESTER_WORKFLOW_V2_ENABLED=true` and an initialized Supabase client; it selects schema `rebuild_v2`. The flag remains off by default.
+
+CI recheck:
+- Current branch head remains `7d844a6afb9224a68670530d441cc4650674caa1`; its combined Vercel status is failure with the `upgradeToPro=build-rate-limit` target.
+- The latest inspected GitHub Actions job `132913259268` for run `43747281313` returned an empty steps array on a direct steps lookup as well as `steps: null` in the job summary. Thus `npm install`, `npm run typecheck`, and `npm run build` have still not been observed running.
+- The exact platform-side reason for the pre-step job termination is not available in the returned metadata. No repository Actions settings or Vercel settings were changed.
+
+Next implementation slice:
+1. Add explicit V2 profile reads/updates for settings and language preferences, or document the profile table as intentionally shared (currently it is not shared in the candidate schema).
+2. Implement V2 privacy export against V2 tables and `wallet_ledger`, with no invented rewards; distinguish unavailable export domains from empty data.
+3. Decide whether support tickets are in this cutover; if yes, add V2 table access and a separately verified private Storage authorization flow before enabling attachment upload/download.
+4. Provide V2-safe session/security activity RPCs or clearly mark those histories unavailable; do not call legacy RPCs as a fallback in V2 mode.
+5. Keep referral features marked as not connected until their V2 data model/workflow is implemented.
+6. Continue to keep withdrawals disabled in V2.
