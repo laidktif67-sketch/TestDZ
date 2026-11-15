@@ -40,12 +40,6 @@ export default function ActiveSessionsPage() {
     let alive = true;
     async function loadSessions() {
       if (!supabase) { if (alive) setSessionReady(true); return; }
-      const [auth, result] = await Promise.all([
-        supabase.auth.getSession(),
-        isTesterWorkflowV2Enabled
-          ? supabaseV2?.rpc("get_my_active_sessions")
-          : supabase.rpc("get_my_active_sessions"),
-      ]);
       if (isTesterWorkflowV2Enabled && !supabaseV2) {
         if (alive) {
           setSessionsUnavailable(true);
@@ -54,6 +48,12 @@ export default function ActiveSessionsPage() {
         }
         return;
       }
+      const [auth, result] = await Promise.all([
+        supabase.auth.getSession(),
+        isTesterWorkflowV2Enabled
+          ? supabaseV2!.rpc("get_my_active_sessions")
+          : supabase.rpc("get_my_active_sessions"),
+      ]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
       if (result.error) setError("Could not load your active sessions. Please try again.");
