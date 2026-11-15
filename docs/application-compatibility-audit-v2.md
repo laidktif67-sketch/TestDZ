@@ -114,6 +114,49 @@ The production project `TestDZ` currently has five buckets and zero objects:
 
 Production currently has Storage object policies for owner-scoped avatar/app-icon uploads, public reads for public image buckets, participant-scoped private support/developer-feedback attachments, and assignment-participant evidence access. These policies must be re-authored against the new canonical schema and tested before cutover; they cannot simply be assumed to follow the candidate table policies. No bucket or object was changed.
 
+## Existing production RPC contracts recovered (read-only)
+
+The live production database contains implementations for several RPCs that were missing from the candidate. Their current behavior was inspected read-only so the replacement can preserve the established contract rather than inventing new workflow semantics.
+
+### Developer app lifecycle
+
+Existing production RPCs and implementation behavior:
+
+- `get_app_limit()`: returns plan code, max active apps, current active apps, and whether another app can be created. It uses the active subscription's `plans.limits.max_active_apps`, falls back to the active `free` plan, then defaults to one app.
+- `create_app(...)`: requires an authenticated developer/admin; validates name (3–50), description (20–500), package name syntax, and category; takes a per-user advisory transaction lock; checks the plan limit; creates a `draft` app.
+- `update_app(...)`: validates metadata and HTTPS icon URL; only updates a non-archived app owned by the caller.
+- `archive_app(...)`: only archives an owned, non-archived app and remembers its previous status.
+- `restore_app(...)`: rechecks the plan limit under the same per-user advisory lock and restores the remembered status.
+
+Candidate compatibility corrections already made in both FixLab and `001_schema.sql`:
+
+- Added `plans.limits jsonb NOT NULL DEFAULT '{}'` (candidate previously retained `features` but omitted the distinct `limits` field used by production quota logic).
+- Added `apps.archived_from_status text` (required to restore the previous app status safely).
+
+These column additions were replay-tested. The five app lifecycle RPCs are still not implemented in the candidate; their behavior above is the contract to port next. Do not replace plan limits with an assumed field inside `features`.
+
+### Onboarding and account security RPCs
+
+Production behavior inspected:
+
+- `complete_onboarding(p_roles,p_interests)`: requires auth; accepts 1–2 roles from only `tester` and `developer`; accepts an interests JSON array of at most 20 entries; updates profile onboarding state. It does not permit `admin`, `financial`, or `support` self-assignment.
+- `get_my_active_sessions()`: returns only the caller's active Auth sessions, including last-active time, user agent, IP address, assurance level, and current-session marker.
+- `get_my_security_activity(p_limit)`: returns only the caller's Auth audit events, clamps the requested limit to 1–100, and returns event/time/IP fields.
+
+Candidate has no corresponding exposed RPCs yet. `devices` is not a drop-in replacement for `auth.sessions`; preserve the existing session semantics by using a carefully scoped private function over `auth.sessions`. Security activity should use the Auth audit source, not expose all rows in `audit_events`.
+
+## Latest replay and advisor notes
+
+After adding the two confirmed app compatibility columns, the full source schema and security scripts were replayed into temporary schemas again:
+
+- 43 tables, all 43 with forced RLS.
+- 44 policies covering all 43 tables.
+- Zero authenticated direct table INSERT/UPDATE/DELETE grants.
+- Both new compatibility columns present.
+- Temporary replay schemas dropped after verification.
+
+Supabase advisor output for the production project still reports four INFO findings for RLS-enabled `public` tables without policies: `audit_logs`, `fraud_reviews`, `platform_config`, and `user_roles`. These are default-deny at the RLS layer, not proof of public data exposure, but need review. The performance advisor reports 28 unindexed foreign keys in the existing production `public` schema. These are production findings, not evidence that the isolated candidate schema has the same defects. The advisor output did not enumerate the non-public candidate schema, so candidate-specific index review remains a separate check.
+
 ## Candidate-only SQL defects found and corrected
 
 A focused semantic review found two incorrect correlated predicates in the generated policies:
@@ -142,5 +185,7 @@ This is still not a substitute for synthetic-user RLS tests; FixLab has no synth
 - Updated source scripts replayed into temporary isolated schemas: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, zero direct authenticated table write grants, and zero of the two known tautological predicates. Temporary replay schemas were dropped after verification.
 - Two synthetic Auth users were used for a real RLS isolation test in FixLab and fully cleaned up; no synthetic users remain.
 - Production Storage inventory was read-only confirmed: five existing buckets and zero objects; bucket policies need candidate-specific reconstruction.
-- No application compatibility patch has been applied yet.
+- Candidate schema and SQL now preserve the production app quota fields `plans.limits` and `apps.archived_from_status`; the full replay passed.
+- Existing production contracts for app lifecycle, onboarding, active sessions, and security history were inspected read-only and recorded above; corresponding candidate RPCs remain to be ported and tested.
+- No frontend compatibility patch has been applied yet.
 - No production database, Auth, Storage, or migration history was changed.
