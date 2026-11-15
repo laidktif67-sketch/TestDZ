@@ -105,6 +105,8 @@ Verification in FixLab:
 - The post-rollback cleanup query returned zero for synthetic Auth users, profiles, apps, tests, assignments, check-ins, feedback, submissions, attachment metadata, and Storage objects.
 - Both new tables have RLS enabled and FORCE RLS. Client write grants remain absent; only SELECT and narrow RPC execution are exposed.
 - The `authenticator` role's PostgREST exposed-schema setting was extended to include `rebuild_v2` on FixLab only, then config/schema reload notifications were sent. Production was not changed.
+- The Supabase Security Advisor on FixLab reports four INFO findings in legacy `public` tables (`audit_logs`, `fraud_reviews`, `platform_config`, `user_roles`) with RLS enabled and no policies. This is default-deny behavior, not evidence of public access; verify whether the absence of policies is intentional before changing it.
+- The Performance Advisor reports 31 unindexed foreign keys and 23 unused indexes across the mixed legacy/V2 FixLab database. Among the reported V2 foreign keys are the composite submission identity relation and attachment tester/submission relations. These are performance follow-ups, not authorization failures; do not drop unused indexes without workload evidence.
 
 Frontend checkpoint:
 - Added `apps/web/src/lib/supabase-v2.ts`, reusing the active Supabase session and requiring `VITE_TESTER_WORKFLOW_V2_ENABLED=true`.
