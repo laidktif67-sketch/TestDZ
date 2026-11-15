@@ -101,21 +101,8 @@ export default function CheckInHistoryPage() {
           setError("We couldn't load your check-in history. Please refresh and try again.");
           setRows([]);
         } else {
-          const source = (checkins.data ?? []) as unknown as Omit<CheckinRow, "points" | "evidence_url">[];
-          const withPrivateEvidence = await Promise.all(source.map(async row => {
-            if (!row.evidence_path) return { ...row, evidence_url: null, points: 0 };
-            // Storage RLS authorizes every signed-URL request; URLs are short-lived and never persisted.
-            const { data, error: signingError } = await client.storage
-              .from("test-evidence")
-              .createSignedUrl(row.evidence_path, 300);
-            return {
-              ...row,
-              evidence_url: signingError ? null : data?.signedUrl ?? null,
-              points: 0
-            };
-          }));
-          if (!alive) return;
-          setRows(withPrivateEvidence);
+          const source = (checkins.data ?? []) as unknown as Omit<CheckinRow, "points">[];
+          setRows(source.map(row => ({ ...row, evidence_url: null, points: 0 })));
         }
         setNotifications(notice.count ?? 0);
         if (profile.error || notice.error) setError("Some check-in information could not be loaded.");
@@ -206,7 +193,7 @@ export default function CheckInHistoryPage() {
     const header = ["Check-in date", "Test", "App", "Assignment status", "Note", "Evidence URL", "Linked points"];
     const data = visibleRows.map(row => [
       row.checkin_date, row.assignment?.test?.title || "", row.assignment?.test?.app?.name || "",
-      statusLabel(row.assignment?.status), row.note || "", isTesterWorkflowV2Enabled ? "" : row.evidence_url || "", row.points || ""
+      statusLabel(row.assignment?.status), row.note || "", row.evidence_url || "", row.points || ""
     ]);
     const csv = [header, ...data].map(line => line.map(csvCell).join(",")).join("\r\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
