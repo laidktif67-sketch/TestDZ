@@ -788,6 +788,7 @@ key text NOT NULL,
 CREATE INDEX user_roles_granted_by_v2 ON rebuild_v2.user_roles USING btree (granted_by);
 
 CREATE INDEX role_requests_status_created_v2 ON rebuild_v2.role_requests USING btree (status, created_at DESC);
+CREATE INDEX role_requests_reviewed_by_v2 ON rebuild_v2.role_requests USING btree (reviewed_by);
 
 CREATE UNIQUE INDEX role_requests_one_pending_per_user_v2 ON rebuild_v2.role_requests USING btree (user_id) WHERE (status = 'pending'::text);
 
