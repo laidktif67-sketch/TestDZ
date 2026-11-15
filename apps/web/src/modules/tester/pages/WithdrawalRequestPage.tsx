@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import "../styles/withdrawal-request.css";
@@ -46,7 +47,7 @@ export default function WithdrawalRequestPage() {
   useEffect(() => {
     let alive = true;
     async function load() {
-      if (!supabase) { if (alive) setLoading(false); return; }
+      if (isTesterWorkflowV2Enabled || !supabase) { if (alive) setLoading(false); return; }
       try {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
@@ -92,6 +93,7 @@ export default function WithdrawalRequestPage() {
     setSubmitted(true);
   }
 
+  if (isTesterWorkflowV2Enabled) return <div className="twr-loading"><strong>Withdrawals are not enabled in the current tester workflow.</strong><p>Points review, approval and withdrawal processing will be designed separately.</p><Link to="/wallet-rewards">Back to Wallet</Link></div>;
   if (loading) return <div className="twr-loading"><span className="td-spinner" />Loading withdrawal form…</div>;
 
   return <div className="td-dashboard twr-page">
