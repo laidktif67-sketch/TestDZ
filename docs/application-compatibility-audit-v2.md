@@ -84,6 +84,36 @@ The application route tree in `apps/web/src/App.tsx` includes public Auth/verifi
 - Candidate support message rows include `internal_note`; the client query currently selects only public message fields, which is good, but the write path must never let a customer set `internal_note=true`.
 - The frontend currently uses a public schema Supabase client, while candidate objects are in `rebuild_v2`; the candidate remains intentionally unexposed. A schema/API cutover plan is required before any app call can reach it.
 
+## Real synthetic-user RLS isolation test (FixLab only)
+
+Two synthetic Auth users were created in the isolated `TestDZ-FixLab` project. Their user metadata deliberately contained forged `role: admin` and `role: financial` values to test that the signup trigger does not trust browser-controlled role metadata.
+
+Observed results while executing as the `authenticated` database role with each user's JWT subject set:
+
+- Each user could read exactly their own profile, own role row, and own wallet row.
+- Each user received zero rows for the other user's profile, role, and wallet.
+- The generated role for both accounts was only `tester`; neither forged metadata role was granted.
+- `authenticated` had no UPDATE privilege on `rebuild_v2.wallets` and no INSERT privilege on `rebuild_v2.wallet_ledger`.
+- Calling the privileged `grant_role` function as a tester to grant another user `admin` failed with `forbidden: admin role required`.
+
+The two synthetic Auth users and their generated profile, role, and wallet rows were then removed. A read-back confirmed zero remaining synthetic Auth users, profiles, roles, or wallets. No production Auth users were involved.
+
+This verifies a narrow but meaningful part of the RLS model. It does not yet cover developer/support/financial/admin sessions, cross-tenant app/test visibility, assignment mutation, ticket internal notes, Storage object paths, or all RPCs.
+
+## Production Storage inventory (read-only)
+
+The production project `TestDZ` currently has five buckets and zero objects:
+
+| Bucket | Public | Max size | Allowed MIME types | Candidate status |
+|---|---:|---:|---|---|
+| `avatars` | Yes | 2 MiB | JPEG, PNG, WebP | Must preserve; candidate policies not yet added |
+| `app-icons` | Yes | 512 KB | PNG, JPEG | Must preserve; candidate policies not yet added |
+| `developer-feedback-attachments` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Must preserve; candidate policies not yet added |
+| `support-attachments` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Must preserve; candidate policies not yet added |
+| `test-evidence` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Must preserve; candidate policies not yet added |
+
+Production currently has Storage object policies for owner-scoped avatar/app-icon uploads, public reads for public image buckets, participant-scoped private support/developer-feedback attachments, and assignment-participant evidence access. These policies must be re-authored against the new canonical schema and tested before cutover; they cannot simply be assumed to follow the candidate table policies. No bucket or object was changed.
+
 ## Candidate-only SQL defects found and corrected
 
 A focused semantic review found two incorrect correlated predicates in the generated policies:
@@ -110,5 +140,7 @@ This is still not a substitute for synthetic-user RLS tests; FixLab has no synth
 - Candidate currently contains 43 tables and seven private helper functions; none of the application RPC names listed above exist in the candidate schemas.
 - The two correlated-policy defects described above were fixed in the candidate and source SQL; the strengthened security contract test passed after the fix.
 - Updated source scripts replayed into temporary isolated schemas: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, zero direct authenticated table write grants, and zero of the two known tautological predicates. Temporary replay schemas were dropped after verification.
+- Two synthetic Auth users were used for a real RLS isolation test in FixLab and fully cleaned up; no synthetic users remain.
+- Production Storage inventory was read-only confirmed: five existing buckets and zero objects; bucket policies need candidate-specific reconstruction.
 - No application compatibility patch has been applied yet.
 - No production database, Auth, Storage, or migration history was changed.
