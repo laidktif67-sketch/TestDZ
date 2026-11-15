@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -14,10 +15,38 @@ export default function AssignmentDetailsPage(){
  const [data,setData]=useState<AssignmentDetails|null>(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(""); const [menuOpen,setMenuOpen]=useState(false);
  const preview=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  const name=session?.user?.user_metadata?.display_name||session?.user?.email?.split("@")[0]||"Tester"; const firstName=name.split(/\s+/)[0];
- useEffect(()=>{if(preview){setData({id:"preview-assignment",status:"active",start_date:"2026-11-07",points_awarded:75,test:{id:"preview-test",title:"Performance Testing",description:"Help us test the app’s performance and stability under different conditions. Focus on responsiveness, smoothness, crashes and battery usage.",short_summary:"Test the app performance under different conditions.",start_date:"2026-11-07",end_date:"2026-11-14",app:{name:"PlayStore App",icon_url:null,category:"Android application"}}});setLoading(false);return;}
- if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){if(alive){setError("Database connection is unavailable.");setLoading(false);}return;}
- const a=await supabase.from("assignments").select("id,status,start_date,points_awarded,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category))").eq("id",id).eq("tester_id",session.user.id).maybeSingle();
- if(!alive)return;if(a.error||!a.data)setError(a.error?.message||"This assignment could not be found.");else setData(a.data as unknown as AssignmentDetails);setLoading(false);})();return()=>{alive=false;};},[id,session?.user?.id,preview]);
+ useEffect(()=>{
+  if(preview){setData({id:"preview-assignment",status:"active",start_date:"2026-11-07",points_awarded:75,test:{id:"preview-test",title:"Performance Testing",description:"Help us test the app’s performance and stability under different conditions. Focus on responsiveness, smoothness, crashes and battery usage.",short_summary:"Test the app performance under different conditions.",start_date:"2026-11-07",end_date:"2026-11-14",app:{name:"PlayStore App",icon_url:null,category:"Android application"}}});setLoading(false);return;}
+  if(!session?.user?.id||!id){setLoading(false);return;}
+  let alive=true;
+  (async()=>{
+   if(isTesterWorkflowV2Enabled&&supabaseV2){
+    const a=await supabaseV2.from("assignments").select("id,status,test_id,assigned_at,started_at,completed_at").eq("id",id).eq("tester_id",session.user.id).maybeSingle();
+    if(!alive)return;
+    if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
+    const t=await supabaseV2.from("tests").select("id,title,description,short_summary,start_date,end_date,app_id").eq("id",a.data.test_id).maybeSingle();
+    if(!alive)return;
+    if(t.error||!t.data){setError(t.error?.message||"The assigned test could not be found.");setLoading(false);return;}
+    const app=await supabaseV2.from("apps").select("name,icon_url,category").eq("id",t.data.app_id).maybeSingle();
+    if(!alive)return;
+    setData({
+     id:a.data.id,status:a.data.status,start_date:a.data.started_at||a.data.assigned_at,points_awarded:null,
+     test:{id:t.data.id,title:t.data.title,description:t.data.description,short_summary:t.data.short_summary,
+      start_date:t.data.start_date,end_date:t.data.end_date,app:app.data||null}
+    } as AssignmentDetails);
+    if(app.error)setError("Some app information could not be loaded.");
+    setLoading(false);
+    return;
+   }
+   if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}
+   const a=await supabase.from("assignments").select("id,status,start_date,points_awarded,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category))").eq("id",id).eq("tester_id",session.user.id).maybeSingle();
+   if(!alive)return;
+   if(a.error||!a.data)setError(a.error?.message||"This assignment could not be found.");
+   else setData(a.data as unknown as AssignmentDetails);
+   setLoading(false);
+  })().catch(()=>{if(alive){setError("Unable to load assignment details.");setLoading(false);}});
+  return()=>{alive=false;};
+ },[id,session?.user?.id,preview]);
  if(!preview&&!session)return <Navigate to="/auth" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;
  const test=data?.test;const canStart=data?.status==="active"||data?.status==="pending";
  return <div className="td-dashboard ad-dashboard"><TesterSidebar nav={[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests",active:true},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help & Support",icon:"headset",href:"/help-support"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Settings",icon:"settings",href:"/settings"}]} name={name} firstName={firstName} avatar="" roles={preview?["tester",...roles]:roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={preview}/>
