@@ -1,5 +1,5 @@
 -- TestDZ rebuild v2 security contract checks.
--- Run after 001_schema.sql, 002_security.sql, 003_app_lifecycle.sql and 004_identity_sessions.sql in a disposable Supabase test project.
+-- Run after 001_schema.sql through 005_support_notifications.sql in a disposable Supabase test project.
 -- The script is read-only apart from a transaction-local test probe; it rolls back.
 
 begin;
@@ -58,6 +58,36 @@ begin
      or to_regprocedure('rebuild_v2.get_my_active_sessions()') is null
      or to_regprocedure('rebuild_v2.get_my_security_activity(integer)') is null then
     raise exception 'onboarding or account-security RPC contract is incomplete';
+  end if;
+
+  if to_regprocedure('rebuild_v2.create_support_ticket(text,text,text,text)') is null
+     or to_regprocedure('rebuild_v2.send_support_message(uuid,text)') is null
+     or to_regprocedure('rebuild_v2.mark_notification_read(uuid)') is null
+     or to_regprocedure('rebuild_v2.mark_all_notifications_read()') is null then
+    raise exception 'support/notification RPC contract is incomplete';
+  end if;
+
+  if has_function_privilege('anon','rebuild_v2.create_support_ticket(text,text,text,text)','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2.send_support_message(uuid,text)','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2.mark_notification_read(uuid)','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2.mark_all_notifications_read()','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.create_support_ticket(text,text,text,text)','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.send_support_message(uuid,text)','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.mark_notification_read(uuid)','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.mark_all_notifications_read()','EXECUTE') then
+    raise exception 'support/notification RPC grants are incorrect';
+  end if;
+
+  if exists (
+       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='rebuild_v2' and p.proname in ('create_support_ticket','send_support_message','mark_notification_read','mark_all_notifications_read')
+         and p.prosecdef
+     )
+     or not exists (
+       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='rebuild_v2_private' and p.proname='send_support_message_impl' and p.prosecdef
+     ) then
+    raise exception 'support/notification wrapper security mode is incorrect';
   end if;
 
   if has_function_privilege('anon','rebuild_v2.complete_onboarding(text[],jsonb)','EXECUTE')
