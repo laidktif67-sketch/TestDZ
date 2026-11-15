@@ -39,9 +39,9 @@ The candidate contains 43 tables grouped around:
 
 - Applied candidate schema and security scripts in the isolated FixLab schema.
 - Replayed the same scripts into a second isolated schema, `rebuild_v2_replay`, to check reproducibility.
-- Replay result: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, and zero direct table-level write grants.
+- Replay result: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, and zero direct table-level write grants. The replay-only schema was removed after verification.
 - Security advisor: no candidate-schema security lint findings. The four reported RLS-without-policy findings are in the pre-existing `public` schema and were not changed.
-- Performance advisor: no unindexed foreign keys remain in the candidate schema. Unused-index notices are expected because the candidate contains no workload data yet.
+- Performance advisor: no unindexed foreign keys remain in the candidate schema. Unused-index notices are expected because the candidate contains no workload data yet. The SQL security-contract test script completed with `rebuild_v2_security_contract: PASS`.
 - Privileged RPCs were checked to deny callers without an authenticated admin/financial identity; immutable-event trigger behavior was checked.
 
 ## Not yet completed
