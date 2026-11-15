@@ -370,6 +370,332 @@ CREATE POLICY tests_select_published_owner_admin_v2 ON rebuild_v2.tests AS PERMI
 
 CREATE POLICY wallets_select_owner_financial_admin_v2 ON rebuild_v2.wallets AS PERMISSIVE FOR SELECT TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'financial'::text])));
 
+
+-- Developer app lifecycle RPCs. Public API wrappers are SECURITY INVOKER;
+-- privileged mutations live only in the non-exposed private schema.
+CREATE OR REPLACE FUNCTION rebuild_v2_private.get_active_subscription()
+ RETURNS TABLE(plan_code text, features jsonb, limits jsonb, expires_at timestamptz)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'rebuild_v2', 'auth'
+ SET row_security TO 'off'
+AS $function$
+  select p.code, p.features, p.limits, s.current_period_end
+  from rebuild_v2.subscriptions s
+  join rebuild_v2.plans p on p.id = s.plan_id
+  where auth.uid() is not null
+    and s.user_id = auth.uid()
+    and s.status in ('active','trialing')
+    and s.current_period_end > now()
+  order by s.current_period_end desc
+  limit 1;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2_private.get_app_limit_impl()
+ RETURNS TABLE(plan_code text, max_active_apps integer, current_active_apps integer, can_create boolean)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'rebuild_v2', 'rebuild_v2_private', 'auth'
+ SET row_security TO 'off'
+AS $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_plan_code text;
+  v_limits jsonb;
+  v_max_apps integer;
+  v_used integer;
+begin
+  if v_user_id is null then
+    raise exception 'authentication required' using errcode='42501';
+  end if;
+
+  select s.plan_code, s.limits into v_plan_code, v_limits
+  from rebuild_v2_private.get_active_subscription() s
+  limit 1;
+
+  if v_plan_code is null then
+    select p.code, p.limits into v_plan_code, v_limits
+    from rebuild_v2.plans p
+    where p.code='free' and p.is_active
+    limit 1;
+  end if;
+
+  v_plan_code := coalesce(v_plan_code, 'free');
+  v_max_apps := greatest(0, coalesce((v_limits->>'max_active_apps')::integer, 1));
+
+  select count(*)::integer into v_used
+  from rebuild_v2.apps a
+  where a.developer_id=v_user_id and a.status <> 'archived';
+
+  return query select v_plan_code, v_max_apps, v_used, (v_used < v_max_apps);
+end;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2_private.create_app_impl(
+ p_name text, p_package_name text, p_description text, p_category text
+)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'rebuild_v2', 'rebuild_v2_private', 'auth'
+ SET row_security TO 'off'
+AS $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_limits jsonb;
+  v_max_apps integer;
+  v_current_count integer;
+  v_app_id uuid;
+begin
+  if v_user_id is null then
+    raise exception 'AUTH_REQUIRED' using errcode='28000';
+  end if;
+  if not rebuild_v2_private.has_role(v_user_id,array['developer','admin']) then
+    raise exception 'DEVELOPER_ROLE_REQUIRED' using errcode='42501';
+  end if;
+  if p_name is null or char_length(btrim(p_name)) < 3 or char_length(btrim(p_name)) > 50 then
+    raise exception 'APP_NAME_INVALID' using errcode='22023';
+  end if;
+  if p_description is null or char_length(btrim(p_description)) < 20 or char_length(btrim(p_description)) > 500 then
+    raise exception 'APP_DESCRIPTION_INVALID' using errcode='22023';
+  end if;
+  if p_package_name is null or p_package_name !~ '^[a-z][a-z0-9_]*([.][a-z][a-z0-9_]*)+
+revoke all on all tables in schema rebuild_v2 from public, anon, authenticated;
+grant select on all tables in schema rebuild_v2 to authenticated;
+grant update(display_name,avatar_url,bio,locale,phone,interests)
+  on rebuild_v2.profiles to authenticated;
+
+revoke all on function rebuild_v2_private.prevent_immutable_mutation() from public,anon,authenticated;
+revoke all on function rebuild_v2_private.handle_new_auth_user() from public,anon,authenticated;
+revoke all on function rebuild_v2_private.has_role(uuid,text[]) from public,anon;
+revoke all on function rebuild_v2_private.grant_role(uuid,text,text) from public,anon;
+revoke all on function rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid) from public,anon;
+revoke all on function rebuild_v2_private.request_developer_role(text) from public,anon;
+revoke all on function rebuild_v2_private.review_role_request(uuid,text,text) from public,anon;
+
+grant execute on function rebuild_v2_private.has_role(uuid,text[]) to authenticated;
+grant execute on function rebuild_v2_private.grant_role(uuid,text,text) to authenticated;
+grant execute on function rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid) to authenticated;
+grant execute on function rebuild_v2_private.request_developer_role(text) to authenticated;
+grant execute on function rebuild_v2_private.review_role_request(uuid,text,text) to authenticated;
+
+revoke all on function rebuild_v2_private.get_active_subscription() from public,anon,authenticated;
+revoke all on function rebuild_v2_private.get_app_limit_impl() from public,anon;
+revoke all on function rebuild_v2_private.create_app_impl(text,text,text,text) from public,anon;
+revoke all on function rebuild_v2_private.update_app_impl(uuid,text,text,text,text) from public,anon;
+revoke all on function rebuild_v2_private.archive_app_impl(uuid) from public,anon;
+revoke all on function rebuild_v2_private.restore_app_impl(uuid) from public,anon;
+revoke all on function rebuild_v2.get_app_limit() from public,anon;
+revoke all on function rebuild_v2.create_app(text,text,text,text) from public,anon;
+revoke all on function rebuild_v2.update_app(uuid,text,text,text,text) from public,anon;
+revoke all on function rebuild_v2.archive_app(uuid) from public,anon;
+revoke all on function rebuild_v2.restore_app(uuid) from public,anon;
+
+grant execute on function rebuild_v2_private.get_app_limit_impl() to authenticated;
+grant execute on function rebuild_v2_private.create_app_impl(text,text,text,text) to authenticated;
+grant execute on function rebuild_v2_private.update_app_impl(uuid,text,text,text,text) to authenticated;
+grant execute on function rebuild_v2_private.archive_app_impl(uuid) to authenticated;
+grant execute on function rebuild_v2_private.restore_app_impl(uuid) to authenticated;
+grant execute on function rebuild_v2.get_app_limit() to authenticated;
+grant execute on function rebuild_v2.create_app(text,text,text,text) to authenticated;
+grant execute on function rebuild_v2.update_app(uuid,text,text,text,text) to authenticated;
+grant execute on function rebuild_v2.archive_app(uuid) to authenticated;
+grant execute on function rebuild_v2.restore_app(uuid) to authenticated;
+ then
+    raise exception 'PACKAGE_NAME_INVALID' using errcode='22023';
+  end if;
+  if p_category is null or p_category not in ('games','tools','education','social','health','other') then
+    raise exception 'APP_CATEGORY_INVALID' using errcode='22023';
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_user_id::text,0));
+
+  select s.limits into v_limits
+  from rebuild_v2_private.get_active_subscription() s
+  limit 1;
+
+  if v_limits is null then
+    select p.limits into v_limits
+    from rebuild_v2.plans p
+    where p.code='free' and p.is_active
+    limit 1;
+  end if;
+
+  v_max_apps := greatest(0,coalesce((v_limits->>'max_active_apps')::integer,1));
+  select count(*)::integer into v_current_count
+  from rebuild_v2.apps a
+  where a.developer_id=v_user_id and a.status <> 'archived';
+
+  if v_current_count >= v_max_apps then
+    raise exception 'PLAN_LIMIT_REACHED'
+      using errcode='P0001',
+      detail=jsonb_build_object('used',v_current_count,'limit',v_max_apps)::text;
+  end if;
+
+  insert into rebuild_v2.apps(developer_id,name,package_name,description,category,status)
+  values(v_user_id,btrim(p_name),lower(btrim(p_package_name)),btrim(p_description),p_category,'draft')
+  returning id into v_app_id;
+
+  return v_app_id;
+end;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2_private.update_app_impl(
+ p_app_id uuid, p_name text, p_description text, p_category text, p_icon_url text DEFAULT NULL
+)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'rebuild_v2', 'auth'
+ SET row_security TO 'off'
+AS $function$
+declare v_user_id uuid := auth.uid();
+begin
+  if v_user_id is null then
+    raise exception 'AUTH_REQUIRED' using errcode='28000';
+  end if;
+  if p_name is null or char_length(btrim(p_name)) < 3 or char_length(btrim(p_name)) > 50
+     or p_description is null or char_length(btrim(p_description)) < 20 or char_length(btrim(p_description)) > 500
+     or p_category is null or p_category not in ('games','tools','education','social','health','other') then
+    raise exception 'APP_FIELDS_INVALID' using errcode='22023';
+  end if;
+  if p_icon_url is not null and p_icon_url !~ '^https://[^[:space:]]+
+revoke all on all tables in schema rebuild_v2 from public, anon, authenticated;
+grant select on all tables in schema rebuild_v2 to authenticated;
+grant update(display_name,avatar_url,bio,locale,phone,interests)
+  on rebuild_v2.profiles to authenticated;
+
+revoke all on function rebuild_v2_private.prevent_immutable_mutation() from public,anon,authenticated;
+revoke all on function rebuild_v2_private.handle_new_auth_user() from public,anon,authenticated;
+revoke all on function rebuild_v2_private.has_role(uuid,text[]) from public,anon;
+revoke all on function rebuild_v2_private.grant_role(uuid,text,text) from public,anon;
+revoke all on function rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid) from public,anon;
+revoke all on function rebuild_v2_private.request_developer_role(text) from public,anon;
+revoke all on function rebuild_v2_private.review_role_request(uuid,text,text) from public,anon;
+
+grant execute on function rebuild_v2_private.has_role(uuid,text[]) to authenticated;
+grant execute on function rebuild_v2_private.grant_role(uuid,text,text) to authenticated;
+grant execute on function rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid) to authenticated;
+grant execute on function rebuild_v2_private.request_developer_role(text) to authenticated;
+grant execute on function rebuild_v2_private.review_role_request(uuid,text,text) to authenticated;
+ then
+    raise exception 'APP_ICON_URL_INVALID' using errcode='22023';
+  end if;
+
+  update rebuild_v2.apps
+  set name=btrim(p_name),
+      description=btrim(p_description),
+      category=p_category,
+      icon_url=case when p_icon_url is null then icon_url else p_icon_url end,
+      updated_at=now()
+  where id=p_app_id and developer_id=v_user_id and status <> 'archived';
+
+  if not found then
+    raise exception 'APP_NOT_FOUND_OR_NOT_OWNED' using errcode='P0002';
+  end if;
+end;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2_private.archive_app_impl(p_app_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'rebuild_v2', 'auth'
+ SET row_security TO 'off'
+AS $function$
+declare v_user_id uuid := auth.uid();
+begin
+  if v_user_id is null then
+    raise exception 'AUTH_REQUIRED' using errcode='28000';
+  end if;
+
+  update rebuild_v2.apps
+  set archived_from_status=status, status='archived', updated_at=now()
+  where id=p_app_id and developer_id=v_user_id and status <> 'archived';
+
+  if not found then
+    raise exception 'APP_NOT_FOUND_OR_ALREADY_ARCHIVED' using errcode='P0002';
+  end if;
+end;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2_private.restore_app_impl(p_app_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog', 'rebuild_v2', 'rebuild_v2_private', 'auth'
+ SET row_security TO 'off'
+AS $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_limits jsonb;
+  v_max_apps integer;
+  v_used integer;
+begin
+  if v_user_id is null then
+    raise exception 'AUTH_REQUIRED' using errcode='28000';
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_user_id::text,0));
+
+  select s.limits into v_limits
+  from rebuild_v2_private.get_active_subscription() s
+  limit 1;
+
+  if v_limits is null then
+    select p.limits into v_limits
+    from rebuild_v2.plans p
+    where p.code='free' and p.is_active
+    limit 1;
+  end if;
+
+  v_max_apps := greatest(0,coalesce((v_limits->>'max_active_apps')::integer,1));
+  select count(*)::integer into v_used
+  from rebuild_v2.apps
+  where developer_id=v_user_id and status <> 'archived';
+
+  if v_used >= v_max_apps then
+    raise exception 'PLAN_LIMIT_REACHED' using errcode='P0001';
+  end if;
+
+  update rebuild_v2.apps
+  set status=coalesce(archived_from_status,'draft'),
+      archived_from_status=null,
+      updated_at=now()
+  where id=p_app_id and developer_id=v_user_id and status='archived';
+
+  if not found then
+    raise exception 'APP_NOT_FOUND_OR_NOT_ARCHIVED' using errcode='P0002';
+  end if;
+end;
+$function$;
+
+-- Exposed-schema wrappers contain no privileged logic.
+CREATE OR REPLACE FUNCTION rebuild_v2.get_app_limit()
+ RETURNS TABLE(plan_code text, max_active_apps integer, current_active_apps integer, can_create boolean)
+ LANGUAGE sql STABLE SECURITY INVOKER SET search_path TO ''
+AS $function$ select * from rebuild_v2_private.get_app_limit_impl(); $function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.create_app(p_name text, p_package_name text, p_description text, p_category text)
+ RETURNS uuid
+ LANGUAGE sql SECURITY INVOKER SET search_path TO ''
+AS $function$ select rebuild_v2_private.create_app_impl(p_name,p_package_name,p_description,p_category); $function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.update_app(p_app_id uuid, p_name text, p_description text, p_category text, p_icon_url text DEFAULT NULL)
+ RETURNS void
+ LANGUAGE sql SECURITY INVOKER SET search_path TO ''
+AS $function$ select rebuild_v2_private.update_app_impl(p_app_id,p_name,p_description,p_category,p_icon_url); $function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.archive_app(p_app_id uuid)
+ RETURNS void
+ LANGUAGE sql SECURITY INVOKER SET search_path TO ''
+AS $function$ select rebuild_v2_private.archive_app_impl(p_app_id); $function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.restore_app(p_app_id uuid)
+ RETURNS void
+ LANGUAGE sql SECURITY INVOKER SET search_path TO ''
+AS $function$ select rebuild_v2_private.restore_app_impl(p_app_id); $function$;
+
 -- Privileges: deny direct client writes; expose only safe reads and explicitly scoped RPCs.
 revoke all on all tables in schema rebuild_v2 from public, anon, authenticated;
 grant select on all tables in schema rebuild_v2 to authenticated;
