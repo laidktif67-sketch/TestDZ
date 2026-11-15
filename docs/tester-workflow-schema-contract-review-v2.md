@@ -280,3 +280,20 @@ Verification limits:
 
 - Updated the export descriptions to say they cover the available profile, tester activity, and wallet records rather than implying a complete archive of every account-related system. The code still explicitly lists the included domains in the JSON export.
 - This is copy-only; no schema, data, Auth, Storage, or Production changes.
+
+
+### Settings and account-security V2 integration — 2026-11-15
+
+Implemented on the rebuild/testdz-v2 branch only:
+
+- SettingsSecurityPage now reads and updates rebuild_v2.profiles for display name and locale when the V2 feature flag is enabled. Legacy public.profiles access remains confined to legacy mode.
+- The Settings page's V2 data-export action now directs users to the V2-aware Privacy & Data Management export instead of running its legacy-only export queries.
+- LanguageAppearancePage now reads and updates rebuild_v2.profiles.locale in V2 mode. Theme and regional display preferences remain in the signed-in user's Auth metadata; password, email, and MFA operations remain Supabase Auth operations.
+- ActiveSessionsPage no longer calls the legacy get_my_active_sessions RPC in V2 mode. It explicitly reports the V2 session list as unavailable rather than showing an empty list as if no sessions exist.
+- LoginActivitySecurityPage no longer calls the legacy get_my_security_activity RPC in V2 mode. The event count and table show an unavailable state rather than a misleading zero-event history.
+- Supabase Auth signOut({ scope: "others" }) remains the supported Auth operation. The V2 session list itself is not yet implemented, so the page does not offer per-session inventory or claim that a session list was refreshed.
+
+Verification limits:
+- These are source-level integrations only. No browser session, TypeScript check, Vite build, or CI build pass has been completed.
+- The V2 feature flag remains off by default. No SQL, migrations, Auth configuration, Storage, Production database, Vercel configuration, or PR #18 changes were made.
+- V2 session inventory and login-event history remain explicit feature gaps until dedicated, owner-scoped V2 RPCs and contract tests are implemented.
