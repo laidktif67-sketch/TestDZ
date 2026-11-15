@@ -58,28 +58,15 @@ SELECT ok(
 );
 
 -- ============================================================
--- TEST 3b: assignments_cohort_tester_fk -> cohort_tests(cohort_id, developer_id)
+-- TEST 3b: tester identity is not constrained to the test owner
 -- ============================================================
 SELECT ok(
-  EXISTS (
+  NOT EXISTS (
     SELECT 1 FROM pg_constraint c
     WHERE c.conrelid = 'public.assignments'::regclass
       AND c.conname = 'assignments_cohort_tester_fk'
-      AND c.contype = 'f'
-      AND c.confrelid = 'public.cohort_tests'::regclass
-      AND c.convalidated
-      AND (
-        SELECT array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum))
-        FROM pg_attribute a
-        WHERE a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
-      ) = ARRAY['cohort_id', 'tester_id']::name[]
-      AND (
-        SELECT array_agg(a.attname ORDER BY array_position(c.confkey, a.attnum))
-        FROM pg_attribute a
-        WHERE a.attrelid = c.confrelid AND a.attnum = ANY(c.confkey)
-      ) = ARRAY['cohort_id', 'developer_id']::name[]
   ),
-  'TEST 3b: assignments_cohort_tester_fk -> cohort_tests(cohort_id, developer_id)'
+  'TEST 3b: no tester-to-developer FK; ordinary testers may test another developer''s test'
 );
 
 -- ============================================================
