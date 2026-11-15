@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -20,11 +21,20 @@ export default function LoginActivitySecurityPage() {
   const [notice, setNotice] = useState("");
   const [activity, setActivity] = useState<Array<{id:string;event:string;occurred_at:string;ip_address:string|null}>>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
+  const [activityUnavailable, setActivityUnavailable] = useState(false);
   const device = useMemo(getDevice, []);
   useEffect(() => {
     let alive = true;
     async function loadActivity() {
       if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }
+      if (isTesterWorkflowV2Enabled) {
+        if (alive) {
+          setActivityUnavailable(true);
+          setNotice("Login security history is not connected to the V2 data model yet. No legacy activity records are shown.");
+          setLoadingActivity(false);
+        }
+        return;
+      }
       setLoadingActivity(true);
       const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
       if (!alive) return;
@@ -59,6 +69,11 @@ export default function LoginActivitySecurityPage() {
   ];
   async function refreshActivity() {
     if (!supabase || !user) { setNotice("Sign in to load your account security history."); return; }
+    if (isTesterWorkflowV2Enabled) {
+      setActivityUnavailable(true);
+      setNotice("Login security history is not connected to the V2 data model yet. No legacy activity records are shown.");
+      return;
+    }
     setRefreshing(true); setNotice("");
     const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
     setRefreshing(false);
@@ -74,7 +89,7 @@ export default function LoginActivitySecurityPage() {
         <Link to="/settings" className="las-back"><Icon name="arrow" size={17}/>Back to Settings</Link>
         <section className="las-hero"><div className="las-hero-icon"><Icon name="shield" size={55}/></div><div className="las-hero-copy"><h1>Login Activity &amp; Security History</h1><p>Review your login activity and keep your account secure.</p></div><div className="las-hero-art"><Icon name="monitor" size={105}/><span><Icon name="check" size={47}/></span></div></section>
         <section className="las-stats">
-          <article><span className="las-stat-icon blue"><Icon name="calendar" size={32}/></span><div><strong>{activity.length || "0"}</strong><b>Recorded Login Events</b><small>Supabase Auth audit history</small></div></article>
+          <article><span className="las-stat-icon blue"><Icon name="calendar" size={32}/></span><div><strong>{activityUnavailable ? "—" : activity.length || "0"}</strong><b>Recorded Login Events</b><small>Supabase Auth audit history</small></div></article>
           <article><span className="las-stat-icon green"><Icon name="smartphone" size={32}/></span><div><strong>{user ? "1" : "—"}</strong><b>Current Device</b><small>{device.label} · Last sign-in: {formattedLogin}</small></div></article>
           <article><span className="las-stat-icon purple"><Icon name="globe" size={32}/></span><div><strong>—</strong><b>Login Locations</b><small>Location data not provided</small></div></article>
           <article><span className="las-stat-icon teal"><Icon name="shield" size={32}/></span><div><strong>{verified ? "Verified" : "Review"}</strong><b>Account Verification</b><small>{verified ? "Email confirmed" : "Email not confirmed"}</small></div></article>
@@ -84,7 +99,7 @@ export default function LoginActivitySecurityPage() {
           <section className="las-card las-activity">
             <div className="las-card-heading"><h2><Icon name="clock" size={25}/>Recent Login Activity</h2><span>Account record</span></div>
             <div className="las-table-wrap"><table><thead><tr><th>Date &amp; Time</th><th>Device</th><th>Browser</th><th>Location</th><th>IP Address</th><th>Status</th></tr></thead><tbody>
-              {loadingActivity ? <tr><td colSpan={6} className="las-empty">Loading your login history…</td></tr> : rows.length ? rows.map(row => <tr key={row.id}><td>{row.date}</td><td><Icon name={device.mobile ? "smartphone" : "monitor"} size={18}/>{row.device}</td><td>{row.browser}</td><td>{row.location}</td><td>{row.ip}</td><td><span className="las-status"><Icon name="check" size={13}/>{row.status}</span></td></tr>) : <tr><td colSpan={6} className="las-empty">No login audit events are available for this account yet.</td></tr>}
+              {activityUnavailable ? <tr><td colSpan={6} className="las-empty">Login history is unavailable in this V2 phase. The legacy security-history RPC is intentionally not called.</td></tr> : loadingActivity ? <tr><td colSpan={6} className="las-empty">Loading your login history…</td></tr> : rows.length ? rows.map(row => <tr key={row.id}><td>{row.date}</td><td><Icon name={device.mobile ? "smartphone" : "monitor"} size={18}/>{row.device}</td><td>{row.browser}</td><td>{row.location}</td><td>{row.ip}</td><td><span className="las-status"><Icon name="check" size={13}/>{row.status}</span></td></tr>) : <tr><td colSpan={6} className="las-empty">No login audit events are available for this account yet.</td></tr>}
             </tbody></table></div>
             <div className="las-data-note"><Icon name="info" size={20}/><p>Only events recorded by Supabase Auth are shown. Device, browser and location are not inferred when the audit record does not contain them.</p></div>
           </section>
