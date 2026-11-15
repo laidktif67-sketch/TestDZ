@@ -86,6 +86,33 @@ This compares a cohort ID to the assignment's own ID, rather than correlating th
 5. Run SQL contract tests, cross-user/role/duplicate/capacity race checks, TypeScript, lint, and build.
 6. No Production SQL, active migration promotion, PR #18 changes, Auth deletion, or Storage cleanup without explicit approval.
 
-## Status
+## Implementation checkpoint — 007
 
-This is a verified contract review only. No source or database changes were made.
+Candidate implementation is now saved in `supabase/rebuild-v2/007_tester_workflow.sql` and applied only to TestDZ-FixLab.
+
+Implemented:
+- Corrected `cohorts_select_participants_v2` tester ownership correlation.
+- Read-only `get_discoverable_tests` RPC with cohort capacity filtering and app/test display fields.
+- Atomic `join_test` with tester-role/account checks, advisory lock per tester+test, cohort row locks, capacity count, and idempotent return for an existing pending/active assignment.
+- `start_assignment`, `submit_checkin` (once per server day, idempotent), and `submit_tester_feedback` (server-owned quality/review fields).
+- Dedicated `assignment_submissions` and `assignment_submission_attachments` tables, private RLS read policies, metadata registration, upload-path authorization, and idempotent finalization.
+- Finalization transitions the assignment to completed only after every registered attachment is present in the private `test-evidence` bucket. No reward is posted.
+
+Verification in FixLab:
+- The rollback-only contract script `supabase/rebuild-v2/tests/007_tester_workflow_contract.sql` passed.
+- Tested discovery, join idempotency, start, daily check-in idempotency, feedback, attachment registration, upload/read helper authorization, finalization idempotency, cross-user denial, and capacity filtering.
+- The post-rollback cleanup query returned zero for synthetic Auth users, profiles, apps, tests, assignments, check-ins, feedback, submissions, attachment metadata, and Storage objects.
+- Both new tables have RLS enabled and FORCE RLS. Client write grants remain absent; only SELECT and narrow RPC execution are exposed.
+- The `authenticator` role's PostgREST exposed-schema setting was extended to include `rebuild_v2` on FixLab only, then config/schema reload notifications were sent. Production was not changed.
+
+Frontend checkpoint:
+- Added `apps/web/src/lib/supabase-v2.ts`, reusing the active Supabase session and requiring `VITE_TESTER_WORKFLOW_V2_ENABLED=true`.
+- Discovery list, test preview/enrollment, and assignment details now have a V2 code path behind that feature flag; the legacy path remains the default when the flag is absent/false.
+- Production remains feature-disabled. Do not enable the flag until the V2 schema and exposed-schema configuration are deployed to that same target project.
+- TypeScript/build/Browser verification has not yet been run; no claim of frontend build success is made.
+
+Remaining:
+- Connect the progress/check-in, feedback form, final submission form, and history pages to the V2 RPCs.
+- Run the frontend typecheck/build and browser workflow against a dedicated FixLab preview environment.
+- Review concurrent capacity behavior with a two-session race test.
+- No Production SQL, active migration promotion, Auth deletion, or PR #18 changes were made.
