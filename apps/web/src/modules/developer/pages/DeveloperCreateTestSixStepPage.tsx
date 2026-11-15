@@ -212,9 +212,9 @@ export default function DeveloperCreateTestSixStepPage() {
       setSaveError(error.message.includes("cohort")
         ? "The test could not be created because the current cohort setup needs attention."
         : "Could not save your test. Check the details and confirm the latest database migration has been applied.");
-      setSaving(false);
       return;
     }
+      navigate("/developer/tests", { state: { createdTestId: data.id } });
     } catch {
       setSaveError("A connection or server error prevented saving. Please try again.");
     } finally {
