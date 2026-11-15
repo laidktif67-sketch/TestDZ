@@ -30,7 +30,7 @@ Before this change, `apps-api.ts` called the default `public` schema for app rea
 2. The app lifecycle has structural/security assertions in `tests/security_contract.sql`, but a separate end-to-end app lifecycle contract (authenticated create, ownership isolation, quota limit, update/archive/restore) has not yet been run as a runtime test in FixLab.
 3. No real browser session has exercised the V2 developer dashboard or app icon upload.
 4. The app-icon bucket is public-read by design; only mutations are owner-scoped. This is suitable only for public app icons, not private APKs or user evidence.
-5. Developer test creation/management, test submission, review/moderation, and developer feedback screens remain outside this app CRUD wiring and require a separate audit before claiming the developer workspace is V2-complete.
+5. Developer test creation/management is not implemented in the current V2 backend: the candidate migrations expose no developer RPCs to create/update/submit tests or manage cohorts, while direct table writes are revoked and the tests/cohorts policies shown are read-only. The current app detail page also labels test management as coming soon; no developer test-management route is registered. Developer feedback/review screens likewise need a separate workflow audit before claiming the developer workspace is V2-complete.
 6. V2 remains opt-in and off by default. Do not enable it in Production until the full acceptance gates pass.
 
 ## Verification status
