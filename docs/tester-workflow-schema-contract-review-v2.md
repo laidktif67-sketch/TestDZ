@@ -208,3 +208,22 @@ Remaining verification:
 - Latest GitHub Actions run `43747141597` for that head concluded `failure`. Its `web` job (`132912841593`) again returned `steps: null` and no logs URL. This does not show that npm install, typecheck, or build ran.
 - The latest Vercel combined status remains a build-rate-limit failure. No Vercel configuration or environment variables were changed.
 - No SQL, migration, Storage, Auth, Production, or PR #18 changes were made in this frontend follow-up.
+
+
+### Further V2 reward-state consistency pass
+
+- Extended the same explicit unavailable-state treatment to the remaining high-traffic tester reward surfaces:
+  - `TesterDashboardPage`: points KPI and reward summary no longer imply that a zero balance is a posted V2 reward result.
+  - `DiscoverTestsPage`: reward card and quick-stat points now identify reward posting as disabled.
+  - `WalletRewardsPage`: total points, points-chart caption, and milestone panel now explain that reward posting/milestones are not enabled in this V2 phase. Legacy mode retains its prior values and milestone UI.
+- Together with the preceding updates, the V2-facing tester surfaces now consistently avoid presenting zero as a verified reward amount in Check-in History, My Tests, Activity History, Active Assignment Progress, Dashboard, Discover Tests, and Wallet & Rewards.
+- V2 completion reward and completion summary pages remain guarded from legacy ledger reads.
+- Read-back verification confirmed the conditional V2 copy is present in the updated source files. No local TypeScript/build run was available, so this is not a compile pass.
+
+### Latest CI after reward-state consistency changes
+
+- Latest verified branch head: `a5f578188a6dff79b959edfb6fc3da0348a9b59b`.
+- Compared with `87a65f3c9aeaf5a517fb284408a10e537d94d596`, branch is ahead by 14 commits and behind by 0.
+- GitHub Actions run `43747281313` for this head concluded `failure`; the `web` job `132913259268` again returned `steps: null` and no logs URL.
+- The repeated pre-step failure still does not establish a source-level failure. TypeScript/build remain pending. Vercel build-rate-limit remains unresolved.
+- No production database, FixLab database, Auth, Storage, SQL, migration, Vercel settings, environment variables, or PR #18 were changed during this frontend-only pass.
