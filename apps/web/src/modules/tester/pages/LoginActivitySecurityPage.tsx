@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -27,16 +27,18 @@ export default function LoginActivitySecurityPage() {
     let alive = true;
     async function loadActivity() {
       if (!supabase || !user) { if (alive) setLoadingActivity(false); return; }
-      if (isTesterWorkflowV2Enabled) {
+      if (isTesterWorkflowV2Enabled && !supabaseV2) {
         if (alive) {
           setActivityUnavailable(true);
-          setNotice("Login security history is not connected to the V2 data model yet. No legacy activity records are shown.");
+          setNotice("V2 login security history is unavailable because the V2 client is not initialized.");
           setLoadingActivity(false);
         }
         return;
       }
       setLoadingActivity(true);
-      const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
+      const result = isTesterWorkflowV2Enabled
+        ? await supabaseV2!.rpc("get_my_security_activity", { p_limit: 30 })
+        : await supabase.rpc("get_my_security_activity", { p_limit: 30 });
       if (!alive) return;
       if (result.error) setNotice("Login history is temporarily unavailable. Please try again.");
       else setActivity((result.data || []) as typeof activity);
@@ -69,13 +71,15 @@ export default function LoginActivitySecurityPage() {
   ];
   async function refreshActivity() {
     if (!supabase || !user) { setNotice("Sign in to load your account security history."); return; }
-    if (isTesterWorkflowV2Enabled) {
+    if (isTesterWorkflowV2Enabled && !supabaseV2) {
       setActivityUnavailable(true);
-      setNotice("Login security history is not connected to the V2 data model yet. No legacy activity records are shown.");
+      setNotice("V2 login security history is unavailable because the V2 client is not initialized.");
       return;
     }
     setRefreshing(true); setNotice("");
-    const result = await supabase.rpc("get_my_security_activity", { p_limit: 30 });
+    const result = isTesterWorkflowV2Enabled
+      ? await supabaseV2!.rpc("get_my_security_activity", { p_limit: 30 })
+      : await supabase.rpc("get_my_security_activity", { p_limit: 30 });
     setRefreshing(false);
     if (result.error) setNotice("Could not refresh login history. Please try again.");
     else { setActivity((result.data || []) as typeof activity); setNotice("Login history refreshed."); }
