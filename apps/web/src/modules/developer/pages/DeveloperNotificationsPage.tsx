@@ -128,34 +128,59 @@ export default function DeveloperNotificationsPage() {
 
   useEffect(() => { setPage(1); }, [filter, range, search, showArchived]);
   async function markRead(row: NotificationRow) {
-    if (!user?.id || row.read_at) return;
-    setBusy(true); setError("");
+    if (!user?.id || row.read_at || busy) return;
+    setBusy(true);
+    setError("");
     const readAt = new Date().toISOString();
-    const result = await markDeveloperNotificationRead(row.id, user.id, readAt);
-    if (result.error) setError("Could not mark this notification as read.");
-    else setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
-    setBusy(false);
+    try {
+      const result = await markDeveloperNotificationRead(row.id, user.id, readAt);
+      if (result.error) {
+        setError("Could not mark this notification as read. Please try again.");
+      } else {
+        setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
+      }
+    } catch {
+      setError("A connection error prevented updating this notification. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
   async function markAllRead() {
-    if (!user?.id || unread === 0) return;
-    setBusy(true); setError("");
+    if (!user?.id || unread === 0 || busy || showArchived) return;
+    setBusy(true);
+    setError("");
     const readAt = new Date().toISOString();
-    const result = await markAllDeveloperNotificationsRead(user.id, readAt);
-    if (result.error) setError("Could not mark all notifications as read.");
-    else setRows(current => current.map(item => !item.archived_at && !item.read_at ? { ...item, read_at: readAt } : item));
-    setBusy(false);
+    try {
+      const result = await markAllDeveloperNotificationsRead(user.id, readAt);
+      if (result.error) {
+        setError("Could not mark all notifications as read. Please try again.");
+      } else {
+        setRows(current => current.map(item => !item.archived_at && !item.read_at ? { ...item, read_at: readAt } : item));
+      }
+    } catch {
+      setError("A connection error prevented updating notifications. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
   async function archive(row: NotificationRow) {
-    if (!user?.id) return;
-    setBusy(true); setError("");
+    if (!user?.id || busy) return;
+    setBusy(true);
+    setError("");
     const archivedAt = row.archived_at ? null : new Date().toISOString();
-    const result = await setDeveloperNotificationArchived(row.id, user.id, archivedAt);
-    if (result.error) setError("Could not update the archive state. Please try again.");
-    else {
-      setRows(current => current.map(item => item.id === row.id ? { ...item, archived_at: archivedAt } : item));
-      setSelectedId("");
+    try {
+      const result = await setDeveloperNotificationArchived(row.id, user.id, archivedAt);
+      if (result.error) {
+        setError("Could not update the archive state. Please try again.");
+      } else {
+        setRows(current => current.map(item => item.id === row.id ? { ...item, archived_at: archivedAt } : item));
+        setSelectedId("");
+      }
+    } catch {
+      setError("A connection error prevented changing the archive state. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
   if (!allowed) return <RoleAccessNotice />;
   const firstName = user?.email?.split("@")[0]?.split(/[._-]/)[0] || "Developer";
