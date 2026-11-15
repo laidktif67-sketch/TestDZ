@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/withdrawal-status.css";
@@ -17,7 +18,7 @@ export default function WithdrawalStatusPage() {
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
-    const client = supabase;
+    const client = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
     if (!client) { setLoading(false); return; }
     const db = client;
     let alive = true;
