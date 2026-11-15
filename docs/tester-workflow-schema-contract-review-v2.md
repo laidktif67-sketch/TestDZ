@@ -305,3 +305,21 @@ Verification limits:
 - SupportTicketDetailsPage now skips legacy ticket/message/attachment queries in V2 mode and blocks reply, upload, and signed-URL actions. The V2 support workflow remains unavailable until the distinct V2 requester/attachment contract and private Storage authorization flow are implemented and tested.
 - Legacy support behavior remains available when V2 is disabled.
 - This is a frontend safety guard only. No support schema, Storage bucket, policies, migrations, or database records were changed. No build or browser verification is claimed.
+
+### Referral pages V2 read-only integration — 2026-11-15
+
+Implemented on `rebuild/testdz-v2` only:
+
+- `ReferralProgramPage` now uses the V2 profile and notification schema when the V2 feature flag is enabled; legacy schema reads remain in legacy mode.
+- `ReferralHistoryPage` now reads only rows where the signed-in user is `referrer_id` from `rebuild_v2.referrals`. The V2 referrals SELECT policy is participant-scoped (referrer/referred user) with an admin exception.
+- The V2 history UI uses the actual V2 statuses (`pending`, `qualified`, `rewarded`, `rejected`) and displays a short opaque tester identifier rather than querying or exposing the referred user's email.
+- Reward amounts, referral points, referral rank, and leaderboard values remain unavailable. The V2 referrals table does not itself define a reward amount, and this phase does not implement reward posting.
+- Referral code creation, invitation-link generation, and referral writes remain disabled/not implemented. No insert/update/delete operation was added.
+- Referral-history CSV output does not fabricate a reward amount; V2 rows export the reward amount as unavailable.
+- The period filter is now applied to the visible referral history.
+
+Verification limits:
+
+- GitHub source read-back confirms the V2 schema-qualified read, referrer filter, V2 status handling, and unavailable reward copy. This is source-level verification only.
+- No live user referral data was read, no SQL or migrations were executed, and no database, Auth, Storage, Production, Vercel, or PR #18 changes were made.
+- TypeScript, Vite build, browser behavior, and CI build remain unverified. Do not treat this integration as production-ready or enable the V2 feature flag in Production based on this source review alone.
