@@ -7,7 +7,7 @@ Candidate schema: `rebuild_v2` / `rebuild_v2_private` in TestDZ-FixLab
 
 ## Scope and safety
 
-This is a source-to-schema compatibility review. It does not modify production, Auth users, Storage objects, active migrations, or the candidate database. The candidate SQL remains outside `supabase/migrations`. PR #18 remains open, draft, and unmerged.
+This is a source-to-schema compatibility review. The isolated FixLab candidate has been updated and tested; production data, Auth users, Storage buckets/objects, and active migrations have not been modified. Candidate SQL remains outside `supabase/migrations`. PR #18 remains open, draft, and unmerged.
 
 This is a first-pass audit of application modules and tester workflows, not a claim that every admin or developer workflow has been exhaustively mapped.
 
@@ -56,7 +56,7 @@ The application route tree in `apps/web/src/App.tsx` includes public Auth/verifi
 |---|---|---|---|
 | Auth and identity | Supabase Auth plus `user_roles` select for the current user | Auth trigger, profiles, user_roles | Signup default tester role aligns conceptually; frontend role allow-list omits candidate `financial` and does not explicitly model a public `user` role. Keep privileged role grants out of signup metadata. |
 | Onboarding/profile | `profiles` reads/updates; `complete_onboarding(p_roles,p_interests)` RPC | profiles, user_roles, role_requests | `complete_onboarding` now exists in `004_identity_sessions.sql`; it only accepts tester/developer and rejects privileged roles. Frontend still calls the `public` schema, so API-schema integration remains. |
-| Developer apps | apps list/detail queries; `get_app_limit`, `create_app`, `update_app`, `archive_app`, `restore_app` RPCs; app-icons upload | apps, plans/subscriptions, Storage | Five RPCs implemented and behavior-tested in FixLab; client still targets `public`, and Storage bucket policies still need candidate-specific testing. |
+| Developer apps | apps list/detail queries; `get_app_limit`, `create_app`, `update_app`, `archive_app`, `restore_app` RPCs; app-icons upload | apps, plans/subscriptions, Storage | Five RPCs implemented and behavior-tested in FixLab; app icon bucket policy now checks app ownership. Client still targets `public`. |
 | Discover tests | tests query with app relation; reads assignments/wallets/notifications | tests, apps, assignments, wallets, notifications | Core read model exists, but assignment start-date field and candidate API schema exposure must be reconciled. |
 | My tests / assignment details | assignments with tests/apps/checkins; feedback history; reads points ledger | assignments, tests, apps, checkins, feedback, wallet_ledger | `start_date` and `points_awarded` mismatches; `points_ledger` rename; candidate assignment lifecycle uses assigned_at/started_at/completed_at/due_at. |
 | Assignment submission / check-in | Reads assignment/checkins/feedback; active progress reads `checkins.evidence_url`; other parts of UI show evidence upload | assignments, checkins, test_media, feedback, wallet_ledger | Candidate has `evidence_path`, not `evidence_url`. Need confirm whether check-in creation and evidence uploads are actually connected; no direct check-in insert was found in reviewed page code. |
@@ -64,23 +64,23 @@ The application route tree in `apps/web/src/App.tsx` includes public Auth/verifi
 | Withdrawal | Request page explicitly preview-only; status page explicitly says no request submitted | wallets, wallet_ledger, payments, refunds | No withdrawal table/workflow exists. Do not invent payout logic or let the UI imply an active request. |
 | Feedback | Feedback History reads feedback and points ledger; Submit Feedback page currently has UI/file selection but no persistence call | feedback, wallet_ledger, test_media | Submission is not connected in the reviewed source. Need a validated submission RPC/storage contract; never trust client quality_status/review fields. |
 | Reports/problem | Report Problem explicitly tells the user submission is not connected and no report was sent | reports, report_attachments | Candidate objects exist, but page has no insert/RPC or attachment upload. |
-| Support | Direct inserts into support_tickets, support_ticket_messages, support_ticket_attachments; upload to support-attachments; signed URL reads | support_tickets, support_ticket_messages, support_ticket_attachments, support_ticket_events | Read contracts largely align; direct writes conflict with candidate grants. Missing create-ticket, reply, attachment-metadata RPCs. Must preserve internal_note privacy and ticket participant checks. |
-| Notifications | Reads own notifications; direct update of read_at for one/all | notifications | Candidate currently has owner SELECT policy and no direct update grant. Add self-only mark-read RPC or narrowly scoped update policy with USING and WITH CHECK. |
-| Active sessions | `get_my_active_sessions()` RPC | devices | RPC missing. Device registration/revocation and session semantics need to be specified; do not expose auth.sessions wholesale. |
+| Support | Direct inserts into support_tickets, support_ticket_messages, support_ticket_attachments; upload to support-attachments; signed URL reads | support_tickets, support_ticket_messages, support_ticket_attachments, support_ticket_events, private Storage | Candidate RPCs now cover ticket creation, public replies, and attachment metadata. Support owner/staff visibility and object path access tested; frontend still needs migration to RPCs. |
+| Notifications | Reads own notifications; currently direct update of read_at for one/all | notifications | Candidate has owner-scoped `mark_notification_read` and `mark_all_notifications_read` RPCs. The frontend must switch from direct updates to these RPCs. |
+| Active sessions | `get_my_active_sessions()` RPC | Supabase Auth sessions | Self-only RPC implemented; `devices` remains separate. Device registration/revocation still needs its own contract. |
 | Login/security history | `get_my_security_activity(p_limit)` RPC | devices, audit_events, events | RPC missing. Define exactly which events are visible to the account owner and keep security metadata private. |
 | Leaderboard | Directly enumerates all tester user_roles, profiles, points_ledger rows, and completed assignments | user_roles, profiles, wallet_ledger, assignments | **Privacy/compatibility blocker.** Candidate RLS intentionally restricts profiles and roles to self/admin and ledger to owner/financial/admin, so the current client-side cross-user query must not be enabled. Design a safe aggregate leaderboard RPC/view with explicit opt-in/visibility rules and no email/private profile fields. |
 | Referrals | Referral pages currently show no referral table/RPC reads in reviewed source | referrals, coupons, coupon_redemptions | Candidate tables exist but UI is not connected. Define referral code generation, attribution, abuse controls and reward posting before connecting. |
 | Privacy export | Exports profiles, assignments, checkins, feedback, notifications, points_ledger; asks for profiles.subscription_tier | profiles, assignments, checkins, feedback, notifications, wallet_ledger, subscriptions/plans | Map points_ledger to wallet_ledger and derive subscription tier from subscription/plan state; candidate profiles has no subscription_tier. Export must not include other users' or staff-only data. |
-| Avatars | Uploads versioned user paths to `avatars`, stores public URL in profile, attempts best-effort cleanup | profiles, Storage | Bucket/policies absent from candidate. Decide public avatar visibility and owner-only upload/delete path constraints. |
-| App icons | Uploads `{userId}/{appId}/icon.ext` to `app-icons`, then stores public URL | apps, Storage | Bucket/policies absent. Restrict upload path to owning developer/app and validate MIME/size; public read only if intended. |
-| Support attachments | Uploads `{ticketId}/{userId}/{uuid-name}` to `support-attachments`; signed URL read for 60 seconds | support ticket tables, Storage | Bucket/policies absent. Must remain private and enforce ticket participant + uploader path ownership. |
+| Avatars | Uploads versioned user paths to `avatars`, stores public URL in profile, attempts best-effort cleanup | profiles, Storage | Candidate bucket mirrors production public setting; upload/list/delete paths are owner-scoped. |
+| App icons | Uploads `{userId}/{appId}/icon.ext` to `app-icons`, then stores public URL | apps, Storage | Candidate bucket is public-read; mutation helper verifies the app exists and belongs to the authenticated developer. |
+| Support attachments | Uploads `{ticketId}/{userId}/{uuid-name}` to `support-attachments`; signed URL read for 60 seconds | support ticket tables, Storage | Candidate bucket is private; upload requires ticket participant and caller path, metadata RPC requires an existing caller-owned object, and reads require visible attachment metadata/public message for ticket owners. |
 | Admin | Current route renders a generic TesterSection placeholder; no full admin feature module in this branch tree | platform_config, audit_events, fraud_reviews, payments/refunds, role_requests, finance tables | Admin workflows are not fully represented in the current UI branch. Do not infer missing admin operations from schema alone. |
 
 ## Additional confirmed issues from candidate-policy comparison
 
 - Candidate `profiles_select_self_or_admin_v2` and `roles_select_self_or_admin_v2` intentionally prevent a tester from enumerating other users. This conflicts with the current leaderboard's direct cross-user queries. Do not weaken those RLS policies to make the leaderboard work.
 - Candidate `wallet_ledger` and `wallets` expose rows only to the owner and financial/admin staff. The current leaderboard must not query raw ledger rows across users.
-- Candidate `notifications` currently has an owner-only SELECT policy; the current UI updates `read_at` directly, so mark-read behavior needs a constrained server-side contract.
+- Candidate `notifications` has an owner-only SELECT policy and self-only read-state RPCs; the frontend still needs to replace direct updates with RPC calls.
 - Candidate support message rows include `internal_note`; the client query currently selects only public message fields, which is good, but the write path must never let a customer set `internal_note=true`.
 - The frontend currently uses a public schema Supabase client, while candidate objects are in `rebuild_v2`; the candidate remains intentionally unexposed. A schema/API cutover plan is required before any app call can reach it.
 
@@ -98,7 +98,7 @@ Observed results while executing as the `authenticated` database role with each 
 
 The two synthetic Auth users and their generated profile, role, and wallet rows were then removed. A read-back confirmed zero remaining synthetic Auth users, profiles, roles, or wallets. No production Auth users were involved.
 
-This verifies a narrow but meaningful part of the RLS model. It does not yet cover developer/support/financial/admin sessions, cross-tenant app/test visibility, assignment mutation, ticket internal notes, Storage object paths, or all RPCs.
+This verifies a narrow but meaningful part of the RLS model. Tester self/other isolation, developer app lifecycle, support owner/staff access, internal-note visibility, notification isolation, and support attachment Storage paths were exercised. Financial/admin role matrices, cross-tenant app/test visibility, assignment mutation, and remaining Storage bucket paths are still outstanding.
 
 ## Production Storage inventory (read-only)
 
@@ -106,13 +106,13 @@ The production project `TestDZ` currently has five buckets and zero objects:
 
 | Bucket | Public | Max size | Allowed MIME types | Candidate status |
 |---|---:|---:|---|---|
-| `avatars` | Yes | 2 MiB | JPEG, PNG, WebP | Must preserve; candidate policies not yet added |
-| `app-icons` | Yes | 512 KB | PNG, JPEG | Must preserve; candidate policies not yet added |
-| `developer-feedback-attachments` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Must preserve; candidate policies not yet added |
-| `support-attachments` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Must preserve; candidate policies not yet added |
-| `test-evidence` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Must preserve; candidate policies not yet added |
+| `avatars` | Yes | 2 MiB | JPEG, PNG, WebP | Mirrored in FixLab; owner-scoped upload/list/delete policy |
+| `app-icons` | Yes | 512 KB | PNG, JPEG | Mirrored in FixLab; public read and app-owner mutation policy |
+| `developer-feedback-attachments` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Mirrored in FixLab; feedback participant policies |
+| `support-attachments` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Mirrored in FixLab; ticket participant and uploader path policies |
+| `test-evidence` | No | 10 MiB | PNG, JPEG, WebP, TXT, PDF, ZIP | Mirrored in FixLab; active-assignment upload and participant read policies |
 
-Production currently has Storage object policies for owner-scoped avatar/app-icon uploads, public reads for public image buckets, participant-scoped private support/developer-feedback attachments, and assignment-participant evidence access. These policies must be re-authored against the new canonical schema and tested before cutover; they cannot simply be assumed to follow the candidate table policies. No bucket or object was changed.
+Production Storage policies were inspected read-only and re-authored as candidate-specific policies in `006_storage_policies.sql`. Five bucket settings and 14 v2 object policies exist in FixLab. Production buckets and objects remain unchanged.
 
 ## Existing production RPC contracts recovered (read-only)
 
@@ -143,7 +143,7 @@ Production behavior inspected:
 - `get_my_active_sessions()`: returns only the caller's active Auth sessions, including last-active time, user agent, IP address, assurance level, and current-session marker.
 - `get_my_security_activity(p_limit)`: returns only the caller's Auth audit events, clamps the requested limit to 1–100, and returns event/time/IP fields.
 
-Candidate has no corresponding exposed RPCs yet. `devices` is not a drop-in replacement for `auth.sessions`; preserve the existing session semantics by using a carefully scoped private function over `auth.sessions`. Security activity should use the Auth audit source, not expose all rows in `audit_events`.
+Candidate self-only RPCs now exist in `004_identity_sessions.sql`. `devices` remains a separate device registry, not a drop-in replacement for `auth.sessions`; the candidate reads Auth sessions and Auth audit entries through private security-definer functions.
 
 ## Developer app lifecycle RPC verification (FixLab only)
 
@@ -163,11 +163,12 @@ The security contract test was extended to assert RPC existence, authenticated-o
 
 ## Latest replay and advisor notes
 
-After adding the two confirmed app compatibility columns and the app lifecycle/onboarding/security/support RPC scripts, all five source scripts were replayed into temporary schemas again:
+After adding the confirmed app compatibility columns, RPC scripts, and Storage policies, all six source scripts were replayed into temporary schemas again:
 
 - 43 tables, all 43 with forced RLS.
 - 44 policies covering all 43 tables.
-- All twelve app/onboarding/security/support/notification RPCs present; zero anon EXECUTE grants and twelve authenticated EXECUTE grants.
+- All thirteen app/onboarding/security/support/notification/attachment RPCs present; zero anon EXECUTE grants and thirteen authenticated EXECUTE grants.
+- Five Storage buckets and 14 Storage object policies present in the replay environment.
 - Zero authenticated direct table INSERT/UPDATE/DELETE grants.
 - Both new compatibility columns present.
 - Temporary replay schemas dropped after verification.
@@ -183,7 +184,7 @@ A focused semantic review found two incorrect correlated predicates in the gener
 
 Both fixes were applied to the isolated FixLab candidate and the source file `supabase/rebuild-v2/002_security.sql`. The security contract test was strengthened to assert these exact correlated predicates and reject the previous tautologies. The updated test returned `rebuild_v2_security_contract: PASS`.
 
-This is still not a substitute for synthetic-user RLS tests; FixLab has no synthetic Auth users yet. A clean isolated replay of the updated source scripts (with only the shared `auth.users` trigger attachment omitted) completed: 43 tables, 43 forced-RLS tables, 44 policies covering 43 tables, zero authenticated direct write grants, and zero occurrences of the two previous tautologies. The temporary replay schemas were dropped afterward.
+This is still not a substitute for the complete role matrix. Synthetic tester, developer, support, and unrelated-user cases were exercised in FixLab and cleaned up. A clean replay of all six source scripts (with only the shared `auth.users` trigger attachment omitted) completed: 43 tables, 43 forced-RLS tables, 44 table policies covering all 43 tables, 13 authenticated RPCs, 14 Storage object policies, and zero authenticated direct table write grants. Temporary replay schemas and replay-only Storage policies were removed afterward.
 
 ## Next steps (single branch, no production changes)
 
@@ -197,12 +198,12 @@ This is still not a substitute for synthetic-user RLS tests; FixLab has no synth
 ## Validation status
 
 - Candidate schema introspection was read from isolated TestDZ-FixLab.
-- Candidate currently contains 43 tables and seven private helper functions; none of the application RPC names listed above exist in the candidate schemas.
+- Candidate currently contains 43 tables, 13 exposed application RPCs, five Storage buckets, and 14 Storage object policies in FixLab.
 - The two correlated-policy defects described above were fixed in the candidate and source SQL; the strengthened security contract test passed after the fix.
-- Updated source scripts replayed into temporary isolated schemas: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, zero direct authenticated table write grants, and zero of the two known tautological predicates. Temporary replay schemas were dropped after verification.
+- All six source scripts replayed into temporary isolated schemas: 43 tables, 43 forced-RLS tables, 44 table policies, 13 authenticated RPCs, 14 Storage policies, and zero direct authenticated table write grants. Replay schemas and replay-only policies were removed.
 - Two synthetic Auth users were used for a real RLS isolation test in FixLab and fully cleaned up; no synthetic users remain.
-- Production Storage inventory was read-only confirmed: five existing buckets and zero objects; bucket policies need candidate-specific reconstruction.
+- Production Storage inventory was read-only confirmed: five existing buckets and zero objects. Matching candidate bucket settings and v2 policies exist only in FixLab; production was not changed.
 - Candidate schema and SQL now preserve the production app quota fields `plans.limits` and `apps.archived_from_status`; the full replay passed.
-- Existing production contracts for app lifecycle, onboarding, active sessions, and security history were inspected read-only. App lifecycle, onboarding, active-session, security-history, support ticket creation/replies, and notification read-state RPCs now exist in candidate scripts and have passed focused FixLab checks; attachment metadata, Storage policies, and frontend API-schema integration remain.
+- Existing production contracts for app lifecycle, onboarding, active sessions, security history, and Storage were inspected read-only. Candidate RPCs cover app lifecycle, onboarding, sessions, security history, support create/reply/attachment metadata, and notification read-state. Frontend API-schema integration, remaining Storage bucket tests, points/assignment compatibility, and leaderboard privacy remain.
 - No frontend compatibility patch has been applied yet.
 - No production database, Auth, Storage, or migration history was changed.
