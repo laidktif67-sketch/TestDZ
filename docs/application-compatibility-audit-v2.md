@@ -45,9 +45,16 @@ This is a first-pass audit of application modules and tester workflows, not a cl
 - The current app tree has a developer dashboard page, but the admin module contains only its README in this branch snapshot; a complete admin workflow/API mapping remains outstanding.
 - Signup uses Supabase Auth; role retrieval reads `user_roles`. Candidate signup creates only the default tester role, which is compatible with the intended privilege boundary.
 
-## Candidate-only SQL defects to investigate before adding compatibility objects
+## Candidate-only SQL defects found and corrected
 
-The generated candidate policies should receive a focused semantic review, not just a syntax/RLS-count check. In particular, inspect correlated predicates in the cohort and support attachment policies for accidental tautologies or incorrect outer-row references. A policy count and successful SQL execution do not prove row-level correctness.
+A focused semantic review found two incorrect correlated predicates in the generated policies:
+
+- `cohort_tests_select_participants_v2` compared `a.cohort_id` and `a.test_id` to themselves. It now correlates assignments to the current `cohort_tests` row.
+- `support_attachments_select_ticket_participants_v2` compared `m.ticket_id` to itself. It now requires the ticket referenced by the message to equal the attachment row's `ticket_id`.
+
+Both fixes were applied to the isolated FixLab candidate and the source file `supabase/rebuild-v2/002_security.sql`. The security contract test was strengthened to assert these exact correlated predicates and reject the previous tautologies. The updated test returned `rebuild_v2_security_contract: PASS`.
+
+This is still not a substitute for synthetic-user RLS tests; FixLab has no synthetic Auth users yet.
 
 ## Next steps (single branch, no production changes)
 
@@ -62,5 +69,6 @@ The generated candidate policies should receive a focused semantic review, not j
 
 - Candidate schema introspection was read from isolated TestDZ-FixLab.
 - Candidate currently contains 43 tables and seven private helper functions; none of the application RPC names listed above exist in the candidate schemas.
+- The two correlated-policy defects described above were fixed in the candidate and source SQL; the strengthened security contract test passed after the fix.
 - No application compatibility patch has been applied yet.
 - No production database, Auth, Storage, or migration history was changed.
