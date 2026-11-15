@@ -26,6 +26,11 @@ DECLARE v_app uuid; v_test uuid; v_cohort uuid; v_assignment uuid; v_count integ
 BEGIN
   v_app:=rebuild_v2.create_app('Lifecycle Demo App','dz.testdz.lifecycle','A synthetic application used only for a rolled-back developer lifecycle contract.','tools');
   PERFORM rebuild_v2.submit_app_for_review(v_app);
+  BEGIN
+    PERFORM rebuild_v2.update_app(v_app,'Attempted Review Edit','This attempted update must be blocked while the app is pending moderation.','tools',NULL);
+    RAISE EXCEPTION 'FAIL: developer edited an app during review';
+  EXCEPTION WHEN SQLSTATE 'P0002' THEN NULL;
+  END;
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.apps WHERE id=v_app AND status='submitted') THEN RAISE EXCEPTION 'FAIL: app submission'; END IF;
 
   PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',true);
@@ -42,6 +47,12 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.apps WHERE id=v_app AND status='published') THEN RAISE EXCEPTION 'FAIL: app approval did not publish'; END IF;
 
   PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  BEGIN
+    PERFORM rebuild_v2.update_app(v_app,'Attempted Published Edit','A published app must use a future re-review workflow before changing metadata.','tools',NULL);
+    RAISE EXCEPTION 'FAIL: developer edited a published app';
+  EXCEPTION WHEN SQLSTATE 'P0002' THEN NULL;
+  END;
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
   v_test:=rebuild_v2.create_test(v_app,'Lifecycle Test','A synthetic test description that is long enough to satisfy the V2 contract validation.','Lifecycle contract','usability',3,NULL,NULL,30,'Complete the synthetic test steps carefully.');
   PERFORM rebuild_v2.submit_test_for_review(v_test);
