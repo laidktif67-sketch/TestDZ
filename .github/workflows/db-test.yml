@@ -313,3 +313,60 @@ jobs:
 
       - name: Verify rollback (must prove no changes)
         run: bash supabase/tests/migration_016c_upgrade_rollback_verify.sh
+
+  # ============================================================
+  # JOB 5: Forward-only FK reconciliation regression
+  # ============================================================
+  fk-reconciliation:
+    name: Upgrade — reconcile legacy assignment foreign keys
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+
+      - name: Ensure psql
+        run: |
+          if ! command -v psql &>/dev/null; then
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+
+      # Hold the forward migration until the database has been reset to 016c.
+      - name: Move reconciliation migration out
+        run: |
+          F=supabase/migrations/20261115000100_reconcile_assignments_cohort_foreign_keys.sql
+          [ -f "$F" ] || { echo "❌ $F not found"; exit 1; }
+          mv "$F" /tmp/
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Reset local database through 016c
+        run: supabase db reset --local --no-seed
+
+      - name: Restore reconciliation migration
+        if: always()
+        run: |
+          F=/tmp/20261115000100_reconcile_assignments_cohort_foreign_keys.sql
+          if [ ! -f "$F" ]; then
+            echo "❌ reconciliation migration not in /tmp"
+            exit 1
+          fi
+          mv "$F" supabase/migrations/
+          [ -f supabase/migrations/20261115000100_reconcile_assignments_cohort_foreign_keys.sql ] \\
+            || { echo "❌ restore failed"; exit 1; }
+          echo "✓ reconciliation migration restored"
+
+      - name: Setup local DB URL
+        run: |
+          DB_URL=$(supabase status -o json | jq -r '.DB_URL')
+          if [ -z "$DB_URL" ] || [ "$DB_URL" = "null" ]; then
+            echo "❌ local DB_URL not available"; supabase status; exit 1
+          fi
+          echo "SUPABASE_DB_URL=$DB_URL" >> $GITHUB_ENV
+
+      - name: Test FK reconciliation (local only)
+        run: bash supabase/tests/migration_017_fk_reconciliation.sh
