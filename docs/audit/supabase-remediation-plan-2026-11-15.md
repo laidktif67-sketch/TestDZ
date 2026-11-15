@@ -271,3 +271,14 @@ The Security Advisor reports six authenticated-callable `SECURITY DEFINER` funct
 - Performance Advisor unindexed-FK findings after the fix: none reported.
 - Security Advisor: six callable `SECURITY DEFINER` warnings remain for review; 71 unused-index notices are informational on the empty target.
 - Auth/RLS/Storage behavioral tests and production readiness: not established.
+
+
+## SECURITY DEFINER review — first-pass static checks (2026-11-15)
+
+A read-only catalog inspection confirmed that the six Security Advisor findings all have an empty function `search_path` setting. Definition inspection found:
+- `create_cohort`, `add_cohort_test`, and `remove_cohort_test` explicitly call `private.is_admin()` and validate cohort state/capacity/assignment consistency before mutation.
+- `create_app_with_distribution` rejects unauthenticated calls, validates URL shape, delegates app creation to the existing guarded RPC, and updates only the new row owned by `auth.uid()`.
+- `get_my_active_sessions` filters sessions by `auth.uid()` and active expiry.
+- `get_my_security_activity` filters Auth audit entries to the current user identifier and caps the requested result count.
+
+This reduces concern about obvious missing checks in the inspected definitions, but it does not replace tests using separate admin, developer, tester, and anonymous identities. Keep the six advisor warnings open until those tests pass.
