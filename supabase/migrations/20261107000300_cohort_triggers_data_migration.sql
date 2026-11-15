@@ -9,7 +9,7 @@ BEGIN;
 -- ============================================================
 -- PHASE 0: Pre-flight (016a + 016b required)
 -- ============================================================
-DO $$
+DO $
 DECLARE v_cohorts_with_test_id int;
 BEGIN
   IF to_regclass('public.cohort_tests') IS NULL THEN
@@ -156,7 +156,18 @@ DECLARE
   v_dev_already_in_cohort int;
   v_capacity_overflow int;
   v_preexisting_mismatch int;
+  v_assignment_mismatch int;
 BEGIN
+  -- Every legacy assignment must point to the test historically attached to its cohort.
+  -- Fail closed rather than creating orphaned or semantically incorrect links.
+  SELECT COUNT(*) INTO v_assignment_mismatch
+  FROM public.assignments a
+  JOIN public.cohorts c ON c.id = a.cohort_id
+  WHERE c.test_id IS DISTINCT FROM a.test_id;
+  IF v_assignment_mismatch > 0 THEN
+    RAISE EXCEPTION '016c_CONFLICT: % assignments do not match their cohort legacy test_id; reconcile before migration', v_assignment_mismatch;
+  END IF;
+
   SELECT COUNT(*) INTO v_orphan_test
   FROM public.cohorts c
   WHERE c.test_id IS NOT NULL
@@ -339,6 +350,14 @@ BEGIN
   RAISE NOTICE '✅ Data migration verified';
 END $migration$;
 
+-- The legacy assignments are now checked against the migrated cohort/test links.
+-- Add this FK only after 016c has populated cohort_tests, so valid legacy rows survive.
+ALTER TABLE public.assignments
+  ADD CONSTRAINT assignments_cohort_test_fk
+  FOREIGN KEY (cohort_id, test_id)
+  REFERENCES public.cohort_tests (cohort_id, test_id)
+  ON DELETE RESTRICT;
+
 -- ============================================================
 -- PHASE 3: Attach triggers
 -- ============================================================
@@ -427,6 +446,19 @@ BEGIN
                  WHERE schemaname='public' AND tablename='cohorts'
                    AND policyname='cohorts_select_participants')
   THEN RAISE EXCEPTION 'RLS policy missing'; END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.assignments'::regclass
+      AND conname='assignments_cohort_test_fk'
+      AND contype='f' AND convalidated
+  ) THEN RAISE EXCEPTION 'assignments_cohort_test_fk missing or not validated'; END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='public.assignments'::regclass
+      AND conname='assignments_cohort_tester_fk'
+  ) THEN RAISE EXCEPTION 'Invalid tester-to-developer FK exists'; END IF;
   
   RAISE NOTICE '✅ Migration 016c complete';
 END $$;
