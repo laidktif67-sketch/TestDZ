@@ -529,6 +529,7 @@ DECLARE
   v_user_id uuid := (SELECT auth.uid());
   v_assignment rebuild_v2.assignments%ROWTYPE;
   v_submission_id uuid;
+  v_existing_status text;
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
@@ -551,11 +552,21 @@ BEGIN
     RAISE EXCEPTION 'ASSIGNMENT_NOT_ACTIVE' USING errcode = '55000';
   END IF;
 
-  SELECT s.id INTO v_submission_id
+  SELECT s.id, s.status INTO v_submission_id, v_existing_status
   FROM rebuild_v2.assignment_submissions s
-  WHERE s.assignment_id = p_assignment_id;
+  WHERE s.assignment_id = p_assignment_id
+  FOR UPDATE;
+
   IF v_submission_id IS NOT NULL THEN
-    RAISE EXCEPTION 'SUBMISSION_ALREADY_EXISTS' USING errcode = '23505';
+    IF v_existing_status <> 'draft' THEN
+      RAISE EXCEPTION 'SUBMISSION_ALREADY_FINALIZED' USING errcode = '55000';
+    END IF;
+    UPDATE rebuild_v2.assignment_submissions
+    SET summary = btrim(p_summary),
+        comments = NULLIF(btrim(p_comments), ''),
+        updated_at = now()
+    WHERE id = v_submission_id;
+    RETURN v_submission_id;
   END IF;
 
   INSERT INTO rebuild_v2.assignment_submissions(
