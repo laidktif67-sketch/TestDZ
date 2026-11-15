@@ -275,3 +275,8 @@ Verification limits:
 - This is source/schema-contract verification only. No export was run against a live user account, no user data was written, and no TypeScript/build/CI pass is claimed.
 - Privacy export is still a scoped export, not a complete archive of every possible account-related domain (for example, device/session/security events, support conversations, and payment/subscription records are not included in this pass). The UI copy should not be interpreted as a legal completeness certification.
 - The latest CI blocker remains pre-step job termination; no repository Actions or Vercel settings were changed.
+
+### Privacy export UI wording follow-up
+
+- Updated the export descriptions to say they cover the available profile, tester activity, and wallet records rather than implying a complete archive of every account-related system. The code still explicitly lists the included domains in the JSON export.
+- This is copy-only; no schema, data, Auth, Storage, or Production changes.
