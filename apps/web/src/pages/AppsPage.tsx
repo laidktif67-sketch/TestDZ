@@ -33,11 +33,11 @@ function AppsPage() {
   const [preview,setPreview]=useState("");
   const [notice,setNotice]=useState("");
 
-  async function load(){
+  async function load(developerId:string){
     if(!supabase)return;
     setLoading(true);setError("");
     const [{data:rows,error:appsError},{data:limits,error:limitError}]=await Promise.all([
-      listApps(),
+      listApps(developerId),
       getAppLimit()
     ]);
     if(appsError)setError("تعذر تحميل التطبيقات. حاول تحديث الصفحة.");
@@ -46,7 +46,7 @@ function AppsPage() {
     else setLimit(Array.isArray(limits)?limits[0]??null:limits as AppLimit);
     setLoading(false);
   }
-  useEffect(()=>{if(!supabase){setError("اتصال Supabase غير مضبوط.");setLoading(false);return;}if(userId)void load();else supabase.auth.getSession().then(({data})=>{if(!data.session){navigate("/auth",{replace:true});setLoading(false);}});},[userId]);
+  useEffect(()=>{if(!supabase){setError("اتصال Supabase غير مضبوط.");setLoading(false);return;}if(userId)void load(userId);else supabase.auth.getSession().then(({data})=>{if(!data.session){navigate("/auth",{replace:true});setLoading(false);}});},[userId]);
   useEffect(()=>{if(!icon){setPreview("");return;}const url=URL.createObjectURL(icon);setPreview(url);return()=>URL.revokeObjectURL(url);},[icon]);
 
   async function chooseIcon(file?:File){
@@ -72,7 +72,7 @@ function AppsPage() {
       if(uploadError){postCreateWarning="أُنشئ التطبيق، لكن تعذر رفع الأيقونة. يمكنك إضافتها لاحقاً.";}
       else if(updateError){postCreateWarning="أُنشئ التطبيق ورُفعت الأيقونة، لكن تعذر ربطها بالتطبيق.";}
     }
-    resetForm();setNotice("تم إنشاء التطبيق كمسودة.");await load();if(postCreateWarning)setError(postCreateWarning);setBusy(false);
+    resetForm();setNotice("تم إنشاء التطبيق كمسودة.");await load(userId);if(postCreateWarning)setError(postCreateWarning);setBusy(false);
   }
   const visible=apps.filter(a=>(filter==="all"?a.status!=="archived":filter==="active"?a.status!=="archived":a.status==="archived")&&a.name.toLowerCase().includes(search.toLowerCase()));
   return <main className="dashboard-shell"><header className="site-header container"><Brand/><nav className="header-actions"><Link to="/dashboard">لوحة التحكم</Link><Link to="/profile">الملف الشخصي</Link></nav></header><section className="dashboard-welcome container">
