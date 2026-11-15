@@ -2,7 +2,7 @@ name: TestDZ Database CI
 
 on:
   push:
-    branches: [main, "feat/week-5-*"]
+    branches: [main, "feat/week-5-*", "fix/week-5-*"]
     paths: ["supabase/**", ".github/workflows/db-test.yml"]
   pull_request:
     paths: ["supabase/**", ".github/workflows/db-test.yml"]
