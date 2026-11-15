@@ -18,7 +18,7 @@ This is a first-pass audit of application modules and tester workflows, not a cl
 | Points ledger | Multiple tester pages query `points_ledger` | Candidate has `wallet_ledger`; no `points_ledger` | Decide and document a single canonical ledger contract. Prefer adapting app queries to the immutable ledger only after checking expected columns/semantics; do not create a writable compatibility table. |
 | Assignment dates/rewards | Pages query `assignments.start_date` and `assignments.points_awarded` | Candidate `assignments` has `assigned_at`, `started_at`, `completed_at`, `due_at`; no `start_date` or `points_awarded` | Define whether start_date is a display alias for started_at/assigned_at, and derive awarded points from ledger entries or a server-owned reward snapshot. Never accept client-supplied reward totals. |
 | Check-in evidence | Active assignment UI queries `checkins.evidence_url` | Candidate has `evidence_path` | Reconcile URL/path contract; prefer private Storage path and signed URL generation, not public evidence URLs. |
-| App lifecycle RPCs | `get_app_limit`, `create_app`, `update_app`, `archive_app`, `restore_app` are called by `features/apps/apps-api.ts` | No matching RPCs in candidate schemas | Implement validated, role-checked server-side RPCs or deliberately refactor the app API before cutover. App create/update/archive must not become direct unrestricted writes. |
+| App lifecycle RPCs | `get_app_limit`, `create_app`, `update_app`, `archive_app`, `restore_app` are called by `features/apps/apps-api.ts` | Implemented in `003_app_lifecycle.sql`; exposed wrappers are invoker functions, privileged implementations are private definer functions | Candidate RPC contract has been exercised with synthetic developer/tester users. Frontend still uses the default `public` schema, so these functions are not yet reachable from the current client until the API-schema integration is completed. |
 | Onboarding | `complete_onboarding` called by `features/profiles/profiles-api.ts` | No matching RPC in candidate | Add a server-side onboarding contract that only permits safe profile fields and the approved default tester role; never accept privileged roles from browser input. |
 | Active sessions | Tester Active Sessions calls `get_my_active_sessions` | No matching RPC in candidate | Determine required session data and implement a self-only, privacy-preserving function or remove the UI dependency with explicit product approval. |
 | Support ticket creation | Support Center directly inserts into `support_tickets` | Candidate revokes all direct table writes; no ticket-create RPC | Add a constrained authenticated RPC (or safe RLS insert policy with immutable owner/role checks) and update client contract. |
@@ -35,7 +35,7 @@ This is a first-pass audit of application modules and tester workflows, not a cl
 - `checkins.evidence_url` is queried by Active Assignment Progress; candidate has `evidence_path`.
 - Privacy export requests `profiles.subscription_tier`; candidate profiles does not contain that field. The canonical source should likely be `subscriptions` joined to `plans`, but UI/export semantics must be checked before refactoring.
 - UI identity role allow-list currently contains `tester`, `developer`, `admin`, `support`; candidate additionally supports `financial`. Staff-role visibility and routing need a deliberate UI contract. Financial access must not be granted through public onboarding or user-editable metadata.
-- `apps-api.ts` selects the app fields already present in candidate `apps`; app CRUD lifecycle still depends on missing RPCs.
+- `apps-api.ts` selects the app fields already present in candidate `apps`; app lifecycle RPCs now exist in `003_app_lifecycle.sql`. The candidate still needs an intentional Data API schema/client integration before the frontend can call them.
 - The current `supabase/config.toml` and typed Supabase client are still public-schema oriented. The candidate schema is isolated and intentionally not exposed, so it must not be treated as a drop-in replacement yet.
 - `SubmitFeedbackPage` and `ReportProblemPage` currently show form UI but have no direct Supabase table/RPC calls in the reviewed page source. Their submission behavior needs a product/API decision before claiming those workflows are backed by the candidate `feedback` and `reports` tables.
 - Support UI reads candidate-compatible columns for tickets/messages/attachments, but direct write behavior is incompatible with candidate privileges.
@@ -56,7 +56,7 @@ The application route tree in `apps/web/src/App.tsx` includes public Auth/verifi
 |---|---|---|---|
 | Auth and identity | Supabase Auth plus `user_roles` select for the current user | Auth trigger, profiles, user_roles | Signup default tester role aligns conceptually; frontend role allow-list omits candidate `financial` and does not explicitly model a public `user` role. Keep privileged role grants out of signup metadata. |
 | Onboarding/profile | `profiles` reads/updates; `complete_onboarding(p_roles,p_interests)` RPC | profiles, user_roles, role_requests | RPC missing. The client passes roles, so server logic must whitelist self-service roles and ignore/reject admin, financial, support. Profile completion fields need exact mapping. |
-| Developer apps | apps list/detail queries; `get_app_limit`, `create_app`, `update_app`, `archive_app`, `restore_app` RPCs; app-icons upload | apps, plans/subscriptions, Storage | App table fields broadly align; all five RPCs missing. Current app icon URL uses public bucket URL. |
+| Developer apps | apps list/detail queries; `get_app_limit`, `create_app`, `update_app`, `archive_app`, `restore_app` RPCs; app-icons upload | apps, plans/subscriptions, Storage | Five RPCs implemented and behavior-tested in FixLab; client still targets `public`, and Storage bucket policies still need candidate-specific testing. |
 | Discover tests | tests query with app relation; reads assignments/wallets/notifications | tests, apps, assignments, wallets, notifications | Core read model exists, but assignment start-date field and candidate API schema exposure must be reconciled. |
 | My tests / assignment details | assignments with tests/apps/checkins; feedback history; reads points ledger | assignments, tests, apps, checkins, feedback, wallet_ledger | `start_date` and `points_awarded` mismatches; `points_ledger` rename; candidate assignment lifecycle uses assigned_at/started_at/completed_at/due_at. |
 | Assignment submission / check-in | Reads assignment/checkins/feedback; active progress reads `checkins.evidence_url`; other parts of UI show evidence upload | assignments, checkins, test_media, feedback, wallet_ledger | Candidate has `evidence_path`, not `evidence_url`. Need confirm whether check-in creation and evidence uploads are actually connected; no direct check-in insert was found in reviewed page code. |
@@ -133,7 +133,7 @@ Candidate compatibility corrections already made in both FixLab and `001_schema.
 - Added `plans.limits jsonb NOT NULL DEFAULT '{}'` (candidate previously retained `features` but omitted the distinct `limits` field used by production quota logic).
 - Added `apps.archived_from_status text` (required to restore the previous app status safely).
 
-These column additions were replay-tested. The five app lifecycle RPCs are still not implemented in the candidate; their behavior above is the contract to port next. Do not replace plan limits with an assumed field inside `features`.
+These column additions were replay-tested. The five app lifecycle RPCs were implemented in `003_app_lifecycle.sql` using the recovered production contract. Do not replace plan limits with an assumed field inside `features`.
 
 ### Onboarding and account security RPCs
 
@@ -144,6 +144,22 @@ Production behavior inspected:
 - `get_my_security_activity(p_limit)`: returns only the caller's Auth audit events, clamps the requested limit to 1–100, and returns event/time/IP fields.
 
 Candidate has no corresponding exposed RPCs yet. `devices` is not a drop-in replacement for `auth.sessions`; preserve the existing session semantics by using a carefully scoped private function over `auth.sessions`. Security activity should use the Auth audit source, not expose all rows in `audit_events`.
+
+## Developer app lifecycle RPC verification (FixLab only)
+
+The new `003_app_lifecycle.sql` was applied to the isolated candidate. The following synthetic-user tests passed:
+
+- A developer received `get_app_limit()` = free plan, limit 1, used 0, can_create true.
+- The developer created one app; the quota then returned used 1 and can_create false.
+- A tester-role account attempting `create_app` was rejected with `DEVELOPER_ROLE_REQUIRED`.
+- Archiving the first app released the active-app slot; a second app could be created.
+- Restoring the first app while the second occupied the only free-plan slot was rejected with `PLAN_LIMIT_REACHED`.
+- The app owner could update their own app metadata and HTTPS icon URL.
+- A different authenticated user attempting to update that app was rejected with `APP_NOT_FOUND_OR_NOT_OWNED`.
+
+All synthetic users, generated profiles/roles/wallets, test apps, and the temporary free plan were removed. Read-back confirmed zero remaining test users, profiles, wallets, apps, or test plan rows.
+
+The security contract test was extended to assert RPC existence, authenticated-only execution, no anon execution, invoker wrappers, private definer implementations, and required app compatibility columns. It returned `rebuild_v2_security_contract: PASS`.
 
 ## Latest replay and advisor notes
 
@@ -186,6 +202,6 @@ This is still not a substitute for synthetic-user RLS tests; FixLab has no synth
 - Two synthetic Auth users were used for a real RLS isolation test in FixLab and fully cleaned up; no synthetic users remain.
 - Production Storage inventory was read-only confirmed: five existing buckets and zero objects; bucket policies need candidate-specific reconstruction.
 - Candidate schema and SQL now preserve the production app quota fields `plans.limits` and `apps.archived_from_status`; the full replay passed.
-- Existing production contracts for app lifecycle, onboarding, active sessions, and security history were inspected read-only and recorded above; corresponding candidate RPCs remain to be ported and tested.
+- Existing production contracts for app lifecycle, onboarding, active sessions, and security history were inspected read-only. App lifecycle RPCs have now been ported and tested; onboarding/session/security-history RPCs remain to be implemented.
 - No frontend compatibility patch has been applied yet.
 - No production database, Auth, Storage, or migration history was changed.
