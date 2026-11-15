@@ -1,0 +1,40 @@
+# Developer workspace V2 integration review
+
+Date: 2026-11-15
+Branch: `rebuild/testdz-v2`
+
+## Scope and safety
+
+This review covered the developer dashboard, app list/detail pages, shared app API, app lifecycle candidate SQL, app RLS, and app-icon Storage policies. Changes were source-only on the V2 development branch. No Supabase SQL was applied, no database/Auth/Storage data was changed, and Production/Vercel/PR #18 were not touched.
+
+## Confirmed integration gap
+
+The V2 candidate already defines:
+- `rebuild_v2.apps` with the developer-owned app model and lifecycle statuses `draft`, `submitted`, `published`, `paused`, `archived`, and `rejected`.
+- `get_app_limit`, `create_app`, `update_app`, `archive_app`, and `restore_app` RPC wrappers.
+- Owner-scoped app SELECT RLS, with published apps visible to authenticated users and staff visibility limited to admin/support.
+- An `app-icons` public-read bucket with owner-only object mutations enforced by `rebuild_v2_private.can_manage_app_icon`.
+
+Before this change, `apps-api.ts` called the default `public` schema for app reads and lifecycle RPCs even when the V2 feature flag was enabled. The developer dashboard also read its profile from `public.profiles`.
+
+## Source changes made
+
+- `apps/web/src/features/apps/apps-api.ts`: app list/detail reads and quota/create/update/archive/restore RPCs now select `supabaseV2` when `VITE_TESTER_WORKFLOW_V2_ENABLED=true`; otherwise they preserve the legacy `public` client. Storage upload remains on the base Supabase Storage client, because Storage buckets are not schema-scoped.
+- `apps/web/src/modules/developer/pages/DeveloperDashboardPage.tsx`: profile reads use the same selected data schema while Auth session handling remains on the base client.
+- `packages/types/src/apps.ts`: shared app status type now includes V2 `submitted` and `rejected` statuses.
+- `apps/web/src/pages/AppsPage.tsx` and `AppDetailPage.tsx`: display labels now distinguish submitted/rejected apps rather than incorrectly presenting them as drafts.
+
+## Remaining limitations / acceptance gates
+
+1. The V2 app lifecycle SQL currently provides create, update, archive, restore, and quota RPCs. It does not provide a developer-facing submit-for-review or publish RPC/UI flow. No publish action was invented or exposed.
+2. The app lifecycle has structural/security assertions in `tests/security_contract.sql`, but a separate end-to-end app lifecycle contract (authenticated create, ownership isolation, quota limit, update/archive/restore) has not yet been run as a runtime test in FixLab.
+3. No real browser session has exercised the V2 developer dashboard or app icon upload.
+4. The app-icon bucket is public-read by design; only mutations are owner-scoped. This is suitable only for public app icons, not private APKs or user evidence.
+5. Developer test creation/management, test submission, review/moderation, and developer feedback screens remain outside this app CRUD wiring and require a separate audit before claiming the developer workspace is V2-complete.
+6. V2 remains opt-in and off by default. Do not enable it in Production until the full acceptance gates pass.
+
+## Verification status
+
+- GitHub readback of changed source files: completed.
+- SQL/runtime/browser/build verification of these frontend changes: pending.
+- No claim is made that TypeScript, Vite build, CI, or browser acceptance passed.
