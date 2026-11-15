@@ -193,3 +193,22 @@ The available local PostgreSQL database is not Supabase-compatible, and the
 current hosted projects have not been confirmed as disposable. The absence of
 the suspension tables and candidate indexes is recorded as schema drift evidence,
 not as authorization for a live repair.
+
+
+## Data preflight for attachment relationship (read-only)
+
+A targeted read-only query against the inspected TestDZ project returned:
+- `developer_feedback_attachments` row count: **0**
+- rows whose `message_id` has no matching developer feedback message: **0**
+- rows where attachment `feedback_id` differs from its message's `feedback_id`: **0**
+- rows with null `message_id`: **0**
+- support-ticket attachments without a matching `(ticket_id, message_id)` message: **0**
+
+This means the current data set does not reveal a row-level blocker to validating the proposed composite developer-feedback attachment relationship. However, the developer-feedback attachment table is empty, so the query does **not** prove that the relationship or migration works with real rows, nor does it justify applying the migration to the live database. The candidate migration also changes constraints and policies, and still requires a disposable Supabase-compatible test run.
+
+### Current priority ordering
+
+1. Obtain an isolated Supabase-compatible PostgreSQL 17 test target; neither connected hosted project has been confirmed disposable.
+2. Reconcile the recorded migration ledger with the deployed objects, including the feedback-attachment relationship and candidate index set.
+3. Run the existing pgTAP tests plus behavioral tests using fixture rows and separate owner/non-owner/admin identities.
+4. Only after the test results and schema diff are reviewed, prepare a narrowly scoped change plan for a separately approved deployment window.
