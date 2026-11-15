@@ -108,11 +108,24 @@ for select to authenticated using (
   )
 );
 drop policy if exists test_steps_manage_owner on public.test_steps;
-create policy test_steps_manage_owner on public.test_steps
-for all to authenticated using (
+drop policy if exists test_steps_insert_owner on public.test_steps;
+drop policy if exists test_steps_update_owner on public.test_steps;
+drop policy if exists test_steps_delete_owner on public.test_steps;
+create policy test_steps_insert_owner on public.test_steps
+for insert to authenticated with check (
+  exists (select 1 from public.tests t where t.id=test_steps.test_id
+    and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
+);
+create policy test_steps_update_owner on public.test_steps
+for update to authenticated using (
   exists (select 1 from public.tests t where t.id=test_steps.test_id
     and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
 ) with check (
+  exists (select 1 from public.tests t where t.id=test_steps.test_id
+    and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
+);
+create policy test_steps_delete_owner on public.test_steps
+for delete to authenticated using (
   exists (select 1 from public.tests t where t.id=test_steps.test_id
     and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
 );
@@ -127,11 +140,24 @@ for select to authenticated using (
   )
 );
 drop policy if exists test_requirements_manage_owner on public.test_requirements;
-create policy test_requirements_manage_owner on public.test_requirements
-for all to authenticated using (
+drop policy if exists test_requirements_insert_owner on public.test_requirements;
+drop policy if exists test_requirements_update_owner on public.test_requirements;
+drop policy if exists test_requirements_delete_owner on public.test_requirements;
+create policy test_requirements_insert_owner on public.test_requirements
+for insert to authenticated with check (
+  exists (select 1 from public.tests t where t.id=test_requirements.test_id
+    and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
+);
+create policy test_requirements_update_owner on public.test_requirements
+for update to authenticated using (
   exists (select 1 from public.tests t where t.id=test_requirements.test_id
     and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
 ) with check (
+  exists (select 1 from public.tests t where t.id=test_requirements.test_id
+    and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
+);
+create policy test_requirements_delete_owner on public.test_requirements
+for delete to authenticated using (
   exists (select 1 from public.tests t where t.id=test_requirements.test_id
     and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
 );
@@ -146,11 +172,24 @@ for select to authenticated using (
   )
 );
 drop policy if exists test_media_manage_owner on public.test_media;
-create policy test_media_manage_owner on public.test_media
-for all to authenticated using (
+drop policy if exists test_media_insert_owner on public.test_media;
+drop policy if exists test_media_update_owner on public.test_media;
+drop policy if exists test_media_delete_owner on public.test_media;
+create policy test_media_insert_owner on public.test_media
+for insert to authenticated with check (
+  exists (select 1 from public.tests t where t.id=test_media.test_id
+    and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
+);
+create policy test_media_update_owner on public.test_media
+for update to authenticated using (
   exists (select 1 from public.tests t where t.id=test_media.test_id
     and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
 ) with check (
+  exists (select 1 from public.tests t where t.id=test_media.test_id
+    and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
+);
+create policy test_media_delete_owner on public.test_media
+for delete to authenticated using (
   exists (select 1 from public.tests t where t.id=test_media.test_id
     and (t.developer_id=(select auth.uid()) or (select private.is_admin())))
 );
