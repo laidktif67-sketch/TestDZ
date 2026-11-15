@@ -26,6 +26,7 @@ This is a first-pass audit of application modules and tester workflows, not a cl
 | Support attachment metadata | Ticket Details directly inserts into `support_ticket_attachments` | Candidate revokes all direct table writes; no attachment RPC | Add metadata RPC/policy tied to an existing message, ticket participant, uploader, validated path, size and MIME type. |
 | Notification read state | Notifications Center updates `notifications.read_at` directly | Candidate revokes all direct table writes | Add a self-only mark-read RPC or a narrowly scoped update policy with both USING and WITH CHECK. |
 | Storage | App uses `avatars`, `app-icons`, `support-attachments`; other screens reference test evidence/media | Candidate SQL has no bucket/policy provisioning plan yet | Inventory production bucket names/configuration and define private/public access and path policies per feature before cutover. |
+| Data API schema | `supabase/config.toml` exposes only `public` and `graphql_public`; `createClient<Database>()` has no schema override; generated `Database` types describe `public` | Candidate tables are in `rebuild_v2`; helper routines are in `rebuild_v2_private` | Candidate is not reachable through the current frontend Data API contract. Choose a deliberate deployment strategy: keep the isolated schema until validation, then cut over into `public` with private helpers unexposed, or explicitly expose a dedicated API schema and update client schema/types. Do not expose the private helper schema. |
 
 ## Confirmed field/table mismatches
 
@@ -35,6 +36,8 @@ This is a first-pass audit of application modules and tester workflows, not a cl
 - Privacy export requests `profiles.subscription_tier`; candidate profiles does not contain that field. The canonical source should likely be `subscriptions` joined to `plans`, but UI/export semantics must be checked before refactoring.
 - UI identity role allow-list currently contains `tester`, `developer`, `admin`, `support`; candidate additionally supports `financial`. Staff-role visibility and routing need a deliberate UI contract. Financial access must not be granted through public onboarding or user-editable metadata.
 - `apps-api.ts` selects the app fields already present in candidate `apps`; app CRUD lifecycle still depends on missing RPCs.
+- The current `supabase/config.toml` and typed Supabase client are still public-schema oriented. The candidate schema is isolated and intentionally not exposed, so it must not be treated as a drop-in replacement yet.
+- `SubmitFeedbackPage` and `ReportProblemPage` currently show form UI but have no direct Supabase table/RPC calls in the reviewed page source. Their submission behavior needs a product/API decision before claiming those workflows are backed by the candidate `feedback` and `reports` tables.
 - Support UI reads candidate-compatible columns for tickets/messages/attachments, but direct write behavior is incompatible with candidate privileges.
 
 ## Other implementation observations
