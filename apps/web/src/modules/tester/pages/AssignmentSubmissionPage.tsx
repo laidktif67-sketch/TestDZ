@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, CSSProperties, ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -38,6 +39,7 @@ export default function AssignmentSubmissionPage() {
   const [evidence, setEvidence] = useState<EvidenceFile[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [notice, setNotice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -62,6 +64,38 @@ export default function AssignmentSubmissionPage() {
     (async () => {
       const client = supabase;
       if (!client) { if (alive) { setLoadError("The database connection is unavailable."); setLoading(false); } return; }
+      if (isTesterWorkflowV2Enabled && supabaseV2) {
+        const [a, c, f] = await Promise.all([
+          supabaseV2.from("assignments").select("id,status,test_id,assigned_at,started_at,completed_at").eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
+          supabaseV2.from("checkins").select("id,checkin_date").eq("assignment_id", id).eq("tester_id", session.user.id).order("checkin_date", { ascending: true }),
+          supabaseV2.from("feedback").select("id", { count: "exact", head: true }).eq("assignment_id", id).eq("tester_id", session.user.id)
+        ]);
+        if (!alive) return;
+        if (a.error || !a.data) {
+          setLoadError(a.error?.message || "This assignment could not be found.");
+          setLoading(false);
+          return;
+        }
+        const t = await supabaseV2.from("tests").select("id,title,status,start_date,end_date,app_id").eq("id", a.data.test_id).maybeSingle();
+        if (!alive) return;
+        if (t.error || !t.data) {
+          setLoadError(t.error?.message || "The assigned test could not be found.");
+          setLoading(false);
+          return;
+        }
+        const app = await supabaseV2.from("apps").select("name,icon_url").eq("id", t.data.app_id).maybeSingle();
+        if (!alive) return;
+        setAssignment({
+          id: a.data.id, status: a.data.status, start_date: a.data.started_at || a.data.assigned_at,
+          completed_at: a.data.completed_at, created_at: a.data.assigned_at, points_awarded: null,
+          test: { id: t.data.id, title: t.data.title, status: t.data.status, start_date: t.data.start_date, end_date: t.data.end_date, app: app.data || null }
+        } as AssignmentRow);
+        setCheckins((c.data || []).map((row: { id: string; checkin_date: string }) => ({ ...row })));
+        setFeedbackCount(f.count || 0);
+        if (app.error) setLoadError("Some app information could not be loaded.");
+        setLoading(false);
+        return;
+      }
       const [a, c, f] = await Promise.all([
         client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,start_date,end_date,app:apps(name,icon_url))").eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
         client.from("checkins").select("id,checkin_date").eq("assignment_id", id).eq("tester_id", session.user.id).order("checkin_date", { ascending: true }),
@@ -71,7 +105,9 @@ export default function AssignmentSubmissionPage() {
       if (a.error || !a.data) setLoadError(a.error?.message || "This assignment could not be found.");
       else setAssignment(a.data as unknown as AssignmentRow);
       setCheckins(c.data || []); setFeedbackCount(f.count || 0); setLoading(false);
-    })();
+    })().catch(() => {
+      if (alive) { setLoadError("Unable to load assignment details."); setLoading(false); }
+    });
     return () => { alive = false; };
   }, [id, session?.user?.id, previewMode]);
 
@@ -91,6 +127,85 @@ export default function AssignmentSubmissionPage() {
     { label: "Assignment ready for review", done: assignment?.status === "completed" },
   ];
   const totalSize = useMemo(() => evidence.reduce((sum, item) => sum + item.file.size, 0), [evidence]);
+  const handleFinalSubmit = async () => {
+    if (!isTesterWorkflowV2Enabled || !supabaseV2 || !supabase || !session?.user?.id || !assignment) {
+      setNotice("Secure final submission is not enabled in this environment yet.");
+      return;
+    }
+    if (report.trim().length < 20) {
+      setNotice("Please provide at least 20 characters in your test results report.");
+      return;
+    }
+    if (submitting) return;
+    setSubmitting(true);
+    setNotice("");
+    try {
+      const existing = await supabaseV2.from("assignment_submissions")
+        .select("id,status").eq("assignment_id", id).maybeSingle();
+      if (existing.error) throw existing.error;
+      if (existing.data?.status === "submitted") {
+        setNotice("This assignment has already been submitted.");
+        setAssignment(current => current ? { ...current, status: "completed" } : current);
+        return;
+      }
+
+      let submissionId = existing.data?.id as string | undefined;
+      if (!submissionId) {
+        const created = await supabaseV2.rpc("create_assignment_submission", {
+          p_assignment_id: id, p_summary: report.trim(), p_comments: comments.trim() || null
+        });
+        if (created.error || !created.data) throw created.error || new Error("Could not create the submission draft.");
+        submissionId = created.data as string;
+      }
+
+      const prior = await supabaseV2.from("assignment_submission_attachments")
+        .select("original_filename,mime_type,size_bytes,storage_path")
+        .eq("submission_id", submissionId);
+      if (prior.error) throw prior.error;
+      const registered = (prior.data || []) as unknown as {
+        original_filename: string; mime_type: string; size_bytes: number; storage_path: string;
+      }[];
+
+      for (const item of evidence) {
+        const file = item.file;
+        const extension = file.name.split(".").pop()?.toLowerCase() || "";
+        const priorFile = registered.find(row =>
+          row.original_filename === file.name && Number(row.size_bytes) === file.size && row.mime_type === file.type
+        );
+        let storagePath = priorFile?.storage_path;
+        if (storagePath) {
+          const existingObject = await supabase.storage.from("test-evidence").createSignedUrl(storagePath, 60);
+          if (!existingObject.error) continue;
+        } else {
+          const registeredFile = await supabaseV2.rpc("register_assignment_submission_attachment", {
+            p_submission_id: submissionId, p_file_id: crypto.randomUUID(),
+            p_extension: extension, p_original_filename: file.name,
+            p_mime_type: file.type, p_size_bytes: file.size
+          });
+          if (registeredFile.error || !registeredFile.data) throw registeredFile.error || new Error("Could not register an evidence file.");
+          storagePath = registeredFile.data as string;
+          registered.push({ original_filename: file.name, mime_type: file.type, size_bytes: file.size, storage_path: storagePath });
+        }
+        const uploaded = await supabase.storage.from("test-evidence").upload(storagePath, file, {
+          contentType: file.type, upsert: false
+        });
+        if (uploaded.error) throw uploaded.error;
+      }
+
+      const finalized = await supabaseV2.rpc("finalize_assignment_submission", { p_submission_id: submissionId });
+      if (finalized.error || !finalized.data) throw finalized.error || new Error("Could not finalize the submission.");
+      window.localStorage.removeItem(draftKey);
+      evidence.forEach(item => URL.revokeObjectURL(item.url));
+      setEvidence([]);
+      setAssignment(current => current ? { ...current, status: "completed", completed_at: new Date().toISOString() } : current);
+      setNotice("Your final report and evidence were submitted successfully.");
+    } catch {
+      setNotice("Submission could not be completed. Your draft and uploaded evidence remain available; check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
   const addFiles = (files: FileList | File[]) => {
     const incoming = Array.from(files);
@@ -184,7 +299,7 @@ export default function AssignmentSubmissionPage() {
               </div>
               <div className="as-section"><Step n={4}>Additional Comments <small>(Optional)</small></Step><textarea className="as-comments" maxLength={500} value={comments} onChange={event => setComments(event.target.value)} placeholder="Add any additional notes about your test..."/><div className="as-char-count">{comments.length} / 500</div></div>
               {notice && <p className="as-notice" role="status" aria-live="polite">{notice}</p>}
-              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => { if (previewMode || !session?.user?.id) { setNotice("Draft saving is unavailable in preview mode."); return; } try { window.localStorage.setItem(draftKey, JSON.stringify({ report, comments, savedAt: new Date().toISOString() })); setNotice("Draft saved on this device. Attached files are not saved and must be selected again."); } catch { setNotice("Could not save the draft on this device. Check available browser storage."); } }}><Icon name="file" size={19}/>Save as Draft</button><button type="button" className="as-submit-btn" disabled={!canSubmit || !report.trim()} onClick={() => setNotice("Your report is ready, but final submission is not connected to the database yet. No report or files have been sent.")}><Icon name="send" size={19}/>{canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
+              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => { if (previewMode || !session?.user?.id) { setNotice("Draft saving is unavailable in preview mode."); return; } try { window.localStorage.setItem(draftKey, JSON.stringify({ report, comments, savedAt: new Date().toISOString() })); setNotice("Draft saved on this device. Attached files are not saved and must be selected again."); } catch { setNotice("Could not save the draft on this device. Check available browser storage."); } }}><Icon name="file" size={19}/>Save as Draft</button><button type="button" className="as-submit-btn" disabled={!canSubmit || !report.trim() || (isTesterWorkflowV2Enabled && submitting)} onClick={() => { if (isTesterWorkflowV2Enabled) void handleFinalSubmit(); else setNotice("Your report is ready, but secure final submission is not enabled in this environment. No report or files have been sent."); }}><Icon name="send" size={19}/>{submitting ? "Submitting…" : canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
             </section>
             <aside className="as-side">
               <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Submission Readiness</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> +{points} Points</b></div></div></section>
