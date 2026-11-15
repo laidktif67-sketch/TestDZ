@@ -1,6 +1,7 @@
 import {useEffect,useState} from "react";
 import {Link,Navigate,useParams} from "react-router-dom";
 import {supabase} from "../../../lib/supabase";
+import {isTesterWorkflowV2Enabled} from "../../../lib/supabase-v2";
 import {useIdentity} from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar,{Icon} from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -12,7 +13,7 @@ export default function TestCompletionRewardPage(){
  const {id=""}=useParams();const {session,roles=[]}=useIdentity();
  const [assignment,setAssignment]=useState<Assignment|null>(null),[entries,setEntries]=useState<Entry[]>([]),[checks,setChecks]=useState<string[]>([]),[feedback,setFeedback]=useState(""),[name,setName]=useState("Tester"),[avatar,setAvatar]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menu,setMenu]=useState(false);
  const preview=import.meta.env.DEV&&new URLSearchParams(location.search).get("preview")==="1";
- useEffect(()=>{if(preview){setAssignment({id,status:"completed",completed_at:"2026-11-12T13:32:00Z",test:{title:"UI Testing Assignment",app:{name:"DemoApp"}}});setEntries([{id:"demo",amount:50,reason:"Test completion reward",created_at:"2026-11-12T13:32:00Z"}]);setChecks(Array.from({length:14},(_,i)=>String(i)));setFeedback("accepted");setName("John Doe");setLoading(false);return;}
+ useEffect(()=>{if(isTesterWorkflowV2Enabled){setLoading(false);return;}if(preview){setAssignment({id,status:"completed",completed_at:"2026-11-12T13:32:00Z",test:{title:"UI Testing Assignment",app:{name:"DemoApp"}}});setEntries([{id:"demo",amount:50,reason:"Test completion reward",created_at:"2026-11-12T13:32:00Z"}]);setChecks(Array.from({length:14},(_,i)=>String(i)));setFeedback("accepted");setName("John Doe");setLoading(false);return;}
  if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}const c=supabase;
  const [a,ch,f,l,p]=await Promise.all([
  c.from("assignments").select("id,status,completed_at,test:tests(title,app:apps(name))").eq("id",id).eq("tester_id",session.user.id).maybeSingle(),
@@ -21,7 +22,7 @@ export default function TestCompletionRewardPage(){
  c.from("points_ledger").select("id,amount,reason,created_at").eq("user_id",session.user.id).eq("wallet_type","earned_points").eq("reference_id",id).order("created_at",{ascending:false}),
  c.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle()
  ]);if(!alive)return;if(a.error||!a.data)setError("This assignment could not be found.");else setAssignment(a.data as unknown as Assignment);setChecks((ch.data??[]).map(x=>x.checkin_date));setFeedback(f.data?.quality_status??"");setEntries((l.data??[]) as Entry[]);setName(p.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(p.data?.avatar_url||"");if(ch.error||f.error||l.error)setError("Some reward details could not be loaded.");setLoading(false);})().catch(()=>{if(alive){setError("Unable to load reward details.");setLoading(false);}});return()=>{alive=false;};},[id,session?.user?.id,preview]);
- if(!preview&&!session)return <Navigate to="/auth" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;
+ if(!preview&&!session)return <Navigate to="/auth" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;if(isTesterWorkflowV2Enabled)return <Navigate to="/wallet-rewards" replace/>;
  const first=name.split(/\s+/)[0]||"Tester",total=entries.reduce((s,e)=>s+e.amount,0),bonus=entries.filter(e=>e.amount>0&&/bonus/i.test(e.reason)).reduce((s,e)=>s+e.amount,0),base=entries.filter(e=>e.amount>0&&!/bonus/i.test(e.reason)).reduce((s,e)=>s+e.amount,0),added=entries.some(e=>e.amount>0),completed=assignment?.status==="completed";
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards",active:true},{label:"Profile",icon:"user",href:"/profile"},{label:"Help & Support",icon:"bell",href:"/help-support"},{label:"Settings",icon:"settings",href:"/settings"}];
  return <div className="td-dashboard cr-page"><TesterSidebar nav={nav} name={name} firstName={first} avatar={avatar} roles={preview?["tester"]:roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={menu} setWorkspaceMenuOpen={setMenu} previewMode={preview}/><main className="td-main cr-main"><header className="td-topbar"><label className="td-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ…"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification"><Icon name="bell" size={22}/></Link><Link to="/profile" className="td-profile-short"><span>{avatar?<img src={avatar} alt=""/>:first.slice(0,2).toUpperCase()}</span></Link></div></header><div className="cr-content"><Link to="/wallet-rewards" className="cr-back">← Back to Wallet</Link>
