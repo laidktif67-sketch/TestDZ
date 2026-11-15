@@ -72,6 +72,8 @@ BEGIN
     RAISE EXCEPTION 'FAIL: tester could not join approved test cohort';
   END IF;
 
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events
   WHERE target_id IN (v_app,v_test,v_cohort)
     AND action IN ('app.submitted','app.review.approved','test.created','test.submitted','test.review.approved','cohort.created');
