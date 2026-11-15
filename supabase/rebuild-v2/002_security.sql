@@ -10,7 +10,7 @@ AS $function$
 begin
   raise exception 'immutable_record: updates and deletes are not allowed';
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION rebuild_v2_private.has_role(p_user_id uuid, p_roles text[])
@@ -26,7 +26,7 @@ AS $function$
        select 1 from rebuild_v2.user_roles ur
        where ur.user_id = p_user_id and ur.role = any(p_roles)
      );
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION rebuild_v2_private.handle_new_auth_user()
@@ -55,7 +55,7 @@ begin
 
   return new;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION rebuild_v2_private.grant_role(p_user_id uuid, p_role text, p_reason text)
@@ -85,7 +85,7 @@ begin
   insert into rebuild_v2.audit_events(actor_id,action,target_type,target_id,reason,metadata)
   values(v_actor,'role.grant','user',p_user_id,p_reason,jsonb_build_object('role',p_role));
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION rebuild_v2_private.post_wallet_entry(p_user_id uuid, p_wallet_type text, p_amount bigint, p_entry_type text, p_idempotency_key text, p_reason text, p_reference_type text DEFAULT NULL::text, p_reference_id uuid DEFAULT NULL::uuid)
@@ -157,7 +157,7 @@ begin
     jsonb_build_object('entry_id',v_entry_id,'wallet_type',p_wallet_type,'amount',p_amount,'entry_type',p_entry_type));
   return v_entry_id;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION rebuild_v2_private.request_developer_role(p_reason text DEFAULT NULL::text)
@@ -185,7 +185,7 @@ begin
   end if;
   return v_request_id;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION rebuild_v2_private.review_role_request(p_request_id uuid, p_decision text, p_review_note text DEFAULT NULL::text)
@@ -221,7 +221,7 @@ begin
     coalesce(p_review_note,'Role request decision'),
     jsonb_build_object('user_id',v_req.user_id,'requested_role',v_req.requested_role));
 end;
-$function$
+$function$;
 
 
 CREATE TRIGGER audit_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.audit_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation();
