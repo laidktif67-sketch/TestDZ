@@ -258,3 +258,20 @@ Next implementation slice:
 4. Provide V2-safe session/security activity RPCs or clearly mark those histories unavailable; do not call legacy RPCs as a fallback in V2 mode.
 5. Keep referral features marked as not connected until their V2 data model/workflow is implemented.
 6. Continue to keep withdrawals disabled in V2.
+
+### Privacy & Data Management V2 export integration — 2026-11-15
+
+Implemented on `rebuild/testdz-v2` only:
+
+- `PrivacyDataManagementPage` now imports the guarded `supabaseV2` client and uses `rebuild_v2.profiles` for the account summary when the V2 flag is enabled. A profile query error is surfaced instead of silently showing fallback values.
+- Full data export and activity CSV now select V2 data from `rebuild_v2.assignments`, `checkins`, `feedback`, `notifications`, and `wallet_ledger` when V2 is enabled. The legacy schema queries remain isolated to the legacy branch.
+- V2 full export also includes the user's `rebuild_v2.wallets` summary (`earned_points`, `purchased_credits`, `updated_at`). V2 ledger entries are labelled `walletLedger`, not `pointsLedger`, and CSV rows are labelled `Ledger`; this avoids implying that all ledger entries are reward points.
+- V2 export records its workflow version and a list of the included data domains. The feature flag remains default-off; no Production enablement occurred.
+- Privacy preferences and export-request history continue to be stored in the signed-in user's Supabase Auth user metadata; no new database table or migration was introduced.
+- No account deletion was added. The existing UI continues to state that deletion is not available from this screen and no data is deleted.
+
+Verification limits:
+- GitHub source read-back confirms the V2 schema branch and selected columns are present. The inspected V2 schema defines the selected profile, assignment, check-in, feedback, notification, wallet, and wallet-ledger columns; the security migration contains owner-scoped SELECT policies for these records.
+- This is source/schema-contract verification only. No export was run against a live user account, no user data was written, and no TypeScript/build/CI pass is claimed.
+- Privacy export is still a scoped export, not a complete archive of every possible account-related domain (for example, device/session/security events, support conversations, and payment/subscription records are not included in this pass). The UI copy should not be interpreted as a legal completeness certification.
+- The latest CI blocker remains pre-step job termination; no repository Actions or Vercel settings were changed.
