@@ -44,3 +44,60 @@ Do not modify the old `TestDZ` project, reset either project, run GitHub Actions
 - Full migration chain: **not yet applied**.
 - RLS/RPC behavior: **not yet validated**.
 - Production readiness: **not established**.
+
+
+## Controlled rebuild execution update (2026-11-15)
+
+A first controlled batch has now been applied successfully to the isolated `TestDZ-Rebuild` project. The old `TestDZ` project was not modified.
+
+Applied in order (22 successful migration executions):
+1. `initial_core_schema`
+2. `foreign_key_indexes`
+3. `master_blueprint_alignment`
+4. `auth_bootstrap_and_subscription_read`
+5. `coupon_payment_index`
+6. `subscription_rpc_invoker_and_admin_reads`
+7. `seed_subscription_plans`
+8. `events_admin_read_policy`
+9. `auth_profiles_onboarding_storage`
+10. `onboarding_rpc_private_wrapper`
+11. `signup_phone_profile_bootstrap`
+12. `auth_bootstrap_verified_state`
+13. `apps_crud_storage_and_plan_limits`
+14. `app_limit_read_rpc`
+15. `harden_app_validation`
+16. `cohort_tests_table`
+17. `assignments_feedback_constraints`
+18. `cohort_triggers_data_migration`
+19. `cohort_rpcs`
+20. `lock_down_postgres_public_defaults`
+21. `harden_user_insert_policies`
+22. `restrict_report_assignment_deletion`
+
+### Post-apply verification
+
+Read-only catalog verification after the batch returned:
+- 29 public base tables.
+- 88 public indexes.
+- 39 public RLS policies.
+- 3 subscription plans and 15 platform configuration rows.
+- 0 rows in `cohort_tests`, `cohorts`, and `assignments` (expected for a fresh project).
+- Both intended Auth triggers are present.
+- No `pgtap` extension is installed, so the repository pgTAP test files have not been run on this project.
+
+All 22 apply calls returned success, and the Supabase migration ledger records these 22 executions. The tool-generated ledger versions are execution timestamps, not the original migration filenames' version prefixes; this rebuild ledger should not be treated as a byte-for-byte replica of the old project's migration history.
+
+### Explicit hold before the next migration
+
+The next candidate, `20261109203933_add_private_report_evidence.sql`, explicitly says: **“Staging only. This file is prepared for review; do not apply until separately approved.”** It creates the `report_attachments` table and a private evidence storage bucket. It has therefore **not** been applied. Its dependent index migration `20261109204205_index_report_attachments_foreign_keys.sql` has also not been applied.
+
+This is an intentional release gate, not a migration failure. Before crossing it, review the evidence-upload design, bucket access, metadata immutability, and report/assignment ownership behavior. Other later migrations must be checked for dependencies on `report_attachments` before deciding whether to continue around this hold or pause the chain.
+
+### Current status
+
+- Controlled rebuild bootstrap: **22 migrations applied successfully**.
+- Schema/catalog postflight: **passed for the checks listed above**.
+- pgTAP and behavioral RLS/Auth/Storage tests: **not run**; pgTAP is not installed.
+- Report-evidence migrations: **held by explicit approval comment**.
+- Remaining migration chain and production readiness: **not yet validated**.
+- Old `TestDZ` project: **unchanged**.
