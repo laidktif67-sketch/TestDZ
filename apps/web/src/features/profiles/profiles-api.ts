@@ -12,6 +12,12 @@ function getClient() {
   return supabase;
 }
 
+function getDataClient() {
+  const client = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
+  if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
+  return client;
+}
+
 const AVATAR_EXTENSIONS = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -26,8 +32,7 @@ export const profilesApi = {
   },
 
   getOnboardingStatus(userId: string) {
-    const client = isTesterWorkflowV2Enabled ? supabaseV2 : getClient();
-    if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
+    const client = getDataClient();
     return client
       .from("profiles")
       .select("onboarding_completed_at")
@@ -45,7 +50,7 @@ export const profilesApi = {
   },
 
   getProfile(userId: string) {
-    return getClient()
+    return getDataClient()
       .from("profiles")
       .select("id, display_name, phone, bio, avatar_url, is_verified, locale, interests, onboarding_completed_at")
       .eq("id", userId)
@@ -53,7 +58,7 @@ export const profilesApi = {
   },
 
   updateSettings(userId: string, input: ProfileSettingsUpdate) {
-    return getClient()
+    return getDataClient()
       .from("profiles")
       .update(input)
       .eq("id", userId)
@@ -62,7 +67,7 @@ export const profilesApi = {
   },
 
   updateCompletion(userId: string, input: ProfileCompletionUpdate) {
-    return getClient()
+    return getDataClient()
       .from("profiles")
       .update(input)
       .eq("id", userId)
@@ -72,6 +77,7 @@ export const profilesApi = {
 
   async uploadAvatar(userId: string, input: AvatarUploadInput): Promise<AvatarUploadResult> {
     const client = getClient();
+    const dataClient = getDataClient();
     const extension = AVATAR_EXTENSIONS[input.contentType];
 
     if (!extension || input.body.byteLength === 0) {
@@ -103,7 +109,7 @@ export const profilesApi = {
 
     const { data } = bucket.getPublicUrl(path);
     const url = `${data.publicUrl}?v=${Date.now()}`;
-    const { data: updatedProfile, error: profileError } = await client
+    const { data: updatedProfile, error: profileError } = await dataClient
       .from("profiles")
       .update({ avatar_url: url })
       .eq("id", userId)
