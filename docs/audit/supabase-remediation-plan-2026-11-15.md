@@ -114,6 +114,10 @@ project as a shortcut.
 - Read-only review: in progress.
 - Live FK/index catalog comparison: completed; nine flagged FKs currently lack
   a covering index in the inspected project.
+- Live attachment constraint inspection: completed read-only. The feedback
+  attachment table still has independent `feedback_id` and `message_id`
+  foreign keys, whereas the branch migration proposes a composite relationship.
+  Migration-ledger equivalence remains unresolved.
 - Live cohort pause-policy catalog check: the expected update policy and
   validation trigger are absent; only the participants SELECT policy and the
   capacity/key-update triggers were found.
