@@ -3,13 +3,18 @@ begin;
 select plan(5);
 
 select ok(
-  not has_table_privilege('anon','public.test_steps','SELECT')
-  and not has_table_privilege('anon','public.test_steps','INSERT')
-  and not has_table_privilege('anon','public.test_requirements','SELECT')
-  and not has_table_privilege('anon','public.test_requirements','INSERT')
-  and not has_table_privilege('anon','public.test_media','SELECT')
-  and not has_table_privilege('anon','public.test_media','INSERT'),
-  'anon has no read or write privileges on test detail tables'
+  (
+    select bool_and(not has_table_privilege('anon', t.table_name, p.privilege))
+    from unnest(array[
+      'public.test_steps',
+      'public.test_requirements',
+      'public.test_media'
+    ]) as t(table_name)
+    cross join unnest(array[
+      'SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'
+    ]) as p(privilege)
+  ),
+  'anon has no table privileges on test detail tables'
 );
 
 select ok(
@@ -37,15 +42,15 @@ select ok(
 );
 
 select ok(
-  not has_table_privilege('authenticated','public.test_steps','TRUNCATE')
-  and not has_table_privilege('authenticated','public.test_steps','TRIGGER')
-  and not has_table_privilege('authenticated','public.test_steps','REFERENCES')
-  and not has_table_privilege('authenticated','public.test_requirements','TRUNCATE')
-  and not has_table_privilege('authenticated','public.test_requirements','TRIGGER')
-  and not has_table_privilege('authenticated','public.test_requirements','REFERENCES')
-  and not has_table_privilege('authenticated','public.test_media','TRUNCATE')
-  and not has_table_privilege('authenticated','public.test_media','TRIGGER')
-  and not has_table_privilege('authenticated','public.test_media','REFERENCES'),
+  (
+    select bool_and(not has_table_privilege('authenticated', t.table_name, p.privilege))
+    from unnest(array[
+      'public.test_steps',
+      'public.test_requirements',
+      'public.test_media'
+    ]) as t(table_name)
+    cross join unnest(array['TRUNCATE','REFERENCES','TRIGGER']) as p(privilege)
+  ),
   'authenticated lacks elevated table privileges on test detail tables'
 );
 
