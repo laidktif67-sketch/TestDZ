@@ -45,6 +45,7 @@ project as a shortcut.
 
 ### Gate B — foreign-key indexes
 
+- Existing `supabase/tests/foreign_key_indexes.test.sql` has nine catalog assertions for the eight indexes plus the previously created message index. These checks validate index presence/definition when run, but no execution result from a PostgreSQL 17/Supabase-compatible test environment has been established in this review.
 - Compare every flagged FK's ordered key columns with valid, ready indexes whose
   leading columns cover the FK columns.
 - Check existing index definitions and table size before adding an index.
@@ -54,6 +55,7 @@ project as a shortcut.
 
 ### Gate C — recruitment pause policy
 
+- Existing `supabase/tests/cohort_campaign_controls.test.sql` has six catalog/privilege assertions. It checks the expected policy and trigger definitions, but it does not itself simulate owner/non-owner updates or exercise the transition behavior against fixture rows. Add behavioral RLS tests before calling this feature runtime-validated.
 - Review the entire candidate migration and related existing RLS policies.
 - Test developer ownership, unrelated developer, admin, anonymous, and
   authenticated-but-non-owner cases.
