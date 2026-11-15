@@ -100,20 +100,26 @@ export default function DeveloperCreateTestSixStepPage() {
         setLoading(false);
         return;
       }
-      const { data: session } = await identityApi.getSession();
-      if (!session.session) {
-        navigate("/auth", { replace: true });
-        return;
+      try {
+        const { data: session } = await identityApi.getSession();
+        if (!session.session) {
+          navigate("/auth", { replace: true });
+          return;
+        }
+        const { data, error } = await listApps();
+        if (!alive) return;
+        if (error) {
+          setLoadError("Could not load your applications. Please refresh and try again.");
+        } else {
+          const available = ((data ?? []) as AppRecord[]).filter(app => app.status === "published");
+          setApps(available);
+          if (available.length === 1) setSelectedApp(available[0].id);
+        }
+      } catch {
+        if (alive) setLoadError("A connection or server error prevented loading your applications. Please try again.");
+      } finally {
+        if (alive) setLoading(false);
       }
-      const { data, error } = await listApps();
-      if (!alive) return;
-      if (error) setLoadError("Could not load your applications. Please refresh and try again.");
-      else {
-        const available = ((data ?? []) as AppRecord[]).filter(app => app.status === "published");
-        setApps(available);
-        if (available.length === 1) setSelectedApp(available[0].id);
-      }
-      setLoading(false);
     }
     void load();
     return () => { alive = false; };
