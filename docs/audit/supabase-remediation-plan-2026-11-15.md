@@ -20,11 +20,28 @@ project as a shortcut.
    `20261112231000_cohort_tests_developer_pause_policy.sql`. Re-check before
    treating this as drift; migration history includes renamed/version-shifted
    entries.
-3. Supabase Performance Advisor reports nine foreign-key indexing warnings in
-   developer-feedback and support-ticket tables. The eight named indexes
-   proposed by `20261112232000_index_remaining_foreign_keys.sql` were not
-   found under those names during the review. Check equivalent indexes and
-   composite-key order before adding any.
+3. A live, read-only catalog query compared every public foreign key's ordered
+   columns with valid/ready indexes whose leading key columns cover that FK.
+   It confirmed nine uncovered foreign keys:
+   - `developer_feedback_attachments(message_id)`
+   - `developer_feedback_attachments(uploaded_by)`
+   - `developer_feedback_events(actor_id)`
+   - `developer_feedback_messages(sender_id)`
+   - `support_ticket_attachments(ticket_id, message_id)` (composite FK; exact
+     column order matters)
+   - `support_ticket_attachments(uploaded_by)`
+   - `support_ticket_events(actor_id)`
+   - `support_ticket_messages(sender_id)`
+   - `support_tickets(resolved_by)`
+
+   Existing indexes were enumerated in the same query; none had the required
+   leading columns for these nine FKs. This is stronger evidence than checking
+   proposed index names alone. It remains a read-only observation, not a
+   migration test. The proposed migration contains eight new indexes because
+   `developer_feedback_attachments(message_id)` is expected to be covered by
+   the existing `developer_feedback_attachments_message_idx`; however, the
+   live catalog query did not find that index on this project, so the migration
+   and test need reconciliation before use.
 4. The database migration ledger and the current feature branch do not match by
    simple filename/version comparison. Filename mismatch alone is not proof a
    migration was never applied.
@@ -46,9 +63,16 @@ project as a shortcut.
 ### Gate B — foreign-key indexes
 
 - Existing `supabase/tests/foreign_key_indexes.test.sql` has nine catalog assertions for the eight indexes plus the previously created message index. These checks validate index presence/definition when run, but no execution result from a PostgreSQL 17/Supabase-compatible test environment has been established in this review.
-- Compare every flagged FK's ordered key columns with valid, ready indexes whose
-  leading columns cover the FK columns.
-- Check existing index definitions and table size before adding an index.
+- The read-only live catalog comparison now confirms all nine flagged FKs lack
+  a covering leading-column index in this project.
+- Important discrepancy: the existing test expects
+  `developer_feedback_attachments_message_idx`, but the live catalog did not
+  list it. The migration creates eight other indexes and does not appear to
+  create this message index. Resolve this mismatch in the migration/test pair
+  before considering the index remediation complete.
+- Check table sizes, write overhead, and deployment locking characteristics
+  before adding indexes; use `CREATE INDEX CONCURRENTLY` only in a migration
+  workflow that supports its transaction restrictions.
 - Prefer a separate, reviewable migration with explicit index names.
 - Validate the migration against a disposable PostgreSQL 17/Supabase-compatible
   environment before any hosted application.
@@ -86,6 +110,11 @@ project as a shortcut.
 ## Current status
 
 - Read-only review: in progress.
+- Live FK/index catalog comparison: completed; nine flagged FKs currently lack
+  a covering index in the inspected project.
+- Live cohort pause-policy catalog check: the expected update policy and
+  validation trigger are absent; only the participants SELECT policy and the
+  capacity/key-update triggers were found.
 - Live database changes: none.
 - Runtime migration/RLS validation: pending.
 - Production readiness: not established.
