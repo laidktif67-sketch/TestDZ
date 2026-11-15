@@ -15,15 +15,15 @@ The V2 candidate already defines:
 - Owner-scoped app SELECT RLS, with published apps visible to authenticated users and staff visibility limited to admin/support.
 - An `app-icons` public-read bucket with owner-only object mutations enforced by `rebuild_v2_private.can_manage_app_icon`.
 
-Before this change, `apps-api.ts` called the default `public` schema for app reads and lifecycle RPCs even when the V2 feature flag was enabled. The developer dashboard also read its profile from `public.profiles`.
+Before this change, `apps-api.ts` called the default `public` schema for app reads and lifecycle RPCs even when the V2 feature flag was enabled. The developer dashboard also read its profile from `public.profiles`. In addition, the V2 app SELECT policy intentionally permits authenticated reads of published apps, but the developer workspace had no `developer_id` filter, so the "My Apps" list and dashboard could mix other developers' published apps into the owner's workspace.
 
 ## Source changes made
 
-- `apps/web/src/features/apps/apps-api.ts`: app list/detail reads and quota/create/update/archive/restore RPCs now select `supabaseV2` when `VITE_TESTER_WORKFLOW_V2_ENABLED=true`; otherwise they preserve the legacy `public` client. Storage upload remains on the base Supabase Storage client, because Storage buckets are not schema-scoped.
-- `apps/web/src/modules/developer/pages/DeveloperDashboardPage.tsx`: profile reads use the same selected data schema while Auth session handling remains on the base client.
+- `apps/web/src/features/apps/apps-api.ts`: app list/detail reads and quota/create/update/archive/restore RPCs now select `supabaseV2` when `VITE_TESTER_WORKFLOW_V2_ENABLED=true`; otherwise they preserve the legacy `public` client. List/detail queries now also require the current developer ID, preventing published apps belonging to other developers from appearing in the owner's workspace. Storage upload remains on the base Supabase Storage client, because Storage buckets are not schema-scoped.
+- `apps/web/src/modules/developer/pages/DeveloperDashboardPage.tsx`: profile reads use the same selected data schema while Auth session handling remains on the base client; app metrics are scoped to the signed-in developer.
 - `apps/web/src/features/profiles/profiles-api.ts`: profile reads, profile updates, onboarding status/completion, and avatar profile-link updates now use the V2 data client when enabled. Avatar file upload/list/delete still use the base Storage client, with V2 owner-scoped `avatars` policies.
 - `packages/types/src/apps.ts`: shared app status type now includes V2 `submitted` and `rejected` statuses.
-- `apps/web/src/pages/AppsPage.tsx` and `AppDetailPage.tsx`: display labels now distinguish submitted/rejected apps rather than incorrectly presenting them as drafts.
+- `apps/web/src/pages/AppsPage.tsx` and `AppDetailPage.tsx`: display labels now distinguish submitted/rejected apps rather than incorrectly presenting them as drafts; app details are fetched only for the signed-in owner.
 
 ## Remaining limitations / acceptance gates
 
