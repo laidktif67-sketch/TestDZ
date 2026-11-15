@@ -224,19 +224,19 @@ end;
 $function$
 
 
-CREATE TRIGGER audit_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.audit_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation()
+CREATE TRIGGER audit_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.audit_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation();
 
-CREATE TRIGGER developer_feedback_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.developer_feedback_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation()
+CREATE TRIGGER developer_feedback_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.developer_feedback_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation();
 
-CREATE TRIGGER fraud_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.fraud_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation()
+CREATE TRIGGER fraud_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.fraud_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation();
 
-CREATE TRIGGER play_opt_in_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.play_opt_in_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation()
+CREATE TRIGGER play_opt_in_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.play_opt_in_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation();
 
-CREATE TRIGGER support_ticket_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.support_ticket_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation()
+CREATE TRIGGER support_ticket_events_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.support_ticket_events FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation();
 
-CREATE TRIGGER wallet_ledger_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.wallet_ledger FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation()
+CREATE TRIGGER wallet_ledger_immutable_v2 BEFORE DELETE OR UPDATE ON rebuild_v2.wallet_ledger FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.prevent_immutable_mutation();
 
-CREATE TRIGGER rebuild_v2_on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.handle_new_auth_user()
+CREATE TRIGGER rebuild_v2_on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.handle_new_auth_user();
 
 CREATE POLICY apps_select_published_owner_admin_v2 ON rebuild_v2.apps AS PERMISSIVE FOR SELECT TO authenticated USING (((status = 'published'::text) OR (developer_id = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'support'::text])));
 
