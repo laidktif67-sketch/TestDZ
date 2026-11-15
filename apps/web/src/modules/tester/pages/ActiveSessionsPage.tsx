@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -9,6 +10,7 @@ import "../styles/active-sessions.css";
 export default function ActiveSessionsPage() {
   const { user, roles = [] } = useIdentity();
   const [sessionReady, setSessionReady] = useState(false);
+  const [sessionsUnavailable, setSessionsUnavailable] = useState(false);
   const [sessions, setSessions] = useState<Array<{id:string;created_at:string;last_active_at:string;user_agent:string|null;ip_address:string|null;assurance_level:string|null;is_current:boolean}>>([]);
   const hasSession = sessions.some(session => session.is_current);
   const [busy, setBusy] = useState(false);
@@ -38,6 +40,13 @@ export default function ActiveSessionsPage() {
     let alive = true;
     async function loadSessions() {
       if (!supabase) { if (alive) setSessionReady(true); return; }
+      if (isTesterWorkflowV2Enabled) {
+        if (alive) {
+          setSessionsUnavailable(true);
+          setSessionReady(true);
+        }
+        return;
+      }
       const [auth, result] = await Promise.all([supabase.auth.getSession(), supabase.rpc("get_my_active_sessions")]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
@@ -56,6 +65,11 @@ export default function ActiveSessionsPage() {
     setBusy(true); setMessage(""); setError("");
     const result = await supabase.auth.signOut({ scope: "others" });
     if (result.error) { setBusy(false); setError("Could not sign out other sessions. Please try again."); return; }
+    if (isTesterWorkflowV2Enabled) {
+      setBusy(false);
+      setMessage("Other sessions were signed out by Supabase Auth. The V2 session list is not available yet.");
+      return;
+    }
     const refreshed = await supabase.rpc("get_my_active_sessions");
     setBusy(false);
     if (refreshed.error) setError("Other sessions were signed out, but the session list could not be refreshed.");
@@ -77,7 +91,7 @@ export default function ActiveSessionsPage() {
         <section className="as-hero"><div className="as-hero-icon"><Icon name="lock" size={54}/></div><div className="as-hero-copy"><h1>Active Sessions</h1><p>Manage your active sessions and devices for better security.</p></div><div className="as-hero-art"><Icon name="shield" size={104}/><span>✓</span></div></section>
 
         <section className="as-summary-grid">
-          <article className="as-summary-card"><span className="as-summary-icon"><Icon name="monitor" size={42}/></span><i className={hasSession ? "online" : "offline"}/><div><strong>{sessionReady ? String(sessions.length) : "—"}</strong><small>Active Sessions</small></div></article>
+          <article className="as-summary-card"><span className="as-summary-icon"><Icon name="monitor" size={42}/></span><i className={hasSession ? "online" : "offline"}/><div><strong>{sessionsUnavailable ? "—" : sessionReady ? String(sessions.length) : "—"}</strong><small>Active Sessions</small></div></article>
           <article className="as-summary-card"><span className="as-summary-icon solid"><Icon name="clock" size={35}/></span><div><small>Last Login</small><strong className="as-date">{latestSession ? new Date(latestSession.last_active_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : formattedLogin}</strong></div></article>
           <article className="as-summary-card"><span className="as-summary-icon shield"><Icon name="shield" size={42}/></span><div><small>Account Security</small><strong className={securityGood ? "as-good" : "as-review"}><Icon name="check" size={17}/>{securityGood ? "Email verified" : "Needs review"}</strong></div></article>
         </section>
@@ -87,7 +101,7 @@ export default function ActiveSessionsPage() {
         <div className="as-columns">
           <section className="as-card as-session-card">
             <h2><Icon name="monitor" size={26}/>Your Active Sessions</h2>
-            {!sessionReady ? <div className="as-empty">Loading your active sessions…</div> : sessions.length ? sessions.map(item => { const agent = item.user_agent || "Device details not provided"; const mobile = /Android|iPhone|iPad|Mobile/i.test(agent); const os = /Android/i.test(agent) ? "Android" : /iPhone|iPad/i.test(agent) ? "iOS" : /Windows/i.test(agent) ? "Windows" : /Mac OS/i.test(agent) ? "macOS" : /Linux/i.test(agent) ? "Linux" : "Unknown OS"; const browser = /Edg\//i.test(agent) ? "Microsoft Edge" : /Firefox\//i.test(agent) ? "Firefox" : /Chrome\//i.test(agent) ? "Chrome" : /Safari\//i.test(agent) ? "Safari" : "Browser"; return <article className="as-device" key={item.id}>
+            {sessionsUnavailable ? <div className="as-empty">Active-session history is not connected to the V2 data model yet. You can still use Supabase Auth sign-out controls where available; no legacy session records are shown here.</div> : !sessionReady ? <div className="as-empty">Loading your active sessions…</div> : sessions.length ? sessions.map(item => { const agent = item.user_agent || "Device details not provided"; const mobile = /Android|iPhone|iPad|Mobile/i.test(agent); const os = /Android/i.test(agent) ? "Android" : /iPhone|iPad/i.test(agent) ? "iOS" : /Windows/i.test(agent) ? "Windows" : /Mac OS/i.test(agent) ? "macOS" : /Linux/i.test(agent) ? "Linux" : "Unknown OS"; const browser = /Edg\//i.test(agent) ? "Microsoft Edge" : /Firefox\//i.test(agent) ? "Firefox" : /Chrome\//i.test(agent) ? "Chrome" : /Safari\//i.test(agent) ? "Safari" : "Browser"; return <article className="as-device" key={item.id}>
               <span className="as-device-icon"><Icon name={mobile ? "smartphone" : "monitor"} size={45}/></span>
               <div className="as-device-copy"><div className="as-device-title"><strong>{mobile ? "Mobile Device" : "Web Browser"}{item.is_current ? " · Current" : ""}</strong>{item.is_current && <span className="as-current"><i/>Current Session</span>}</div><p>{os} · {browser}</p><div className="as-device-meta"><span><Icon name="globe" size={16}/>{item.ip_address || "IP not available"}</span><span><Icon name="clock" size={16}/>{new Date(item.last_active_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</span></div></div>
               <span className="as-status"><Icon name="check" size={16}/>Active</span>
@@ -96,7 +110,7 @@ export default function ActiveSessionsPage() {
           </section>
 
           <aside className="as-side-column">
-            <section className="as-card as-details-card"><h2><Icon name="shield" size={25}/>Session Details</h2><p>You can keep your account secure by reviewing your signed-in device. If you notice unfamiliar activity, sign out other sessions and update your password.</p><button type="button" className="as-primary" disabled={!hasSession || busy || !supabase} onClick={() => void signOutOtherSessions()}><Icon name="logout" size={21}/>{busy ? "Signing out…" : "Log Out All Other Sessions"}</button><Link to="/settings?tab=security" className="as-secondary">Change Password <Icon name="arrow" size={15}/></Link></section>
+            <section className="as-card as-details-card"><h2><Icon name="shield" size={25}/>Session Details</h2><p>You can keep your account secure by reviewing your signed-in device. If you notice unfamiliar activity, sign out other sessions and update your password.</p><button type="button" className="as-primary" disabled={!hasSession || busy || !supabase || sessionsUnavailable} onClick={() => void signOutOtherSessions()}><Icon name="logout" size={21}/>{busy ? "Signing out…" : "Log Out All Other Sessions"}</button><Link to="/settings?tab=security" className="as-secondary">Change Password <Icon name="arrow" size={15}/></Link></section>
             <section className="as-card as-tips-card"><h2><Icon name="lightbulb" size={27}/>Security Tips</h2><ul><li><Icon name="check" size={17}/>Use a strong, unique password</li><li><Icon name="check" size={17}/>Enable two-factor authentication (2FA)</li><li><Icon name="check" size={17}/>Sign out from shared devices</li></ul></section>
           </aside>
         </div>
