@@ -87,6 +87,9 @@ jobs:
       - name: Run RLS test (bash)
         run: bash supabase/tests/migration_016c_rls.sh
 
+      - name: Run C1 test ownership RLS test
+        run: bash supabase/tests/test_c1_test_ownership_rls.sh
+
       - name: Run concurrency test
         run: bash supabase/tests/migration_016c_concurrency.sh
 
