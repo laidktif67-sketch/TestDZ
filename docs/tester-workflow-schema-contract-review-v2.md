@@ -181,3 +181,9 @@ Remaining verification:
 - Its only `web` job returned an empty steps list. Therefore the configured `npm install`, `npm run typecheck`, and `npm run build` steps did not run. The run provides no evidence for or against source correctness.
 - The combined status still shows Vercel `failure` with `upgradeToPro=build-rate-limit`.
 - The new JSX and CSV output were read back from GitHub and the exact expected V2 labels were verified in the committed file; this is source-level verification, not a TypeScript/build pass.
+
+
+### Diagnostic retry of the Check-in History CI run
+
+- Retried the `web` job for run `43745958426` (commit `2724f45c86ea6a194b9ddf2e620ef932f4f7dfdc`). The retry again concluded `failure` with an empty steps list.
+- Since the original attempt and retry both stop before any step, the CI blocker is currently outside the visible project commands. Keep the code verification status pending until a runner actually executes the workflow.
