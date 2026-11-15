@@ -37,6 +37,6 @@ Before this change, `apps-api.ts` called the default `public` schema for app rea
 ## Verification status
 
 - GitHub readback of changed source files: completed.
-- FixLab runtime SQL contract: PASS. It exercised authenticated app creation, owner read/update, active-app quota enforcement, archive/restore quota accounting, cross-developer draft visibility isolation, cross-user update/archive rejection, and owner-only app-icon helper access. The transaction rolled back with zero synthetic Auth users, profiles, or app rows remaining.
+- FixLab runtime SQL contracts: PASS. The app lifecycle test exercised authenticated app creation, owner read/update, active-app quota enforcement, archive/restore quota accounting, cross-developer draft visibility isolation, cross-user update/archive rejection, and owner-only app-icon helper access. The profile test exercised self-only reads/updates, allowed profile columns, and denied writes to verification/ban flags. Both transactions rolled back with zero synthetic Auth users, profiles, or app rows remaining.
 - Browser/build verification of the frontend changes: pending.
 - No claim is made that TypeScript, Vite build, CI, or browser acceptance passed.
