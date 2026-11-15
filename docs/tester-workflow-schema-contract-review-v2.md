@@ -323,3 +323,10 @@ Verification limits:
 - GitHub source read-back confirms the V2 schema-qualified read, referrer filter, V2 status handling, and unavailable reward copy. This is source-level verification only.
 - No live user referral data was read, no SQL or migrations were executed, and no database, Auth, Storage, Production, Vercel, or PR #18 changes were made.
 - TypeScript, Vite build, browser behavior, and CI build remain unverified. Do not treat this integration as production-ready or enable the V2 feature flag in Production based on this source review alone.
+
+### Notification preferences profile read — 2026-11-15
+
+- `NotificationPreferencesPage` now selects the profile through `rebuild_v2.profiles` when the V2 feature flag is enabled; legacy mode continues to use `public.profiles`.
+- Notification preference values remain in the authenticated user's own Supabase Auth `user_metadata`; this change does not introduce a new database table or claim that notification delivery channels are active.
+- Profile query errors now surface an unavailable/error state rather than silently presenting a fallback profile as successfully loaded.
+- Source read-back confirmed the V2 schema branch and unchanged Auth metadata save path. No SQL, migrations, live account reads, or production changes were performed.
