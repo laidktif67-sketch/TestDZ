@@ -6,7 +6,8 @@ These scripts describe the isolated TestDZ rebuild candidate.
 - `002_security.sql`: private security functions, triggers, policies and grants.
 - `003_app_lifecycle.sql`: developer app quota/create/update/archive/restore RPCs with invoker wrappers and private definer implementations.
 - `004_identity_sessions.sql`: validated onboarding plus self-only active-session and security-activity RPCs.
-- `005_support_notifications.sql`: ticket creation/replies and owner-scoped notification read-state RPCs.
+- `005_support_notifications.sql`: ticket creation/replies, attachment metadata registration, and owner-scoped notification read-state RPCs.
+- `006_storage_policies.sql`: five preserved bucket definitions, owner/participant upload and read policies, and private evidence access helpers.
 
 **Important:** This folder is deliberately not `supabase/migrations`. Do not apply it to production or move it into the active migration path until the validation gates in [the rebuild plan](../../docs/database-rebuild-v2.md) pass.
 
