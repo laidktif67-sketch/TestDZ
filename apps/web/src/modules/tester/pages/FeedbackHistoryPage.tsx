@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -72,6 +73,32 @@ export default function FeedbackHistoryPage() {
       setLoading(true);
       setError("");
       const client = supabase!;
+      if (isTesterWorkflowV2Enabled && supabaseV2) {
+        const [profileResult, feedbackResult] = await Promise.all([
+          supabaseV2.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
+          supabaseV2.from("feedback")
+            .select("id,assignment_id,rating,body,category,quality_status,reviewed_at,created_at,assignment:assignments(id,test:tests(id,title,app:apps(name,icon_url)))")
+            .eq("tester_id", session!.user.id)
+            .order("created_at", { ascending: false })
+        ]);
+        if (!alive) return;
+        if (profileResult.data) {
+          setName(profileResult.data.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
+          setAvatar(profileResult.data.avatar_url || "");
+        } else {
+          setName(session!.user.email?.split("@")[0] || "Tester");
+        }
+        if (feedbackResult.error) {
+          setError("We couldn't load your feedback history. Please try again.");
+          setRows([]);
+        } else {
+          setRows((feedbackResult.data ?? []) as unknown as FeedbackRow[]);
+        }
+        setLedger([]);
+        if (profileResult.error) setError("Some profile information could not be loaded.");
+        setLoading(false);
+        return;
+      }
       const [profileResult, feedbackResult, ledgerResult] = await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
         client.from("feedback")
@@ -154,7 +181,7 @@ export default function FeedbackHistoryPage() {
           <div className="fh-stat-grid">
             <article><span className="fh-stat-icon blue"><Icon name="chart" size={25}/></span><div><small>Total Feedback</small><strong>{rangedRows.length}</strong></div></article>
             <article><span className="fh-stat-icon gold">★</span><div><small>Average Rating</small><strong>{average === null ? "—" : average.toFixed(1) + " / 5"}</strong></div></article>
-            <article><span className="fh-stat-icon green"><Icon name="gift" size={25}/></span><div><small>Total Earned</small><strong className="fh-earned">+{earned} pts</strong></div></article>
+            <article><span className="fh-stat-icon green"><Icon name="gift" size={25}/></span><div><small>Total Earned</small><strong className="fh-earned">{isTesterWorkflowV2Enabled?"Not enabled": "+"+earned+" pts"}</strong></div></article>
           </div>
         </section>
         {error && <div className="fh-error" role="alert">{error}<button type="button" onClick={() => window.location.reload()}>Retry</button></div>}
@@ -178,7 +205,7 @@ export default function FeedbackHistoryPage() {
                 <span className="fh-row-rating"><RatingStars value={row.rating}/><strong>{row.rating === null ? "Not rated" : row.rating.toFixed(1) + " / 5"}</strong></span>
                 <span className="fh-row-date"><Icon name="calendar" size={15}/>{formatDate(row.created_at)}</span>
                 <span className={"fh-status " + row.quality_status}>{row.quality_status === "accepted" ? "✓  Approved" : row.quality_status === "rejected" ? "✕  Rejected" : "◷  Pending"}</span>
-                <strong className="fh-row-reward">+{reward} pts</strong>
+                <strong className="fh-row-reward">{isTesterWorkflowV2Enabled?"—":"+"+reward+" pts"}</strong>
                 <span className="fh-row-view"><Icon name="eye" size={17}/>View</span>
                 <span className="fh-row-chevron">{isExpanded ? "⌃" : "›"}</span>
               </button>
@@ -186,7 +213,7 @@ export default function FeedbackHistoryPage() {
                 <section className="fh-app-detail"><AppMark name={appName} iconUrl={test?.app?.icon_url}/><strong>{appName}</strong><small>{test?.title ?? "Feedback submission"}</small><span className="fh-category">{formatCategory(row.category)}</span></section>
                 <section className="fh-rating-detail"><h3>Your Rating</h3><div><RatingStars value={row.rating}/><strong>{row.rating === null ? "—" : row.rating.toFixed(1) + " / 5"}</strong></div><small>Overall rating recorded for this feedback</small></section>
                 <section className="fh-comment-detail"><h3>Your Comment</h3><blockquote>{row.body}</blockquote><span className="fh-category">{formatCategory(row.category)}</span></section>
-                <section className="fh-review-detail"><h3>Review Status</h3><span className={"fh-status " + row.quality_status}>{statusText[row.quality_status]}</span><small>{row.reviewed_at ? "Reviewed on " + formatDate(row.reviewed_at) : "Awaiting QA review"}</small><div className="fh-reward-box"><Icon name="gift" size={25}/><span>Reward Earned<strong>+{reward} pts</strong></span></div></section>
+                <section className="fh-review-detail"><h3>Review Status</h3><span className={"fh-status " + row.quality_status}>{statusText[row.quality_status]}</span><small>{row.reviewed_at ? "Reviewed on " + formatDate(row.reviewed_at) : "Awaiting QA review"}</small><div className="fh-reward-box"><Icon name="gift" size={25}/><span>{isTesterWorkflowV2Enabled?"Reward not enabled":"Reward Earned"}<strong>{isTesterWorkflowV2Enabled?"—":"+"+reward+" pts"}</strong></span></div></section>
               </div>}
             </article>;
           }) : <div className="fh-empty"><span>★</span><strong>{rows.length ? "No matching feedback" : "Your feedback journey starts here"}</strong><p>{rows.length ? "There are no entries for these filters. Clear them to see your full history." : "Feedback you submit after completing a test will appear here, together with its review status and earned points."}</p>{hasActiveFilters && <button type="button" onClick={clearFilters}>Clear all filters</button>}</div>}
