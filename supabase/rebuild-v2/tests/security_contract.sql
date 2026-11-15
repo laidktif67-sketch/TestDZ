@@ -1,5 +1,5 @@
 -- TestDZ rebuild v2 security contract checks.
--- Run after 001_schema.sql, 002_security.sql and 003_app_lifecycle.sql in a disposable Supabase test project.
+-- Run after 001_schema.sql, 002_security.sql, 003_app_lifecycle.sql and 004_identity_sessions.sql in a disposable Supabase test project.
 -- The script is read-only apart from a transaction-local test probe; it rolls back.
 
 begin;
@@ -52,6 +52,33 @@ begin
      or to_regprocedure('rebuild_v2.archive_app(uuid)') is null
      or to_regprocedure('rebuild_v2.restore_app(uuid)') is null then
     raise exception 'developer app lifecycle RPC contract is incomplete';
+  end if;
+
+  if to_regprocedure('rebuild_v2.complete_onboarding(text[],jsonb)') is null
+     or to_regprocedure('rebuild_v2.get_my_active_sessions()') is null
+     or to_regprocedure('rebuild_v2.get_my_security_activity(integer)') is null then
+    raise exception 'onboarding or account-security RPC contract is incomplete';
+  end if;
+
+  if has_function_privilege('anon','rebuild_v2.complete_onboarding(text[],jsonb)','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2.get_my_active_sessions()','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2.get_my_security_activity(integer)','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.complete_onboarding(text[],jsonb)','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.get_my_active_sessions()','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.get_my_security_activity(integer)','EXECUTE') then
+    raise exception 'onboarding/account-security RPC grants are incorrect';
+  end if;
+
+  if exists (
+       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='rebuild_v2' and p.proname in ('complete_onboarding','get_my_active_sessions','get_my_security_activity')
+         and p.prosecdef
+     )
+     or not exists (
+       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='rebuild_v2_private' and p.proname='complete_onboarding_impl' and p.prosecdef
+     ) then
+    raise exception 'onboarding/account-security wrapper security mode is incorrect';
   end if;
 
   if has_function_privilege('anon','rebuild_v2.create_app(text,text,text,text)','EXECUTE')
