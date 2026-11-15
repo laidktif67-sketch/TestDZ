@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -62,11 +63,15 @@ export default function LanguageAppearancePage() {
   useEffect(() => {
     if (!user || !supabase) return;
     let alive = true;
+    const profileQuery = isTesterWorkflowV2Enabled && supabaseV2
+      ? supabaseV2.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle()
+      : supabase.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle();
     Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle(),
+      profileQuery,
       Promise.resolve(user.user_metadata?.testdz_language_appearance as Partial<Preferences> | undefined)
     ]).then(([profile, saved]) => {
       if (!alive) return;
+      if (profile.error) setError("Your profile language could not be loaded. Please refresh and try again.");
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
       const locale = profile.data?.locale;
@@ -85,8 +90,11 @@ export default function LanguageAppearancePage() {
   const update = <K extends keyof Preferences,>(key: K, value: Preferences[K]) => setPrefs(current => ({ ...current, [key]: value }));
   async function save() {
     if (!supabase || !user) { setError("Sign in to save your language and appearance preferences."); return; }
+    if (isTesterWorkflowV2Enabled && !supabaseV2) { setError("V2 profile settings are unavailable because the V2 client is not initialized."); return; }
     setBusy(true); setMessage(""); setError("");
-    const profileResult = await supabase.from("profiles").update({ locale: language }).eq("id", user.id);
+    const profileResult = isTesterWorkflowV2Enabled
+      ? await supabaseV2!.from("profiles").update({ locale: language }).eq("id", user.id)
+      : await supabase.from("profiles").update({ locale: language }).eq("id", user.id);
     if (profileResult.error) {
       setBusy(false); setError("Your language preference could not be saved. Please try again."); return;
     }
