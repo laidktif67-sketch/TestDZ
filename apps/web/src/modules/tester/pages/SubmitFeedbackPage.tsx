@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/submit-feedback.css";
@@ -45,6 +46,8 @@ function FeedbackIcon({ name }: { name: "bug" | "palette" | "lightbulb" }) {
 
 export default function SubmitFeedbackPage() {
   const { session, roles = [] } = useIdentity();
+  const [searchParams] = useSearchParams();
+  const assignmentId = searchParams.get("assignmentId") || "";
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("Bug");
   const [title, setTitle] = useState("");
@@ -54,6 +57,7 @@ export default function SubmitFeedbackPage() {
   const [steps, setSteps] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const name = session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Tester";
   const firstName = name.split(/\s+/)[0];
@@ -77,9 +81,39 @@ export default function SubmitFeedbackPage() {
     setFiles(current => [...current, ...accepted].slice(0, 5));
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setMessage("Your feedback form is ready, but submission is not connected to the feedback service yet.");
+    if (!isTesterWorkflowV2Enabled || !supabaseV2) {
+      setMessage("Secure feedback submission is not enabled in this environment yet.");
+      return;
+    }
+    if (!session?.user?.id || !assignmentId) {
+      setMessage("Open this form from an active assignment to attach your feedback to the correct test.");
+      return;
+    }
+    if (submitting) return;
+    setSubmitting(true);
+    setMessage("");
+    const category = feedbackType === "Bug" ? "bug" : feedbackType === "UI Issue" ? "usability" : "general";
+    const body = [
+      "Title: " + title.trim(),
+      "Severity: " + severity,
+      "Description: " + description.trim(),
+      steps.trim() ? "Steps to reproduce: " + steps.trim() : ""
+    ].filter(Boolean).join("\\n\\n");
+    const result = await supabaseV2.rpc("submit_tester_feedback", {
+      p_assignment_id: assignmentId,
+      p_category: category,
+      p_body: body,
+      p_rating: null
+    });
+    if (result.error) {
+      setMessage("Your feedback could not be submitted. Check that the assignment is active or completed, then try again.");
+    } else {
+      setMessage("Your feedback has been submitted successfully.");
+      setTitle(""); setSeverity(""); setDescription(""); setSteps(""); setFiles([]);
+    }
+    setSubmitting(false);
   };
 
   return <div className="td-dashboard sf-dashboard">
@@ -142,7 +176,7 @@ export default function SubmitFeedbackPage() {
           <label className="sf-field sf-steps-field"><span><b>5.</b> Steps to Reproduce</span><textarea maxLength={500} value={steps} onChange={event => setSteps(event.target.value)} placeholder="Please list the steps to reproduce this issue..."/><small className="sf-counter">{steps.length} / 500</small></label>
 
           <div className="sf-bottom-row">
-            <section className="sf-attachments">
+            {!isTesterWorkflowV2Enabled && <section className="sf-attachments">
               <h2>6. Attachments (Optional)</h2>
               <div className="sf-dropzone" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); addFiles(event.dataTransfer.files); }}>
                 <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 32V8m0 0L14 18M24 8l10 10M8 29v8a4 4 0 0 0 4 4h24a4 4 0 0 0 4-4v-8" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -151,7 +185,7 @@ export default function SubmitFeedbackPage() {
                 <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={event => { if (event.target.files) addFiles(event.target.files); event.target.value = ""; }}/>
               </div>
             </section>
-            <div className="sf-submit-wrap"><button type="submit" className="sf-submit"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27 4 5 13l9 4 4 10 9-23ZM14 17l13-13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/></svg> Submit Feedback</button>{message && <p className="sf-submit-message" role="status">{message}</p>}</div>
+            <div className="sf-submit-wrap"><button type="submit" className="sf-submit" disabled={submitting}><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27 4 5 13l9 4 4 10 9-23ZM14 17l13-13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/></svg> {submitting ? "Submitting…" : "Submit Feedback"}</button>{message && <p className="sf-submit-message" role="status">{message}</p>}</div>
           </div>
         </form>
       </div>
