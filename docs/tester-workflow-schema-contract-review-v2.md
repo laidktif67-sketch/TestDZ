@@ -330,3 +330,21 @@ Verification limits:
 - Notification preference values remain in the authenticated user's own Supabase Auth `user_metadata`; this change does not introduce a new database table or claim that notification delivery channels are active.
 - Profile query errors now surface an unavailable/error state rather than silently presenting a fallback profile as successfully loaded.
 - Source read-back confirmed the V2 schema branch and unchanged Auth metadata save path. No SQL, migrations, live account reads, or production changes were performed.
+
+
+### Project-wide V2 integration scan — 2026-11-15
+
+- Reviewed the remaining tester pages and shared identity/profile/app service modules for legacy Supabase reads, RPCs, Storage access, and V2 feature-flag handling.
+- `CheckInHistoryPage` reads V2 check-ins with `evidence_path` only as internal row data; it explicitly sets `evidence_url: null` in V2 mode. The CSV therefore exports an empty Evidence URL, and the UI has no V2 signed-URL action. Dedicated check-in evidence registration and authorization remain unsupported.
+- `TesterLeaderboardPage` loads only the current user's V2 profile/notification data and deliberately clears global ranking, ledger, tester-count, and award totals. It does not query legacy cross-user ranking data in V2 mode.
+- `WithdrawalRequestPage` explicitly disables withdrawals in V2 mode and does not query the legacy wallet. `WithdrawalStatusPage` now selects the profile through `rebuild_v2` when V2 is enabled; legacy mode is unchanged.
+- `SupportCenterPage` and `SupportTicketDetailsPage` both block legacy ticket/message/attachment reads in V2 mode. The latter also blocks legacy Storage signed URLs and all reply/upload actions.
+- `PrivacyDataManagementPage` uses V2 profile, assignment, check-in, feedback, notification, wallet, and wallet-ledger queries for its V2 exports. Its export remains scoped to the listed domains and is not a complete account archive.
+- `SettingsSecurityPage`, `LanguageAppearancePage`, `ActiveSessionsPage`, and `LoginActivitySecurityPage` retain the previously documented V2-specific profile/settings integration and explicit unavailable states for unsupported session/security-history features.
+- Shared developer app/profile service modules (`features/apps/apps-api.ts`, `features/profiles/profiles-api.ts`) and `DeveloperDashboardPage` still use the legacy public-schema client. This scan treats developer workspace/app management as not migrated to the tester V2 workflow; it is not evidence that these modules are V2-compatible. Keep developer workflows on the legacy path until a separately reviewed migration is implemented.
+- Shared identity role lookup remains through `public.user_roles`; this is the current application identity integration and was not changed in this scan. Its authorization boundary remains dependent on the reviewed legacy role-table policies and must be included in any future identity cutover review.
+
+Verification:
+- Source read-back was performed on `rebuild/testdz-v2`; the withdrawal-status change is committed separately and must be verified against the resulting branch HEAD.
+- No database, Auth, Storage, Production, Vercel, or PR #18 changes were made. No TypeScript, Vite build, browser, or CI pass is claimed.
+- The V2 feature flag remains off by default. Do not enable it in Production based on this source scan alone.
