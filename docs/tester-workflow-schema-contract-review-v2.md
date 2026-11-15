@@ -111,7 +111,7 @@ Frontend checkpoint:
 - Final submission creates or updates a server-side draft, registers evidence metadata before upload, uploads privately to `test-evidence`, and calls finalization. Retry paths reuse the draft and already-uploaded files where metadata matches.
 - Tester feedback is associated with the assignment ID passed from the progress page. The current feedback UI hides its local-only attachments while V2 is enabled because the V2 feedback model does not yet provide an attachment workflow.
 - The progress page deliberately shows no assignment reward credit in V2 mode; reward posting remains excluded.
-- Production remains feature-disabled. Do not enable the flag until the V2 schema and exposed-schema configuration are deployed to that same target project.
+- No Vercel environment variables were changed. The V2 code path is off unless `VITE_TESTER_WORKFLOW_V2_ENABLED=true` is explicitly set; verify the target environment before enabling it. Do not enable the flag until the V2 schema and exposed-schema configuration are deployed to that same target project.
 - TypeScript/build/Browser verification has not yet been run; no claim of frontend build success is made.
 
 Remaining:
