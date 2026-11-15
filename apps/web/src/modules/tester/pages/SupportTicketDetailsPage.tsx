@@ -34,7 +34,7 @@ export default function SupportTicketDetailsPage(){
    client.from("support_ticket_messages").select("id,ticket_id,sender_id,body,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
    client.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at").eq("ticket_id",id).order("created_at",{ascending:true})
   ]);
-  if(messageResult.error||attachmentResult.error){setError("Ticket details are available, but conversation or attachment storage is not ready yet. The database migration must be applied after review.");setMessages([]);setAttachments([]);}
+  if(messageResult.error||attachmentResult.error){setError("Ticket details are available, but conversation or attachment records could not be loaded. Please refresh and try again.");setMessages([]);setAttachments([]);}
   else {setMessages((messageResult.data||[]) as Message[]);setAttachments((attachmentResult.data||[]) as Attachment[]);}
   setLoading(false);
  },[id,user?.id]);
