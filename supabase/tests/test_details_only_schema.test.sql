@@ -36,15 +36,15 @@ select ok(
 );
 
 select ok(
-  (select count(*) = 6 from pg_policies
+  (select count(*) = 12 from pg_policies
    where schemaname='public'
      and tablename = any(array['test_steps','test_requirements','test_media'])
      and policyname = any(array[
-       'test_steps_select_visible_test','test_steps_manage_owner',
-       'test_requirements_select_visible_test','test_requirements_manage_owner',
-       'test_media_select_visible_test','test_media_manage_owner'
+       'test_steps_select_visible_test','test_steps_insert_owner','test_steps_update_owner','test_steps_delete_owner',
+       'test_requirements_select_visible_test','test_requirements_insert_owner','test_requirements_update_owner','test_requirements_delete_owner',
+       'test_media_select_visible_test','test_media_insert_owner','test_media_update_owner','test_media_delete_owner'
      ])),
-  'all six owner/admin and visible-test policies exist'
+  'all twelve visible-test and owner/admin action policies exist'
 );
 
 select ok(
