@@ -94,7 +94,7 @@ export default function DeveloperTestsPage() {
     setBusy(false);
   }
 
-  async function createCohort(event:React.FormEvent<HTMLFormElement>,testId:string){
+  async function createCohort(event:FormEvent<HTMLFormElement>,testId:string){
     event.preventDefault();setBusy(true);setError("");setNotice("");
     const {error:rpcError}=await createDeveloperTestCohort({testId,name:cohortName,capacity:cohortCapacity});
     if(rpcError)setError("تعذر إنشاء مجموعة المختبرين: "+rpcError.message);
