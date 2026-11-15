@@ -208,6 +208,7 @@ export default function TesterDashboardPage() {
     <TesterSidebar nav={nav} name={name} firstName={firstName} avatar={avatar} roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={workspaceMenuOpen} setWorkspaceMenuOpen={setWorkspaceMenuOpen} previewMode={previewMode} />
 
     <main className="td-main">
+      {previewMode && <div role="status" style={{ margin: "12px 18px 0", padding: "10px 14px", border: "1px solid #e6b85c", borderRadius: 10, background: "#fff8e7", color: "#704d08", fontSize: 13, fontWeight: 600 }}>Preview mode — all dashboard figures, assignments, and notifications shown here are sample data, not your account records.</div>}
       <RoleAccessNotice />
       <header className="td-topbar">
         <label className="td-search"><Icon name="search" size={21}/><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tests, topics, or skills…"/></label>
