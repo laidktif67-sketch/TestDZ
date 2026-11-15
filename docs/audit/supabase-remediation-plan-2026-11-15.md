@@ -92,12 +92,32 @@ project as a shortcut.
 
 ### Gate D — high-impact account enforcement migrations
 
-- Review `20261113000400_banned_account_enforcement.sql` and
-  `20261113000500_admin_account_suspension_appeals.sql` independently.
-- Test that banned users cannot write through any public-table or storage path,
-  and that admins can appeal/suspend only through intended guarded RPCs.
+Static source review was performed for both candidate migrations; this is not a
+runtime or security sign-off.
+
+- `20261113000400_banned_account_enforcement.sql` installs a restrictive
+  policy and write-blocking trigger on every public table except the special
+  profile path, plus a restrictive storage policy. Because this has broad
+  effects, validate each public-table RLS policy combination and all legitimate
+  storage upload/delete flows with banned and non-banned identities before
+  applying it.
+- `20261113000500_admin_account_suspension_appeals.sql` creates suspension
+  and appeal tables with direct table access revoked and exposes guarded RPCs.
+  Its procedures depend on existing `profiles.is_banned`, `user_roles`,
+  `audit_logs`, and `notifications` schemas/constraints. Confirm those
+  exact deployed definitions and test notification inserts for each role before
+  applying.
+- Required behavioral cases: non-admin cannot suspend or review; admin cannot
+  suspend self or another admin; invalid/duplicate suspension is rejected;
+  suspended user can read only their suspension and submit one appeal inside
+  the seven-day window; expired/duplicate appeals fail; non-admin cannot list
+  appeals; accepted appeal lifts suspension atomically; rejected appeal keeps
+  suspension active; every admin decision is audited and notifications satisfy
+  deployed constraints; banned user cannot bypass enforcement via RPC or
+  Storage.
 - Verify no existing service, support, or recovery flow is unintentionally
-  blocked.
+  blocked. These cases are not yet run against an isolated Supabase-compatible
+  environment.
 
 ## Required evidence before considering complete
 
