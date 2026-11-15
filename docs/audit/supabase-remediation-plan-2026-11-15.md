@@ -243,3 +243,31 @@ The Supabase migration ledger records the successful applied migration names usi
 - Full behavioral Auth/RLS/Storage tests: **pending**.
 - Report-evidence and broad account-enforcement migrations: **held intentionally**.
 - Rebuild completeness and production readiness: **not yet established**.
+
+
+## Advisor follow-up and FK index repair (2026-11-15)
+
+Supabase Performance Advisor initially reported two remaining unindexed foreign keys on the rebuilt schema:
+- `developer_feedback_attachments(feedback_id, message_id)`, a composite FK to `developer_feedback_messages(feedback_id, id)`.
+- `medical_exception_requests(tester_id)`.
+
+The exact catalog definitions were checked read-only. A small additive migration was committed on a separate review branch:
+`fix/supabase-rebuild-fk-indexes` — `supabase/migrations/20261115103000_cover_remaining_fk_indexes.sql`.
+
+It creates:
+- `developer_feedback_attachments_feedback_message_idx(feedback_id, message_id)`
+- `medical_exception_requests_tester_id_idx(tester_id)`
+
+The migration was applied successfully to `TestDZ-Rebuild`; both indexes were then verified valid/ready. A subsequent Performance Advisor run no longer reported any `unindexed_foreign_keys` finding. It reports 71 unused indexes, which is expected on an empty/near-empty rebuild with no real workload; do not delete them based on this signal alone.
+
+The Security Advisor reports six authenticated-callable `SECURITY DEFINER` functions: `add_cohort_test`, `create_app_with_distribution`, `create_cohort`, `get_my_active_sessions`, `get_my_security_activity`, and `remove_cohort_test`. These are warnings requiring authorization/behavior review, not proof that the functions are exploitable. The cohort/app RPCs have server-side guards in their definitions; the session/activity RPCs intentionally read Supabase-managed Auth data for the signed-in user. Dedicated identity-based tests remain required before sign-off.
+
+### Updated status
+
+- Original candidate migration files applied to rebuild: 48/52.
+- Held candidate migrations: report evidence + its dependent index migration; broad banned-account enforcement + suspension/appeals.
+- Additional FK-index fix: committed to a separate review branch and applied only to rebuild.
+- Targeted index and cohort pause catalog checks: 15/15 passed.
+- Performance Advisor unindexed-FK findings after the fix: none reported.
+- Security Advisor: six callable `SECURITY DEFINER` warnings remain for review; 71 unused-index notices are informational on the empty target.
+- Auth/RLS/Storage behavioral tests and production readiness: not established.
