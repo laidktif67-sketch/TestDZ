@@ -107,12 +107,15 @@ Verification in FixLab:
 
 Frontend checkpoint:
 - Added `apps/web/src/lib/supabase-v2.ts`, reusing the active Supabase session and requiring `VITE_TESTER_WORKFLOW_V2_ENABLED=true`.
-- Discovery list, test preview/enrollment, and assignment details now have a V2 code path behind that feature flag; the legacy path remains the default when the flag is absent/false.
+- Discovery list, test preview/enrollment, assignment details, assignment start/progress, daily check-in, feedback submission, and final assignment submission now have V2 code paths behind that feature flag; the legacy path remains the default when the flag is absent/false.
+- Final submission creates or updates a server-side draft, registers evidence metadata before upload, uploads privately to `test-evidence`, and calls finalization. Retry paths reuse the draft and already-uploaded files where metadata matches.
+- Tester feedback is associated with the assignment ID passed from the progress page. The current feedback UI hides its local-only attachments while V2 is enabled because the V2 feedback model does not yet provide an attachment workflow.
+- The progress page deliberately shows no assignment reward credit in V2 mode; reward posting remains excluded.
 - Production remains feature-disabled. Do not enable the flag until the V2 schema and exposed-schema configuration are deployed to that same target project.
 - TypeScript/build/Browser verification has not yet been run; no claim of frontend build success is made.
 
 Remaining:
-- Connect the progress/check-in, feedback form, final submission form, and history pages to the V2 RPCs.
+- Connect the check-in history, My Tests, feedback history, notification history, and other remaining tester history pages to V2 reads.
 - Run the frontend typecheck/build and browser workflow against a dedicated FixLab preview environment.
 - Review concurrent capacity behavior with a two-session race test.
 - No Production SQL, active migration promotion, Auth deletion, or PR #18 changes were made.
