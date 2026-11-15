@@ -190,10 +190,10 @@ export default function CheckInHistoryPage() {
     setFromDate(""); setToDate(""); setExpandedId(null);
   };
   const exportCsv = () => {
-    const header = ["Check-in date", "Test", "App", "Assignment status", "Note", "Evidence URL", "Linked points"];
+    const header = ["Check-in date", "Test", "App", "Assignment status", "Note", "Evidence URL", isTesterWorkflowV2Enabled ? "Points (unavailable in V2)" : "Linked points"];
     const data = visibleRows.map(row => [
       row.checkin_date, row.assignment?.test?.title || "", row.assignment?.test?.app?.name || "",
-      statusLabel(row.assignment?.status), row.note || "", row.evidence_url || "", row.points || ""
+      statusLabel(row.assignment?.status), row.note || "", row.evidence_url || "", isTesterWorkflowV2Enabled ? "Unavailable in V2" : row.points || ""
     ]);
     const csv = [header, ...data].map(line => line.map(csvCell).join(",")).join("\r\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
@@ -242,7 +242,7 @@ export default function CheckInHistoryPage() {
           <article className="cih-kpi-card"><span className="cih-kpi-icon blue"><Icon name="calendar" size={22}/></span><div><small>Check-ins in range</small><strong>{rangedRows.length}</strong><span>Recorded entries</span></div></article>
           <article className="cih-kpi-card"><span className="cih-kpi-icon green"><Icon name="check" size={22}/></span><div><small>Completed tests</small><strong>{completedCount}</strong><span>Assignments completed</span></div></article>
           <article className="cih-kpi-card"><span className="cih-kpi-icon amber"><Icon name="clock" size={22}/></span><div><small>Active / pending</small><strong>{activeCount + pendingCount}</strong><span>{activeCount} active · {pendingCount} pending</span></div></article>
-          <article className="cih-kpi-card"><span className="cih-kpi-icon violet"><Icon name="gift" size={22}/></span><div><small>Linked points</small><strong>{totalPoints.toLocaleString()}</strong><span>{linkedPoints} entries with linked points</span></div></article>
+          <article className="cih-kpi-card"><span className="cih-kpi-icon violet"><Icon name="gift" size={22}/></span><div>{isTesterWorkflowV2Enabled ? <><small>Points</small><strong>Unavailable</strong><span>Reward posting is not enabled in V2</span></> : <><small>Linked points</small><strong>{totalPoints.toLocaleString()}</strong><span>{linkedPoints} entries with linked points</span></>}</div></article>
         </section>
 
         <div className="cih-layout">
@@ -285,7 +285,7 @@ export default function CheckInHistoryPage() {
                         <td><strong className="cih-app-name">{app?.name || "App unavailable"}</strong><small className="cih-muted">{test?.status || "—"}</small></td>
                         <td><strong>{formatDate(row.checkin_date)}</strong><small className="cih-muted">{formatDate(row.created_at, true).split(", ").slice(-1)[0]}</small></td>
                         <td><span className={"cih-status-pill " + (assignmentStatus || "unknown")}><i/>{statusLabel(assignmentStatus)}</span></td>
-                        <td><span className="cih-points">{row.points ? "+" + row.points.toLocaleString() : "—"}</span></td>
+                        <td><span className="cih-points">{isTesterWorkflowV2Enabled ? "Unavailable" : row.points ? "+" + row.points.toLocaleString() : "—"}</span></td>
                         <td><button className="cih-view" type="button" aria-expanded={expanded} onClick={() => setExpandedId(expanded ? null : row.id)}>{expanded ? "Close" : "Details"} <Icon name={expanded ? "chevron-up" : "arrow"} size={15}/></button></td>
                       </tr>;
                     })}
