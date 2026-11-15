@@ -149,14 +149,11 @@ export default function AssignmentSubmissionPage() {
         return;
       }
 
-      let submissionId = existing.data?.id as string | undefined;
-      if (!submissionId) {
-        const created = await supabaseV2.rpc("create_assignment_submission", {
-          p_assignment_id: id, p_summary: report.trim(), p_comments: comments.trim() || null
-        });
-        if (created.error || !created.data) throw created.error || new Error("Could not create the submission draft.");
-        submissionId = created.data as string;
-      }
+      const created = await supabaseV2.rpc("create_assignment_submission", {
+        p_assignment_id: id, p_summary: report.trim(), p_comments: comments.trim() || null
+      });
+      if (created.error || !created.data) throw created.error || new Error("Could not save the submission draft.");
+      const submissionId = created.data as string;
 
       const prior = await supabaseV2.from("assignment_submission_attachments")
         .select("original_filename,mime_type,size_bytes,storage_path")
