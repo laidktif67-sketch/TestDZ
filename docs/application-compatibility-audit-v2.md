@@ -57,7 +57,7 @@ A focused semantic review found two incorrect correlated predicates in the gener
 
 Both fixes were applied to the isolated FixLab candidate and the source file `supabase/rebuild-v2/002_security.sql`. The security contract test was strengthened to assert these exact correlated predicates and reject the previous tautologies. The updated test returned `rebuild_v2_security_contract: PASS`.
 
-This is still not a substitute for synthetic-user RLS tests; FixLab has no synthetic Auth users yet.
+This is still not a substitute for synthetic-user RLS tests; FixLab has no synthetic Auth users yet. A clean isolated replay of the updated source scripts (with only the shared `auth.users` trigger attachment omitted) completed: 43 tables, 43 forced-RLS tables, 44 policies covering 43 tables, zero authenticated direct write grants, and zero occurrences of the two previous tautologies. The temporary replay schemas were dropped afterward.
 
 ## Next steps (single branch, no production changes)
 
@@ -73,5 +73,6 @@ This is still not a substitute for synthetic-user RLS tests; FixLab has no synth
 - Candidate schema introspection was read from isolated TestDZ-FixLab.
 - Candidate currently contains 43 tables and seven private helper functions; none of the application RPC names listed above exist in the candidate schemas.
 - The two correlated-policy defects described above were fixed in the candidate and source SQL; the strengthened security contract test passed after the fix.
+- Updated source scripts replayed into temporary isolated schemas: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, zero direct authenticated table write grants, and zero of the two known tautological predicates. Temporary replay schemas were dropped after verification.
 - No application compatibility patch has been applied yet.
 - No production database, Auth, Storage, or migration history was changed.
