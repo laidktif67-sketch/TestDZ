@@ -176,10 +176,14 @@ export default function DeveloperCreateTestSixStepPage() {
       setSaveError("The selected application could not be verified. Refresh and try again.");
       return;
     }
-    const { data: auth } = await identityApi.getCurrentUser();
-    if (!auth.user) { navigate("/auth", { replace: true }); return; }
     setSaving(true);
-    const { data, error } = await createTestDraft({
+    try {
+      const { data: auth } = await identityApi.getCurrentUser();
+      if (!auth.user) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+      const { data, error } = await createTestDraft({
       appId: selected.id,
       developerId: auth.user.id,
       title: title.trim(),
@@ -211,7 +215,11 @@ export default function DeveloperCreateTestSixStepPage() {
       setSaving(false);
       return;
     }
-    navigate("/developer/tests", { state: { createdTestId: data.id } });
+    } catch {
+      setSaveError("A connection or server error prevented saving. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return <main className="dct-shell">
