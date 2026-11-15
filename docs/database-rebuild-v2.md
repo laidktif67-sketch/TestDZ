@@ -8,7 +8,7 @@ This is an isolated rebuild candidate, not a production migration.
 - Base: PR #18 head `24bcaa1c01db69db1c15b55bca992ea9f3feaff0` (PR #18 remains open, draft, and unmerged).
 - Supabase validation project: `TestDZ-FixLab` (`bxjqwqidmxxnsgnpyzxv`, eu-west-3).
 - Candidate schema: `rebuild_v2`; helper schema: `rebuild_v2_private`.
-- Source scripts: `supabase/rebuild-v2/001_schema.sql` and `002_security.sql`.
+- Source scripts: `supabase/rebuild-v2/001_schema.sql`, `002_security.sql`, and `003_app_lifecycle.sql`.
 - These scripts are intentionally outside `supabase/migrations` until application compatibility and clean replay tests are complete.
 
 ## Candidate model
@@ -37,18 +37,18 @@ The candidate contains 43 tables grouped around:
 
 ## Validation completed
 
-- Applied candidate schema and security scripts in the isolated FixLab schema.
+- Applied candidate schema, security, and developer app lifecycle scripts in the isolated FixLab schema.
 - Replayed the same scripts into a second isolated schema, `rebuild_v2_replay`, to check reproducibility.
 - Replay result: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, and zero direct table-level write grants. The replay-only schema was removed after verification.
-- Security advisor: no candidate-schema security lint findings. The four reported RLS-without-policy findings are in the pre-existing `public` schema and were not changed.
+- Supabase security advisor currently reports four INFO RLS-enabled/no-policy findings in the pre-existing `public` schema only (`audit_logs`, `fraud_reviews`, `platform_config`, `user_roles`). The advisor output did not enumerate the isolated non-public candidate schema; candidate policy coverage was checked directly instead.
 - Performance advisor: no unindexed foreign keys remain in the candidate schema. Unused-index notices are expected because the candidate contains no workload data yet. The SQL security-contract test script completed with `rebuild_v2_security_contract: PASS`.
 - Privileged RPCs were checked to deny callers without an authenticated admin/financial identity; immutable-event trigger behavior was checked.
 
 ## Not yet completed
 
-- End-to-end RLS tests with real test users and each role. FixLab currently has no Auth users or Storage buckets, so user isolation and Storage rules still need dedicated tests.
-- Full app/API contract mapping for every frontend workflow and RPC.
-- Storage bucket policies and upload/download path authorization.
+- Complete role-matrix RLS tests for developer, support, financial, and admin roles. Tester self/other isolation and developer app lifecycle RPCs were tested with synthetic Auth users; all synthetic users and test data were cleaned up. FixLab currently has no Storage buckets, so Storage object-path tests remain outstanding.
+- Full app/API contract mapping for every frontend workflow and RPC. The first-pass route/data map is documented; remaining mismatches include points ledger, assignment fields, check-in evidence, support writes, notifications, onboarding, active sessions, security history, and leaderboard privacy.
+- Storage bucket policies and upload/download path authorization. Production inventory confirmed five existing buckets and zero objects; no bucket or object was changed.
 - Migration replay in a clean disposable Supabase project. The existing inactive rebuild project could not be restored because the organization reached its free active-project limit.
 - Verified production backup and restore rehearsal.
 - Data migration plan for the two existing production Auth users and existing Storage buckets.
