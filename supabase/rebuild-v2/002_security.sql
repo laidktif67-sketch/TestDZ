@@ -370,7 +370,6 @@ CREATE POLICY tests_select_published_owner_admin_v2 ON rebuild_v2.tests AS PERMI
 
 CREATE POLICY wallets_select_owner_financial_admin_v2 ON rebuild_v2.wallets AS PERMISSIVE FOR SELECT TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'financial'::text])));
 
-
 -- Developer app lifecycle RPCs. Public API wrappers are SECURITY INVOKER;
 -- privileged mutations live only in the non-exposed private schema.
 CREATE OR REPLACE FUNCTION rebuild_v2_private.get_active_subscription()
@@ -501,6 +500,8 @@ grant execute on function rebuild_v2.create_app(text,text,text,text) to authenti
 grant execute on function rebuild_v2.update_app(uuid,text,text,text,text) to authenticated;
 grant execute on function rebuild_v2.archive_app(uuid) to authenticated;
 grant execute on function rebuild_v2.restore_app(uuid) to authenticated;
+
+
  then
     raise exception 'PACKAGE_NAME_INVALID' using errcode='22023';
   end if;
@@ -695,6 +696,7 @@ CREATE OR REPLACE FUNCTION rebuild_v2.restore_app(p_app_id uuid)
  RETURNS void
  LANGUAGE sql SECURITY INVOKER SET search_path TO ''
 AS $function$ select rebuild_v2_private.restore_app_impl(p_app_id); $function$;
+
 
 -- Privileges: deny direct client writes; expose only safe reads and explicitly scoped RPCs.
 revoke all on all tables in schema rebuild_v2 from public, anon, authenticated;
