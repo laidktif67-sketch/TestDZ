@@ -253,7 +253,7 @@ CREATE POLICY checkins_select_participants_v2 ON rebuild_v2.checkins AS PERMISSI
 
 CREATE POLICY cohort_tests_select_participants_v2 ON rebuild_v2.cohort_tests AS PERMISSIVE FOR SELECT TO authenticated USING (((developer_id = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'support'::text]) OR (EXISTS ( SELECT 1
    FROM rebuild_v2.assignments a
-  WHERE ((a.cohort_id = a.cohort_id) AND (a.test_id = a.test_id) AND (a.tester_id = ( SELECT auth.uid() AS uid)))))));
+  WHERE ((a.cohort_id = cohort_tests.cohort_id) AND (a.test_id = cohort_tests.test_id) AND (a.tester_id = ( SELECT auth.uid() AS uid)))))));
 
 CREATE POLICY cohorts_select_participants_v2 ON rebuild_v2.cohorts AS PERMISSIVE FOR SELECT TO authenticated USING (((created_by = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'support'::text]) OR (EXISTS ( SELECT 1
    FROM rebuild_v2.assignments a
@@ -342,7 +342,7 @@ CREATE POLICY subscriptions_select_owner_admin_v2 ON rebuild_v2.subscriptions AS
 CREATE POLICY support_attachments_select_ticket_participants_v2 ON rebuild_v2.support_ticket_attachments AS PERMISSIVE FOR SELECT TO authenticated USING (((EXISTS ( SELECT 1
    FROM (rebuild_v2.support_ticket_messages m
      JOIN rebuild_v2.support_tickets st ON ((st.id = m.ticket_id)))
-  WHERE ((m.id = support_ticket_attachments.message_id) AND (m.ticket_id = m.ticket_id) AND (st.user_id = ( SELECT auth.uid() AS uid)) AND (m.internal_note = false)))) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'support'::text])));
+  WHERE ((m.id = support_ticket_attachments.message_id) AND (st.id = support_ticket_attachments.ticket_id) AND (st.user_id = ( SELECT auth.uid() AS uid)) AND (m.internal_note = false)))) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'support'::text])));
 
 CREATE POLICY support_events_select_ticket_participants_v2 ON rebuild_v2.support_ticket_events AS PERMISSIVE FOR SELECT TO authenticated USING (((EXISTS ( SELECT 1
    FROM rebuild_v2.support_tickets st
