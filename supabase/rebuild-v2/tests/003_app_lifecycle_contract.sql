@@ -57,7 +57,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.create_app(
       'V2 Quota Overflow','dz.testdz.v2quotaoverflow',
-      'Synthetic second app should exceed the default free-plan app quota.','tools'
+      'Synthetic second app should exceed the default one-active-app quota.','tools'
     );
     RAISE EXCEPTION 'FAIL: create_app exceeded the active app quota';
   EXCEPTION WHEN SQLSTATE 'P0001' THEN
