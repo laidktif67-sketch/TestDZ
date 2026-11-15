@@ -92,7 +92,7 @@ BEGIN
   IF v_visible <> 0 THEN RAISE EXCEPTION 'FAIL: another developer can read a private draft app'; END IF;
 
   IF rebuild_v2_private.can_manage_app_icon(v_icon_path) THEN
-    RAISE EXCEPTION 'FAIL: another developer can manage the owner's app icon';
+    RAISE EXCEPTION 'FAIL: another developer can manage this app icon';
   END IF;
 
   BEGIN
