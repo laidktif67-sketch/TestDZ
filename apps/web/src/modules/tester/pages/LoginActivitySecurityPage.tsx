@@ -40,8 +40,8 @@ export default function LoginActivitySecurityPage() {
         ? await supabaseV2!.rpc("get_my_security_activity", { p_limit: 30 })
         : await supabase.rpc("get_my_security_activity", { p_limit: 30 });
       if (!alive) return;
-      if (result.error) setNotice("Login history is temporarily unavailable. Please try again.");
-      else setActivity((result.data || []) as typeof activity);
+      if (result.error) { setActivityUnavailable(true); setNotice("Login history is temporarily unavailable. Please try again."); }
+      else { setActivityUnavailable(false); setActivity((result.data || []) as typeof activity); }
       setLoadingActivity(false);
     }
     void loadActivity();
@@ -81,8 +81,8 @@ export default function LoginActivitySecurityPage() {
       ? await supabaseV2!.rpc("get_my_security_activity", { p_limit: 30 })
       : await supabase.rpc("get_my_security_activity", { p_limit: 30 });
     setRefreshing(false);
-    if (result.error) setNotice("Could not refresh login history. Please try again.");
-    else { setActivity((result.data || []) as typeof activity); setNotice("Login history refreshed."); }
+    if (result.error) { setActivityUnavailable(true); setNotice("Could not refresh login history. Please try again."); }
+    else { setActivityUnavailable(false); setActivity((result.data || []) as typeof activity); setNotice("Login history refreshed."); }
   }
   const rows = activity.map(item => ({ id: item.id, date: new Date(item.occurred_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }), device: "Not recorded", browser: "Not recorded", location: "Not provided", ip: item.ip_address || "Not available", status: item.event }));
   return <div className="td-dashboard las-dashboard">
