@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - architecture-v1
+      - rebuild/testdz-v2
     paths:
       - "apps/web/**"
       - "packages/**"
