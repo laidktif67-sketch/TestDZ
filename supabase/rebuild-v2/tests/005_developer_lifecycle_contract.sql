@@ -14,7 +14,8 @@ INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
  ('50000000-0000-4000-8000-000000000001','developer'),
  ('50000000-0000-4000-8000-000000000002','admin'),
- ('50000000-0000-4000-8000-000000000003','tester');
+ ('50000000-0000-4000-8000-000000000003','tester')
+ON CONFLICT(user_id,role) DO NOTHING;
 
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
