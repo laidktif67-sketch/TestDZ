@@ -1,5 +1,5 @@
 -- TestDZ rebuild v2 security contract checks.
--- Run after 001_schema.sql through 005_support_notifications.sql in a disposable Supabase test project.
+-- Run after 001_schema.sql through 006_storage_policies.sql in a disposable Supabase test project.
 -- The script is read-only apart from a transaction-local test probe; it rolls back.
 
 begin;
@@ -65,6 +65,39 @@ begin
      or to_regprocedure('rebuild_v2.mark_notification_read(uuid)') is null
      or to_regprocedure('rebuild_v2.mark_all_notifications_read()') is null then
     raise exception 'support/notification RPC contract is incomplete';
+  end if;
+
+  if to_regprocedure('rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint)') is null then
+    raise exception 'support attachment metadata RPC is missing';
+  end if;
+
+  if (select count(*) from storage.buckets where id in
+      ('avatars','app-icons','developer-feedback-attachments','support-attachments','test-evidence')) <> 5 then
+    raise exception 'one or more required Storage buckets are missing';
+  end if;
+
+  if (select count(*) from pg_policies where schemaname='storage' and tablename='objects'
+      and policyname in (
+        'avatars_owner_select_v2','avatars_owner_insert_v2','avatars_owner_update_v2','avatars_owner_delete_v2',
+        'app_icons_public_read_v2','app_icons_owner_insert_v2','app_icons_owner_update_v2','app_icons_owner_delete_v2',
+        'developer_feedback_storage_insert_v2','developer_feedback_storage_select_v2',
+        'support_attachments_insert_v2','support_attachments_select_v2',
+        'report_evidence_insert_v2','report_evidence_select_v2'
+      )) <> 14 then
+    raise exception 'Storage object policy set is incomplete';
+  end if;
+
+  if has_function_privilege('anon','rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint)','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint)','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2_private.can_read_support_attachment(text)','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2_private.can_read_test_evidence(text)','EXECUTE') then
+    raise exception 'Storage helper or attachment RPC grants are too broad';
+  end if;
+
+  if position('support_ticket_attachments' in pg_get_functiondef('rebuild_v2_private.can_read_support_attachment(text)'::regprocedure))=0
+     or position('internal_note' in pg_get_functiondef('rebuild_v2_private.can_read_support_attachment(text)'::regprocedure))=0
+     or position('report_attachments' in pg_get_functiondef('rebuild_v2_private.can_read_test_evidence(text)'::regprocedure))=0 then
+    raise exception 'private Storage read helpers do not enforce metadata visibility';
   end if;
 
   if has_function_privilege('anon','rebuild_v2.create_support_ticket(text,text,text,text)','EXECUTE')
