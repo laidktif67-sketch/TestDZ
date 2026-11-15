@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -83,6 +84,31 @@ export default function CheckInHistoryPage() {
       setLoading(true);
       setRefreshing(true);
       setError("");
+      if (isTesterWorkflowV2Enabled && supabaseV2) {
+        const [profile, checkins, notice] = await Promise.all([
+          supabaseV2.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
+          supabaseV2.from("checkins")
+            .select("id,assignment_id,checkin_date,created_at,note,evidence_path,assignment:assignments(id,status,test:tests(id,title,status,app:apps(name,icon_url)))")
+            .eq("tester_id", session!.user.id)
+            .order("checkin_date", { ascending: false }),
+          supabaseV2.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", session!.user.id).is("read_at", null)
+        ]);
+        if (!alive) return;
+        setName(profile.data?.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
+        setAvatar(profile.data?.avatar_url || "");
+        if (checkins.error) {
+          setError("We couldn't load your check-in history. Please refresh and try again.");
+          setRows([]);
+        } else {
+          const source = (checkins.data ?? []) as unknown as Omit<CheckinRow, "points">[];
+          setRows(source.map(row => ({ ...row, evidence_url: null, points: 0 })));
+        }
+        setNotifications(notice.count ?? 0);
+        if (profile.error || notice.error) setError("Some check-in information could not be loaded.");
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
       const [profile, checkins, notice] = await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
         client.from("checkins")
