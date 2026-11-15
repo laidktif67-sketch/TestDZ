@@ -134,3 +134,30 @@ Remaining verification:
 - The `join_test` implementation uses a transaction-scoped advisory lock for a tester+test and `FOR UPDATE` row locking on candidate cohorts before counting seats. This is the intended last-seat serialization design, but a true two-session concurrent race test has not been executed.
 - Run a true two-session race test for the final cohort seat.
 - Repeat FixLab SQL contract tests after any subsequent SQL changes; no Production rollout is authorized.
+
+
+## Follow-up verification — 2026-11-15
+
+### Branch and CI state
+
+- GitHub Actions reports the latest observed push run for this branch as run `43745468748`, commit `7f40f3b1d1687cb116d32f177ff26fff4346f4d4` (`Keep check-in evidence hidden until dedicated storage authorization exists`).
+- The run conclusion is `failure`; its single `web` job also reports `failure`. The job-steps endpoint returned an empty list, and the job-log download endpoint returned 404. Therefore the exact GitHub Actions failure point is **unresolved**; do not infer a TypeScript or Vite build failure from this metadata.
+- The combined commit status reports Vercel `failure` with target URL indicating `upgradeToPro=build-rate-limit`. This is a Vercel build-rate-limit status, not evidence of an application compile error.
+- Frontend TypeScript/build/browser verification remains **pending**. No Vercel settings or environment variables were changed.
+
+### FixLab foreign-key index follow-up
+
+- Re-ran the FixLab Performance Advisor. It still reports 31 unindexed foreign keys and 23 unused indexes across legacy `public` and candidate `rebuild_v2` objects.
+- A read-only catalog check confirmed the following candidate V2 relations:
+  - `assignment_submissions.tester_id` is covered by `assignment_submissions_tester_created_idx`.
+  - `assignment_submissions.assignment_id` is covered by the unique `assignment_id` index.
+  - `assignment_submission_attachments.submission_id` is covered by the unique `(submission_id,file_id)` index.
+  - `assignment_submission_attachments.tester_id` has no dedicated leading-column index.
+  - The composite identity foreign keys begin with `assignment_id` / `submission_id`, respectively, and those leading columns already have indexes; the Advisor still flags the composite constraints because there is no exact full-column-prefix index.
+- The candidate tables currently contain zero rows and no representative production-like workload is available. Do **not** add redundant composite indexes or remove Advisor-listed unused indexes solely to silence the linter. Revisit the attachment `tester_id` index when workload/EXPLAIN evidence demonstrates a material benefit.
+
+### Concurrency verification
+
+- The current Supabase SQL connector exposes single SQL execution calls; no supported second independent PostgreSQL session or transaction-coordination mechanism was available in this pass.
+- A true two-session last-seat race test is therefore still **pending**. The advisory-lock + cohort-row-lock implementation remains a design review result, not a concurrency-test pass.
+- No SQL writes, migrations, schema changes, Storage changes, Auth changes, or Production operations were performed in this follow-up.
