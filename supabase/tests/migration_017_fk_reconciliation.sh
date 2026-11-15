@@ -4,10 +4,13 @@ set -euo pipefail
 DB_URL="${SUPABASE_DB_URL:?SUPABASE_DB_URL not set}"
 
 # This test writes fixtures and must never run against a hosted database.
-if [[ ! "$DB_URL" =~ @((localhost)|(127\\.0\\.0\\.1)|(\\[::1\\])): ]]; then
-  echo "FAIL: refusing non-local database URL; use supabase status -o json DB_URL"
-  exit 1
-fi
+case "$DB_URL" in
+  *@localhost:*|*@127.0.0.1:*|*@\\[::1\\]:*) ;;
+  *)
+    echo "FAIL: refusing non-local database URL; use the local DB_URL from supabase status"
+    exit 1
+    ;;
+esac
 
 echo "=== Week 5 FK reconciliation regression test ==="
 
