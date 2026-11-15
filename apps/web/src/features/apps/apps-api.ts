@@ -1,5 +1,6 @@
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../lib/supabase-v2";
 
 const APP_SELECT = "id,developer_id,name,package_name,description,category,icon_url,status,created_at";
 
@@ -8,14 +9,20 @@ function client() {
   return supabase;
 }
 
+function dataClient() {
+  const selected = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
+  if (!selected) throw new Error("SUPABASE_NOT_CONFIGURED");
+  return selected;
+}
+
 /** Read the current user's applications using the existing RLS policies. */
 export function listApps() {
-  return client().from("apps").select(APP_SELECT).order("created_at", { ascending: false });
+  return dataClient().from("apps").select(APP_SELECT).order("created_at", { ascending: false });
 }
 
 /** Read the current plan's application limit through the existing RPC. */
 export function getAppLimit() {
-  return client().rpc("get_app_limit");
+  return dataClient().rpc("get_app_limit");
 }
 
 /** Read one application; access remains enforced by the existing RLS policies. */
@@ -30,7 +37,7 @@ export function createApp(input: {
   description: string;
   category: string;
 }) {
-  return client().rpc("create_app", {
+  return dataClient().rpc("create_app", {
     p_name: input.name,
     p_package_name: input.packageName,
     p_description: input.description,
@@ -46,7 +53,7 @@ export function updateApp(input: {
   category: string;
   iconUrl?: string;
 }) {
-  return client().rpc("update_app", {
+  return dataClient().rpc("update_app", {
     p_app_id: input.id,
     p_name: input.name,
     p_description: input.description,
@@ -55,7 +62,7 @@ export function updateApp(input: {
   });
 }
 
-/** Upload an icon and then attach its public URL to the newly-created app. */
+/** Upload an icon to the public bucket; Storage policies restrict writes to the app owner. */
 export async function uploadAppIcon(userId: string, appId: string, file: File, metadata: { name: string; description: string; category: string }) {
   const storage = client().storage;
   const extension = file.type === "image/png" ? "png" : "jpg";
@@ -79,12 +86,12 @@ export async function uploadAppIcon(userId: string, appId: string, file: File, m
 
 /** Archive an application through the existing server-side RPC. */
 export function archiveApp(id: string) {
-  return client().rpc("archive_app", { p_app_id: id });
+  return dataClient().rpc("archive_app", { p_app_id: id });
 }
 
 /** Restore an archived application through the existing server-side RPC. */
 export function restoreApp(id: string) {
-  return client().rpc("restore_app", { p_app_id: id });
+  return dataClient().rpc("restore_app", { p_app_id: id });
 }
 
 export type { AppLimit, AppRecord };
