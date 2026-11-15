@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -40,14 +40,20 @@ export default function ActiveSessionsPage() {
     let alive = true;
     async function loadSessions() {
       if (!supabase) { if (alive) setSessionReady(true); return; }
-      if (isTesterWorkflowV2Enabled) {
+      const [auth, result] = await Promise.all([
+        supabase.auth.getSession(),
+        isTesterWorkflowV2Enabled
+          ? supabaseV2?.rpc("get_my_active_sessions")
+          : supabase.rpc("get_my_active_sessions"),
+      ]);
+      if (isTesterWorkflowV2Enabled && !supabaseV2) {
         if (alive) {
           setSessionsUnavailable(true);
+          setError("V2 session history is unavailable because the V2 client is not initialized.");
           setSessionReady(true);
         }
         return;
       }
-      const [auth, result] = await Promise.all([supabase.auth.getSession(), supabase.rpc("get_my_active_sessions")]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
       if (result.error) setError("Could not load your active sessions. Please try again.");
@@ -65,12 +71,15 @@ export default function ActiveSessionsPage() {
     setBusy(true); setMessage(""); setError("");
     const result = await supabase.auth.signOut({ scope: "others" });
     if (result.error) { setBusy(false); setError("Could not sign out other sessions. Please try again."); return; }
-    if (isTesterWorkflowV2Enabled) {
+    const refreshed = isTesterWorkflowV2Enabled
+      ? await supabaseV2?.rpc("get_my_active_sessions")
+      : await supabase.rpc("get_my_active_sessions");
+    if (!refreshed) {
       setBusy(false);
-      setMessage("Other sessions were signed out by Supabase Auth. The V2 session list is not available yet.");
+      setSessionsUnavailable(true);
+      setError("Other sessions were signed out, but the V2 session list could not be refreshed.");
       return;
     }
-    const refreshed = await supabase.rpc("get_my_active_sessions");
     setBusy(false);
     if (refreshed.error) setError("Other sessions were signed out, but the session list could not be refreshed.");
     else { setSessions((refreshed.data || []) as typeof sessions); setMessage("Other sessions have been signed out. This device remains connected."); }
