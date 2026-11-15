@@ -163,11 +163,11 @@ The security contract test was extended to assert RPC existence, authenticated-o
 
 ## Latest replay and advisor notes
 
-After adding the two confirmed app compatibility columns and the app lifecycle RPC script, all three source scripts were replayed into temporary schemas again:
+After adding the two confirmed app compatibility columns and the app lifecycle/onboarding/security RPC scripts, all four source scripts were replayed into temporary schemas again:
 
 - 43 tables, all 43 with forced RLS.
 - 44 policies covering all 43 tables.
-- All five developer app RPCs present; zero anon EXECUTE grants and five authenticated EXECUTE grants.
+- All eight app/onboarding/security RPCs present; zero anon EXECUTE grants and eight authenticated EXECUTE grants.
 - Zero authenticated direct table INSERT/UPDATE/DELETE grants.
 - Both new compatibility columns present.
 - Temporary replay schemas dropped after verification.
