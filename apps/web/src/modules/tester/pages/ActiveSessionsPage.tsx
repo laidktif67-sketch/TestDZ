@@ -56,8 +56,8 @@ export default function ActiveSessionsPage() {
       ]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
-      if (result.error) setError("Could not load your active sessions. Please try again.");
-      else setSessions((result.data || []) as typeof sessions);
+      if (result.error) { setSessionsUnavailable(true); setError("Could not load your active sessions. Please try again."); }
+      else { setSessionsUnavailable(false); setSessions((result.data || []) as typeof sessions); }
       setSessionReady(true);
     }
     void loadSessions();
@@ -81,8 +81,8 @@ export default function ActiveSessionsPage() {
       return;
     }
     setBusy(false);
-    if (refreshed.error) setError("Other sessions were signed out, but the session list could not be refreshed.");
-    else { setSessions((refreshed.data || []) as typeof sessions); setMessage("Other sessions have been signed out. This device remains connected."); }
+    if (refreshed.error) { setSessionsUnavailable(true); setError("Other sessions were signed out, but the session list could not be refreshed."); }
+    else { setSessionsUnavailable(false); setSessions((refreshed.data || []) as typeof sessions); setMessage("Other sessions have been signed out. This device remains connected."); }
   }
 
   const formattedLogin = lastLogin ? lastLogin.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not available";
