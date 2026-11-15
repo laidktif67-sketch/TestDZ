@@ -1,6 +1,7 @@
 import { useEffect,useMemo,useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar,{Icon} from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -15,6 +16,18 @@ export default function TesterLeaderboardPage(){
  const [filter,setFilter]=useState<Filter>("all"),[rows,setRows]=useState<Rank[]>([]),[ledgerRows,setLedgerRows]=useState<Score[]>([]),[totalTesters,setTotalTesters]=useState<number|null>(null),[totalAwarded,setTotalAwarded]=useState<number|null>(null),[loading,setLoading]=useState(true),[dataNotice,setDataNotice]=useState("");
  const [page,setPage]=useState(1);const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  useEffect(()=>{if(!session?.user?.id||!supabase){setLoading(false);return;}let alive=true;const uid=session.user.id;(async()=>{
+ if(isTesterWorkflowV2Enabled&&supabaseV2){
+  const [profile,notifications]=await Promise.all([
+   supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
+   supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null)
+  ]);
+  if(!alive)return;
+  setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
+  setAvatar(profile.data?.avatar_url||"");setUnread(notifications.count??0);
+  setRows([]);setLedgerRows([]);setTotalTesters(null);setTotalAwarded(null);
+  setDataNotice("Global rankings are hidden until a secure, approved V2 leaderboard service is available.");
+  setLoading(false);return;
+ }
  const [profile,notifications,roleCount,roleRows]=await Promise.all([
  supabase.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
  supabase.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
