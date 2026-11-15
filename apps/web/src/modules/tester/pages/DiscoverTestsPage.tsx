@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -10,6 +11,7 @@ import "../styles/discover-tests.css";
 
 type AppInfo={name:string;icon_url:string|null;category?:string|null};
 type TestRow={id:string;title:string;description:string|null;short_summary?:string|null;status:string;min_testers:number;start_date:string|null;end_date:string|null;app?:AppInfo|null};
+type DiscoverableTestRow={test_id:string;app_name:string;app_icon_url:string|null;app_category:string;title:string;description:string|null;short_summary:string|null;test_status:string;min_testers:number;start_date:string|null;end_date:string|null};
 type Category="all"|"mobile"|"web"|"desktop"|"other";
 type FilterIconName="grid"|"smartphone"|"globe"|"monitor"|"layers";
 const filters:{id:Category;label:string;icon:FilterIconName}[]=[
@@ -32,8 +34,35 @@ export default function DiscoverTestsPage(){
  const previewMode=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  useEffect(()=>{
-  const client=supabase;if(!client){setLoading(false);setError("Supabase is not configured.");return;}let alive=true;
+  const client=supabase;
+  if(!client){setLoading(false);setError("Supabase is not configured.");return;}
+  let alive=true;
   const load=async(userId:string,email?:string)=>{
+   if(isTesterWorkflowV2Enabled&&supabaseV2){
+    const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
+     supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
+     supabaseV2.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
+     supabaseV2.from("assignments").select("id,status").eq("tester_id",userId),
+     supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null),
+     supabaseV2.rpc("get_discoverable_tests")
+    ]);
+    if(!alive)return;
+    setName(profile.data?.display_name?.trim()||email?.split("@")[0]||"Tester");
+    setAvatar(profile.data?.avatar_url||"");
+    setPoints(Number(wallet.data?.earned_points??0));
+    setCompleted((assignments.data??[]).filter((a:{status:string})=>a.status==="completed").length);
+    setUnread(notifications.count??0);
+    const rows=(testRows.data??[]) as unknown as DiscoverableTestRow[];
+    setTests(rows.map(row=>({
+     id:row.test_id,title:row.title,description:row.description,short_summary:row.short_summary,
+     status:row.test_status,min_testers:row.min_testers,start_date:row.start_date,end_date:row.end_date,
+     app:{name:row.app_name,icon_url:row.app_icon_url,category:row.app_category}
+    })));
+    if(profile.error||wallet.error||assignments.error||notifications.error||testRows.error)
+     setError("Some information could not be loaded. You can still explore the available tests.");
+    setLoading(false);
+    return;
+   }
    const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
     client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
     client.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
@@ -42,10 +71,14 @@ export default function DiscoverTestsPage(){
     client.from("tests").select("id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category)").in("status",["recruiting","ready"]).order("created_at",{ascending:false}).limit(60)
    ]);
    if(!alive)return;
-   setName(profile.data?.display_name?.trim()||email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");
-   setPoints(Number(wallet.data?.earned_points??0));setCompleted((assignments.data??[]).filter((a:{status:string})=>a.status==="completed").length);
-   setUnread(notifications.count??0);setTests((testRows.data??[]) as unknown as TestRow[]);
-   if(profile.error||wallet.error||assignments.error||notifications.error||testRows.error)setError("Some information could not be loaded. You can still explore the available tests.");
+   setName(profile.data?.display_name?.trim()||email?.split("@")[0]||"Tester");
+   setAvatar(profile.data?.avatar_url||"");
+   setPoints(Number(wallet.data?.earned_points??0));
+   setCompleted((assignments.data??[]).filter((a:{status:string})=>a.status==="completed").length);
+   setUnread(notifications.count??0);
+   setTests((testRows.data??[]) as unknown as TestRow[]);
+   if(profile.error||wallet.error||assignments.error||notifications.error||testRows.error)
+    setError("Some information could not be loaded. You can still explore the available tests.");
    setLoading(false);
   };
   client.auth.getSession().then(({data,error:sessionError})=>{if(!alive)return;if(sessionError){setError("We couldn’t verify your session. Refresh and try again.");setLoading(false);return;}setSession(data.session);if(data.session)void load(data.session.user.id,data.session.user.email);else setLoading(false);}).catch(()=>{if(alive){setError("We couldn’t verify your session.");setLoading(false);}});
