@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -73,9 +74,10 @@ export default function PrivacyDataManagementPage() {
     const metadata = user.user_metadata || {};
     const saved = metadata.testdz_privacy_preferences as Partial<PrivacyPreferences> | undefined;
     const history = metadata.testdz_privacy_export_requests as ExportRequest[] | undefined;
-    Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url,created_at,updated_at").eq("id", user.id).maybeSingle()
-    ]).then(([profile]) => {
+    const profileQuery = isTesterWorkflowV2Enabled && supabaseV2
+      ? supabaseV2.from("profiles").select("display_name,avatar_url,created_at,updated_at").eq("id", user.id).maybeSingle()
+      : supabase.from("profiles").select("display_name,avatar_url,created_at,updated_at").eq("id", user.id).maybeSingle();
+    Promise.resolve(profileQuery).then((profile) => {
       if (!alive) return;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
@@ -112,13 +114,26 @@ export default function PrivacyDataManagementPage() {
   async function requestData() {
     if (!supabase || !user) return;
     setBusy("data"); setMessage(""); setError("");
+    const v2 = isTesterWorkflowV2Enabled && supabaseV2;
     const [profile, assignments, checkins, feedback, notifications, ledger] = await Promise.all([
-      supabase.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,subscription_tier,created_at,updated_at").eq("id", user.id).maybeSingle(),
-      supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at,updated_at").eq("tester_id", user.id),
-      supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
-      supabase.from("feedback").select("id,assignment_id,rating,body,category,quality_status,created_at").eq("tester_id", user.id),
-      supabase.from("notifications").select("id,type,title,body,read_at,created_at").eq("user_id", user.id),
-      supabase.from("points_ledger").select("id,wallet_type,amount,reason,reference_type,created_at").eq("user_id", user.id)
+      v2
+        ? v2.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,created_at,updated_at").eq("id", user.id).maybeSingle()
+        : supabase.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,subscription_tier,created_at,updated_at").eq("id", user.id).maybeSingle(),
+      v2
+        ? v2.from("assignments").select("id,test_id,status,assigned_at,started_at,completed_at,due_at").eq("tester_id", user.id)
+        : supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at,updated_at").eq("tester_id", user.id),
+      v2
+        ? v2.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id)
+        : supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
+      v2
+        ? v2.from("feedback").select("id,assignment_id,rating,body,category,created_at").eq("tester_id", user.id)
+        : supabase.from("feedback").select("id,assignment_id,rating,body,category,quality_status,created_at").eq("tester_id", user.id),
+      v2
+        ? v2.from("notifications").select("id,type,title,body,data,read_at,archived_at,created_at").eq("user_id", user.id)
+        : supabase.from("notifications").select("id,type,title,body,read_at,created_at").eq("user_id", user.id),
+      v2
+        ? v2.from("wallet_ledger").select("id,wallet_type,amount,entry_type,reference_type,reference_id,reason,created_at").eq("user_id", user.id)
+        : supabase.from("points_ledger").select("id,wallet_type,amount,reason,reference_type,created_at").eq("user_id", user.id)
     ]);
     const failed = [profile, assignments, checkins, feedback, notifications, ledger].some(result => result.error);
     if (failed) {
@@ -133,7 +148,8 @@ export default function PrivacyDataManagementPage() {
       checkIns: checkins.data,
       feedback: feedback.data,
       notifications: notifications.data,
-      pointsLedger: ledger.data
+      pointsLedger: ledger.data,
+      workflowVersion: v2 ? "rebuild_v2" : "legacy"
     };
     downloadFile("testdz-account-data.json", JSON.stringify(payload, null, 2), "application/json");
     await recordRequest("Full Account Data", "Completed");
@@ -143,21 +159,30 @@ export default function PrivacyDataManagementPage() {
   async function exportActivity() {
     if (!supabase || !user) return;
     setBusy("activity"); setMessage(""); setError("");
+    const v2 = isTesterWorkflowV2Enabled && supabaseV2;
     const [assignments, checkins, feedback, ledger] = await Promise.all([
-      supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at").eq("tester_id", user.id),
-      supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
-      supabase.from("feedback").select("id,assignment_id,rating,category,quality_status,created_at").eq("tester_id", user.id),
-      supabase.from("points_ledger").select("id,wallet_type,amount,reason,created_at").eq("user_id", user.id)
+      v2
+        ? v2.from("assignments").select("id,test_id,status,assigned_at,started_at,completed_at,due_at").eq("tester_id", user.id)
+        : supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at").eq("tester_id", user.id),
+      v2
+        ? v2.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id)
+        : supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
+      v2
+        ? v2.from("feedback").select("id,assignment_id,rating,category,created_at").eq("tester_id", user.id)
+        : supabase.from("feedback").select("id,assignment_id,rating,category,quality_status,created_at").eq("tester_id", user.id),
+      v2
+        ? v2.from("wallet_ledger").select("id,wallet_type,amount,entry_type,reason,created_at").eq("user_id", user.id)
+        : supabase.from("points_ledger").select("id,wallet_type,amount,reason,created_at").eq("user_id", user.id)
     ]);
     if ([assignments, checkins, feedback, ledger].some(result => result.error)) {
       setBusy(""); setError("Activity history could not be exported. Please try again."); return;
     }
     const lines = [
       ["Record Type","Record ID","Related ID","Status / Category","Date","Details"].map(csvCell).join(","),
-      ...(assignments.data || []).map(row => ["Assignment",row.id,row.test_id,row.status,row.created_at,row.start_date].map(csvCell).join(",")),
+      ...(assignments.data || []).map(row => ["Assignment",row.id,row.test_id,row.status,("assigned_at" in row ? row.assigned_at : row.created_at),("started_at" in row ? row.started_at : row.start_date)].map(csvCell).join(",")),
       ...(checkins.data || []).map(row => ["Check-in",row.id,row.assignment_id,"Recorded",row.created_at,row.note].map(csvCell).join(",")),
-      ...(feedback.data || []).map(row => ["Feedback",row.id,row.assignment_id,row.quality_status,row.created_at,row.category].map(csvCell).join(",")),
-      ...(ledger.data || []).map(row => ["Points",row.id,"",row.wallet_type,row.created_at, row.reason + " (" + row.amount + ")"].map(csvCell).join(","))
+      ...(feedback.data || []).map(row => ["Feedback",row.id,row.assignment_id,("quality_status" in row ? row.quality_status : "Not provided"),row.created_at,row.category].map(csvCell).join(",")),
+      ...(ledger.data || []).map(row => ["Ledger",row.id,("reference_id" in row ? row.reference_id : ""),("entry_type" in row ? row.entry_type : row.wallet_type),row.created_at, (row.reason || "") + " (" + row.amount + ")"].map(csvCell).join(","))
     ];
     downloadFile("testdz-activity-history.csv", lines.join("\n"), "text/csv;charset=utf-8");
     await recordRequest("Activity History (CSV)", "Completed");
