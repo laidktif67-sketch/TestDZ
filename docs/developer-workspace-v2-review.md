@@ -21,6 +21,7 @@ Before this change, `apps-api.ts` called the default `public` schema for app rea
 
 - `apps/web/src/features/apps/apps-api.ts`: app list/detail reads and quota/create/update/archive/restore RPCs now select `supabaseV2` when `VITE_TESTER_WORKFLOW_V2_ENABLED=true`; otherwise they preserve the legacy `public` client. Storage upload remains on the base Supabase Storage client, because Storage buckets are not schema-scoped.
 - `apps/web/src/modules/developer/pages/DeveloperDashboardPage.tsx`: profile reads use the same selected data schema while Auth session handling remains on the base client.
+- `apps/web/src/features/profiles/profiles-api.ts`: profile reads, profile updates, onboarding status/completion, and avatar profile-link updates now use the V2 data client when enabled. Avatar file upload/list/delete still use the base Storage client, with V2 owner-scoped `avatars` policies.
 - `packages/types/src/apps.ts`: shared app status type now includes V2 `submitted` and `rejected` statuses.
 - `apps/web/src/pages/AppsPage.tsx` and `AppDetailPage.tsx`: display labels now distinguish submitted/rejected apps rather than incorrectly presenting them as drafts.
 
