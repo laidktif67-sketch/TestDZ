@@ -39,7 +39,7 @@ The candidate contains 43 tables grouped around:
 
 - Applied candidate schema, security, developer app lifecycle, onboarding, and account-security scripts in the isolated FixLab schema.
 - Replayed all three scripts into a second isolated schema, `rebuild_v2_replay`, to check reproducibility.
-- Replay result: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, all five app RPCs present, zero anon app-RPC execute grants, five authenticated app-RPC execute grants, and zero direct table-level write grants. The replay-only schema was removed after verification.
+- Replay result: 43 tables, 43 forced-RLS tables, 44 policies covering all 43 tables, all eight app/onboarding/security RPCs present, zero anon execute grants, eight authenticated execute grants, and zero direct table-level write grants. The replay-only schema was removed after verification.
 - Supabase security advisor currently reports four INFO RLS-enabled/no-policy findings in the pre-existing `public` schema only (`audit_logs`, `fraud_reviews`, `platform_config`, `user_roles`). The advisor output did not enumerate the isolated non-public candidate schema; candidate policy coverage was checked directly instead.
 - Performance advisor: no unindexed foreign keys remain in the candidate schema. Unused-index notices are expected because the candidate contains no workload data yet. The SQL security-contract test script completed with `rebuild_v2_security_contract: PASS`.
 - Privileged RPCs were checked to deny callers without an authenticated admin/financial identity; immutable-event trigger behavior was checked.
