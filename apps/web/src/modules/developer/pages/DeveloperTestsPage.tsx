@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { AppRecord } from "@testdz/types";
 import { supabase } from "../../../lib/supabase";
@@ -11,6 +12,8 @@ import {
   submitDeveloperTestForReview,
 } from "../../../features/apps/apps-api";
 import { Brand } from "../../../shared/components/Brand";
+
+type DeveloperTestInputType = "google_play_closed"|"apk_testing"|"bug_discovery"|"usability"|"compatibility"|"custom";
 
 type DeveloperTest = {
   id: string; app_id: string; title: string; description: string | null;
@@ -47,8 +50,6 @@ export default function DeveloperTestsPage() {
   const [cohortName,setCohortName]=useState("");
   const [cohortCapacity,setCohortCapacity]=useState(12);
 
-  type DeveloperTestInputType = "google_play_closed"|"apk_testing"|"bug_discovery"|"usability"|"compatibility"|"custom";
-
   const load=useCallback(async(id:string)=>{
     setLoading(true);setError("");
     const [appResult,testResult]=await Promise.all([listApps(id),listDeveloperTests(id)]);
@@ -72,7 +73,7 @@ export default function DeveloperTestsPage() {
     return()=>{alive=false;};
   },[load,navigate]);
 
-  async function createTest(event:React.FormEvent<HTMLFormElement>){
+  async function createTest(event:FormEvent<HTMLFormElement>){
     event.preventDefault();
     if(!appId){setError("اختر التطبيق المنشور أولاً.");return;}
     setBusy(true);setError("");setNotice("");
