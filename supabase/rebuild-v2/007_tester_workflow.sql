@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS rebuild_v2.assignment_submissions (
   submitted_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT assignment_submissions_identity_key
+    UNIQUE (id, assignment_id, test_id, tester_id),
   CONSTRAINT assignment_submissions_assignment_identity_fkey
     FOREIGN KEY (assignment_id, test_id, tester_id)
     REFERENCES rebuild_v2.assignments(id, test_id, tester_id) ON DELETE RESTRICT,
@@ -274,7 +276,7 @@ BEGIN
     pg_catalog.hashtextextended(v_user_id::text || ':' || p_test_id::text, 0)
   );
 
-  SELECT * INTO v_test
+  SELECT t.* INTO v_test
   FROM rebuild_v2.tests t
   JOIN rebuild_v2.apps app ON app.id = t.app_id
   WHERE t.id = p_test_id
@@ -420,8 +422,11 @@ BEGIN
   FROM rebuild_v2.assignments a
   WHERE a.id = p_assignment_id
   FOR UPDATE;
-  IF NOT FOUND OR v_assignment.tester_id <> v_user_id THEN
-    RAISE EXCEPTION 'ASSIGNMENT_NOT_FOUND' USING errcode = '42501';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'ASSIGNMENT_NOT_FOUND' USING errcode = 'P0002';
+  END IF;
+  IF v_assignment.tester_id <> v_user_id THEN
+    RAISE EXCEPTION 'ASSIGNMENT_FORBIDDEN' USING errcode = '42501';
   END IF;
   IF v_assignment.status <> 'active' THEN
     RAISE EXCEPTION 'ASSIGNMENT_NOT_ACTIVE' USING errcode = '55000';
@@ -474,6 +479,7 @@ BEGIN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
   END IF;
   IF p_assignment_id IS NULL
+     OR p_category IS NULL
      OR p_category NOT IN ('general','bug','usability','performance','compatibility')
      OR p_body IS NULL
      OR char_length(btrim(p_body)) NOT BETWEEN 20 AND 8000
@@ -584,10 +590,13 @@ BEGIN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
   END IF;
   IF p_submission_id IS NULL OR p_file_id IS NULL
+     OR p_extension IS NULL
      OR p_extension NOT IN ('png','jpg','jpeg','webp','pdf')
      OR p_original_filename IS NULL
      OR char_length(p_original_filename) NOT BETWEEN 1 AND 255
+     OR p_size_bytes IS NULL
      OR p_size_bytes NOT BETWEEN 1 AND 10485760
+     OR p_mime_type IS NULL
      OR NOT (
        (p_extension = 'png' AND p_mime_type = 'image/png')
        OR (p_extension IN ('jpg','jpeg') AND p_mime_type = 'image/jpeg')
@@ -924,8 +933,10 @@ REVOKE ALL ON FUNCTION rebuild_v2_private.submit_tester_feedback_impl(uuid,text,
 REVOKE ALL ON FUNCTION rebuild_v2_private.create_assignment_submission_impl(uuid,text,text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION rebuild_v2_private.register_assignment_submission_attachment_impl(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION rebuild_v2_private.finalize_assignment_submission_impl(uuid) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) TO authenticated;
 
 REVOKE ALL ON FUNCTION rebuild_v2.get_discoverable_tests() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION rebuild_v2.join_test(uuid) FROM PUBLIC, anon;
