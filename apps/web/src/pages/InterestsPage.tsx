@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../lib/supabase";
+import { isTesterWorkflowV2Enabled } from "../lib/supabase-v2";
 import { profilesApi } from "../features/profiles/profiles-api";
 import { useIdentity } from "../shared/auth/hooks/useIdentity";
 import { useLenis } from "../hooks/useLenis";
@@ -162,7 +163,12 @@ export default function InterestsPage(){
       } else {
         // Refresh shared identity state after the RPC commits the role rows.
         await refreshRoles();
-        navigate("/complete-profile",{replace:true});
+        if (isTesterWorkflowV2Enabled) {
+          // V2 profile completion is optional and its legacy-only fields are not part of the V2 contract.
+          navigate(role === "developer" ? "/developer-dashboard" : "/tester-dashboard", { replace: true });
+        } else {
+          navigate("/complete-profile",{replace:true});
+        }
       }
     } catch {
       setError(t.error);
