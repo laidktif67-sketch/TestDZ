@@ -9,7 +9,7 @@ BEGIN;
 -- ============================================================
 -- PHASE 0: Pre-flight (016a + 016b required)
 -- ============================================================
-DO $
+DO $$
 DECLARE v_cohorts_with_test_id int;
 BEGIN
   IF to_regclass('public.cohort_tests') IS NULL THEN
