@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -17,27 +18,71 @@ function dateLabel(value:string|null){if(!value)return "To be announced";const d
 function initials(value:string){return value.split(/\s+/).slice(0,2).map(part=>part[0]||"").join("").toUpperCase()||"T";}
 
 export default function TestPreviewPage(){
- const {id}=useParams<{id:string}>();const {session,loading:identityLoading,roles}=useIdentity();
+ const {id}=useParams<{id:string}>();const navigate=useNavigate();const {session,loading:identityLoading,roles}=useIdentity();
  const [test,setTest]=useState<TestPreview|null>(null);const [name,setName]=useState("Tester");const [avatar,setAvatar]=useState("");const [unread,setUnread]=useState(0);
- const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [alreadyAssigned,setAlreadyAssigned]=useState(false);const [menuOpen,setMenuOpen]=useState(false);
+ const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [alreadyAssigned,setAlreadyAssigned]=useState(false);const [joining,setJoining]=useState(false);const [menuOpen,setMenuOpen]=useState(false);
  const previewMode=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
  const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");const firstName=name.split(/\s+/)[0];
  useEffect(()=>{
-  if(identityLoading)return;const client=supabase;if(!session||!id||!client){setLoading(false);return;}let alive=true;
+  if(identityLoading)return;
+  const client=supabase;
+  if(!session||!id||!client){setLoading(false);return;}
+  let alive=true;
   const load=async()=>{
+   if(isTesterWorkflowV2Enabled&&supabaseV2){
+    const [profile,notifications,testResult,assignmentResult]=await Promise.all([
+     supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
+     supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
+     supabaseV2.from("tests").select("id,app_id,title,description,short_summary,status,min_testers,start_date,end_date").eq("id",id).maybeSingle(),
+     supabaseV2.from("assignments").select("id,status").eq("test_id",id).eq("tester_id",session.user.id).maybeSingle()
+    ]);
+    if(!alive)return;
+    setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
+    setAvatar(profile.data?.avatar_url||"");
+    setUnread(notifications.count??0);
+    if(testResult.error||!testResult.data){
+     setError("This test could not be found or is no longer available.");
+    }else{
+     const appResult=await supabaseV2.from("apps").select("name,icon_url,category,play_store_url,description").eq("id",testResult.data.app_id).maybeSingle();
+     if(!alive)return;
+     if(appResult.error)setError("Test details could not be fully loaded.");
+     setTest({...testResult.data,app:appResult.data||null} as unknown as TestPreview);
+    }
+    if(assignmentResult.data)setAlreadyAssigned(true);
+    setLoading(false);
+    return;
+   }
    const [profile,notifications,testResult,assignmentResult]=await Promise.all([
     client.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
     client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
     client.from("tests").select("id,app_id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category,play_store_url,description)").eq("id",id).maybeSingle(),
     client.from("assignments").select("id,status").eq("test_id",id).eq("tester_id",session.user.id).maybeSingle()
    ]);
-   if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notifications.count??0);
-   if(testResult.error||!testResult.data)setError("This test could not be found or is no longer available.");else setTest(testResult.data as unknown as TestPreview);
-   if(assignmentResult.data)setAlreadyAssigned(true);setLoading(false);
-  };void load();return()=>{alive=false;};
+   if(!alive)return;
+   setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
+   setAvatar(profile.data?.avatar_url||"");
+   setUnread(notifications.count??0);
+   if(testResult.error||!testResult.data)setError("This test could not be found or is no longer available.");
+   else setTest(testResult.data as unknown as TestPreview);
+   if(assignmentResult.data)setAlreadyAssigned(true);
+   setLoading(false);
+  };
+  void load().catch(()=>{if(alive){setError("Unable to load this test. Please try again.");setLoading(false);}});
+  return()=>{alive=false;};
  },[id,identityLoading,session]);
  if(!identityLoading&&!session&&!previewMode)return <Navigate to="/auth" replace/>;
  const nav=[{label:"Dashboard",icon:"flask",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
+ const handleAccept=async()=>{
+  if(!isTesterWorkflowV2Enabled||!supabaseV2||!id||joining)return;
+  setJoining(true);setError("");
+  const {data,error:joinError}=await supabaseV2.rpc("join_test",{p_test_id:id});
+  if(joinError||!data){
+   setError(joinError?.message||"This test could not be joined. It may have reached capacity.");
+   setJoining(false);
+   return;
+  }
+  navigate("/assignments/"+data);
+ };
  const statusLabel=test?.status==="recruiting"?"Available Now":test?.status==="ready"?"Coming Soon":(test?.status||"Unavailable").replaceAll("_"," ");
  const appName=test?.app?.name||"TestDZ";
  const description=test?.short_summary||test?.description||test?.app?.description||"Help us improve our mobile app! Explore the latest version, check key features, and share your feedback about your experience.";
@@ -76,7 +121,7 @@ export default function TestPreviewPage(){
        <article className="to-panel to-feedback-banner"><div className="to-trophy" aria-hidden="true">🏆</div><div><h2>Your Feedback Matters!</h2><p>Help us build a better app and earn rewards.</p></div></article>
       </aside>
      </div>
-     <footer className="to-bottom-actions"><Link className="to-question" to="/help"><Icon name="info" size={25}/>Ask a Question</Link>{alreadyAssigned?<Link className="to-accept is-assigned" to="/my-tests"><Icon name="check" size={26}/>View My Tests<Icon name="arrow" size={24}/></Link>:<button className="to-accept" type="button" disabled title="Test enrollment is not yet connected to the secure assignment workflow"><Icon name="check" size={27}/><span>Accept Test</span><Icon name="arrow" size={25}/></button>}</footer>
+     <footer className="to-bottom-actions"><Link className="to-question" to="/help"><Icon name="info" size={25}/>Ask a Question</Link>{alreadyAssigned?<Link className="to-accept is-assigned" to="/my-tests"><Icon name="check" size={26}/>View My Tests<Icon name="arrow" size={24}/></Link>:<button className="to-accept" type="button" onClick={handleAccept} disabled={!isTesterWorkflowV2Enabled||joining} title={!isTesterWorkflowV2Enabled?"Secure enrollment will be enabled after the V2 backend is deployed to this environment.":""}><Icon name="check" size={27}/><span>{joining?"Joining…":"Accept Test"}</span><Icon name="arrow" size={25}/></button>}</footer>
      {test.app?.play_store_url&&<p className="to-store-link"><a href={test.app.play_store_url} target="_blank" rel="noreferrer"><Icon name="link" size={15}/> View app on Google Play</a></p>}
     </>}
    </div>
