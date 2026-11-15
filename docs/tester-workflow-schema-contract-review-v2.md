@@ -140,10 +140,10 @@ Remaining verification:
 
 ### Branch and CI state
 
-- GitHub Actions reports the latest observed push run for this branch as run `43745468748`, commit `7f40f3b1d1687cb116d32f177ff26fff4346f4d4` (`Keep check-in evidence hidden until dedicated storage authorization exists`).
-- The run conclusion is `failure`; its single `web` job also reports `failure`. The job-steps endpoint returned an empty list, and the job-log download endpoint returned 404. Therefore the exact GitHub Actions failure point is **unresolved**; do not infer a TypeScript or Vite build failure from this metadata.
-- The combined commit status reports Vercel `failure` with target URL indicating `upgradeToPro=build-rate-limit`. This is a Vercel build-rate-limit status, not evidence of an application compile error.
-- Frontend TypeScript/build/browser verification remains **pending**. No Vercel settings or environment variables were changed.
+- The observed GitHub Actions push run is run `43745468748` on branch `rebuild/testdz-v2`, commit `7f40f3b1d1687cb116d32f177ff26fff4346f4d4` (`Keep check-in evidence hidden until dedicated storage authorization exists`). A later branch comparison confirms the current branch head has advanced beyond that commit; the latest documentation-only commit does not match the CI workflow's configured path filters.
+- The original `web` job failed with no recorded steps, `runner_id=0`, and no runner name. A retry of that same job was requested; the retry also failed immediately with an empty steps array. This indicates the job failed before any configured npm/typecheck/build step ran. The precise platform-side cause is unavailable from the exposed job metadata; do **not** attribute it to application code.
+- The combined status on current branch head `b215d18373f61a0ae799958233a2196938433226` reports Vercel `failure` and target URL indicating `upgradeToPro=build-rate-limit`. This is a Vercel build-rate-limit status, not evidence of an application compile error.
+- Frontend TypeScript/build/browser verification remains **pending** because neither GitHub job reached its steps and Vercel did not complete a build. No Vercel settings or environment variables were changed.
 
 ### FixLab foreign-key index follow-up
 
@@ -161,3 +161,10 @@ Remaining verification:
 - The current Supabase SQL connector exposes single SQL execution calls; no supported second independent PostgreSQL session or transaction-coordination mechanism was available in this pass.
 - A true two-session last-seat race test is therefore still **pending**. The advisory-lock + cohort-row-lock implementation remains a design review result, not a concurrency-test pass.
 - No SQL writes, migrations, schema changes, Storage changes, Auth changes, or Production operations were performed in this follow-up.
+
+
+### Branch-head and CI retry clarification
+
+- The current `rebuild/testdz-v2` branch head was rechecked by comparing it with commit `87a65f3c9aeaf5a517fb284408a10e537d94d596`; the branch is one commit ahead, at `b215d18373f61a0ae799958233a2196938433226`.
+- Comparing the failed-run commit `7f40f3b1d1687cb116d32f177ff26fff4346f4d4` to the current branch shows the run commit is an ancestor, with three later commits on the branch.
+- A retry of the failed `web` job was initiated. It again terminated before step execution (`steps=[]`). This retry is diagnostic only and does not establish a code failure or pass.
