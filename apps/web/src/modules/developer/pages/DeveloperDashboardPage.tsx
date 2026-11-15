@@ -175,7 +175,7 @@ export default function DeveloperDashboardPage() {
       if(!user){setLoading(false);return;}
       const [profileRes,appsRes,limitRes]=await Promise.all([
         dataClient.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
-        listApps(),
+        listApps(user.id),
         getAppLimit()
       ]);
       if(!alive)return;
