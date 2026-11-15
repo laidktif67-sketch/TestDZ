@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../lib/supabase-v2";
 import type {
   AvatarUploadInput,
   AvatarUploadResult,
@@ -25,7 +26,9 @@ export const profilesApi = {
   },
 
   getOnboardingStatus(userId: string) {
-    return getClient()
+    const client = isTesterWorkflowV2Enabled ? supabaseV2 : getClient();
+    if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
+    return client
       .from("profiles")
       .select("onboarding_completed_at")
       .eq("id", userId)
@@ -33,7 +36,9 @@ export const profilesApi = {
   },
 
   completeOnboarding(roles: string[], interests: string[]) {
-    return getClient().rpc("complete_onboarding", {
+    const client = isTesterWorkflowV2Enabled ? supabaseV2 : getClient();
+    if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
+    return client.rpc("complete_onboarding", {
       p_roles: roles,
       p_interests: interests,
     });
