@@ -168,3 +168,16 @@ Remaining verification:
 - The current `rebuild/testdz-v2` branch head was rechecked by comparing it with commit `87a65f3c9aeaf5a517fb284408a10e537d94d596`; the branch is one commit ahead, at `b215d18373f61a0ae799958233a2196938433226`.
 - Comparing the failed-run commit `7f40f3b1d1687cb116d32f177ff26fff4346f4d4` to the current branch shows the run commit is an ancestor, with three later commits on the branch.
 - A retry of the failed `web` job was initiated. It again terminated before step execution (`steps=[]`). This retry is diagnostic only and does not establish a code failure or pass.
+
+
+### Check-in history points presentation
+
+- Updated `CheckInHistoryPage` so V2 no longer presents a fabricated zero-point balance. The KPI now says points are unavailable while V2 reward posting is disabled; the table and CSV export use an explicit unavailable label. Legacy mode retains its existing linked-points display.
+- This is a frontend presentation correction only. It does not add reward posting or change wallet/ledger data.
+
+### CI result for the presentation correction
+
+- Push run `43745958426` was created for commit `2724f45c86ea6a194b9ddf2e620ef932f4f7dfdc` and concluded `failure`.
+- Its only `web` job returned an empty steps list. Therefore the configured `npm install`, `npm run typecheck`, and `npm run build` steps did not run. The run provides no evidence for or against source correctness.
+- The combined status still shows Vercel `failure` with `upgradeToPro=build-rate-limit`.
+- The new JSX and CSV output were read back from GitHub and the exact expected V2 labels were verified in the committed file; this is source-level verification, not a TypeScript/build pass.
