@@ -348,3 +348,24 @@ Verification:
 - Source read-back was performed on `rebuild/testdz-v2`; the withdrawal-status change is committed separately and must be verified against the resulting branch HEAD.
 - No database, Auth, Storage, Production, Vercel, or PR #18 changes were made. No TypeScript, Vite build, browser, or CI pass is claimed.
 - The V2 feature flag remains off by default. Do not enable it in Production based on this source scan alone.
+
+
+### Identity, session-security, and support workflow V2 frontend wiring — 2026-11-15
+
+Supersedes the earlier notes that described onboarding, V2 session history, and customer support as legacy-only or unavailable. Implemented on `rebuild/testdz-v2`:
+
+- `identityApi.getUserRoles` now reads `rebuild_v2.user_roles` when the tester V2 flag is enabled. The V2 self/admin SELECT policy is the authorization boundary; role values are still filtered to the application's supported UI roles.
+- `profilesApi.getOnboardingStatus` reads `rebuild_v2.profiles` in V2 mode, and `profilesApi.completeOnboarding` calls `rebuild_v2.complete_onboarding`. The RPC validates tester/developer selections and interest input, assigns only those self-service roles, and updates the caller's own V2 profile.
+- After successful V2 onboarding, `InterestsPage` routes directly to the selected workspace rather than sending the user through the legacy-only optional profile-completion form. Legacy onboarding routing is unchanged.
+- `ActiveSessionsPage` now uses `rebuild_v2.get_my_active_sessions` for V2 session inventory and refreshes that list after Supabase Auth signs out other sessions.
+- `LoginActivitySecurityPage` now uses `rebuild_v2.get_my_security_activity` for V2 login-event history and refresh. These RPCs are owner-scoped SECURITY DEFINER implementations over Auth session/audit records; the UI does not query Auth internal tables directly.
+- `SupportCenterPage` now reads the caller's V2 support tickets and creates tickets through `rebuild_v2.create_support_ticket` rather than direct client inserts.
+- `SupportTicketDetailsPage` now reads V2 ticket, public-message, and attachment metadata under participant-scoped RLS; sends replies through `rebuild_v2.send_support_message`; uploads to the private `support-attachments` bucket; registers metadata through `rebuild_v2.add_support_attachment`; and creates short-lived signed URLs through the private bucket's SELECT policy.
+- V2 support attachment registration checks ticket/uploader-bound storage paths, caller ownership of the uploaded Storage object, public-message ownership, ticket participation, MIME type, and file size. Storage read policies require registered attachment metadata and a valid ticket participant/staff role. The customer UI never creates a public URL for support files.
+
+Important limits:
+- V2 optional profile completion fields such as username, country, and portfolio are not part of the current V2 profile contract; the V2 onboarding flow skips that legacy form. The V2 profile's core display name/avatar/locale fields remain handled by the separately documented settings integration.
+- Developer workspace pages and shared app/profile CRUD services are still on the legacy schema. A developer-only onboarding choice still routes to the existing developer dashboard, so the V2 flag must not be interpreted as a completed developer-workspace cutover.
+- The support attachment flow sends the message before uploading/registering the optional attachment. If upload or metadata registration fails, the message remains sent; the private bucket has no customer DELETE policy, so an uploaded object whose metadata registration fails may require a controlled staff cleanup. The UI reports partial success rather than retrying the message.
+- These changes are source-level integrations against the existing V2 SQL contracts. No database, Auth, Storage, Production, Vercel, or PR #18 changes were made. No live support ticket was created or read, and no browser, TypeScript, Vite build, or CI pass is claimed.
+- The V2 feature flag remains off by default. Do not enable it in Production based on source review alone.
