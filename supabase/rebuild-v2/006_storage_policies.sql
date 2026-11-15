@@ -89,18 +89,26 @@ BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL THEN RETURN false; END IF;
   v_folders := storage.foldername(p_object_name);
   IF coalesce(array_length(v_folders,1),0) <> 2
-     OR v_folders[1] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+     OR v_folders[1] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+     OR v_folders[2] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
     RETURN false;
   END IF;
   v_ticket_id := v_folders[1]::uuid;
   RETURN EXISTS (
-    SELECT 1 FROM rebuild_v2.support_tickets st
-    WHERE st.id=v_ticket_id
+    SELECT 1
+    FROM rebuild_v2.support_ticket_attachments att
+    JOIN rebuild_v2.support_ticket_messages m
+      ON m.id=att.message_id AND m.ticket_id=att.ticket_id
+    JOIN rebuild_v2.support_tickets st ON st.id=att.ticket_id
+    WHERE att.storage_path=p_object_name
+      AND st.id=v_ticket_id
       AND (
-        (st.user_id=(SELECT auth.uid()) AND EXISTS (
-          SELECT 1 FROM rebuild_v2.user_roles ur
-          WHERE ur.user_id=(SELECT auth.uid()) AND ur.role=st.requester_role
-        ))
+        (st.user_id=(SELECT auth.uid())
+          AND m.internal_note=false
+          AND EXISTS (
+            SELECT 1 FROM rebuild_v2.user_roles ur
+            WHERE ur.user_id=(SELECT auth.uid()) AND ur.role=st.requester_role
+          ))
         OR rebuild_v2_private.has_role((SELECT auth.uid()),ARRAY['support','admin'])
       )
   );
@@ -132,12 +140,26 @@ BEGIN
   END IF;
   IF p_for_upload AND v_folders[2] <> (SELECT auth.uid())::text THEN RETURN false; END IF;
   v_feedback_id := v_folders[1]::uuid;
+
+  IF p_for_upload THEN
+    RETURN EXISTS (
+      SELECT 1
+      FROM rebuild_v2.feedback f
+      JOIN rebuild_v2.assignments a ON a.id=f.assignment_id
+      JOIN rebuild_v2.tests t ON t.id=a.test_id
+      WHERE f.id=v_feedback_id
+        AND (f.tester_id=(SELECT auth.uid()) OR t.developer_id=(SELECT auth.uid()))
+    );
+  END IF;
+
   RETURN EXISTS (
     SELECT 1
-    FROM rebuild_v2.feedback f
+    FROM rebuild_v2.developer_feedback_attachments dfa
+    JOIN rebuild_v2.feedback f ON f.id=dfa.feedback_id
     JOIN rebuild_v2.assignments a ON a.id=f.assignment_id
     JOIN rebuild_v2.tests t ON t.id=a.test_id
-    WHERE f.id=v_feedback_id
+    WHERE dfa.storage_path=p_object_name
+      AND f.id=v_feedback_id
       AND (f.tester_id=(SELECT auth.uid()) OR t.developer_id=(SELECT auth.uid()))
   );
 EXCEPTION WHEN invalid_text_representation THEN
@@ -206,13 +228,18 @@ BEGIN
   v_report_id := split_part(p_object_name,'/',3)::uuid;
   RETURN EXISTS (
     SELECT 1
-    FROM rebuild_v2.reports r
+    FROM rebuild_v2.report_attachments ra
+    JOIN rebuild_v2.reports r ON r.id=ra.report_id
     JOIN rebuild_v2.assignments a ON a.id=r.assignment_id
     JOIN rebuild_v2.tests t ON t.id=a.test_id
-    WHERE r.id=v_report_id
-      AND r.assignment_id=a.id
-      AND a.test_id=v_test_id
+    WHERE ra.storage_path=p_object_name
+      AND ra.report_id=v_report_id
+      AND ra.assignment_id=a.id
+      AND ra.test_id=v_test_id
+      AND ra.tester_id=v_tester_id
+      AND r.id=v_report_id
       AND a.tester_id=v_tester_id
+      AND a.test_id=v_test_id
       AND (
         r.reporter_id=(SELECT auth.uid())
         OR t.developer_id=(SELECT auth.uid())
