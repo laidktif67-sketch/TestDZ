@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/tester-dashboard.css";
@@ -92,6 +93,45 @@ export default function TesterDashboardPage() {
     let alive = true;
     const load = async (userId: string, userEmail?: string) => {
       try {
+        if(isTesterWorkflowV2Enabled&&supabaseV2){
+          const [profileRes,walletRes,assignmentRes,testRes,notificationRes]=await Promise.all([
+            supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
+            supabaseV2.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
+            supabaseV2.from("assignments").select("id,status,started_at,assigned_at,created_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id",userId),
+            supabaseV2.rpc("get_discoverable_tests"),
+            supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
+          ]);
+          if(!alive)return;
+          const assignments=assignmentRes.data??[];
+          setActiveAssignments(assignments.filter((a:any)=>a.status==="active").map((a:any)=>({
+            id:a.id,status:a.status,start_date:a.started_at||a.assigned_at,
+            test:a.test||null,checkins:a.checkins||[]
+          })).slice(0,4) as ActiveAssignment[]);
+          const completed=assignments.filter((a:any)=>a.status==="completed").length;
+          const checkins=assignments.reduce((total:number,a:any)=>total+(a.checkins?.length??0),0);
+          setName(profileRes.data?.display_name?.trim()||userEmail?.split("@")[0]||"there");
+          setAvatar(profileRes.data?.avatar_url||"");
+          const discoverable=(testRes.data??[]) as any[];
+          setStats({available:discoverable.length,active:assignments.filter((a:any)=>a.status==="active").length,completed,assignments:assignments.length,points:Number(walletRes.data?.earned_points??0),checkins});
+          const completedAssignments=assignments.filter((a:any)=>a.status==="completed"&&a.completed_at);
+          const now=new Date();
+          const bucketCount=range==="1W"?7:range==="1M"?5:12;
+          const labels=range==="1W"?["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]:range==="1M"?["W1","W2","W3","W4","W5"]:range==="3M"?Array.from({length:12},(_,i)=>"W"+(i+1)):["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+          const points=Array.from({length:bucketCount},(_,index)=>{
+            let end:Date;
+            if(range==="1W"){const monday=new Date(now);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-((monday.getDay()+6)%7));end=new Date(monday);end.setDate(end.getDate()+index+1);}
+            else if(range==="1M")end=new Date(now.getFullYear(),now.getMonth(),1+(index+1)*7);
+            else if(range==="3M"){const first=new Date(now);first.setDate(first.getDate()-83);end=new Date(first);end.setDate(end.getDate()+(index+1)*7);}
+            else end=new Date(now.getFullYear(),index+1,1);
+            const cumulative=completedAssignments.filter((a:any)=>new Date(a.completed_at as string)<end).length;
+            return assignments.length?Math.round(cumulative/assignments.length*100):0;
+          });
+          setChartLabels(labels);setChartPoints(points);
+          setTests(discoverable.slice(0,4).map((row:any)=>({id:row.test_id,title:row.title,status:row.test_status,min_testers:row.min_testers,app:{name:row.app_name,icon_url:row.app_icon_url}})));
+          setNotifications(notificationRes.count??0);
+          if(profileRes.error||walletRes.error||assignmentRes.error||testRes.error||notificationRes.error)setError("Some dashboard information could not be loaded. Check your connection and try again.");
+          return;
+        }
         const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
         client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
