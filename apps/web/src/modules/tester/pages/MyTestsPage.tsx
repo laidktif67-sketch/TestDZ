@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import "../styles/tester-dashboard.css";
 import "../../../styles/my-tests.css";
 import TesterSidebar from "../components/TesterSidebar";
@@ -64,6 +65,42 @@ export default function MyTestsPage(){
   const client=supabase;if(!client){setLoading(false);return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
    try{
+   if(isTesterWorkflowV2Enabled&&supabaseV2){
+    const [roleRes,profileRes,walletRes,assignmentRes,feedbackRes,noticeRes]=await Promise.all([
+     supabaseV2.from("user_roles").select("role").eq("user_id",userId),
+     supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
+     supabaseV2.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
+     supabaseV2.from("assignments").select("id,status,started_at,assigned_at,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id",userId).order("assigned_at",{ascending:false}),
+     supabaseV2.from("feedback").select("id,quality_status,created_at,assignment_id").eq("tester_id",userId).order("created_at",{ascending:false}),
+     supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
+    ]);
+    if(!alive)return;
+    setRoles((roleRes.data??[]).map((r:{role:string})=>r.role));
+    setName(profileRes.data?.display_name?.trim()||email?.split("@")[0]||"there");
+    setAvatar(profileRes.data?.avatar_url||"");
+    const rows=(assignmentRes.data??[]).map((a:any)=>({
+     id:a.id,status:a.status,start_date:a.started_at||a.assigned_at,
+     completed_at:a.completed_at,created_at:a.created_at||a.assigned_at,
+     points_awarded:null,test:a.test||null,checkins:a.checkins||[]
+    })) as Assignment[];
+    setAssignments(rows);
+    setPoints(Number(walletRes.data?.earned_points??0));
+    setAcceptedFeedback((feedbackRes.data??[]).filter((f:{quality_status:string})=>f.quality_status==="accepted").length);
+    setNotifications(noticeRes.count??0);
+    const events:Activity[]=[];
+    rows.forEach(a=>{
+     if(a.completed_at)events.push({id:"done-"+a.id,kind:"completed",title:"You completed a test",detail:a.test?.title||"Test",date:a.completed_at});
+     (a.checkins??[]).forEach(c=>events.push({id:"check-"+c.id,kind:"checkin",title:"You completed a check-in",detail:a.test?.title||"Test",date:c.created_at||c.checkin_date}));
+    });
+    (feedbackRes.data??[]).forEach((f:{id:string;created_at:string;assignment_id:string})=>{
+     const a=rows.find(x=>x.id===f.assignment_id);
+     events.push({id:"feedback-"+f.id,kind:"feedback",title:"You submitted feedback",detail:a?.test?.title||"Test feedback",date:f.created_at});
+    });
+    setActivities(events.sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,4));
+    if(roleRes.error||profileRes.error||walletRes.error||assignmentRes.error||feedbackRes.error||noticeRes.error)
+     setError("Some tester information could not be loaded. Please refresh and try again.");
+    return;
+   }
    const [roleRes,profileRes,walletRes,assignmentRes,feedbackRes,noticeRes]=await Promise.all([
     client.from("user_roles").select("role").eq("user_id",userId),
     client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
