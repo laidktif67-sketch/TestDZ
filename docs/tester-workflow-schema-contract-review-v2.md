@@ -297,3 +297,11 @@ Verification limits:
 - These are source-level integrations only. No browser session, TypeScript check, Vite build, or CI build pass has been completed.
 - The V2 feature flag remains off by default. No SQL, migrations, Auth configuration, Storage, Production database, Vercel configuration, or PR #18 changes were made.
 - V2 session inventory and login-event history remain explicit feature gaps until dedicated, owner-scoped V2 RPCs and contract tests are implemented.
+
+
+### Support workflow V2 safety guard — 2026-11-15
+
+- SupportCenterPage now skips legacy support-ticket reads in V2 mode, shows ticket counts as unavailable, and disables ticket creation. The V2 page does not present an empty legacy result as a real empty inbox.
+- SupportTicketDetailsPage now skips legacy ticket/message/attachment queries in V2 mode and blocks reply, upload, and signed-URL actions. The V2 support workflow remains unavailable until the distinct V2 requester/attachment contract and private Storage authorization flow are implemented and tested.
+- Legacy support behavior remains available when V2 is disabled.
+- This is a frontend safety guard only. No support schema, Storage bucket, policies, migrations, or database records were changed. No build or browser verification is claimed.
