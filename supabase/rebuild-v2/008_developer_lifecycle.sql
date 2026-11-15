@@ -71,6 +71,7 @@ BEGIN
   END IF;
   IF p_title IS NULL OR char_length(btrim(p_title)) NOT BETWEEN 3 AND 160
      OR p_description IS NULL OR char_length(btrim(p_description)) NOT BETWEEN 20 AND 12000
+     OR (p_short_summary IS NOT NULL AND char_length(p_short_summary)>240)
      OR p_test_type NOT IN ('google_play_closed','apk_testing','bug_discovery','usability','compatibility','custom')
      OR p_min_testers NOT BETWEEN 1 AND 500
      OR (p_start_date IS NOT NULL AND p_end_date IS NOT NULL AND p_end_date<p_start_date)
@@ -139,6 +140,9 @@ AS $function$
 DECLARE v_user uuid := auth.uid();
 BEGIN
   IF v_user IS NULL THEN RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode='28000'; END IF;
+  IF NOT rebuild_v2_private.has_role(v_user,ARRAY['developer','admin']) THEN
+    RAISE EXCEPTION 'DEVELOPER_ROLE_REQUIRED' USING errcode='42501';
+  END IF;
   UPDATE rebuild_v2.tests t
   SET status='submitted',updated_at=now()
   WHERE t.id=p_test_id AND t.developer_id=v_user AND t.status IN ('draft','failed','cancelled')
@@ -165,6 +169,10 @@ BEGIN
   IF p_decision NOT IN ('approved','rejected') OR p_reason IS NULL OR char_length(btrim(p_reason)) NOT BETWEEN 5 AND 2000 THEN
     RAISE EXCEPTION 'REVIEW_INPUT_INVALID' USING errcode='22023';
   END IF;
+  IF NOT EXISTS(
+    SELECT 1 FROM rebuild_v2.tests t JOIN rebuild_v2.apps a ON a.id=t.app_id
+    WHERE t.id=p_test_id AND a.status='published'
+  ) THEN RAISE EXCEPTION 'PUBLISHED_APP_REQUIRED' USING errcode='42501'; END IF;
   UPDATE rebuild_v2.tests
   SET status=CASE WHEN p_decision='approved' THEN 'recruiting' ELSE 'failed' END,
       updated_at=now()
@@ -187,6 +195,9 @@ AS $function$
 DECLARE v_user uuid := auth.uid(); v_cohort_id uuid;
 BEGIN
   IF v_user IS NULL THEN RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode='28000'; END IF;
+  IF NOT rebuild_v2_private.has_role(v_user,ARRAY['developer','admin']) THEN
+    RAISE EXCEPTION 'DEVELOPER_ROLE_REQUIRED' USING errcode='42501';
+  END IF;
   IF p_name IS NULL OR char_length(btrim(p_name)) NOT BETWEEN 2 AND 120
      OR p_capacity NOT BETWEEN 1 AND 500
      OR (p_starts_at IS NOT NULL AND p_ends_at IS NOT NULL AND p_ends_at<=p_starts_at) THEN
