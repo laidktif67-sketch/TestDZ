@@ -53,6 +53,25 @@ begin
     raise exception 'support internal-note visibility guard is missing';
   end if;
 
+  select qual into v_policy from pg_policies
+  where schemaname='rebuild_v2' and tablename='cohort_tests'
+    and policyname='cohort_tests_select_participants_v2';
+  if v_policy is null
+     or position('a.cohort_id = cohort_tests.cohort_id' in v_policy)=0
+     or position('a.test_id = cohort_tests.test_id' in v_policy)=0
+     or position('a.cohort_id = a.cohort_id' in v_policy)>0 then
+    raise exception 'cohort participant policy is not correlated to the current cohort_tests row';
+  end if;
+
+  select qual into v_policy from pg_policies
+  where schemaname='rebuild_v2' and tablename='support_ticket_attachments'
+    and policyname='support_attachments_select_ticket_participants_v2';
+  if v_policy is null
+     or position('st.id = support_ticket_attachments.ticket_id' in v_policy)=0
+     or position('m.ticket_id = m.ticket_id' in v_policy)>0 then
+    raise exception 'support attachment policy is not correlated to its ticket row';
+  end if;
+
   if not exists(select 1 from pg_trigger t
     join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace
     where n.nspname='auth' and c.relname='users'
