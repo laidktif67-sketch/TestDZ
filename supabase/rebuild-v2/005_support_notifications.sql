@@ -231,3 +231,113 @@ GRANT EXECUTE ON FUNCTION rebuild_v2.create_support_ticket(text, text, text, tex
 GRANT EXECUTE ON FUNCTION rebuild_v2.send_support_message(uuid, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION rebuild_v2.mark_notification_read(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION rebuild_v2.mark_all_notifications_read() TO authenticated;
+
+
+-- Attachment metadata is accepted only after the object exists in the private bucket.
+CREATE OR REPLACE FUNCTION rebuild_v2_private.add_support_attachment_impl(
+  p_ticket_id uuid,
+  p_message_id uuid,
+  p_storage_path text,
+  p_original_filename text,
+  p_mime_type text,
+  p_size_bytes bigint
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'pg_catalog', 'rebuild_v2', 'rebuild_v2_private', 'auth', 'storage'
+SET row_security TO 'off'
+AS $function$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_ticket rebuild_v2.support_tickets%rowtype;
+  v_message rebuild_v2.support_ticket_messages%rowtype;
+  v_attachment_id uuid;
+  v_folders text[];
+  v_object_owner text;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'authentication required' USING errcode = '42501';
+  END IF;
+
+  IF p_ticket_id IS NULL OR p_message_id IS NULL
+     OR p_storage_path IS NULL OR p_original_filename IS NULL
+     OR char_length(p_original_filename) NOT BETWEEN 1 AND 255
+     OR position('/' in p_original_filename) > 0
+     OR p_mime_type NOT IN ('image/png','image/jpeg','image/webp','text/plain','application/pdf','application/zip')
+     OR p_size_bytes NOT BETWEEN 1 AND 10485760 THEN
+    RAISE EXCEPTION 'invalid support attachment metadata' USING errcode = '22023';
+  END IF;
+
+  v_folders := storage.foldername(p_storage_path);
+  IF coalesce(array_length(v_folders,1),0) <> 2
+     OR v_folders[1] <> p_ticket_id::text
+     OR v_folders[2] <> v_user_id::text
+     OR split_part(p_storage_path,'/',3) !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[^/]+$' THEN
+    RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
+  END IF;
+
+  SELECT * INTO v_ticket
+  FROM rebuild_v2.support_tickets
+  WHERE id = p_ticket_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR v_ticket.status = 'closed' THEN
+    RAISE EXCEPTION 'support ticket unavailable' USING errcode = 'P0002';
+  END IF;
+
+  IF v_ticket.user_id <> v_user_id
+     AND NOT rebuild_v2_private.has_role(v_user_id, ARRAY['support','admin']) THEN
+    RAISE EXCEPTION 'not a support ticket participant' USING errcode = '42501';
+  END IF;
+
+  SELECT * INTO v_message
+  FROM rebuild_v2.support_ticket_messages
+  WHERE id = p_message_id AND ticket_id = p_ticket_id;
+
+  IF NOT FOUND OR v_message.sender_id <> v_user_id OR v_message.internal_note THEN
+    RAISE EXCEPTION 'attachment must belong to the caller public message' USING errcode = '42501';
+  END IF;
+
+  SELECT coalesce(o.owner_id,o.owner::text) INTO v_object_owner
+  FROM storage.objects o
+  WHERE o.bucket_id='support-attachments' AND o.name=p_storage_path;
+
+  IF NOT FOUND OR v_object_owner IS DISTINCT FROM v_user_id::text THEN
+    RAISE EXCEPTION 'uploaded support object not found or not owned by caller' USING errcode = '42501';
+  END IF;
+
+  INSERT INTO rebuild_v2.support_ticket_attachments(
+    ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes
+  )
+  VALUES (
+    p_ticket_id,p_message_id,v_user_id,p_storage_path,btrim(p_original_filename),p_mime_type,p_size_bytes
+  )
+  RETURNING id INTO v_attachment_id;
+
+  RETURN v_attachment_id;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.add_support_attachment(
+  p_ticket_id uuid,
+  p_message_id uuid,
+  p_storage_path text,
+  p_original_filename text,
+  p_mime_type text,
+  p_size_bytes bigint
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path TO ''
+AS $function$
+  SELECT rebuild_v2_private.add_support_attachment_impl(
+    p_ticket_id,p_message_id,p_storage_path,p_original_filename,p_mime_type,p_size_bytes
+  );
+$function$;
+
+REVOKE ALL ON FUNCTION rebuild_v2_private.add_support_attachment_impl(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.add_support_attachment_impl(uuid,uuid,text,text,text,bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint) TO authenticated;
