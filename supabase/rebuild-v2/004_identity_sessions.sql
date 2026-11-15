@@ -32,8 +32,11 @@ BEGIN
     RAISE EXCEPTION 'invalid role selection' USING errcode = '22023';
   END IF;
 
-  IF jsonb_typeof(v_interests) <> 'array'
-     OR jsonb_array_length(v_interests) > 20 THEN
+  IF jsonb_typeof(v_interests) <> 'array' THEN
+    RAISE EXCEPTION 'invalid interests' USING errcode = '22023';
+  END IF;
+
+  IF jsonb_array_length(v_interests) > 20 THEN
     RAISE EXCEPTION 'invalid interests' USING errcode = '22023';
   END IF;
 
