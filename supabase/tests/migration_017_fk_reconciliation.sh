@@ -5,7 +5,7 @@ DB_URL="${SUPABASE_DB_URL:?SUPABASE_DB_URL not set}"
 
 # This test writes fixtures and must never run against a hosted database.
 case "$DB_URL" in
-  *@localhost:*|*@127.0.0.1:*|*@\\[::1\\]:*) ;;
+  *@localhost:*|*@127.0.0.1:*) ;;
   *)
     echo "FAIL: refusing non-local database URL; use the local DB_URL from supabase status"
     exit 1
