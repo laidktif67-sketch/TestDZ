@@ -121,6 +121,14 @@ project as a shortcut.
 - Live cohort pause-policy catalog check: the expected update policy and
   validation trigger are absent; only the participants SELECT policy and the
   capacity/key-update triggers were found.
+- A further read-only privileges/RLS query found only SELECT grants to
+  `authenticated` on `public.cohort_tests` and `public.cohorts`, and only
+  the participants SELECT policies on those tables. The intended pause feature
+  is therefore not currently exposed through the expected authenticated
+  column-level UPDATE grant/policy in this inspected project. This confirms a
+  functional gap for that feature, but the missing objects still must be
+  reconciled against the migration ledger and deployed schema history before
+  applying a repair.
 - Live database changes: none.
 - Runtime migration/RLS validation: pending.
 - Production readiness: not established.
