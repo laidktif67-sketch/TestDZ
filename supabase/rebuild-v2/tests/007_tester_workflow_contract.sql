@@ -156,6 +156,13 @@ BEGIN
     jsonb_build_object('sub',v_other,'role','authenticated')::text,true
   );
 
+  IF rebuild_v2_private.can_read_test_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: unrelated user must not read private submission evidence';
+  END IF;
+  IF rebuild_v2_private.can_upload_test_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: unrelated user must not upload to another tester submission';
+  END IF;
+
   BEGIN
     PERFORM rebuild_v2.start_assignment(v_assignment);
     RAISE EXCEPTION 'FAIL: cross-user assignment start unexpectedly allowed';
