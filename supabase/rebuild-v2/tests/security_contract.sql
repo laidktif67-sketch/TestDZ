@@ -1,5 +1,5 @@
 -- TestDZ rebuild v2 security contract checks.
--- Run after 001_schema.sql and 002_security.sql in a disposable Supabase test project.
+-- Run after 001_schema.sql, 002_security.sql and 003_app_lifecycle.sql in a disposable Supabase test project.
 -- The script is read-only apart from a transaction-local test probe; it rolls back.
 
 begin;
@@ -33,6 +33,44 @@ begin
      or has_column_privilege('authenticated','rebuild_v2.profiles','is_banned','UPDATE')
      or has_column_privilege('authenticated','rebuild_v2.profiles','is_verified','UPDATE') then
     raise exception 'profile column grants are not restricted as designed';
+  end if;
+
+  if not exists (
+       select 1 from information_schema.columns
+       where table_schema='rebuild_v2' and table_name='plans' and column_name='limits'
+     )
+     or not exists (
+       select 1 from information_schema.columns
+       where table_schema='rebuild_v2' and table_name='apps' and column_name='archived_from_status'
+     ) then
+    raise exception 'developer app lifecycle compatibility columns are missing';
+  end if;
+
+  if to_regprocedure('rebuild_v2.get_app_limit()') is null
+     or to_regprocedure('rebuild_v2.create_app(text,text,text,text)') is null
+     or to_regprocedure('rebuild_v2.update_app(uuid,text,text,text,text)') is null
+     or to_regprocedure('rebuild_v2.archive_app(uuid)') is null
+     or to_regprocedure('rebuild_v2.restore_app(uuid)') is null then
+    raise exception 'developer app lifecycle RPC contract is incomplete';
+  end if;
+
+  if has_function_privilege('anon','rebuild_v2.create_app(text,text,text,text)','EXECUTE')
+     or has_function_privilege('anon','rebuild_v2.get_app_limit()','EXECUTE')
+     or has_function_privilege('authenticated','rebuild_v2_private.get_active_subscription()','EXECUTE')
+     or not has_function_privilege('authenticated','rebuild_v2.create_app(text,text,text,text)','EXECUTE') then
+    raise exception 'developer app lifecycle RPC grants are too broad or missing';
+  end if;
+
+  if exists (
+       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='rebuild_v2' and p.proname in ('get_app_limit','create_app','update_app','archive_app','restore_app')
+         and p.prosecdef
+     )
+     or not exists (
+       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='rebuild_v2_private' and p.proname='create_app_impl' and p.prosecdef
+     ) then
+    raise exception 'RPC wrapper/private implementation security mode is incorrect';
   end if;
 
   if has_function_privilege('anon','rebuild_v2_private.has_role(uuid,text[])','EXECUTE')
