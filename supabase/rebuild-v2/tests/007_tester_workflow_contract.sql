@@ -55,6 +55,7 @@ DECLARE
   v_checkin_again uuid;
   v_feedback uuid;
   v_submission uuid;
+  v_submission_again uuid;
   v_path text;
   v_file constant uuid := '20000000-0000-4000-8000-000000000001';
 BEGIN
@@ -106,6 +107,14 @@ BEGIN
     'Synthetic final report summary that satisfies the required minimum length.',
     'Synthetic optional comment'
   );
+  v_submission_again := rebuild_v2.create_assignment_submission(
+    v_assignment,
+    'Updated synthetic final report summary that still satisfies the minimum length.',
+    'Updated synthetic comment'
+  );
+  IF v_submission_again <> v_submission THEN
+    RAISE EXCEPTION 'FAIL: draft update must reuse the same submission';
+  END IF;
 
   v_path := rebuild_v2.register_assignment_submission_attachment(
     v_submission,v_file,'pdf','synthetic-proof.pdf','application/pdf',1024
