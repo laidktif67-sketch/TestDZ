@@ -71,6 +71,11 @@ BEGIN
 
   PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  BEGIN
+    PERFORM rebuild_v2.create_test_cohort(v_test,'Too Small Cohort',2,NULL,NULL);
+    RAISE EXCEPTION 'FAIL: cohort capacity below minimum was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
+  END;
   v_cohort:=rebuild_v2.create_test_cohort(v_test,'Lifecycle Cohort',5,NULL,NULL);
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohort_tests WHERE cohort_id=v_cohort AND test_id=v_test AND developer_id='50000000-0000-4000-8000-000000000001') THEN
     RAISE EXCEPTION 'FAIL: cohort not linked to test';
