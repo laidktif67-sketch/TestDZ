@@ -32,6 +32,9 @@ export type CreateTestDraftInput = {
  * Create a draft test using the existing tests table and RLS policies.
  * Keep the data-access boundary in the testing feature; callers remain
  * responsible for obtaining the authenticated user and validating form state.
+ *
+ * `status` is deliberately not sent: the database defaults new tests to
+ * 'draft', and lifecycle columns are not client-insertable.
  */
 export function createTestDraft(input: CreateTestDraftInput) {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
@@ -48,7 +51,6 @@ export function createTestDraft(input: CreateTestDraftInput) {
       min_testers: input.minTesters,
       test_type: input.testType,
       test_config: input.testConfig,
-      status: "draft",
     })
     .select("id")
     .single();
