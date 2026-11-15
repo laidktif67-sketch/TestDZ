@@ -1,8 +1,8 @@
 # Tester Workflow — V2 Schema/Frontend Contract Review
 
 Branch: `rebuild/testdz-v2`  
-Scope: read-only review of candidate SQL, FixLab catalog metadata, and tester page contracts.  
-Safety: no database writes, no Auth users created/deleted, no Storage objects changed, no Production access.
+Scope: candidate SQL, FixLab catalog metadata, tester page contracts, and rollback-only synthetic contract verification.  
+Safety: no persistent database changes; synthetic Auth rows and Storage objects exist only inside a transaction that is rolled back. No Production access.
 
 ## Verified FixLab baseline
 
@@ -100,7 +100,8 @@ Implemented:
 
 Verification in FixLab:
 - The rollback-only contract script `supabase/rebuild-v2/tests/007_tester_workflow_contract.sql` passed.
-- Tested discovery, join idempotency, start, daily check-in idempotency, feedback, attachment registration, upload/read helper authorization, finalization idempotency, cross-user denial, and capacity filtering.
+- Tested discovery, join idempotency, start, daily check-in idempotency, feedback, attachment registration, upload/read helper authorization, finalization idempotency, cross-user assignment/feedback denial, and capacity filtering.
+- Extended the contract test to explicitly assert that a second authenticated tester cannot read or upload evidence belonging to another tester's final submission. The updated script was rerun against TestDZ-FixLab and completed without exceptions; the post-rollback cleanup result was zero for every checked table and Storage object count.
 - The post-rollback cleanup query returned zero for synthetic Auth users, profiles, apps, tests, assignments, check-ins, feedback, submissions, attachment metadata, and Storage objects.
 - Both new tables have RLS enabled and FORCE RLS. Client write grants remain absent; only SELECT and narrow RPC execution are exposed.
 - The `authenticator` role's PostgREST exposed-schema setting was extended to include `rebuild_v2` on FixLab only, then config/schema reload notifications were sent. Production was not changed.
@@ -126,7 +127,7 @@ Frontend follow-on checkpoint — history and rewards guardrails:
 - The V2 feature flag remains off by default. No Production SQL, Vercel environment variables, Auth deletion, Storage cleanup, or PR #18 changes were made.
 
 Remaining verification:
-- TypeScript, frontend build, and browser workflow have **not** been run. GitHub Actions returned no workflow runs for the inspected head; the Vercel commit status is `failure` with the target indicating a build-rate-limit restriction. This is not a successful build.
+- TypeScript, frontend build, and browser workflow have **not** been run. The CI workflow was updated to include `rebuild/testdz-v2`, but the available GitHub workflow-run lookup only returns pull-request-triggered runs and therefore cannot confirm the push run. This is not a successful build.
 - Review V2 check-in evidence access and add private signed URLs only after confirming the relevant bucket/path policy.
 - Run a true two-session race test for the final cohort seat.
 - Repeat FixLab SQL contract tests after any subsequent SQL changes; no Production rollout is authorized.
