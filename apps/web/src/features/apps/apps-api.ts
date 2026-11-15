@@ -16,8 +16,8 @@ function dataClient() {
 }
 
 /** Read the current user's applications using the existing RLS policies. */
-export function listApps() {
-  return dataClient().from("apps").select(APP_SELECT).order("created_at", { ascending: false });
+export function listApps(developerId: string) {
+  return dataClient().from("apps").select(APP_SELECT).eq("developer_id", developerId).order("created_at", { ascending: false });
 }
 
 /** Read the current plan's application limit through the existing RPC. */
@@ -26,8 +26,8 @@ export function getAppLimit() {
 }
 
 /** Read one application; access remains enforced by the existing RLS policies. */
-export function getAppById(id: string) {
-  return dataClient().from("apps").select(APP_SELECT).eq("id", id).single();
+export function getAppById(id: string, developerId: string) {
+  return dataClient().from("apps").select(APP_SELECT).eq("id", id).eq("developer_id", developerId).single();
 }
 
 /** Create an application through the existing server-side RPC. */
