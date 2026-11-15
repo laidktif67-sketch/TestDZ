@@ -5,7 +5,7 @@ Branch: `rebuild/testdz-v2`
 
 ## Scope and safety
 
-This review covered the developer dashboard, app list/detail pages, shared app API, app lifecycle candidate SQL, app RLS, and app-icon Storage policies. Changes were source-only on the V2 development branch. No Supabase SQL was applied, no database/Auth/Storage data was changed, and Production/Vercel/PR #18 were not touched.
+This review covered the developer dashboard, app list/detail pages, shared app API, app lifecycle candidate SQL, app RLS, and app-icon Storage policies. Source changes were made on the V2 development branch. No schema migration or DDL was applied; only transaction-scoped FixLab contract tests were executed and rolled back. No persistent database/Auth/Storage data was changed, and Production/Vercel/PR #18 were not touched.
 
 ## Confirmed integration gap
 
@@ -28,7 +28,7 @@ Before this change, `apps-api.ts` called the default `public` schema for app rea
 ## Remaining limitations / acceptance gates
 
 1. The V2 app lifecycle SQL currently provides create, update, archive, restore, and quota RPCs. It does not provide a developer-facing submit-for-review or publish RPC/UI flow. No publish action was invented or exposed.
-2. The app lifecycle has structural/security assertions in `tests/security_contract.sql`, but a separate end-to-end app lifecycle contract (authenticated create, ownership isolation, quota limit, update/archive/restore) has not yet been run as a runtime test in FixLab.
+2. Structural/security assertions in `tests/security_contract.sql` are complemented by the new FixLab runtime contract `tests/003_app_lifecycle_contract.sql`, which passed for authenticated create, ownership isolation, quota enforcement, update/archive/restore, and app-icon helper authorization.
 3. No real browser session has exercised the V2 developer dashboard or app icon upload.
 4. The app-icon bucket is public-read by design; only mutations are owner-scoped. This is suitable only for public app icons, not private APKs or user evidence.
 5. Developer test creation/management is not implemented in the current V2 backend: the candidate migrations expose no developer RPCs to create/update/submit tests or manage cohorts, while direct table writes are revoked and the tests/cohorts policies shown are read-only. The current app detail page also labels test management as coming soon; no developer test-management route is registered. Developer feedback/review screens likewise need a separate workflow audit before claiming the developer workspace is V2-complete.
