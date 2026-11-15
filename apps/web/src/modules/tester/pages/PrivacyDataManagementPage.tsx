@@ -115,7 +115,7 @@ export default function PrivacyDataManagementPage() {
     if (!supabase || !user) return;
     setBusy("data"); setMessage(""); setError("");
     const v2 = isTesterWorkflowV2Enabled && supabaseV2;
-    const [profile, assignments, checkins, feedback, notifications, ledger] = await Promise.all([
+    const [profile, assignments, checkins, feedback, notifications, ledger, wallet] = await Promise.all([
       v2
         ? v2.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,created_at,updated_at").eq("id", user.id).maybeSingle()
         : supabase.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,subscription_tier,created_at,updated_at").eq("id", user.id).maybeSingle(),
@@ -133,9 +133,12 @@ export default function PrivacyDataManagementPage() {
         : supabase.from("notifications").select("id,type,title,body,read_at,created_at").eq("user_id", user.id),
       v2
         ? v2.from("wallet_ledger").select("id,wallet_type,amount,entry_type,reference_type,reference_id,reason,created_at").eq("user_id", user.id)
-        : supabase.from("points_ledger").select("id,wallet_type,amount,reason,reference_type,created_at").eq("user_id", user.id)
+        : supabase.from("points_ledger").select("id,wallet_type,amount,reason,reference_type,created_at").eq("user_id", user.id),
+      v2
+        ? v2.from("wallets").select("earned_points,purchased_credits,updated_at").eq("user_id", user.id).maybeSingle()
+        : Promise.resolve({ data: null, error: null })
     ]);
-    const failed = [profile, assignments, checkins, feedback, notifications, ledger].some(result => result.error);
+    const failed = [profile, assignments, checkins, feedback, notifications, ledger, wallet].some(result => result.error);
     if (failed) {
       setBusy(""); setError("Some account data could not be retrieved. Check your access and try again."); return;
     }
@@ -148,8 +151,9 @@ export default function PrivacyDataManagementPage() {
       checkIns: checkins.data,
       feedback: feedback.data,
       notifications: notifications.data,
-      pointsLedger: ledger.data,
-      workflowVersion: v2 ? "rebuild_v2" : "legacy"
+      ...(v2 ? { wallet: wallet.data, walletLedger: ledger.data } : { pointsLedger: ledger.data }),
+      workflowVersion: v2 ? "rebuild_v2" : "legacy",
+      exportScope: ["account profile", "tester assignments", "check-ins", "tester feedback", "notifications", "wallet ledger", ...(v2 ? ["wallet summary"] : [])]
     };
     downloadFile("testdz-account-data.json", JSON.stringify(payload, null, 2), "application/json");
     await recordRequest("Full Account Data", "Completed");
