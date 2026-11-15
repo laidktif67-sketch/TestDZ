@@ -5,7 +5,7 @@ Branch: `rebuild/testdz-v2`
 
 ## Scope and safety
 
-This review covered the developer dashboard, app list/detail pages, shared app API, app lifecycle candidate SQL, app RLS, and app-icon Storage policies. Source changes were made on the V2 development branch. Candidate migration `008_developer_lifecycle.sql` was applied to isolated TestDZ-FixLab only; no Production schema/data, Auth users, Storage objects, Vercel settings, or PR #18 were changed. Runtime contract fixtures were transaction-scoped and rolled back.
+This review covered the developer dashboard, app list/detail pages, shared app API, app lifecycle candidate SQL, app RLS, and app-icon Storage policies. Source changes were made on the V2 development branch. Candidate migrations `008_developer_lifecycle.sql` and `009_lock_app_edits_during_review.sql` were applied to isolated TestDZ-FixLab only; no Production schema/data, Auth users, Storage objects, Vercel settings, or PR #18 were changed. Runtime contract fixtures were transaction-scoped and rolled back.
 
 ## Confirmed integration gap
 
@@ -28,6 +28,7 @@ Before this change, `apps-api.ts` called the default `public` schema for app rea
 ## Implemented in this round
 
 - `008_developer_lifecycle.sql` adds owner-checked `submit_app_for_review`, admin-only `review_app`, developer `create_test` / `update_test` / `submit_test_for_review`, admin-only `review_test`, and developer `create_test_cohort` RPCs. Every state transition records an immutable audit event with the actor and decision reason where applicable.
+- `009_lock_app_edits_during_review.sql` tightens `update_app`: only draft/rejected apps can be edited. The V2 app detail UI also disables edits during review and after publication, avoiding an unreviewed metadata change on a published app.
 - The test authoring RPCs require an owned published app. Test approval moves the test into `recruiting`; cohort creation links it to a forming cohort. This unlocks the existing `join_test` flow.
 - `apps-api.ts` exposes typed RPC wrappers and owner-filtered test reads. `AppDetailPage` can submit an eligible app for review. `DeveloperTestsPage` creates and submits tests and creates cohorts after test approval. `DeveloperReviewQueuePage` exposes app/test review only under the admin route guard and requires a review reason. Developer and admin navigation links were connected.
 - `tests/005_developer_lifecycle_contract.sql` passed in FixLab. It exercised app submission, non-admin review denial, admin app approval, test creation/submission, developer self-approval denial, admin test approval, cohort creation, tester join, and six audit events. The final rollback check reported zero synthetic Auth users, profiles, apps, tests, cohorts, and assignments.
@@ -44,6 +45,6 @@ Before this change, `apps-api.ts` called the default `public` schema for app rea
 ## Verification status
 
 - GitHub readback of changed source files: completed.
-- FixLab runtime SQL contracts: PASS. Existing app/profile contracts passed in the earlier round. The new developer lifecycle contract exercised authenticated app submission, non-admin denial, admin app approval, test creation/submission, developer self-approval denial, admin test approval, cohort linking, tester join, and audit events. Its rollback check returned zero synthetic Auth users, profiles, apps, tests, cohorts, and assignments remaining.
+- FixLab runtime SQL contracts: PASS. Existing app/profile contracts passed in the earlier round. The new developer lifecycle contract exercised authenticated app submission, non-admin denial, admin app approval, test creation/submission, developer self-approval denial, admin test approval, cohort linking, tester join, audit events, and rejection of attempted app edits while submitted and after publication. Its rollback check returned zero synthetic Auth users, profiles, apps, tests, cohorts, and assignments remaining.
 - Browser/build verification of the frontend changes: pending.
 - Latest GitHub Actions run observed during this review (`43752418859`, commit `7974f7c`) failed with the job's `steps` and logs unavailable; therefore it does not establish a TypeScript or Vite build failure or success. Vercel's status still points to the existing `upgradeToPro=build-rate-limit` limit. No claim is made that TypeScript, Vite build, CI, or browser acceptance passed.
