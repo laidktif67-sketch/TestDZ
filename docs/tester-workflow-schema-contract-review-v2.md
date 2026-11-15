@@ -116,6 +116,7 @@ Frontend checkpoint:
 
 Frontend follow-on checkpoint — history and rewards guardrails:
 
+- `TesterDashboardPage` now reads V2 profile, wallet, assignments/check-ins, discoverable tests, and notification counts. `ActivityHistoryPage` now reads V2 assignments, check-ins, feedback, and earned-points ledger entries.
 - `MyTestsPage` now reads V2 roles, profile, wallet, assignments, test/app relations, check-ins, feedback, and notifications when the feature flag is enabled. V2 assignment dates are mapped from `started_at` / `assigned_at`; no client-supplied `points_awarded` is synthesized.
 - `CheckInHistoryPage` now reads V2 check-ins and assignment/test/app context. V2 evidence URLs remain intentionally blank until a private signed-URL adapter is verified; no public URL is persisted or exposed.
 - `FeedbackHistoryPage` now reads V2 feedback and review state. Reward totals are shown as unavailable in V2 rather than inferred from the legacy points ledger.
