@@ -134,10 +134,10 @@ export default function DiscoverTestsPage(){
       }):<div className="discover-empty"><strong>{query||category!=="all"?"No matching tests":"No available tests right now"}</strong><p>{query||category!=="all"?"Try another search or category to find an opportunity.":"New opportunities will appear here when developers publish recruiting tests."}</p>{(query||category!=="all")&&<button type="button" onClick={()=>{setQuery("");setCategory("all");}}>Clear search and filters</button>}</div>}
      </section>
      <aside className="discover-right-rail">
-      <section className="discover-reward-card"><div>🏆</div><h3>Your Rewards</h3><strong>{loading? "—":points.toLocaleString("en-US")}</strong><span>Earned points</span><Link to="/wallet-rewards">View Wallet <Icon name="arrow" size={14}/></Link></section>
+      <section className="discover-reward-card"><div>🏆</div><h3>Your Rewards</h3><strong>{loading?"—":isTesterWorkflowV2Enabled?"Unavailable":points.toLocaleString("en-US")}</strong><span>{isTesterWorkflowV2Enabled?"Reward posting disabled":"Earned points"}</span><Link to="/wallet-rewards">View Wallet <Icon name="arrow" size={14}/></Link></section>
       <section className="discover-stats"><h3><Icon name="tests" size={18}/> Quick Stats</h3><div>
        <article><b className="stat-check">✓</b><strong>{completed}</strong><span>Completed Tests</span></article>
-       <article><b className="stat-star">★</b><strong>{points.toLocaleString("en-US")}</strong><span>Earned Points</span></article>
+       <article><b className="stat-star">★</b><strong>{isTesterWorkflowV2Enabled?"Unavailable":points.toLocaleString("en-US")}</strong><span>{isTesterWorkflowV2Enabled?"Reward posting disabled":"Earned Points"}</span></article>
        <article><b className="stat-gift">♔</b><strong>{tests.length}</strong><span>Open Tests</span></article>
        <article><b className="stat-time">◷</b><strong>{visible.length}</strong><span>Matching Tests</span></article>
       </div></section>
