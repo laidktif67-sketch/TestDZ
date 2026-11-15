@@ -785,151 +785,151 @@ key text NOT NULL,
   CONSTRAINT platform_config_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES rebuild_v2.profiles(id) ON DELETE SET NULL
 );
 
-CREATE INDEX user_roles_granted_by_v2 ON rebuild_v2.user_roles USING btree (granted_by)
+CREATE INDEX user_roles_granted_by_v2 ON rebuild_v2.user_roles USING btree (granted_by);
 
-CREATE INDEX role_requests_status_created_v2 ON rebuild_v2.role_requests USING btree (status, created_at DESC)
+CREATE INDEX role_requests_status_created_v2 ON rebuild_v2.role_requests USING btree (status, created_at DESC);
 
-CREATE UNIQUE INDEX role_requests_one_pending_per_user_v2 ON rebuild_v2.role_requests USING btree (user_id) WHERE (status = 'pending'::text)
+CREATE UNIQUE INDEX role_requests_one_pending_per_user_v2 ON rebuild_v2.role_requests USING btree (user_id) WHERE (status = 'pending'::text);
 
-CREATE INDEX devices_user_v2 ON rebuild_v2.devices USING btree (user_id)
+CREATE INDEX devices_user_v2 ON rebuild_v2.devices USING btree (user_id);
 
-CREATE INDEX apps_developer_created_v2 ON rebuild_v2.apps USING btree (developer_id, created_at DESC)
+CREATE INDEX apps_developer_created_v2 ON rebuild_v2.apps USING btree (developer_id, created_at DESC);
 
-CREATE INDEX tests_developer_status_v2 ON rebuild_v2.tests USING btree (developer_id, status, created_at DESC)
+CREATE INDEX tests_developer_status_v2 ON rebuild_v2.tests USING btree (developer_id, status, created_at DESC);
 
-CREATE INDEX tests_app_developer_v2 ON rebuild_v2.tests USING btree (app_id, developer_id)
+CREATE INDEX tests_app_developer_v2 ON rebuild_v2.tests USING btree (app_id, developer_id);
 
-CREATE INDEX test_steps_test_v2 ON rebuild_v2.test_steps USING btree (test_id)
+CREATE INDEX test_steps_test_v2 ON rebuild_v2.test_steps USING btree (test_id);
 
-CREATE INDEX test_requirements_test_v2 ON rebuild_v2.test_requirements USING btree (test_id)
+CREATE INDEX test_requirements_test_v2 ON rebuild_v2.test_requirements USING btree (test_id);
 
-CREATE INDEX test_media_test_v2 ON rebuild_v2.test_media USING btree (test_id)
+CREATE INDEX test_media_test_v2 ON rebuild_v2.test_media USING btree (test_id);
 
-CREATE INDEX cohorts_creator_v2 ON rebuild_v2.cohorts USING btree (created_by)
+CREATE INDEX cohorts_creator_v2 ON rebuild_v2.cohorts USING btree (created_by);
 
-CREATE INDEX cohort_tests_test_developer_v2 ON rebuild_v2.cohort_tests USING btree (test_id, developer_id)
+CREATE INDEX cohort_tests_test_developer_v2 ON rebuild_v2.cohort_tests USING btree (test_id, developer_id);
 
-CREATE INDEX assignments_tester_status_v2 ON rebuild_v2.assignments USING btree (tester_id, status, assigned_at DESC)
+CREATE INDEX assignments_tester_status_v2 ON rebuild_v2.assignments USING btree (tester_id, status, assigned_at DESC);
 
-CREATE INDEX assignments_medical_approver_v2 ON rebuild_v2.assignments USING btree (medical_exception_approved_by)
+CREATE INDEX assignments_medical_approver_v2 ON rebuild_v2.assignments USING btree (medical_exception_approved_by);
 
-CREATE INDEX assignments_cohort_test_v2 ON rebuild_v2.assignments USING btree (cohort_id, test_id)
+CREATE INDEX assignments_cohort_test_v2 ON rebuild_v2.assignments USING btree (cohort_id, test_id);
 
-CREATE INDEX checkins_tester_v2 ON rebuild_v2.checkins USING btree (tester_id)
+CREATE INDEX checkins_tester_v2 ON rebuild_v2.checkins USING btree (tester_id);
 
-CREATE INDEX feedback_reviewer_v2 ON rebuild_v2.feedback USING btree (reviewed_by)
+CREATE INDEX feedback_reviewer_v2 ON rebuild_v2.feedback USING btree (reviewed_by);
 
-CREATE INDEX feedback_tester_v2 ON rebuild_v2.feedback USING btree (tester_id)
+CREATE INDEX feedback_tester_v2 ON rebuild_v2.feedback USING btree (tester_id);
 
-CREATE INDEX medical_requests_tester_v2 ON rebuild_v2.medical_exception_requests USING btree (tester_id)
+CREATE INDEX medical_requests_tester_v2 ON rebuild_v2.medical_exception_requests USING btree (tester_id);
 
-CREATE INDEX medical_requests_reviewer_v2 ON rebuild_v2.medical_exception_requests USING btree (reviewed_by)
+CREATE INDEX medical_requests_reviewer_v2 ON rebuild_v2.medical_exception_requests USING btree (reviewed_by);
 
-CREATE UNIQUE INDEX medical_exception_one_pending_per_assignment_v2 ON rebuild_v2.medical_exception_requests USING btree (assignment_id) WHERE (status = 'pending'::text)
+CREATE UNIQUE INDEX medical_exception_one_pending_per_assignment_v2 ON rebuild_v2.medical_exception_requests USING btree (assignment_id) WHERE (status = 'pending'::text);
 
-CREATE INDEX ledger_user_created_v2 ON rebuild_v2.wallet_ledger USING btree (user_id, created_at DESC)
+CREATE INDEX ledger_user_created_v2 ON rebuild_v2.wallet_ledger USING btree (user_id, created_at DESC);
 
-CREATE INDEX wallet_ledger_actor_v2 ON rebuild_v2.wallet_ledger USING btree (actor_id)
+CREATE INDEX wallet_ledger_actor_v2 ON rebuild_v2.wallet_ledger USING btree (actor_id);
 
-CREATE UNIQUE INDEX subscriptions_one_current_per_user_v2 ON rebuild_v2.subscriptions USING btree (user_id) WHERE (status = ANY (ARRAY['active'::text, 'trialing'::text, 'past_due'::text]))
+CREATE UNIQUE INDEX subscriptions_one_current_per_user_v2 ON rebuild_v2.subscriptions USING btree (user_id) WHERE (status = ANY (ARRAY['active'::text, 'trialing'::text, 'past_due'::text]));
 
-CREATE INDEX subscriptions_plan_v2 ON rebuild_v2.subscriptions USING btree (plan_id)
+CREATE INDEX subscriptions_plan_v2 ON rebuild_v2.subscriptions USING btree (plan_id);
 
-CREATE INDEX subscriptions_user_v2 ON rebuild_v2.subscriptions USING btree (user_id)
+CREATE INDEX subscriptions_user_v2 ON rebuild_v2.subscriptions USING btree (user_id);
 
-CREATE INDEX payments_user_created_v2 ON rebuild_v2.payments USING btree (user_id, created_at DESC)
+CREATE INDEX payments_user_created_v2 ON rebuild_v2.payments USING btree (user_id, created_at DESC);
 
-CREATE INDEX payments_subscription_v2 ON rebuild_v2.payments USING btree (subscription_id)
+CREATE INDEX payments_subscription_v2 ON rebuild_v2.payments USING btree (subscription_id);
 
-CREATE INDEX refunds_payment_v2 ON rebuild_v2.refunds USING btree (payment_id)
+CREATE INDEX refunds_payment_v2 ON rebuild_v2.refunds USING btree (payment_id);
 
-CREATE INDEX refunds_approver_v2 ON rebuild_v2.refunds USING btree (approved_by)
+CREATE INDEX refunds_approver_v2 ON rebuild_v2.refunds USING btree (approved_by);
 
-CREATE INDEX refunds_user_v2 ON rebuild_v2.refunds USING btree (user_id)
+CREATE INDEX refunds_user_v2 ON rebuild_v2.refunds USING btree (user_id);
 
-CREATE INDEX support_ticket_resolver_v2 ON rebuild_v2.support_tickets USING btree (resolved_by)
+CREATE INDEX support_ticket_resolver_v2 ON rebuild_v2.support_tickets USING btree (resolved_by);
 
-CREATE INDEX support_user_created_v2 ON rebuild_v2.support_tickets USING btree (user_id, created_at DESC)
+CREATE INDEX support_user_created_v2 ON rebuild_v2.support_tickets USING btree (user_id, created_at DESC);
 
-CREATE INDEX support_ticket_assignee_v2 ON rebuild_v2.support_tickets USING btree (assigned_to)
+CREATE INDEX support_ticket_assignee_v2 ON rebuild_v2.support_tickets USING btree (assigned_to);
 
-CREATE INDEX support_messages_ticket_v2 ON rebuild_v2.support_ticket_messages USING btree (ticket_id)
+CREATE INDEX support_messages_ticket_v2 ON rebuild_v2.support_ticket_messages USING btree (ticket_id);
 
-CREATE INDEX support_messages_sender_v2 ON rebuild_v2.support_ticket_messages USING btree (sender_id)
+CREATE INDEX support_messages_sender_v2 ON rebuild_v2.support_ticket_messages USING btree (sender_id);
 
-CREATE INDEX notifications_user_created_v2 ON rebuild_v2.notifications USING btree (user_id, created_at DESC)
+CREATE INDEX notifications_user_created_v2 ON rebuild_v2.notifications USING btree (user_id, created_at DESC);
 
-CREATE INDEX audit_events_actor_v2 ON rebuild_v2.audit_events USING btree (actor_id)
+CREATE INDEX audit_events_actor_v2 ON rebuild_v2.audit_events USING btree (actor_id);
 
-CREATE INDEX reports_reviewer_v2 ON rebuild_v2.reports USING btree (reviewed_by)
+CREATE INDEX reports_reviewer_v2 ON rebuild_v2.reports USING btree (reviewed_by);
 
-CREATE INDEX reports_assignment_v2 ON rebuild_v2.reports USING btree (assignment_id)
+CREATE INDEX reports_assignment_v2 ON rebuild_v2.reports USING btree (assignment_id);
 
-CREATE INDEX reports_reporter_v2 ON rebuild_v2.reports USING btree (reporter_id)
+CREATE INDEX reports_reporter_v2 ON rebuild_v2.reports USING btree (reporter_id);
 
-CREATE INDEX reports_reported_user_v2 ON rebuild_v2.reports USING btree (reported_user_id)
+CREATE INDEX reports_reported_user_v2 ON rebuild_v2.reports USING btree (reported_user_id);
 
-CREATE INDEX dev_feedback_messages_feedback_v2 ON rebuild_v2.developer_feedback_messages USING btree (feedback_id)
+CREATE INDEX dev_feedback_messages_feedback_v2 ON rebuild_v2.developer_feedback_messages USING btree (feedback_id);
 
-CREATE INDEX dev_feedback_messages_sender_v2 ON rebuild_v2.developer_feedback_messages USING btree (sender_id)
+CREATE INDEX dev_feedback_messages_sender_v2 ON rebuild_v2.developer_feedback_messages USING btree (sender_id);
 
-CREATE INDEX dev_feedback_reviews_developer_v2 ON rebuild_v2.developer_feedback_reviews USING btree (developer_id)
+CREATE INDEX dev_feedback_reviews_developer_v2 ON rebuild_v2.developer_feedback_reviews USING btree (developer_id);
 
-CREATE INDEX dev_feedback_events_actor_v2 ON rebuild_v2.developer_feedback_events USING btree (actor_id)
+CREATE INDEX dev_feedback_events_actor_v2 ON rebuild_v2.developer_feedback_events USING btree (actor_id);
 
-CREATE INDEX dev_feedback_events_feedback_v2 ON rebuild_v2.developer_feedback_events USING btree (feedback_id)
+CREATE INDEX dev_feedback_events_feedback_v2 ON rebuild_v2.developer_feedback_events USING btree (feedback_id);
 
-CREATE INDEX dev_feedback_attachments_feedback_v2 ON rebuild_v2.developer_feedback_attachments USING btree (feedback_id)
+CREATE INDEX dev_feedback_attachments_feedback_v2 ON rebuild_v2.developer_feedback_attachments USING btree (feedback_id);
 
-CREATE INDEX dev_feedback_attachments_message_v2 ON rebuild_v2.developer_feedback_attachments USING btree (message_id)
+CREATE INDEX dev_feedback_attachments_message_v2 ON rebuild_v2.developer_feedback_attachments USING btree (message_id);
 
-CREATE INDEX dev_feedback_attachments_uploader_v2 ON rebuild_v2.developer_feedback_attachments USING btree (uploaded_by)
+CREATE INDEX dev_feedback_attachments_uploader_v2 ON rebuild_v2.developer_feedback_attachments USING btree (uploaded_by);
 
-CREATE INDEX coupon_redemptions_payment_v2 ON rebuild_v2.coupon_redemptions USING btree (payment_id)
+CREATE INDEX coupon_redemptions_payment_v2 ON rebuild_v2.coupon_redemptions USING btree (payment_id);
 
-CREATE INDEX coupon_redemptions_user_v2 ON rebuild_v2.coupon_redemptions USING btree (user_id)
+CREATE INDEX coupon_redemptions_user_v2 ON rebuild_v2.coupon_redemptions USING btree (user_id);
 
-CREATE INDEX feature_usage_user_period_v2 ON rebuild_v2.feature_usage USING btree (user_id, feature_key, period_start)
+CREATE INDEX feature_usage_user_period_v2 ON rebuild_v2.feature_usage USING btree (user_id, feature_key, period_start);
 
-CREATE INDEX referrals_referrer_v2 ON rebuild_v2.referrals USING btree (referrer_id, created_at DESC)
+CREATE INDEX referrals_referrer_v2 ON rebuild_v2.referrals USING btree (referrer_id, created_at DESC);
 
-CREATE INDEX disputes_payment_v2 ON rebuild_v2.disputes USING btree (payment_id)
+CREATE INDEX disputes_payment_v2 ON rebuild_v2.disputes USING btree (payment_id);
 
-CREATE INDEX disputes_report_v2 ON rebuild_v2.disputes USING btree (report_id)
+CREATE INDEX disputes_report_v2 ON rebuild_v2.disputes USING btree (report_id);
 
-CREATE INDEX disputes_resolver_v2 ON rebuild_v2.disputes USING btree (resolved_by)
+CREATE INDEX disputes_resolver_v2 ON rebuild_v2.disputes USING btree (resolved_by);
 
-CREATE INDEX disputes_opened_by_v2 ON rebuild_v2.disputes USING btree (opened_by)
+CREATE INDEX disputes_opened_by_v2 ON rebuild_v2.disputes USING btree (opened_by);
 
-CREATE INDEX events_dispatch_v2 ON rebuild_v2.events USING btree (status, available_at, created_at) WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]))
+CREATE INDEX events_dispatch_v2 ON rebuild_v2.events USING btree (status, available_at, created_at) WHERE (status = ANY (ARRAY['pending'::text, 'failed'::text]));
 
-CREATE INDEX fraud_events_user_time_v2 ON rebuild_v2.fraud_events USING btree (user_id, occurred_at DESC)
+CREATE INDEX fraud_events_user_time_v2 ON rebuild_v2.fraud_events USING btree (user_id, occurred_at DESC);
 
-CREATE INDEX fraud_reviews_reviewer_v2 ON rebuild_v2.fraud_reviews USING btree (reviewed_by)
+CREATE INDEX fraud_reviews_reviewer_v2 ON rebuild_v2.fraud_reviews USING btree (reviewed_by);
 
-CREATE INDEX fraud_reviews_user_v2 ON rebuild_v2.fraud_reviews USING btree (user_id)
+CREATE INDEX fraud_reviews_user_v2 ON rebuild_v2.fraud_reviews USING btree (user_id);
 
-CREATE INDEX play_opt_in_tester_v2 ON rebuild_v2.play_opt_in_events USING btree (tester_id)
+CREATE INDEX play_opt_in_tester_v2 ON rebuild_v2.play_opt_in_events USING btree (tester_id);
 
-CREATE INDEX play_opt_in_assignment_time_v2 ON rebuild_v2.play_opt_in_events USING btree (assignment_id, occurred_at)
+CREATE INDEX play_opt_in_assignment_time_v2 ON rebuild_v2.play_opt_in_events USING btree (assignment_id, occurred_at);
 
-CREATE INDEX play_opt_in_recorder_v2 ON rebuild_v2.play_opt_in_events USING btree (recorded_by)
+CREATE INDEX play_opt_in_recorder_v2 ON rebuild_v2.play_opt_in_events USING btree (recorded_by);
 
-CREATE INDEX report_attachments_assignment_v2 ON rebuild_v2.report_attachments USING btree (assignment_id, test_id, tester_id)
+CREATE INDEX report_attachments_assignment_v2 ON rebuild_v2.report_attachments USING btree (assignment_id, test_id, tester_id);
 
-CREATE INDEX report_attachments_tester_v2 ON rebuild_v2.report_attachments USING btree (tester_id)
+CREATE INDEX report_attachments_tester_v2 ON rebuild_v2.report_attachments USING btree (tester_id);
 
-CREATE INDEX report_attachments_report_assignment_v2 ON rebuild_v2.report_attachments USING btree (report_id, assignment_id)
+CREATE INDEX report_attachments_report_assignment_v2 ON rebuild_v2.report_attachments USING btree (report_id, assignment_id);
 
-CREATE INDEX support_attachments_ticket_message_v2 ON rebuild_v2.support_ticket_attachments USING btree (ticket_id, message_id)
+CREATE INDEX support_attachments_ticket_message_v2 ON rebuild_v2.support_ticket_attachments USING btree (ticket_id, message_id);
 
-CREATE INDEX support_attachments_uploader_v2 ON rebuild_v2.support_ticket_attachments USING btree (uploaded_by)
+CREATE INDEX support_attachments_uploader_v2 ON rebuild_v2.support_ticket_attachments USING btree (uploaded_by);
 
-CREATE INDEX support_events_ticket_created_v2 ON rebuild_v2.support_ticket_events USING btree (ticket_id, created_at)
+CREATE INDEX support_events_ticket_created_v2 ON rebuild_v2.support_ticket_events USING btree (ticket_id, created_at);
 
-CREATE INDEX support_events_actor_v2 ON rebuild_v2.support_ticket_events USING btree (actor_id)
+CREATE INDEX support_events_actor_v2 ON rebuild_v2.support_ticket_events USING btree (actor_id);
 
-CREATE INDEX platform_config_updated_by_v2 ON rebuild_v2.platform_config USING btree (updated_by)
+CREATE INDEX platform_config_updated_by_v2 ON rebuild_v2.platform_config USING btree (updated_by);
 
 ALTER TABLE rebuild_v2.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rebuild_v2.profiles FORCE ROW LEVEL SECURITY;
