@@ -79,6 +79,7 @@ export default function PrivacyDataManagementPage() {
       : supabase.from("profiles").select("display_name,avatar_url,created_at,updated_at").eq("id", user.id).maybeSingle();
     Promise.resolve(profileQuery).then((profile) => {
       if (!alive) return;
+      if (profile.error) throw profile.error;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
       setAvatar(profile.data?.avatar_url || "");
       setMemberSince(profile.data?.created_at || user.created_at || null);
