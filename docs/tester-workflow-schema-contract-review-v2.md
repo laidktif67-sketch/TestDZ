@@ -11,7 +11,7 @@ Project: `TestDZ-FixLab` (`bxjqwqidmxxnsgnpyzxv`), PostgreSQL 17.11, ACTIVE_HEAL
 - 43 tables in `rebuild_v2`; all 43 have RLS enabled and FORCE RLS.
 - 44 RLS policies.
 - 6 user-defined triggers on V2 tables.
-- 13 exposed RPCs in `rebuild_v2`; none implements tester discovery/enrollment, assignment start, check-in, tester feedback submission, or assignment final submission.
+- The pre-007 baseline contained 13 exposed RPCs. Script `007_tester_workflow.sql` adds the narrow tester discovery, enrollment, assignment, check-in, feedback, and final-submission RPC wrappers.
 - All V2 tables currently report zero rows.
 - Authenticated has SELECT on V2 tables; no direct table INSERT/DELETE grants were found in the role-table grants snapshot. The only intended column-level UPDATE grant is the safe profile-field grant.
 - The inspected candidate schema and live FixLab catalog agree on the tester workflow table definitions.
@@ -114,8 +114,18 @@ Frontend checkpoint:
 - No Vercel environment variables were changed. The V2 code path is off unless `VITE_TESTER_WORKFLOW_V2_ENABLED=true` is explicitly set; verify the target environment before enabling it. Do not enable the flag until the V2 schema and exposed-schema configuration are deployed to that same target project.
 - TypeScript/build/Browser verification has not yet been run; no claim of frontend build success is made.
 
-Remaining:
-- Connect the check-in history, My Tests, feedback history, notification history, and other remaining tester history pages to V2 reads.
-- Run the frontend typecheck/build and browser workflow against a dedicated FixLab preview environment.
-- Review concurrent capacity behavior with a two-session race test.
-- No Production SQL, active migration promotion, Auth deletion, or PR #18 changes were made.
+Frontend follow-on checkpoint — history and rewards guardrails:
+
+- `MyTestsPage` now reads V2 roles, profile, wallet, assignments, test/app relations, check-ins, feedback, and notifications when the feature flag is enabled. V2 assignment dates are mapped from `started_at` / `assigned_at`; no client-supplied `points_awarded` is synthesized.
+- `CheckInHistoryPage` now reads V2 check-ins and assignment/test/app context. V2 evidence URLs remain intentionally blank until a private signed-URL adapter is verified; no public URL is persisted or exposed.
+- `FeedbackHistoryPage` now reads V2 feedback and review state. Reward totals are shown as unavailable in V2 rather than inferred from the legacy points ledger.
+- `NotificationsCenterPage` now reads V2 notifications and marks them read only through `mark_notification_read` / `mark_all_notifications_read` RPCs; direct client updates remain only in the legacy path.
+- `WalletRewardsPage` now reads `wallet_ledger` in V2, keeps `earned_points` separate from `purchased_credits`, and hides withdrawal entry points while V2 is enabled.
+- `TesterLeaderboardPage` deliberately hides global rankings in V2 until a secure leaderboard RPC is designed and verified. Assignment details and final submission no longer display fallback reward amounts.
+- The V2 feature flag remains off by default. No Production SQL, Vercel environment variables, Auth deletion, Storage cleanup, or PR #18 changes were made.
+
+Remaining verification:
+- TypeScript, frontend build, and browser workflow have **not** been run. GitHub Actions returned no workflow runs for the inspected head; the Vercel commit status is `failure` with the target indicating a build-rate-limit restriction. This is not a successful build.
+- Review V2 check-in evidence access and add private signed URLs only after confirming the relevant bucket/path policy.
+- Run a true two-session race test for the final cohort seat.
+- Repeat FixLab SQL contract tests after any subsequent SQL changes; no Production rollout is authorized.
