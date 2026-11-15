@@ -119,7 +119,7 @@ Frontend follow-on checkpoint — history and rewards guardrails:
 
 - `TesterDashboardPage` now reads V2 profile, wallet, assignments/check-ins, discoverable tests, and notification counts. `ActivityHistoryPage` now reads V2 assignments, check-ins, feedback, and earned-points ledger entries.
 - `MyTestsPage` now reads V2 roles, profile, wallet, assignments, test/app relations, check-ins, feedback, and notifications when the feature flag is enabled. V2 assignment dates are mapped from `started_at` / `assigned_at`; no client-supplied `points_awarded` is synthesized.
-- `CheckInHistoryPage` now reads V2 check-ins and assignment/test/app context. V2 evidence URLs remain intentionally blank until a private signed-URL adapter is verified; no public URL is persisted or exposed.
+- `CheckInHistoryPage` reads V2 check-ins and assignment/test/app context. V2 evidence links remain intentionally unavailable: the V2 `submit_checkin` RPC accepts only assignment ID and note, does not register an evidence object, and the private Storage read helper recognizes report attachments and final-submission attachment metadata only. A raw `checkins.evidence_path` value alone is therefore not sufficient authorization for a signed URL. Do not expose or sign it until a dedicated check-in evidence registration/upload model and matching Storage authorization are implemented and tested.
 - `FeedbackHistoryPage` now reads V2 feedback and review state. Reward totals are shown as unavailable in V2 rather than inferred from the legacy points ledger.
 - `NotificationsCenterPage` now reads V2 notifications and marks them read only through `mark_notification_read` / `mark_all_notifications_read` RPCs; direct client updates remain only in the legacy path.
 - `WalletRewardsPage` now reads only `earned_points` ledger entries in V2 (while displaying `purchased_credits` as a separate balance), and hides withdrawal entry points. `WithdrawalRequestPage` also blocks direct-route access while V2 is enabled.
@@ -128,6 +128,7 @@ Frontend follow-on checkpoint — history and rewards guardrails:
 
 Remaining verification:
 - TypeScript, frontend build, and browser workflow have **not** been run. The CI workflow was updated to include `rebuild/testdz-v2`, but the available GitHub workflow-run lookup only returns pull-request-triggered runs and therefore cannot confirm the push run. This is not a successful build.
-- Review V2 check-in evidence access and add private signed URLs only after confirming the relevant bucket/path policy.
+- Check-in evidence remains a known feature gap. The FixLab catalog confirms `checkins.evidence_path` exists, but `submit_checkin(assignment_id,note)` never sets it and there is no dedicated check-in attachment metadata table or matching Storage helper branch. The attempted frontend signed-URL path was reverted; V2 history does not expose an unverified evidence URL.
+- The `join_test` implementation uses a transaction-scoped advisory lock for a tester+test and `FOR UPDATE` row locking on candidate cohorts before counting seats. This is the intended last-seat serialization design, but a true two-session concurrent race test has not been executed.
 - Run a true two-session race test for the final cohort seat.
 - Repeat FixLab SQL contract tests after any subsequent SQL changes; no Production rollout is authorized.
