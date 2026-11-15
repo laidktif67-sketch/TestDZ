@@ -218,8 +218,8 @@ export default function DeveloperCreateTestSixStepPage() {
     <DeveloperSidebar />
     <section className="dct-content">
       <header className="dct-topbar">
-        <label className="dct-global-search"><Icon name="search" /><input placeholder="Search apps, tests, or anything..." /></label>
-        <div className="dct-user"><span className="dct-bell">♧<i>3</i></span><span className="dct-avatar">D</span><strong>Developer</strong></div>
+        <div className="dct-global-search" aria-label="Current workspace"><Icon name="tests" /><span>Six-step test setup</span></div>
+        <div className="dct-user"><strong>Developer workspace</strong></div>
       </header>
       <div className="dct-page">
         <section className={"dct-hero " + (step === 2 ? "dct-hero-select-app" : "")}>
