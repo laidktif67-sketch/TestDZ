@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(6);
+SELECT plan(5);
 
 -- ============================================================
 -- TEST 1: Old UNIQUE gone
@@ -32,30 +32,7 @@ SELECT ok(
   'TEST 2: UNIQUE(cohort_id, test_id, tester_id) exists with correct column order'
 );
 
--- ============================================================
--- TEST 3a: assignments_cohort_test_fk -> cohort_tests(cohort_id, test_id)
--- ============================================================
-SELECT ok(
-  EXISTS (
-    SELECT 1 FROM pg_constraint c
-    WHERE c.conrelid = 'public.assignments'::regclass
-      AND c.conname = 'assignments_cohort_test_fk'
-      AND c.contype = 'f'
-      AND c.confrelid = 'public.cohort_tests'::regclass
-      AND c.convalidated
-      AND (
-        SELECT array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum))
-        FROM pg_attribute a
-        WHERE a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
-      ) = ARRAY['cohort_id', 'test_id']::name[]
-      AND (
-        SELECT array_agg(a.attname ORDER BY array_position(c.confkey, a.attnum))
-        FROM pg_attribute a
-        WHERE a.attrelid = c.confrelid AND a.attnum = ANY(c.confkey)
-      ) = ARRAY['cohort_id', 'test_id']::name[]
-  ),
-  'TEST 3a: assignments_cohort_test_fk -> cohort_tests(cohort_id, test_id)'
-);
+-- The cohort/test FK is intentionally deferred until 016c migrates legacy links.
 
 -- ============================================================
 -- TEST 3b: tester identity is not constrained to the test owner
