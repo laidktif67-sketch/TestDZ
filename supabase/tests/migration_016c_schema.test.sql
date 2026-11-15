@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(11);
+SELECT plan(12);
 
 -- ============================================================
 -- TEST 1: 6 triggers on correct tables, enabled
@@ -23,6 +23,31 @@ SELECT ok(
   NOT EXISTS (SELECT 1 FROM information_schema.columns
               WHERE table_schema='public' AND table_name='cohorts' AND column_name='test_id'),
   'TEST 2: cohorts.test_id dropped'
+);
+
+-- ============================================================
+-- TEST 2b: assignments FK is added after legacy data migration
+-- ============================================================
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_constraint c
+    WHERE c.conrelid='public.assignments'::regclass
+      AND c.conname='assignments_cohort_test_fk'
+      AND c.contype='f'
+      AND c.confrelid='public.cohort_tests'::regclass
+      AND c.convalidated
+      AND (
+        SELECT array_agg(a.attname ORDER BY array_position(c.conkey, a.attnum))
+        FROM pg_attribute a
+        WHERE a.attrelid=c.conrelid AND a.attnum=ANY(c.conkey)
+      ) = ARRAY['cohort_id','test_id']::name[]
+      AND (
+        SELECT array_agg(a.attname ORDER BY array_position(c.confkey, a.attnum))
+        FROM pg_attribute a
+        WHERE a.attrelid=c.confrelid AND a.attnum=ANY(c.confkey)
+      ) = ARRAY['cohort_id','test_id']::name[]
+  ),
+  'TEST 2b: assignments FK references cohort_tests(cohort_id, test_id)'
 );
 
 -- ============================================================
