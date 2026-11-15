@@ -155,6 +155,9 @@ GRANT SELECT ON TABLE rebuild_v2.assignment_submissions,
 -- ---------------------------------------------------------------------------
 -- 3. Discovery and enrollment.
 -- ---------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS rebuild_v2.get_discoverable_tests();
+DROP FUNCTION IF EXISTS rebuild_v2_private.get_discoverable_tests_impl();
+
 CREATE OR REPLACE FUNCTION rebuild_v2_private.get_discoverable_tests_impl()
 RETURNS TABLE (
   test_id uuid,
@@ -162,10 +165,12 @@ RETURNS TABLE (
   app_id uuid,
   app_name text,
   app_icon_url text,
+  app_category text,
   title text,
   short_summary text,
   description text,
   test_type text,
+  test_status text,
   start_date date,
   end_date date,
   estimated_duration_minutes integer,
@@ -203,8 +208,8 @@ BEGIN
 
   RETURN QUERY
   SELECT
-    t.id, c.id, app.id, app.name, app.icon_url,
-    t.title, t.short_summary, t.description, t.test_type,
+    t.id, c.id, app.id, app.name, app.icon_url, app.category,
+    t.title, t.short_summary, t.description, t.test_type, t.status,
     t.start_date, t.end_date, t.estimated_duration_minutes,
     t.min_testers, t.eligibility_criteria, t.device_requirements,
     t.tester_instructions, c.name, c.capacity,
@@ -826,8 +831,9 @@ $function$;
 CREATE OR REPLACE FUNCTION rebuild_v2.get_discoverable_tests()
 RETURNS TABLE (
   test_id uuid, cohort_id uuid, app_id uuid, app_name text, app_icon_url text,
-  title text, short_summary text, description text, test_type text,
-  start_date date, end_date date, estimated_duration_minutes integer,
+  app_category text, title text, short_summary text, description text,
+  test_type text, test_status text, start_date date, end_date date,
+  estimated_duration_minutes integer,
   min_testers integer, eligibility_criteria jsonb, device_requirements jsonb,
   tester_instructions text, cohort_name text, cohort_capacity integer,
   spots_remaining integer, cohort_starts_at timestamptz, cohort_ends_at timestamptz
