@@ -3,6 +3,7 @@ import type { AppRecord } from "@testdz/types";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import { getAppLimit, listApps } from "../../../features/apps/apps-api";
@@ -18,7 +19,7 @@ const copy = {
     search:"Search apps, tests, or developers...", welcome:"Welcome back, Developer!", subtitle:"Build, test and share your amazing applications with TestDZ.", createApp:"Create New App",
     total:"My Apps", published:"Published Apps", drafts:"Draft Apps", archived:"Archived Apps", overview:"Apps Overview", quick:"Quick Actions",
     manage:"Manage Apps", view:"View All", recent:"Recently Added", emptyTitle:"Your workspace is ready", emptyBody:"Create your first app to start building your TestDZ workspace.", addFirst:"Add Your First App",
-    status:{draft:"Draft",published:"Published",paused:"Paused",archived:"Archived"}, category:"Application", package:"Package", open:"Manage", all:"All applications",
+    status:{draft:"Draft",submitted:"Submitted",published:"Published",paused:"Paused",archived:"Archived",rejected:"Rejected"}, category:"Application", package:"Package", open:"Manage", all:"All applications",
     latest:"Latest apps added to your workspace", limit:"Plan usage", of:"of", active:"active apps", noLimit:"Plan limit unavailable",
     noSearch:"No applications match your search.", preview:"Development preview · sample data · read only", loading:"Loading your developer workspace…",
     access:"This area is available to developer accounts.", back:"Go to dashboard", soon:"Coming soon", appTrend:"Applications created over time", noTrend:"Add apps to see your activity here.",
@@ -30,7 +31,7 @@ const copy = {
     search:"Rechercher des applications, tests...", welcome:"Bon retour, développeur !", subtitle:"Créez, testez et partagez vos applications avec TestDZ.", createApp:"Créer une application",
     total:"Mes applications", published:"Applications publiées", drafts:"Brouillons", archived:"Archivées", overview:"Aperçu des applications", quick:"Actions rapides",
     manage:"Gérer les applications", view:"Tout voir", recent:"Ajouts récents", emptyTitle:"Votre espace est prêt", emptyBody:"Créez votre première application pour commencer.", addFirst:"Ajouter votre première app",
-    status:{draft:"Brouillon",published:"Publiée",paused:"En pause",archived:"Archivée"}, category:"Application", package:"Package", open:"Gérer", all:"Toutes les applications",
+    status:{draft:"Brouillon",submitted:"Soumise",published:"Publiée",paused:"En pause",archived:"Archivée",rejected:"Rejetée"}, category:"Application", package:"Package", open:"Gérer", all:"Toutes les applications",
     latest:"Dernières applications ajoutées", limit:"Utilisation du forfait", of:"sur", active:"applications actives", noLimit:"Limite indisponible",
     noSearch:"Aucune application ne correspond.", preview:"Aperçu de développement · données exemples · lecture seule", loading:"Chargement de votre espace développeur…",
     access:"Cette page est réservée aux comptes développeur.", back:"Retour au tableau de bord", soon:"Bientôt", appTrend:"Applications créées au fil du temps", noTrend:"Ajoutez des applications pour voir votre activité.",
@@ -42,7 +43,7 @@ const copy = {
     search:"ابحث عن التطبيقات أو الاختبارات...", welcome:"مرحباً بعودتك، أيها المطوّر!", subtitle:"أنشئ تطبيقاتك واختبرها وشاركها مع مجتمع TestDZ.", createApp:"إنشاء تطبيق جديد",
     total:"تطبيقاتي", published:"التطبيقات المنشورة", drafts:"المسودات", archived:"المؤرشفة", overview:"نظرة عامة على التطبيقات", quick:"إجراءات سريعة",
     manage:"إدارة التطبيقات", view:"عرض الكل", recent:"أُضيفت مؤخراً", emptyTitle:"مساحة عملك جاهزة", emptyBody:"أنشئ أول تطبيق لك لبدء العمل على TestDZ.", addFirst:"أضف تطبيقك الأول",
-    status:{draft:"مسودة",published:"منشور",paused:"متوقف",archived:"مؤرشف"}, category:"تطبيق", package:"اسم الحزمة", open:"إدارة", all:"كل التطبيقات",
+    status:{draft:"مسودة",submitted:"مرسل للمراجعة",published:"منشور",paused:"متوقف",archived:"مؤرشف",rejected:"مرفوض"}, category:"تطبيق", package:"اسم الحزمة", open:"إدارة", all:"كل التطبيقات",
     latest:"أحدث التطبيقات التي أضفتها", limit:"استخدام الخطة", of:"من", active:"تطبيقات نشطة", noLimit:"حد الخطة غير متاح",
     noSearch:"لا توجد تطبيقات تطابق البحث.", preview:"معاينة تطوير · بيانات تجريبية · للقراءة فقط", loading:"جارٍ تحميل مساحة المطوّر…",
     access:"هذه المساحة متاحة لحسابات المطوّرين فقط.", back:"العودة إلى لوحة التحكم", soon:"قريباً", appTrend:"التطبيقات المضافة عبر الزمن", noTrend:"أضف تطبيقاتك لعرض نشاطك هنا.",
@@ -164,7 +165,8 @@ export default function DeveloperDashboardPage() {
       setApps(sample);setName("John Doe");setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
     }
     const client=supabase;
-    if(!client){setError("Supabase is not configured.");setLoading(false);return;}
+    const dataClient=isTesterWorkflowV2Enabled?supabaseV2:client;
+    if(!client||!dataClient){setError("Supabase is not configured.");setLoading(false);return;}
     let alive=true;
     const load=async()=>{
       const {data:sessionData}=await client.auth.getSession();
@@ -172,7 +174,7 @@ export default function DeveloperDashboardPage() {
       const user=sessionData.session?.user;
       if(!user){setLoading(false);return;}
       const [profileRes,appsRes,limitRes]=await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
+        dataClient.from("profiles").select("display_name,avatar_url").eq("id",user.id).maybeSingle(),
         listApps(),
         getAppLimit()
       ]);
