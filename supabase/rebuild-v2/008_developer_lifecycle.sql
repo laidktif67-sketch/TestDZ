@@ -69,9 +69,6 @@ BEGIN
   IF NOT rebuild_v2_private.has_role(v_user,ARRAY['developer','admin']) THEN
     RAISE EXCEPTION 'DEVELOPER_ROLE_REQUIRED' USING errcode='42501';
   END IF;
-  IF NOT rebuild_v2_private.has_role(v_user,ARRAY['developer','admin']) THEN
-    RAISE EXCEPTION 'DEVELOPER_ROLE_REQUIRED' USING errcode='42501';
-  END IF;
   IF p_title IS NULL OR char_length(btrim(p_title)) NOT BETWEEN 3 AND 160
      OR p_description IS NULL OR char_length(btrim(p_description)) NOT BETWEEN 20 AND 12000
      OR p_test_type NOT IN ('google_play_closed','apk_testing','bug_discovery','usability','compatibility','custom')
@@ -107,6 +104,9 @@ AS $function$
 DECLARE v_user uuid := auth.uid();
 BEGIN
   IF v_user IS NULL THEN RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode='28000'; END IF;
+  IF NOT rebuild_v2_private.has_role(v_user,ARRAY['developer','admin']) THEN
+    RAISE EXCEPTION 'DEVELOPER_ROLE_REQUIRED' USING errcode='42501';
+  END IF;
   IF p_title IS NULL OR char_length(btrim(p_title)) NOT BETWEEN 3 AND 160
      OR p_description IS NULL OR char_length(btrim(p_description)) NOT BETWEEN 20 AND 12000
      OR p_test_type NOT IN ('google_play_closed','apk_testing','bug_discovery','usability','compatibility','custom')
