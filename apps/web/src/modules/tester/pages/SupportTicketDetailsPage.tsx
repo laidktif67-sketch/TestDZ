@@ -49,7 +49,7 @@ export default function SupportTicketDetailsPage(){
   }
   const {data:messageData,error:insertError}=isTesterWorkflowV2Enabled ? await client.rpc("send_support_message",{p_ticket_id:ticket.id,p_body:reply.trim()}) : await client.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()}).select("id").single();
   const messageId=typeof messageData==="string"?messageData:messageData?.id;
-  if(insertError||!messageId)
+  if(insertError||!messageId){setSending(false);setError("Your reply could not be sent. Please try again.");return;}
   if(selectedFile){
    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
