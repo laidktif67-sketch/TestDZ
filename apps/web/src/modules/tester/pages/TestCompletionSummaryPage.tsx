@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -15,7 +16,7 @@ export default function TestCompletionSummaryPage(){
  const [assignment,setAssignment]=useState<Assignment|null>(null),[checkins,setCheckins]=useState<string[]>([]),[feedback,setFeedback]=useState<Feedback|null>(null),[ledger,setLedger]=useState<Ledger[]>([]);
  const [name,setName]=useState("Tester"),[avatar,setAvatar]=useState(""),[loading,setLoading]=useState(true),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false);
  const preview=import.meta.env.DEV&&new URLSearchParams(window.location.search).get("preview")==="1";
- useEffect(()=>{if(preview){setName("John Doe");setAssignment({id:"preview-assignment",status:"completed",start_date:"2026-04-14",completed_at:"2026-04-27T14:30:00Z",points_awarded:120,test:{title:"UI Testing Assignment",start_date:"2026-04-14",end_date:"2026-04-27",app:{name:"DemoApp",icon_url:null}}});setCheckins(Array.from({length:14},(_,i)=>String(i)));setFeedback({id:"preview-feedback",body:"The application is great, with minor UI improvements suggested for mobile devices.",quality_status:"accepted",created_at:"2025-04-27T14:30:00Z",reviewed_at:"2025-04-28T10:00:00Z"});setLedger([{id:"p1",amount:120,reason:"Assignment completion",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"},{id:"p2",amount:50,reason:"Completion bonus",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"}]);setLoading(false);return;}
+ useEffect(()=>{if(isTesterWorkflowV2Enabled){setLoading(false);return;}if(preview){setName("John Doe");setAssignment({id:"preview-assignment",status:"completed",start_date:"2026-04-14",completed_at:"2026-04-27T14:30:00Z",points_awarded:120,test:{title:"UI Testing Assignment",start_date:"2026-04-14",end_date:"2026-04-27",app:{name:"DemoApp",icon_url:null}}});setCheckins(Array.from({length:14},(_,i)=>String(i)));setFeedback({id:"preview-feedback",body:"The application is great, with minor UI improvements suggested for mobile devices.",quality_status:"accepted",created_at:"2025-04-27T14:30:00Z",reviewed_at:"2025-04-28T10:00:00Z"});setLedger([{id:"p1",amount:120,reason:"Assignment completion",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"},{id:"p2",amount:50,reason:"Completion bonus",reference_id:"preview-assignment",reference_type:"assignment",created_at:"2026-04-27T14:30:00Z"}]);setLoading(false);return;}
  if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}
  const client=supabase;const [a,c,f,l,p]=await Promise.all([
  client.from("assignments").select("id,status,start_date,completed_at,points_awarded,test:tests(title,start_date,end_date,app:apps(name,icon_url))").eq("id",id).eq("tester_id",session.user.id).maybeSingle(),
@@ -28,7 +29,7 @@ export default function TestCompletionSummaryPage(){
  setCheckins((c.data??[]).map(x=>x.checkin_date));setFeedback(f.data as Feedback|null);setLedger((l.data??[]) as Ledger[]);
  setName(p.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(p.data?.avatar_url||"");setLoading(false);
  })();return()=>{alive=false;};},[id,session?.user?.id,preview]);
- if(!preview&&!session)return <Navigate to="/auth" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;
+ if(!preview&&!session)return <Navigate to="/auth" replace/>;if(isTesterWorkflowV2Enabled)return <Navigate to="/wallet-rewards" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;
  const firstName=name.split(/\s+/)[0]||"Tester";const isCompleted=assignment?.status==="completed";
  const base=ledger.filter(x=>x.amount>0&&!/bonus/i.test(x.reason)).reduce((s,x)=>s+x.amount,0);
  const bonus=ledger.filter(x=>x.amount>0&&/bonus/i.test(x.reason)).reduce((s,x)=>s+x.amount,0);
