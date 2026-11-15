@@ -184,7 +184,7 @@ export default function SubmitFeedbackPage() {
                 <button type="button" className="sf-browse" onClick={() => fileInput.current?.click()}><Icon name="folder" size={22}/> Browse Files</button>
                 <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={event => { if (event.target.files) addFiles(event.target.files); event.target.value = ""; }}/>
               </div>
-            </section>
+            </section>}
             <div className="sf-submit-wrap"><button type="submit" className="sf-submit" disabled={submitting}><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27 4 5 13l9 4 4 10 9-23ZM14 17l13-13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/></svg> {submitting ? "Submitting…" : "Submit Feedback"}</button>{message && <p className="sf-submit-message" role="status">{message}</p>}</div>
           </div>
         </form>
