@@ -65,11 +65,13 @@ project as a shortcut.
 - Existing `supabase/tests/foreign_key_indexes.test.sql` has nine catalog assertions for the eight indexes plus the previously created message index. These checks validate index presence/definition when run, but no execution result from a PostgreSQL 17/Supabase-compatible test environment has been established in this review.
 - The read-only live catalog comparison now confirms all nine flagged FKs lack
   a covering leading-column index in this project.
-- Important discrepancy: the existing test expects
-  `developer_feedback_attachments_message_idx`, but the live catalog did not
-  list it. The migration creates eight other indexes and does not appear to
-  create this message index. Resolve this mismatch in the migration/test pair
-  before considering the index remediation complete.
+- Important discrepancy: the branch's earlier conversation migration expects
+  a composite `(feedback_id, message_id)` foreign key and creates
+  `developer_feedback_attachments_message_idx`; the live catalog instead has
+  a single-column `message_id` FK and no matching index. This is schema-shape
+  drift and requires migration-ledger/object reconciliation before any DDL.
+  Do not treat the nine-index migration as a standalone safe fix until this
+  dependency is understood.
 - Check table sizes, write overhead, and deployment locking characteristics
   before adding indexes; use `CREATE INDEX CONCURRENTLY` only in a migration
   workflow that supports its transaction restrictions.
