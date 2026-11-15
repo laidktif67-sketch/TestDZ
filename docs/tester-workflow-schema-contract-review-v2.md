@@ -187,3 +187,24 @@ Remaining verification:
 
 - Retried the `web` job for run `43745958426` (commit `2724f45c86ea6a194b9ddf2e620ef932f4f7dfdc`). The retry again concluded `failure` with an empty steps list.
 - Since the original attempt and retry both stop before any step, the CI blocker is currently outside the visible project commands. Keep the code verification status pending until a runner actually executes the workflow.
+
+
+### Follow-up: points and evidence presentation across V2 tester pages
+
+- Rechecked the remaining tester-facing pages for legacy reward displays and the unsupported check-in-evidence assumption.
+- Updated `MyTestsPage` so the hero balance, points KPI, and history points column show **Unavailable** while V2 reward posting is disabled. This avoids presenting the empty V2 wallet as a real zero-point earned balance. Legacy mode keeps its previous display.
+- Updated `ActivityHistoryPage` so its total-points KPI, assignment points column, and CSV export explicitly report points as unavailable in V2. Legacy mode is unchanged.
+- Updated `ActiveAssignmentProgressPage`:
+  - The evidence task now explains that V2 evidence is attached to the assignment submission and that check-in evidence is not supported yet.
+  - The reward panel now says **Unavailable** instead of `+0 pts` while reward posting is disabled.
+  - The existing V2 check-in evidence URL remains null; no raw `evidence_path` or unsupported signed URL was introduced.
+- Earlier in this same follow-up, `TestCompletionRewardPage` and `TestCompletionSummaryPage` were guarded from legacy ledger reads and redirect to Wallet & Rewards while V2 is enabled.
+- Source files were read back from GitHub after each update and the expected V2 conditional labels/guards were verified. This is source-level verification only; TypeScript/build is still not verified.
+
+### Latest branch head and CI status
+
+- Latest verified `rebuild/testdz-v2` head at the time of this note: `43f6fd7289fe7315b6abc1d579fb764acf34dee8`.
+- Compared with `87a65f3c9aeaf5a517fb284408a10e537d94d596`, the branch is ahead by 10 commits and behind by 0.
+- Latest GitHub Actions run `43747141597` for that head concluded `failure`. Its `web` job (`132912841593`) again returned `steps: null` and no logs URL. This does not show that npm install, typecheck, or build ran.
+- The latest Vercel combined status remains a build-rate-limit failure. No Vercel configuration or environment variables were changed.
+- No SQL, migration, Storage, Auth, Production, or PR #18 changes were made in this frontend follow-up.
