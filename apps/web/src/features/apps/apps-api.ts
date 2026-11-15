@@ -95,3 +95,82 @@ export function restoreApp(id: string) {
 }
 
 export type { AppLimit, AppRecord };
+
+
+export interface DeveloperTestInput {
+  appId: string;
+  title: string;
+  description: string;
+  shortSummary?: string | null;
+  testType: "google_play_closed" | "apk_testing" | "bug_discovery" | "usability" | "compatibility" | "custom";
+  minTesters: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  durationMinutes?: number | null;
+  instructions?: string | null;
+}
+
+export function listDeveloperTests(developerId: string) {
+  return dataClient().from("tests")
+    .select("id,app_id,developer_id,title,description,short_summary,test_type,status,min_testers,start_date,end_date,estimated_duration_minutes,created_at")
+    .eq("developer_id", developerId)
+    .order("created_at", { ascending: false });
+}
+
+export function createDeveloperTest(input: DeveloperTestInput) {
+  return dataClient().rpc("create_test", {
+    p_app_id: input.appId,
+    p_title: input.title,
+    p_description: input.description,
+    p_short_summary: input.shortSummary ?? null,
+    p_test_type: input.testType,
+    p_min_testers: input.minTesters,
+    p_start_date: input.startDate ?? null,
+    p_end_date: input.endDate ?? null,
+    p_duration: input.durationMinutes ?? null,
+    p_instructions: input.instructions ?? null,
+  });
+}
+
+export function updateDeveloperTest(testId: string, input: Omit<DeveloperTestInput, "appId">) {
+  return dataClient().rpc("update_test", {
+    p_test_id: testId,
+    p_title: input.title,
+    p_description: input.description,
+    p_short_summary: input.shortSummary ?? null,
+    p_test_type: input.testType,
+    p_min_testers: input.minTesters,
+    p_start_date: input.startDate ?? null,
+    p_end_date: input.endDate ?? null,
+    p_duration: input.durationMinutes ?? null,
+    p_instructions: input.instructions ?? null,
+  });
+}
+
+export function submitDeveloperTestForReview(testId: string) {
+  return dataClient().rpc("submit_test_for_review", { p_test_id: testId });
+}
+
+export function createDeveloperTestCohort(input: {
+  testId: string; name: string; capacity: number; startsAt?: string | null; endsAt?: string | null;
+}) {
+  return dataClient().rpc("create_test_cohort", {
+    p_test_id: input.testId,
+    p_name: input.name,
+    p_capacity: input.capacity,
+    p_starts_at: input.startsAt ?? null,
+    p_ends_at: input.endsAt ?? null,
+  });
+}
+
+export function submitAppForReview(appId: string) {
+  return dataClient().rpc("submit_app_for_review", { p_app_id: appId });
+}
+
+export function reviewDeveloperApp(appId: string, decision: "approved" | "rejected", reason: string) {
+  return dataClient().rpc("review_app", { p_app_id: appId, p_decision: decision, p_reason: reason });
+}
+
+export function reviewDeveloperTest(testId: string, decision: "approved" | "rejected", reason: string) {
+  return dataClient().rpc("review_test", { p_test_id: testId, p_decision: decision, p_reason: reason });
+}
