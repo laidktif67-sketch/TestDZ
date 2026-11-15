@@ -9,7 +9,7 @@ DO $reconcile$
 DECLARE
   v_source_columns text[];
   v_target_columns text[];
-  v_target_table text;
+  v_target_table oid;
   v_orphans bigint;
   v_constraint_type "char";
   v_validated boolean;
@@ -21,7 +21,7 @@ BEGIN
 
   -- Drop the known invalid constraint only when its full definition matches
   -- the specific tester_id -> developer_id mistake documented in the audit.
-  SELECT c.contype, c.confrelid::regclass::text, c.convalidated
+  SELECT c.contype, c.confrelid, c.convalidated
     INTO v_constraint_type, v_target_table, v_validated
   FROM pg_constraint c
   WHERE c.conrelid = 'public.assignments'::regclass
@@ -47,11 +47,11 @@ BEGIN
       AND c.conname = 'assignments_cohort_tester_fk';
 
     IF v_constraint_type <> 'f'
-       OR v_target_table <> 'cohort_tests'
+       OR v_target_table <> 'public.cohort_tests'::regclass
        OR v_source_columns IS DISTINCT FROM ARRAY['cohort_id','tester_id']::text[]
        OR v_target_columns IS DISTINCT FROM ARRAY['cohort_id','developer_id']::text[] THEN
       RAISE EXCEPTION 'Refusing to drop assignments_cohort_tester_fk: unexpected definition (source %, target table %, target columns %)',
-        v_source_columns, v_target_table, v_target_columns;
+        v_source_columns, v_target_table::regclass, v_target_columns;
     END IF;
 
     ALTER TABLE public.assignments
@@ -59,7 +59,7 @@ BEGIN
   END IF;
 
   -- Ensure the correct assignment -> cohort/test relationship exists.
-  SELECT c.contype, c.confrelid::regclass::text, c.convalidated
+  SELECT c.contype, c.confrelid, c.convalidated
     INTO v_constraint_type, v_target_table, v_validated
   FROM pg_constraint c
   WHERE c.conrelid = 'public.assignments'::regclass
@@ -85,11 +85,11 @@ BEGIN
       AND c.conname = 'assignments_cohort_test_fk';
 
     IF v_constraint_type <> 'f'
-       OR v_target_table <> 'cohort_tests'
+       OR v_target_table <> 'public.cohort_tests'::regclass
        OR v_source_columns IS DISTINCT FROM ARRAY['cohort_id','test_id']::text[]
        OR v_target_columns IS DISTINCT FROM ARRAY['cohort_id','test_id']::text[] THEN
       RAISE EXCEPTION 'Refusing to modify assignments_cohort_test_fk: unexpected definition (source %, target table %, target columns %)',
-        v_source_columns, v_target_table, v_target_columns;
+        v_source_columns, v_target_table::regclass, v_target_columns;
     END IF;
 
     IF NOT v_validated THEN
