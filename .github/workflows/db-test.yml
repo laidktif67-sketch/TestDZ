@@ -237,3 +237,79 @@ jobs:
 
       - name: Verify rollback (must prove no changes)
         run: bash supabase/tests/migration_016c_upgrade_rollback_verify.sh
+
+  # ============================================================
+  # JOB 4: Upgrade Negative — assignment/cohort mismatch
+  # ============================================================
+  upgrade-assignment-mismatch:
+    name: Upgrade — reject mismatched legacy assignments
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+
+      - name: Ensure psql
+        run: |
+          if ! command -v psql &>/dev/null; then
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+
+      - name: Move 016c out
+        run: |
+          F=supabase/migrations/20261107000300_cohort_triggers_data_migration.sql
+          [ -f "$F" ] || { echo "❌ $F not found"; exit 1; }
+          mv "$F" /tmp/
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Reset to 016b
+        run: supabase db reset --local --no-seed
+
+      - name: Restore 016c
+        if: always()
+        run: |
+          F=/tmp/20261107000300_cohort_triggers_data_migration.sql
+          if [ ! -f "$F" ]; then
+            echo "❌ 016c not in /tmp"
+            exit 1
+          fi
+          mv "$F" supabase/migrations/
+          [ -f supabase/migrations/20261107000300_cohort_triggers_data_migration.sql ] \
+            || { echo "❌ restore failed"; exit 1; }
+
+      - name: Setup DB URL
+        run: |
+          DB_URL=$(supabase status -o json | jq -r '.DB_URL')
+          if [ -z "$DB_URL" ] || [ "$DB_URL" = "null" ]; then
+            echo "❌ DB_URL not available"; supabase status; exit 1
+          fi
+          echo "SUPABASE_DB_URL=$DB_URL" >> $GITHUB_ENV
+
+      - name: Create mismatched legacy assignment
+        run: bash supabase/tests/migration_016c_upgrade_assignment_mismatch.sh
+
+      - name: Apply 016c — must fail on assignment mismatch
+        run: |
+          set +e
+          supabase migration up --local > /tmp/016c_assignment_mismatch.log 2>&1
+          EXIT=$?
+          set -e
+          if [ "$EXIT" -eq 0 ]; then
+            echo "❌ 016c succeeded but should reject mismatched assignment"
+            cat /tmp/016c_assignment_mismatch.log
+            exit 1
+          fi
+          if ! grep -q "016c_CONFLICT: .*assignments do not match their cohort legacy test_id" /tmp/016c_assignment_mismatch.log; then
+            echo "❌ wrong error; expected assignment/cohort mismatch guard"
+            cat /tmp/016c_assignment_mismatch.log
+            exit 1
+          fi
+          echo "✅ 016c rejected mismatched legacy assignment"
+
+      - name: Verify rollback (must prove no changes)
+        run: bash supabase/tests/migration_016c_upgrade_rollback_verify.sh
