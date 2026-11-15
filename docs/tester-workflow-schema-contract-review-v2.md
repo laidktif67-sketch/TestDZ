@@ -120,7 +120,7 @@ Frontend follow-on checkpoint — history and rewards guardrails:
 - `CheckInHistoryPage` now reads V2 check-ins and assignment/test/app context. V2 evidence URLs remain intentionally blank until a private signed-URL adapter is verified; no public URL is persisted or exposed.
 - `FeedbackHistoryPage` now reads V2 feedback and review state. Reward totals are shown as unavailable in V2 rather than inferred from the legacy points ledger.
 - `NotificationsCenterPage` now reads V2 notifications and marks them read only through `mark_notification_read` / `mark_all_notifications_read` RPCs; direct client updates remain only in the legacy path.
-- `WalletRewardsPage` now reads `wallet_ledger` in V2, keeps `earned_points` separate from `purchased_credits`, and hides withdrawal entry points while V2 is enabled.
+- `WalletRewardsPage` now reads only `earned_points` ledger entries in V2 (while displaying `purchased_credits` as a separate balance), and hides withdrawal entry points. `WithdrawalRequestPage` also blocks direct-route access while V2 is enabled.
 - `TesterLeaderboardPage` deliberately hides global rankings in V2 until a secure leaderboard RPC is designed and verified. Assignment details and final submission no longer display fallback reward amounts.
 - The V2 feature flag remains off by default. No Production SQL, Vercel environment variables, Auth deletion, Storage cleanup, or PR #18 changes were made.
 
