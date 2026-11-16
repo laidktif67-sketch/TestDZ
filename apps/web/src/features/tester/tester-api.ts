@@ -139,3 +139,44 @@ export async function getMyTestsPageData(userId: string) {
     hasError: Boolean(roleRes.error || profileRes.error || walletRes.error || assignmentRes.error || feedbackRes.error || noticeRes.error),
   };
 }
+
+export async function getActivityHistoryPageData(userId: string) {
+  const client = getAppDataClient();
+  const [profile, assignmentResult, feedbackResult, ledgerResult, notice] = await Promise.all([
+    client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
+    isTesterWorkflowV2Enabled
+      ? client.from("assignments").select("id,status,started_at,assigned_at,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("assigned_at", { ascending: false })
+      : client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("created_at", { ascending: false }),
+    client.from("feedback").select("id,assignment_id,rating,quality_status,created_at").eq("tester_id", userId).order("created_at", { ascending: false }),
+    isTesterWorkflowV2Enabled
+      ? client.from("wallet_ledger").select("amount,reference_id,wallet_type").eq("user_id", userId).eq("wallet_type", "earned_points")
+      : client.from("points_ledger").select("amount,reference_id,wallet_type").eq("user_id", userId).eq("wallet_type", "earned_points"),
+    client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
+  ]);
+
+  const assignments = isTesterWorkflowV2Enabled
+    ? ((assignmentResult.data ?? []) as any[]).map((row) => ({
+        id: row.id,
+        status: row.status,
+        start_date: row.started_at || row.assigned_at,
+        completed_at: row.completed_at,
+        created_at: row.created_at || row.assigned_at,
+        test: row.test || null,
+        checkins: row.checkins || [],
+      }))
+    : ((assignmentResult.data ?? []) as any[]);
+
+  return {
+    displayName: profile.data?.display_name?.trim() ?? "",
+    avatarUrl: profile.data?.avatar_url ?? "",
+    assignments,
+    assignmentError: assignmentResult.error,
+    feedback: feedbackResult.data ?? [],
+    feedbackError: feedbackResult.error,
+    ledger: ledgerResult.data ?? [],
+    ledgerError: ledgerResult.error,
+    notifications: notice.count ?? 0,
+    profileError: profile.error,
+    notificationError: notice.error,
+  };
+}
