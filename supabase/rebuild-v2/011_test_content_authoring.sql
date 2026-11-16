@@ -16,7 +16,6 @@ DECLARE
   v_user uuid := auth.uid();
   v_test_status text;
   v_item jsonb;
-  v_count integer := 0;
   v_order integer;
   v_type text;
 BEGIN
@@ -45,11 +44,10 @@ BEGIN
 
   FOR v_item IN SELECT value FROM jsonb_array_elements(p_steps)
   LOOP
-    v_count:=v_count+1;
     IF jsonb_typeof(v_item)<>'object'
-       OR jsonb_typeof(v_item->'title')<>'string'
-       OR jsonb_typeof(v_item->'description')<>'string'
-       OR (v_item ? 'isRequired' AND jsonb_typeof(v_item->'isRequired')<>'boolean')
+       OR jsonb_typeof(v_item->'title') IS DISTINCT FROM 'string'
+       OR jsonb_typeof(v_item->'description') IS DISTINCT FROM 'string'
+       OR (v_item ? 'isRequired' AND jsonb_typeof(v_item->'isRequired') IS DISTINCT FROM 'boolean')
        OR char_length(btrim(v_item->>'title')) NOT BETWEEN 2 AND 160
        OR char_length(btrim(v_item->>'description')) NOT BETWEEN 1 AND 4000 THEN
       RAISE EXCEPTION 'TEST_STEP_INVALID' USING errcode='22023';
@@ -59,10 +57,10 @@ BEGIN
   FOR v_item IN SELECT value FROM jsonb_array_elements(p_requirements)
   LOOP
     IF jsonb_typeof(v_item)<>'object'
-       OR jsonb_typeof(v_item->'type')<>'string'
+       OR jsonb_typeof(v_item->'type') IS DISTINCT FROM 'string'
        OR jsonb_typeof(v_item->'title')<>'string'
        OR jsonb_typeof(v_item->'description')<>'string'
-       OR (v_item ? 'isMandatory' AND jsonb_typeof(v_item->'isMandatory')<>'boolean')
+       OR (v_item ? 'isMandatory' AND jsonb_typeof(v_item->'isMandatory') IS DISTINCT FROM 'boolean')
        OR (v_item->>'type') NOT IN ('device','android_version','account','network','eligibility','other')
        OR char_length(btrim(v_item->>'title')) NOT BETWEEN 2 AND 160
        OR char_length(btrim(v_item->>'description')) NOT BETWEEN 1 AND 2000 THEN
@@ -73,6 +71,7 @@ BEGIN
   DELETE FROM rebuild_v2.test_steps WHERE test_id=p_test_id;
   DELETE FROM rebuild_v2.test_requirements WHERE test_id=p_test_id;
 
+  v_order:=0;
   FOR v_item IN SELECT value FROM jsonb_array_elements(p_steps)
   LOOP
     v_order:=v_order+1;
