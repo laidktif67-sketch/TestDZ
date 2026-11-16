@@ -366,6 +366,58 @@ export async function uploadDeveloperTestAsset(input: {
   return { error: null, stage: "complete" as const };
 }
 
+export type DeveloperFeedbackStatus = "new" | "under_review" | "planned" | "resolved" | "wont_fix";
+export type DeveloperFeedbackPriority = "low" | "normal" | "high" | "urgent";
+export type DeveloperFeedbackRecord = {
+  feedback_id: string;
+  test_id: string;
+  test_title: string;
+  app_name: string;
+  category: string;
+  body: string;
+  rating: number | null;
+  submitted_at: string;
+  review_status: DeveloperFeedbackStatus;
+  priority: DeveloperFeedbackPriority;
+  resolution_note: string | null;
+  resolved_at: string | null;
+  updated_at: string;
+};
+export type DeveloperFeedbackMessage = {
+  sender_label: "You" | "Tester";
+  body: string;
+  created_at: string;
+};
+
+export function listDeveloperFeedback() {
+  return dataClient().rpc("get_developer_feedback");
+}
+
+export function updateDeveloperFeedbackReview(input: {
+  feedbackId: string;
+  status: DeveloperFeedbackStatus;
+  priority: DeveloperFeedbackPriority;
+  resolutionNote: string | null;
+}) {
+  return dataClient().rpc("update_developer_feedback_review", {
+    p_feedback_id: input.feedbackId,
+    p_status: input.status,
+    p_priority: input.priority,
+    p_resolution_note: input.resolutionNote,
+  });
+}
+
+export function listDeveloperFeedbackMessages(feedbackId: string) {
+  return dataClient().rpc("get_developer_feedback_messages", { p_feedback_id: feedbackId });
+}
+
+export function sendDeveloperFeedbackMessage(feedbackId: string, body: string) {
+  return dataClient().rpc("send_developer_feedback_message", {
+    p_feedback_id: feedbackId,
+    p_body: body,
+  });
+}
+
 export function submitAppForReview(appId: string) {
   return dataClient().rpc("submit_app_for_review", { p_app_id: appId });
 }
