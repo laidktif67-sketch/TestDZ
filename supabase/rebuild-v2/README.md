@@ -41,16 +41,19 @@ After all 18 scripts, run:
 - `tests/007_tester_workflow_contract.sql`
 - `tests/008_developer_feedback_privacy_contract.sql`
 - `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
+- `tests/010_security_definer_boundary_contract.sql` — asserts required V2 schema USAGE, denies schema CREATE to untrusted roles, and enforces explicit allowlisted search paths plus `postgres` ownership for every SECURITY DEFINER function.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 18 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the eight post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack. The local-only `supabase/seed.sql` creates the empty `rebuild_v2` namespace before PostgREST starts; it is not a migration and is not applied by remote `db push`. CI then applies the 18 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, runs the nine post-phase contracts, and verifies authenticated PostgREST access to `rebuild_v2` while rejecting `rebuild_v2_private`. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
 - GitHub Actions run [#8](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43944382982), commit `665ea461430c958132108c2310d5c11a59469d6c`, completed successfully.
 - CI applied all 18 scripts to a disposable empty local Supabase stack.
-- CI passed all nine contracts: the phase-one security contract plus the eight post-phase contracts.
+- The latest post-merge CI run [#43978743410](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43978743410), commit `e98e13d806d574b30ef163ff059dfbc4dd2e9733`, passed all ten contracts: the phase-one security contract plus nine post-phase contracts.
+- The new SECURITY DEFINER boundary contract passed in [PR validation run #43979499705](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43979499705) and was included in the successful post-merge run.
+- The authenticated PostgREST probe succeeded for `rebuild_v2.profiles`; the `rebuild_v2_private` schema probe was rejected as unexposed.
 - The wallet idempotency contract explicitly returned `rebuild_v2_wallet_idempotency_contract: PASS`.
 - Contract fixtures were rolled back; the final-state contract's cleanup check reported zero remaining app, profile, and auth-user fixtures.
 - The disposable local Supabase stack stopped successfully.
