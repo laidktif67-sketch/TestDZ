@@ -13,6 +13,8 @@ type TestPreview = {
  id:string; app_id:string; title:string; description:string|null; short_summary?:string|null;
  status:string; min_testers:number; start_date:string|null; end_date:string|null;
  app:{name:string;icon_url:string|null;category:string|null;play_store_url?:string|null;description?:string|null}|null;
+ steps?:{id:string;step_order:number;title:string;description:string;is_required:boolean}[];
+ requirements?:{id:string;requirement_type:string;title:string;description:string;is_mandatory:boolean;sort_order:number}[];
 };
 function dateLabel(value:string|null){if(!value)return "To be announced";const date=new Date(value+"T00:00:00");return Number.isNaN(date.getTime())?value:date.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"2-digit"});}
 function initials(value:string){return value.split(/\s+/).slice(0,2).map(part=>part[0]||"").join("").toUpperCase()||"T";}
@@ -43,10 +45,14 @@ export default function TestPreviewPage(){
     if(testResult.error||!testResult.data){
      setError("This test could not be found or is no longer available.");
     }else{
-     const appResult=await supabaseV2.from("apps").select("name,icon_url,category,play_store_url,description").eq("id",testResult.data.app_id).maybeSingle();
+     const [appResult,stepsResult,requirementsResult]=await Promise.all([
+      supabaseV2.from("apps").select("name,icon_url,category,play_store_url,description").eq("id",testResult.data.app_id).maybeSingle(),
+      supabaseV2.from("test_steps").select("id,step_order,title,description,is_required").eq("test_id",id).order("step_order"),
+      supabaseV2.from("test_requirements").select("id,requirement_type,title,description,is_mandatory,sort_order").eq("test_id",id).order("sort_order")
+     ]);
      if(!alive)return;
-     if(appResult.error)setError("Test details could not be fully loaded.");
-     setTest({...testResult.data,app:appResult.data||null} as unknown as TestPreview);
+     if(appResult.error||stepsResult.error||requirementsResult.error)setError("Test details could not be fully loaded.");
+     setTest({...testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[]} as unknown as TestPreview);
     }
     if(assignmentResult.data)setAlreadyAssigned(true);
     setLoading(false);
@@ -113,10 +119,10 @@ export default function TestPreviewPage(){
          </div>
         </div>
        </article>
-       <article className="to-panel to-tasks"><h2><span><Icon name="tests" size={22}/></span>What You’ll Do</h2><ol><li><i>1</i><span>Explore the app and use its main features.</span></li><li><i>2</i><span>Check for any issues, bugs, or performance problems.</span></li><li><i>3</i><span>Provide detailed feedback with screenshots if needed.</span></li><li><i>4</i><span>Complete the test within the estimated time.</span></li></ol></article>
+       <article className="to-panel to-tasks"><h2><span><Icon name="tests" size={22}/></span>What You’ll Do</h2><ol>{test.steps?.length?test.steps.map((step,index)=><li key={step.id}><i>{index+1}</i><span><strong>{step.title}</strong><br/>{step.description}{step.is_required?" · Required":""}</span></li>):<><li><i>1</i><span>Explore the app and use its main features.</span></li><li><i>2</i><span>Check for any issues, bugs, or performance problems.</span></li><li><i>3</i><span>Provide detailed feedback with screenshots if needed.</span></li><li><i>4</i><span>Complete the test within the estimated time.</span></li></>}</ol></article>
       </section>
       <aside className="to-side-column">
-       <article className="to-panel to-requirements"><h2><span><Icon name="users" size={27}/></span>Eligibility</h2><ul><li><i><Icon name="check" size={15}/></i>Android device (v8.0+)</li><li><i><Icon name="check" size={15}/></i>Internet connection</li><li><i><Icon name="check" size={15}/></i>Basic knowledge of mobile apps</li></ul></article>
+       {test.requirements?.length?<article className="to-panel to-requirements"><h2><span><Icon name="users" size={27}/></span>Test Requirements</h2><ul>{test.requirements.map(item=><li key={item.id}><i><Icon name="check" size={15}/></i><span><strong>{item.title}</strong> — {item.description}{item.is_mandatory?" · Required":" · Optional"}</span></li>)}</ul></article>:<article className="to-panel to-requirements"><h2><span><Icon name="users" size={27}/></span>Eligibility</h2><ul><li><i><Icon name="check" size={15}/></i>Android device (v8.0+)</li><li><i><Icon name="check" size={15}/></i>Internet connection</li><li><i><Icon name="check" size={15}/></i>Basic knowledge of mobile apps</li></ul></article>}
        <article className="to-panel to-checklist"><h2><span><Icon name="tests" size={25}/></span>Requirements</h2><ul><li><i><Icon name="check" size={15}/></i>Install the latest version of TestDZ app</li><li><i><Icon name="check" size={15}/></i>Test main features (login, tests, wallet)</li><li><i><Icon name="check" size={15}/></i>Report any bugs or issues</li></ul></article>
        <article className="to-panel to-feedback-banner"><div className="to-trophy" aria-hidden="true">🏆</div><div><h2>Your Feedback Matters!</h2><p>Help us build a better app and earn rewards.</p></div></article>
       </aside>
