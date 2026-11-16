@@ -121,7 +121,14 @@ begin
 
   select * into v_existing from rebuild_v2.wallet_ledger where idempotency_key=p_idempotency_key;
   if found then
-    if v_existing.user_id<>p_user_id or v_existing.wallet_type<>p_wallet_type or v_existing.amount<>p_amount then
+    if v_existing.user_id IS DISTINCT FROM p_user_id
+       or v_existing.wallet_type IS DISTINCT FROM p_wallet_type
+       or v_existing.amount IS DISTINCT FROM p_amount
+       or v_existing.entry_type IS DISTINCT FROM p_entry_type
+       or v_existing.reference_type IS DISTINCT FROM p_reference_type
+       or v_existing.reference_id IS DISTINCT FROM p_reference_id
+       or v_existing.actor_id IS DISTINCT FROM v_actor
+       or v_existing.reason IS DISTINCT FROM p_reason then
       raise exception 'idempotency key already used for a different operation';
     end if;
     return v_existing.id;
@@ -140,7 +147,14 @@ begin
 
   if v_entry_id is null then
     select * into v_existing from rebuild_v2.wallet_ledger where idempotency_key=p_idempotency_key;
-    if v_existing.user_id<>p_user_id or v_existing.wallet_type<>p_wallet_type or v_existing.amount<>p_amount then
+    if v_existing.user_id IS DISTINCT FROM p_user_id
+       or v_existing.wallet_type IS DISTINCT FROM p_wallet_type
+       or v_existing.amount IS DISTINCT FROM p_amount
+       or v_existing.entry_type IS DISTINCT FROM p_entry_type
+       or v_existing.reference_type IS DISTINCT FROM p_reference_type
+       or v_existing.reference_id IS DISTINCT FROM p_reference_id
+       or v_existing.actor_id IS DISTINCT FROM v_actor
+       or v_existing.reason IS DISTINCT FROM p_reason then
       raise exception 'idempotency key already used for a different operation';
     end if;
     return v_existing.id;
