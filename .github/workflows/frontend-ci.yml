@@ -12,6 +12,8 @@ on:
       - "scripts/check-tester-page-data-boundary.mjs"
       - ".github/workflows/frontend-ci.yml"
   pull_request:
+    branches:
+      - rebuild/testdz-v2
     paths:
       - "apps/web/**"
       - "packages/**"
