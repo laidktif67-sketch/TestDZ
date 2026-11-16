@@ -12,7 +12,6 @@ import "../styles/discover-tests.css";
 
 type AppInfo={name:string;icon_url:string|null;category?:string|null};
 type TestRow={id:string;title:string;description:string|null;short_summary?:string|null;status:string;min_testers:number;start_date:string|null;end_date:string|null;app?:AppInfo|null};
-type DiscoverableTestRow={test_id:string;app_name:string;app_icon_url:string|null;app_category:string;title:string;description:string|null;short_summary:string|null;test_status:string;min_testers:number;start_date:string|null;end_date:string|null};
 type Category="all"|"mobile"|"web"|"desktop"|"other";
 type FilterIconName="grid"|"smartphone"|"globe"|"monitor"|"layers";
 const filters:{id:Category;label:string;icon:FilterIconName}[]=[
