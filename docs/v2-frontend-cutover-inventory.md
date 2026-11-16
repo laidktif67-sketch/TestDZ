@@ -84,14 +84,18 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Feature API domain separation (2026-11-16)
 
-The tester feature API is being separated by responsibility rather than accumulating unrelated service operations in one file:
+Tester-facing data access is now separated by business responsibility:
 
+- `features/tester/dashboard-api.ts`: dashboard, discovery, my tests, and leaderboard shell data.
+- `features/tester/activity-api.ts`: activity, check-in, and feedback history.
+- `features/tester/assignments-api.ts`: assignment progress, start/check-in workflow calls, submission lifecycle, and evidence metadata registration.
 - `features/notifications/notifications-api.ts`: notification center reads and guarded read-state changes.
 - `features/support/support-api.ts`: tester support tickets, conversation messages, and attachment metadata registration.
 - `features/wallet/wallet-api.ts`: tester wallet/reward presentation reads. V2 intentionally returns no wallet balance or ledger while reward operations remain disabled.
-- `features/tester/tester-api.ts`: tester discovery, dashboard, assignment workflow, activity, check-in, feedback, and leaderboard page data only.
 
-The Wallet Rewards, Notifications Center, Support Center, and Support Ticket Details pages now import their domain APIs directly. Transitional re-exports remain in `tester-api.ts` temporarily for compatibility; remove them after confirming no remaining consumers. All modules continue using `getAppDataClient()` and the existing V2/legacy selector. No schema, migration, hosted data, Storage policy, feature flag, or deployment changes are part of this refactor.
+The dashboard, discovery, my tests, activity, check-in history, feedback history, active assignment, assignment submission, leaderboard, wallet, notifications, and support pages now import their focused domain APIs directly. `features/tester/tester-api.ts` is reduced to a temporary backwards-compatible re-export barrel; new page code must not add imports from it. Remove the barrel after a repository-wide consumer check.
+
+All extracted modules continue using `getAppDataClient()` and the existing V2/legacy selector. This is a frontend organization change only: no schema, migration, hosted data, Storage policy, feature flag, environment, or deployment changes.
 
 ## Confirmed remaining migration inventory
 
@@ -132,7 +136,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 1. Extract tester dashboard, discover tests, my tests, activity history, check-in history, feedback history, and active-assignment reads/actions into feature API modules (completed). Assignment submission initial reads are extracted; submission workflow actions remain pending.
 2. Reconcile the points/date/evidence fields in those APIs against the actual V2 schema and tests.
-3. Extract wallet, notification, and support APIs; page imports are now domain-specific. Continue splitting the remaining tester API by dashboard/activity/assignment responsibilities and remove transitional re-exports after consumer verification.
+3. Extract wallet, notification, and support APIs; page imports are now domain-specific. The dashboard/activity/assignment APIs are now separated. Verify all remaining consumers, then remove the temporary re-export barrel and add static checks against page-level database calls.
 4. Implement a dedicated privacy-safe leaderboard aggregate contract; cross-user client-side enumeration is now removed from the active-assignment page but remains to be checked in `TesterLeaderboardPage.tsx`.
 5. Complete profile export and remaining read-only/referral display routes.
 6. Add static source checks preventing direct page-level database access and legacy fallback references.
