@@ -6,11 +6,13 @@ on:
       - rebuild/testdz-v2
     paths:
       - "supabase/rebuild-v2/**"
+      - "supabase/seed.sql"
       - "supabase/config.toml"
       - ".github/workflows/rebuild-v2-tests.yml"
   pull_request:
     paths:
       - "supabase/rebuild-v2/**"
+      - "supabase/seed.sql"
       - "supabase/config.toml"
       - ".github/workflows/rebuild-v2-tests.yml"
   workflow_dispatch:
