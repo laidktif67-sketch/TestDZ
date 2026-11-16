@@ -65,7 +65,7 @@ The following pages still contain direct database access and/or explicit legacy 
 - `FeedbackHistoryPage.tsx`: page-level data calls are now extracted; V2 intentionally omits the legacy `points_ledger` read.
 - `MyTestsPage.tsx`: V2 and public read branches for roles, profiles, wallets, assignments, feedback, notifications.
 - `TesterDashboardPage.tsx`: V2 and public read branches for profile, wallet, assignments, tests, notifications.
-- `TesterLeaderboardPage.tsx`: still performs client-side cross-user profile/role/ledger queries in the legacy branch; replace with a privacy-safe aggregate API before enabling.
+- `TesterLeaderboardPage.tsx`: personal profile/notification shell reads are centralized in `getTesterLeaderboardPageData`; cross-user profile/role/ledger enumeration has been removed from both V2 and legacy paths. Rankings and period filters remain unavailable until a privacy-safe aggregate API is designed and approved.
 - `WalletRewardsPage.tsx`: V2 reads `wallet_ledger`, public fallback reads `points_ledger`; no reward posting should be enabled.
 
 ### Support, notifications, profile export, referrals, withdrawal
@@ -82,7 +82,7 @@ The following pages still contain direct database access and/or explicit legacy 
 - Canonical points/reward ledger is `rebuild_v2.wallet_ledger`; no client-side writes.
 - Assignment dates and awarded points must use V2 schedule fields and server-owned ledger semantics.
 - Check-in evidence must use private Storage paths and authorized access, not public evidence URLs.
-- Leaderboard must use an opt-in privacy-safe aggregate and must not weaken RLS.
+- Leaderboard must use an opt-in privacy-safe aggregate and must not weaken RLS. Until that service exists, the page intentionally shows no global rankings or aggregate totals.
 - Support writes and notification read-state changes must use V2 RPCs.
 - Referral reward posting, payouts/withdrawals, and financial operations remain disabled until their server-side contracts and business rules are approved.
 - Admin and staff workflows require their own complete UI/API contract; schema existence alone does not establish readiness.
