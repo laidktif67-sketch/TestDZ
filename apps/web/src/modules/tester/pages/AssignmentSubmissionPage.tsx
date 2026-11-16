@@ -15,6 +15,21 @@ type AssignmentRow = {
 };
 type EvidenceFile = { file: File; url: string };
 
+async function stableEvidenceFileId(file: File): Promise<string> {
+  if (!globalThis.crypto?.subtle) throw new Error("Secure file fingerprinting is unavailable in this browser.");
+  const metadata = new TextEncoder().encode(`${file.name}\0${file.type}\0${file.size}\0`);
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const input = new Uint8Array(metadata.length + bytes.length);
+  input.set(metadata);
+  input.set(bytes, metadata.length);
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", input));
+  // Derive a stable UUID-shaped key from the SHA-256 digest (version 5 / RFC variant).
+  digest[6] = (digest[6] & 0x0f) | 0x50;
+  digest[8] = (digest[8] & 0x3f) | 0x80;
+  const hex = Array.from(digest.slice(0, 16), value => value.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+}
+
 function dateTime(value: string | null) {
   if (!value) return "Not submitted";
   return new Date(value).toLocaleString(undefined, { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -156,32 +171,32 @@ export default function AssignmentSubmissionPage() {
       const submissionId = created.data as string;
 
       const prior = await supabaseV2.from("assignment_submission_attachments")
-        .select("original_filename,mime_type,size_bytes,storage_path")
+        .select("file_id,original_filename,mime_type,size_bytes,storage_path")
         .eq("submission_id", submissionId);
       if (prior.error) throw prior.error;
       const registered = (prior.data || []) as unknown as {
-        original_filename: string; mime_type: string; size_bytes: number; storage_path: string;
+        file_id: string; original_filename: string; mime_type: string; size_bytes: number; storage_path: string;
       }[];
 
       for (const item of evidence) {
         const file = item.file;
         const extension = file.name.split(".").pop()?.toLowerCase() || "";
-        const priorFile = registered.find(row =>
-          row.original_filename === file.name && Number(row.size_bytes) === file.size && row.mime_type === file.type
-        );
+        // Match retries by the actual file bytes plus metadata, never by name/size/MIME alone.
+        const fileId = await stableEvidenceFileId(file);
+        const priorFile = registered.find(row => row.file_id === fileId);
         let storagePath = priorFile?.storage_path;
         if (storagePath) {
           const existingObject = await supabase.storage.from("test-evidence").createSignedUrl(storagePath, 60);
           if (!existingObject.error) continue;
         } else {
           const registeredFile = await supabaseV2.rpc("register_assignment_submission_attachment", {
-            p_submission_id: submissionId, p_file_id: crypto.randomUUID(),
+            p_submission_id: submissionId, p_file_id: fileId,
             p_extension: extension, p_original_filename: file.name,
             p_mime_type: file.type, p_size_bytes: file.size
           });
           if (registeredFile.error || !registeredFile.data) throw registeredFile.error || new Error("Could not register an evidence file.");
           storagePath = registeredFile.data as string;
-          registered.push({ original_filename: file.name, mime_type: file.type, size_bytes: file.size, storage_path: storagePath });
+          registered.push({ file_id: fileId, original_filename: file.name, mime_type: file.type, size_bytes: file.size, storage_path: storagePath });
         }
         const uploaded = await supabase.storage.from("test-evidence").upload(storagePath, file, {
           contentType: file.type, upsert: false
