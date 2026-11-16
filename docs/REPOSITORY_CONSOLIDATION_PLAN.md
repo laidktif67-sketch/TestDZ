@@ -312,22 +312,27 @@ On governance commit `06feb4e711f9286af39f44d228782d9411b7802e`, both relevant G
 
 These results validate that commit and those local CI workflows only. They do not prove exact equivalence with hosted FixLab, legacy public-schema compatibility, or Production readiness.
 
-### Algeria-local calendar correction in progress
+### Algeria-local calendar correction — merged
 
 The candidate had timezone-sensitive calendar logic in three places: seven `CURRENT_DATE` uses in tester discovery, joining, and daily check-ins in script 007; two schedule-window checks in script 017; and the default value for `checkins.checkin_date` in script 001. With the database session timezone set to UTC, these could use yesterday's date during 00:00–00:59 in Algeria.
 
-A separate draft fix, [PR #44](https://github.com/laidktif67-sketch/TestDZ/pull/44), now:
+[PR #44](https://github.com/laidktif67-sketch/TestDZ/pull/44) was squash-merged into `rebuild/testdz-v2` as commit `6a60e6f04ba05d6af6ee962a306e795c39fa2eb7`. It:
 - Adds a private deterministic `algeria_local_date(timestamptz)` helper.
 - Uses that helper for tester discovery, joining, assignment schedule checks, and check-in lookup/insert/retry.
 - Changes the `checkins.checkin_date` default to an explicit `Africa/Algiers` local-date expression.
 - Adds fixed UTC-to-Algeria boundary assertions and a catalog assertion for the column default.
 
-Static readback confirms the affected business-date paths no longer depend on session `CURRENT_DATE`. The isolated Rebuild V2 CI run and legacy migration regression workflow are still pending at the time of this note. No hosted database has been changed; the live FixLab functions and column default remain unpatched until a separately reviewed FixLab-only validation step.
+Validation passed:
+- Rebuild V2 isolated database CI [run 43975152683](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43975152683): all 18 candidate scripts and all nine SQL contracts passed on a disposable local Supabase stack.
+- Legacy migration regression CI [run 43975152708](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43975152708) also completed successfully. It exercised the separate legacy migration path.
+- The tester contract confirmed the UTC 23:30 → Algeria 00:30 boundary and the check-in date default; all synthetic fixtures were rolled back.
+
+No hosted database was changed. The live FixLab functions and column default remain unpatched until a separately reviewed FixLab-only validation step.
 
 ### Remaining source-of-truth decision
 
 Treat `supabase/rebuild-v2/` as the current candidate replay source, not as an approved production migration sequence. Before any schema cutover:
-1. Replay the 18 scripts from an empty disposable database.
+1. Keep the successful empty-database replay of all 18 scripts as a required CI gate; rerun it after every candidate SQL change.
 2. Export and compare complete catalogs against FixLab: columns/defaults, constraints, indexes, functions and security attributes, grants, policies, triggers, extensions, buckets, and Storage policies.
 3. Resolve the 24 legacy `public` tables and the frontend feature-flag compatibility path.
 4. Only then propose a canonical migration-history baseline, backup/restore rehearsal, and explicit cutover/rollback plan.
