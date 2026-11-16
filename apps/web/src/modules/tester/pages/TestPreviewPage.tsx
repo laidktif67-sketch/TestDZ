@@ -15,7 +15,7 @@ type TestPreview = {
  app:{name:string;icon_url:string|null;category:string|null;play_store_url?:string|null;description?:string|null}|null;
  steps?:{id:string;step_order:number;title:string;description:string;is_required:boolean}[];
  requirements?:{id:string;requirement_type:string;title:string;description:string;is_mandatory:boolean;sort_order:number}[];
- builds?:{id:string;version_label:string;original_filename:string;size_bytes:number;download_url:string}[];
+ builds?:{id:string;version_label:string;original_filename:string;size_bytes:number;download_url:string}[];\n assets?:{id:string;title:string;original_filename:string;file_extension:string;mime_type:string;size_bytes:number;download_url:string}[];
 };
 function dateLabel(value:string|null){if(!value)return "To be announced";const date=new Date(value+"T00:00:00");return Number.isNaN(date.getTime())?value:date.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"2-digit"});}
 function initials(value:string){return value.split(/\s+/).slice(0,2).map(part=>part[0]||"").join("").toUpperCase()||"T";}
@@ -50,10 +50,10 @@ export default function TestPreviewPage(){
       supabaseV2.from("apps").select("name,icon_url,category,play_store_url,description").eq("id",testResult.data.app_id).maybeSingle(),
       supabaseV2.from("test_steps").select("id,step_order,title,description,is_required").eq("test_id",id).order("step_order"),
       supabaseV2.from("test_requirements").select("id,requirement_type,title,description,is_mandatory,sort_order").eq("test_id",id).order("sort_order"),
-      supabaseV2.from("test_builds").select("id,version_label,original_filename,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false})
+      supabaseV2.from("test_builds").select("id,version_label,original_filename,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false}),\n      supabaseV2.from("test_assets").select("id,title,original_filename,file_extension,mime_type,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false})
      ]);
      if(!alive)return;
-     if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error)setError("Test details could not be fully loaded.");
+     if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error||assetsResult.error)setError("Test details could not be fully loaded.");
      const visibleBuilds=assignmentResult.data?(buildsResult.data??[]):[];
      const signedBuilds=await Promise.all(visibleBuilds.map(async build=>{
       const {data:signed,error:signedError}=await client.storage.from("test-builds").createSignedUrl(build.storage_path,300);
@@ -131,6 +131,7 @@ export default function TestPreviewPage(){
       <aside className="to-side-column">
        {test.requirements?.length?<article className="to-panel to-requirements"><h2><span><Icon name="users" size={27}/></span>Test Requirements</h2><ul>{test.requirements.map(item=><li key={item.id}><i><Icon name="check" size={15}/></i><span><strong>{item.title}</strong> — {item.description}{item.is_mandatory?" · Required":" · Optional"}</span></li>)}</ul></article>:<article className="to-panel to-requirements"><h2><span><Icon name="users" size={27}/></span>Eligibility</h2><ul><li><i><Icon name="check" size={15}/></i>Android device (v8.0+)</li><li><i><Icon name="check" size={15}/></i>Internet connection</li><li><i><Icon name="check" size={15}/></i>Basic knowledge of mobile apps</li></ul></article>}
        {test.test_type==="apk_testing"&&<article className="to-panel to-requirements"><h2><span><Icon name="download" size={22}/></span>Private APK builds</h2>{test.builds?.length?<ul>{test.builds.map(build=><li key={build.id}><i><Icon name="download" size={15}/></i><span><strong>{build.version_label}</strong> · {(build.size_bytes/1048576).toFixed(1)} MB<br/><a href={build.download_url} target="_blank" rel="noreferrer">Download {build.original_filename}</a></span></li>)}</ul>:<p>APK download is available after you join this test.</p>}</article>}
+       {!!test.assets?.length&&<article className="to-panel to-requirements"><h2><span><Icon name="download" size={22}/></span>Test materials</h2><ul>{test.assets.map(asset=><li key={asset.id}><i><Icon name={asset.mime_type.startsWith("image/")?"image":asset.mime_type.startsWith("video/")?"video":"file"} size={15}/></i><span><strong>{asset.title}</strong> · {(asset.size_bytes/1048576).toFixed(1)} MB<br/>{asset.mime_type.startsWith("image/")?<a href={asset.download_url} target="_blank" rel="noreferrer">View {asset.original_filename}</a>:asset.mime_type.startsWith("video/")?<video controls preload="metadata" src={asset.download_url} style={{maxWidth:"100%"}}/>:<a href={asset.download_url} target="_blank" rel="noreferrer">Open {asset.original_filename}</a>}</span></li>)}</ul></article>}
        <article className="to-panel to-checklist"><h2><span><Icon name="tests" size={25}/></span>Requirements</h2><ul><li><i><Icon name="check" size={15}/></i>Install the latest version of TestDZ app</li><li><i><Icon name="check" size={15}/></i>Test main features (login, tests, wallet)</li><li><i><Icon name="check" size={15}/></i>Report any bugs or issues</li></ul></article>
        <article className="to-panel to-feedback-banner"><div className="to-trophy" aria-hidden="true">🏆</div><div><h2>Your Feedback Matters!</h2><p>Help us build a better app and earn rewards.</p></div></article>
       </aside>
