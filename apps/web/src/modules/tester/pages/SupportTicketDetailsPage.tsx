@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getTesterSupportTicketDetails, sendTesterSupportMessage, addTesterSupportAttachment } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -24,31 +25,27 @@ export default function SupportTicketDetailsPage(){
  const firstName=name.split(/[\s._-]+/)[0]||"Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
  const load=useCallback(async()=>{
-  const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;
-  if(!client||!user||!id){setLoading(false);return;}
+  if(!user||!id){setLoading(false);return;}
   setLoading(true);setError("");
-  const {data:ticketData,error:ticketError}=await client.from("support_tickets").select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by").eq("id",id).maybeSingle();
-  if(ticketError||!ticketData){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setLoading(false);return;}
+  const {ticketResult,messageResult,attachmentResult}=await getTesterSupportTicketDetails(id);
+  const ticketData=ticketResult.data;
+  if(ticketResult.error||!ticketData){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setLoading(false);return;}
   setTicket(ticketData as Ticket);
-  const [messageResult,attachmentResult]=await Promise.all([
-   client.from("support_ticket_messages").select("id,ticket_id,sender_id,body,created_at").eq("ticket_id",id).order("created_at",{ascending:true}),
-   client.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at").eq("ticket_id",id).order("created_at",{ascending:true})
-  ]);
-  if(messageResult.error||attachmentResult.error){setError("Ticket details are available, but conversation or attachment records could not be loaded. Please refresh and try again.");setMessages([]);setAttachments([]);}
-  else {setMessages((messageResult.data||[]) as Message[]);setAttachments((attachmentResult.data||[]) as Attachment[]);}
+  if(messageResult?.error||attachmentResult?.error){setError("Ticket details are available, but conversation or attachment records could not be loaded. Please refresh and try again.");setMessages([]);setAttachments([]);}
+  else {setMessages((messageResult?.data||[]) as Message[]);setAttachments((attachmentResult?.data||[]) as Attachment[]);}
   setLoading(false);
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
  const canReply=!!ticket&&ticket.status!=="closed"&&(ticket.user_id===user?.id||roles.includes("support")||roles.includes("admin"));
  const customerMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===ticket?.user_id).map(m=>m.id)),[messages,ticket?.user_id]);
  async function sendReply(event:FormEvent<HTMLFormElement>){
-  event.preventDefault();const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;if(!client||!user||!ticket||!reply.trim())return;
+  event.preventDefault();if(!user||!ticket||!reply.trim())return;
   setSending(true);setError("");setNotice("");
   if(!supabase){setSending(false);setError("Storage is unavailable.");return;}
    if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
    setSending(false);setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
   }
-  const {data:messageData,error:insertError}=isTesterWorkflowV2Enabled ? await client.rpc("send_support_message",{p_ticket_id:ticket.id,p_body:reply.trim()}) : await client.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()}).select("id").single();
+  const {data:messageData,error:insertError}=await sendTesterSupportMessage(ticket.id,user.id,reply.trim());
   const messageId=typeof messageData==="string"?messageData:messageData?.id;
   if(insertError||!messageId){setSending(false);setError("Your reply could not be sent. Please try again.");return;}
   if(selectedFile){
@@ -56,14 +53,13 @@ export default function SupportTicketDetailsPage(){
    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
     const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
-    const {error:metadataError}=isTesterWorkflowV2Enabled ? await client.rpc("add_support_attachment",{p_ticket_id:ticket.id,p_message_id:messageId,p_storage_path:storagePath,p_original_filename:selectedFile.name.slice(0,255),p_mime_type:selectedFile.type,p_size_bytes:selectedFile.size}) : await client.from("support_ticket_attachments").insert({ticket_id:ticket.id,message_id:messageId,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
+    const {error:metadataError}=await addTesterSupportAttachment({ticketId:ticket.id,messageId,userId:user.id,storagePath,filename:selectedFile.name.slice(0,255),mimeType:selectedFile.type,sizeBytes:selectedFile.size});
    if(metadataError){setSending(false);setReply("");setSelectedFile(null);await load();setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");return;}
   }
   setSending(false);setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
  }
  async function openAttachment(item:Attachment){
-  const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;
-  if(!client){return;}setError("");
+  setError("");
   if(!supabase)return;
    const {data,error:storageError}=await supabase.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
   if(storageError||!data?.signedUrl){setError("This attachment is not available or you do not have permission to access it.");return;}
