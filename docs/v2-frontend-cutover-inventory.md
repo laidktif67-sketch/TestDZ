@@ -96,12 +96,12 @@ The following pages still contain direct database access and/or explicit legacy 
 - `MyTestsPage.tsx`: V2 reads roles, profiles, assignments, feedback, and notifications; wallet reads are legacy-only while rewards are disabled.
 - `TesterDashboardPage.tsx`: V2 reads profile, assignments, discoverable tests, and notifications; wallet reads are legacy-only while rewards are disabled.
 - `TesterLeaderboardPage.tsx`: personal profile/notification shell reads are centralized in `getTesterLeaderboardPageData`; cross-user profile/role/ledger enumeration has been removed from both V2 and legacy paths. Rankings and period filters remain unavailable until a privacy-safe aggregate API is designed and approved.
-- `WalletRewardsPage.tsx`: V2 reads `wallet_ledger`, public fallback reads `points_ledger`; no reward posting should be enabled.
+- `WalletRewardsPage.tsx`: data access is centralized in `tester-api.ts`; V2 does not read wallet balances, purchased credits, or reward ledgers while reward/payment rules remain disabled. Legacy reads are transitional only.
 
 ### Support, notifications, profile export, referrals, withdrawal
-- `NotificationsCenterPage.tsx`: V2 read-state RPCs exist, but legacy fallback still directly updates notification rows.
-- `SupportCenterPage.tsx`: V2 support-ticket RPC and legacy direct insert fallback coexist.
-- `SupportTicketDetailsPage.tsx`: V2 support message/attachment RPCs and legacy direct inserts coexist; Storage must remain on the base client.
+- `NotificationsCenterPage.tsx`: reads and read-state changes are centralized in `tester-api.ts`; V2 uses guarded read-state RPCs.
+- `SupportCenterPage.tsx`: ticket listing and creation are centralized in `tester-api.ts`; V2 creation uses the guarded RPC.
+- `SupportTicketDetailsPage.tsx`: ticket/conversation reads, replies, and attachment metadata registration are centralized in `tester-api.ts`; binary uploads and signed URL access remain on base Supabase Storage.
 - `PrivacyDataManagementPage.tsx`: V2/public export branches use different schema fields and ledger names; must be reconciled before cutover.
 - `ReferralHistoryPage.tsx` and `ReferralProgramPage.tsx`: profile/notification data still uses a legacy-capable selector; referral workflow remains incomplete and must not imply reward posting.
 - `WithdrawalStatusPage.tsx`: profile reads still use a legacy-capable selector; withdrawals remain preview-only.
