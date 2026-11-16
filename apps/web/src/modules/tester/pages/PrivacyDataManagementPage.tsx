@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getPrivacyAccountProfile, getPrivacyDataExport, getPrivacyActivityExport } from "../../../features/privacy/privacy-api";
+import { identityApi } from "../../../shared/auth/identity-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -74,10 +76,7 @@ export default function PrivacyDataManagementPage() {
     const metadata = user.user_metadata || {};
     const saved = metadata.testdz_privacy_preferences as Partial<PrivacyPreferences> | undefined;
     const history = metadata.testdz_privacy_export_requests as ExportRequest[] | undefined;
-    const profileQuery = isTesterWorkflowV2Enabled && supabaseV2
-      ? supabaseV2.from("profiles").select("display_name,avatar_url,created_at,updated_at").eq("id", user.id).maybeSingle()
-      : supabase.from("profiles").select("display_name,avatar_url,created_at,updated_at").eq("id", user.id).maybeSingle();
-    Promise.resolve(profileQuery).then((profile) => {
+    getPrivacyAccountProfile(user.id).then((profile) => {
       if (!alive) return;
       if (profile.error) throw profile.error;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
@@ -98,7 +97,7 @@ export default function PrivacyDataManagementPage() {
     const previous = privacy;
     setPrivacy(next);
     setBusy("privacy"); setMessage(""); setError("");
-    const result = await supabase.auth.updateUser({ data: { testdz_privacy_preferences: next } });
+    const result = await identityApi.updateUserMetadata({ testdz_privacy_preferences: next });
     setBusy("");
     if (result.error) { setPrivacy(previous); setError("Your privacy preferences could not be saved. Please try again."); }
     else setMessage("Your privacy preferences have been saved.");
@@ -108,37 +107,15 @@ export default function PrivacyDataManagementPage() {
     if (!supabase || !user) return;
     const entry: ExportRequest = { id: crypto.randomUUID(), type, createdAt: new Date().toISOString(), status };
     const next = [entry, ...requests].slice(0, 8);
-    const result = await supabase.auth.updateUser({ data: { testdz_privacy_export_requests: next } });
+    const result = await identityApi.updateUserMetadata({ testdz_privacy_export_requests: next });
     if (!result.error) setRequests(next);
   }
 
   async function requestData() {
     if (!supabase || !user) return;
     setBusy("data"); setMessage(""); setError("");
-    const v2 = isTesterWorkflowV2Enabled && supabaseV2;
-    const [profile, assignments, checkins, feedback, notifications, ledger, wallet] = await Promise.all([
-      v2
-        ? v2.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,created_at,updated_at").eq("id", user.id).maybeSingle()
-        : supabase.from("profiles").select("display_name,avatar_url,bio,locale,phone,interests,subscription_tier,created_at,updated_at").eq("id", user.id).maybeSingle(),
-      v2
-        ? v2.from("assignments").select("id,test_id,status,assigned_at,started_at,completed_at,due_at").eq("tester_id", user.id)
-        : supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at,updated_at").eq("tester_id", user.id),
-      v2
-        ? v2.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id)
-        : supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
-      v2
-        ? v2.from("feedback").select("id,assignment_id,rating,body,category,created_at").eq("tester_id", user.id)
-        : supabase.from("feedback").select("id,assignment_id,rating,body,category,quality_status,created_at").eq("tester_id", user.id),
-      v2
-        ? v2.from("notifications").select("id,type,title,body,data,read_at,archived_at,created_at").eq("user_id", user.id)
-        : supabase.from("notifications").select("id,type,title,body,read_at,created_at").eq("user_id", user.id),
-      v2
-        ? v2.from("wallet_ledger").select("id,wallet_type,amount,entry_type,reference_type,reference_id,reason,created_at").eq("user_id", user.id)
-        : supabase.from("points_ledger").select("id,wallet_type,amount,reason,reference_type,created_at").eq("user_id", user.id),
-      v2
-        ? v2.from("wallets").select("earned_points,purchased_credits,updated_at").eq("user_id", user.id).maybeSingle()
-        : Promise.resolve({ data: null, error: null })
-    ]);
+    const { profile, assignments, checkins, feedback, notifications, ledger, wallet } =
+      await getPrivacyDataExport(user.id, isTesterWorkflowV2Enabled);
     const failed = [profile, assignments, checkins, feedback, notifications, ledger, wallet].some(result => result.error);
     if (failed) {
       setBusy(""); setError("Some account data could not be retrieved. Check your access and try again."); return;
@@ -164,21 +141,8 @@ export default function PrivacyDataManagementPage() {
   async function exportActivity() {
     if (!supabase || !user) return;
     setBusy("activity"); setMessage(""); setError("");
-    const v2 = isTesterWorkflowV2Enabled && supabaseV2;
-    const [assignments, checkins, feedback, ledger] = await Promise.all([
-      v2
-        ? v2.from("assignments").select("id,test_id,status,assigned_at,started_at,completed_at,due_at").eq("tester_id", user.id)
-        : supabase.from("assignments").select("id,test_id,status,start_date,completed_at,created_at").eq("tester_id", user.id),
-      v2
-        ? v2.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id)
-        : supabase.from("checkins").select("id,assignment_id,checkin_date,note,created_at").eq("tester_id", user.id),
-      v2
-        ? v2.from("feedback").select("id,assignment_id,rating,category,created_at").eq("tester_id", user.id)
-        : supabase.from("feedback").select("id,assignment_id,rating,category,quality_status,created_at").eq("tester_id", user.id),
-      v2
-        ? v2.from("wallet_ledger").select("id,wallet_type,amount,entry_type,reason,created_at").eq("user_id", user.id)
-        : supabase.from("points_ledger").select("id,wallet_type,amount,reason,created_at").eq("user_id", user.id)
-    ]);
+    const { assignments, checkins, feedback, ledger } =
+      await getPrivacyActivityExport(user.id, isTesterWorkflowV2Enabled);
     if ([assignments, checkins, feedback, ledger].some(result => result.error)) {
       setBusy(""); setError("Activity history could not be exported. Please try again."); return;
     }
