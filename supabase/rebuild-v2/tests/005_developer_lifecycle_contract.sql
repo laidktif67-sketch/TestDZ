@@ -124,12 +124,45 @@ BEGIN
   SELECT count(*) INTO v_count FROM rebuild_v2.test_requirements WHERE test_id=v_test;
   IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: assigned tester cannot read test requirements under RLS'; END IF;
 
+  -- Cohort updates remain owner-only and cannot shrink below the test minimum.
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  BEGIN
+    PERFORM rebuild_v2.update_test_cohort(v_cohort,'Forged Cohort',6,NULL,NULL,'Non-owner must not edit');
+    RAISE EXCEPTION 'FAIL: non-owner edited cohort';
+  EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
+  END;
+
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  PERFORM rebuild_v2.update_test_cohort(v_cohort,'Updated Lifecycle Cohort',6,NULL,NULL,'Adjusting capacity before recruitment starts');
+  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohorts WHERE id=v_cohort AND name='Updated Lifecycle Cohort' AND capacity=6) THEN
+    RAISE EXCEPTION 'FAIL: cohort update was not persisted';
+  END IF;
+  BEGIN
+    PERFORM rebuild_v2.update_test_cohort(v_cohort,'Too Small Cohort',2,NULL,NULL,'Must not go below test minimum');
+    RAISE EXCEPTION 'FAIL: cohort capacity below test minimum was accepted during update';
+  EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
+  END;
+  BEGIN
+    PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Not enough enrolled testers yet');
+    RAISE EXCEPTION 'FAIL: cohort became ready below tester minimum';
+  EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
+  END;
+  PERFORM rebuild_v2.transition_test_cohort(v_cohort,'cancelled','Developer cancelled before cohort launch');
+  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='cancelled') THEN
+    RAISE EXCEPTION 'FAIL: cohort cancellation did not persist';
+  END IF;
+  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.assignments WHERE id=v_assignment AND status='withdrawn') THEN
+    RAISE EXCEPTION 'FAIL: pending assignment was not withdrawn on cancellation';
+  END IF;
+
   PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events
   WHERE target_id IN (v_app,v_test,v_cohort)
     AND action IN ('app.submitted','app.review.approved','test.created','test.content.saved','test.submitted','test.review.approved','cohort.created');
-  IF v_count<>7 THEN RAISE EXCEPTION 'FAIL: expected audit events missing; got %',v_count; END IF;
+  IF v_count<>9 THEN RAISE EXCEPTION 'FAIL: expected audit events missing; got %',v_count; END IF;
 END;
 $test$;
 
@@ -143,6 +176,6 @@ SELECT jsonb_build_object(
  'tests_after_rollback',(SELECT count(*) FROM rebuild_v2.tests WHERE title='Lifecycle Test'),
  'test_steps_after_rollback',(SELECT count(*) FROM rebuild_v2.test_steps WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
  'test_requirements_after_rollback',(SELECT count(*) FROM rebuild_v2.test_requirements WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
- 'cohorts_after_rollback',(SELECT count(*) FROM rebuild_v2.cohorts WHERE name='Lifecycle Cohort'),
+ 'cohorts_after_rollback',(SELECT count(*) FROM rebuild_v2.cohorts WHERE name IN ('Lifecycle Cohort','Updated Lifecycle Cohort')),
  'assignments_after_rollback',(SELECT count(*) FROM rebuild_v2.assignments WHERE tester_id='50000000-0000-4000-8000-000000000003')
 ) AS rollback_cleanup_check;
