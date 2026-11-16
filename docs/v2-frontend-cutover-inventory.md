@@ -143,8 +143,9 @@ The following pages still contain direct database access and/or explicit legacy 
 - `NotificationsCenterPage.tsx`: reads and read-state changes are centralized in `tester-api.ts`; V2 uses guarded read-state RPCs.
 - `SupportCenterPage.tsx`: ticket listing and creation are centralized in `tester-api.ts`; V2 creation uses the guarded RPC.
 - `SupportTicketDetailsPage.tsx`: ticket/conversation reads, replies, and attachment metadata registration are centralized in `tester-api.ts`; binary uploads and signed URL access remain on base Supabase Storage.
-- `PrivacyDataManagementPage.tsx`: V2/public export branches use different schema fields and ledger names; must be reconciled before cutover.
-- `ReferralHistoryPage.tsx` and `ReferralProgramPage.tsx`: profile/notification data still uses a legacy-capable selector; referral workflow remains incomplete and must not imply reward posting.
+- `PrivacyDataManagementPage.tsx`: account/data export queries are centralized in `features/privacy/privacy-api.ts`; Auth metadata remains in `identity-api.ts`. The export includes only the signed-in user's rows. Review its V2 export scope before removing the legacy fallback.
+- `ReferralHistoryPage.tsx` and `ReferralProgramPage.tsx`: profile/notification/referral reads are centralized in `features/referrals/referrals-api.ts` and their domain APIs. Referral tracking remains read-only; invitation creation and reward posting are disabled. The referral history query no longer selects or exposes the referred user's UUID.
+- `TesterProfilePage.tsx` and `ProfileCompletionPage.tsx`: profile reads, updates, and avatar Storage workflow use `features/profiles/profiles-api.ts`; Auth metadata remains in `identity-api.ts`.
 - `WithdrawalStatusPage.tsx`: profile reads still use a legacy-capable selector; withdrawals remain preview-only.
 - `WithdrawalRequestPage.tsx`: intentionally preview-only; it must not become a live withdrawal workflow as part of schema cleanup.
 
@@ -162,7 +163,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 1. Extract tester dashboard, discover tests, my tests, activity history, check-in history, feedback history, and active-assignment reads/actions into feature API modules (completed). Assignment submission initial reads are extracted; submission workflow actions remain pending.
 2. Reconcile the points/date/evidence fields in those APIs against the actual V2 schema and tests.
-3. Extract wallet, notification, and support APIs; page imports are now domain-specific. The dashboard/activity/assignment APIs are now separated. Verify all remaining consumers, then remove the temporary re-export barrel and add static checks against page-level database calls.
+3. Wallet, notification, support, privacy, referral, and profile API modules are now separated. Dashboard/activity/assignment APIs are also separated. Verify remaining imports of the compatibility `tester-api.ts` barrel, then remove it and add static checks against page-level database calls.
 4. Implement a dedicated privacy-safe leaderboard aggregate contract; cross-user client-side enumeration is now removed from the active-assignment page but remains to be checked in `TesterLeaderboardPage.tsx`.
 5. Complete profile export and remaining read-only/referral display routes.
 6. Add static source checks preventing direct page-level database access and legacy fallback references.
@@ -171,5 +172,6 @@ The following pages still contain direct database access and/or explicit legacy 
 ## Verification status
 
 - The existing isolated SQL CI run remains successful for 18 scripts and 9 SQL contracts.
-- The new frontend CI workflow passed on commit `589fa2a8d2f69e4f2a208493fe4eb7fb7362d75e`: `npm ci`, TypeScript typecheck, and production build all succeeded. Workflow run: `43946437297`.
+- Frontend CI and project CI passed on commit `c58de13cc7f4fb88252721925ad114bcc860a10a`: page data-boundary check, TypeScript typecheck, and production build all succeeded. Workflow runs: `43957061110` and `43957061097`.
+- Referral privacy hardening was committed after that verification in `ebe6351f4153d0f771224e3faaea4ce6c46f55ec` and `54fb04eadfb94b29e40ad83b055021e3b0bcb876`; these two latest commits still require a fresh CI run.
 - No database writes, hosted schema changes, Vercel environment changes, deployments, PR #18 edits, or Production changes were made in this pass.
