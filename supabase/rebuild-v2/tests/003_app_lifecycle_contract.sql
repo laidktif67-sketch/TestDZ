@@ -114,6 +114,63 @@ BEGIN
 END;
 $test$;
 
+-- The database must enforce the same edit lock as the UI, even for direct RPC calls.
+RESET ROLE;
+UPDATE rebuild_v2.apps
+SET status = 'submitted'
+WHERE package_name = 'dz.testdz.v2lifecycle';
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','30000000-0000-4000-8000-000000000001',true);
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"30000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+
+DO $submitted_edit_lock$
+BEGIN
+  BEGIN
+    PERFORM rebuild_v2.update_app(
+      (SELECT id FROM rebuild_v2.apps WHERE package_name = 'dz.testdz.v2lifecycle'),
+      'Submitted App Tamper',
+      'This update must be rejected while the application is under review.','tools'
+    );
+    RAISE EXCEPTION 'FAIL: update_app allowed editing a submitted application';
+  EXCEPTION WHEN SQLSTATE 'P0002' THEN
+    NULL;
+  END;
+END;
+$submitted_edit_lock$;
+
+RESET ROLE;
+UPDATE rebuild_v2.apps
+SET status = 'published'
+WHERE package_name = 'dz.testdz.v2lifecycle';
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','30000000-0000-4000-8000-000000000001',true);
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"30000000-0000-4000-8000-000000000001","role":"authenticated"}',
+  true
+);
+
+DO $published_edit_lock$
+BEGIN
+  BEGIN
+    PERFORM rebuild_v2.update_app(
+      (SELECT id FROM rebuild_v2.apps WHERE package_name = 'dz.testdz.v2lifecycle'),
+      'Published App Tamper',
+      'This update must be rejected after the application has been published.','tools'
+    );
+    RAISE EXCEPTION 'FAIL: update_app allowed editing a published application';
+  EXCEPTION WHEN SQLSTATE 'P0002' THEN
+    NULL;
+  END;
+END;
+$published_edit_lock$;
+
 RESET ROLE;
 ROLLBACK;
 
