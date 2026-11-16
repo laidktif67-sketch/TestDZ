@@ -100,7 +100,7 @@ export default function SubmitFeedbackPage() {
       "Severity: " + severity,
       "Description: " + description.trim(),
       steps.trim() ? "Steps to reproduce: " + steps.trim() : ""
-    ].filter(Boolean).join("\\n\\n");
+    ].filter(Boolean).join("\n\n");
     const result = await supabaseV2.rpc("submit_tester_feedback", {
       p_assignment_id: assignmentId,
       p_category: category,
