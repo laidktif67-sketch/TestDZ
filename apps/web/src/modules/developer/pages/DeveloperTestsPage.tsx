@@ -7,6 +7,7 @@ import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import {
   createDeveloperTest,
   createDeveloperTestCohort,
+  saveDeveloperTestContent,
   listApps,
   listDeveloperTests,
   submitDeveloperTestForReview,
@@ -46,6 +47,8 @@ export default function DeveloperTestsPage() {
   const [minTesters,setMinTesters]=useState(12);
   const [duration,setDuration]=useState(30);
   const [instructions,setInstructions]=useState("");
+  const [steps,setSteps]=useState([{title:"",description:"",isRequired:true}]);
+  const [requirements,setRequirements]=useState([{type:"device" as const,title:"",description:"",isMandatory:true}]);
   const [cohortFor,setCohortFor]=useState<string|null>(null);
   const [cohortName,setCohortName]=useState("");
   const [cohortCapacity,setCohortCapacity]=useState(12);
@@ -77,12 +80,25 @@ export default function DeveloperTestsPage() {
     event.preventDefault();
     if(!appId){setError("اختر التطبيق المنشور أولاً.");return;}
     setBusy(true);setError("");setNotice("");
-    const {error:rpcError}=await createDeveloperTest({
+    const {data:testId,error:rpcError}=await createDeveloperTest({
       appId,title,description,shortSummary:summary,testType,minTesters,
       durationMinutes:duration,instructions,
     });
     if(rpcError)setError(rpcError.message==="PUBLISHED_OWNED_APP_REQUIRED"?"يجب أن يكون التطبيق منشوراً ومملوكاً لك.":"تعذر إنشاء الاختبار: "+rpcError.message);
-    else{setNotice("تم إنشاء الاختبار كمسودة. راجعه ثم أرسله للمراجعة.");setShowCreate(false);setTitle("");setDescription("");setSummary("");setInstructions("");if(userId)await load(userId);}
+    else if(typeof testId!=="string")setError("أُنشئت المسودة لكن تعذر تأكيد معرّف الاختبار. حدّث القائمة قبل المتابعة.");
+    else{
+      const contentResult=await saveDeveloperTestContent(
+        testId,
+        steps.filter(step=>step.title.trim()&&step.description.trim()),
+        requirements.filter(item=>item.title.trim()&&item.description.trim()),
+      );
+      if(contentResult.error)setError("أُنشئت المسودة، لكن تعذر حفظ الخطوات والمتطلبات: "+contentResult.error.message+" — معرّف المسودة: "+testId);
+      else setNotice("تم إنشاء الاختبار وحفظ خطواته ومتطلباته كمسودة. راجعه ثم أرسله للمراجعة.");
+      setShowCreate(false);setTitle("");setDescription("");setSummary("");setInstructions("");
+      setSteps([{title:"",description:"",isRequired:true}]);
+      setRequirements([{type:"device",title:"",description:"",isMandatory:true}]);
+      if(userId)await load(userId);
+    }
     setBusy(false);
   }
 
@@ -121,6 +137,31 @@ export default function DeveloperTestsPage() {
         <label>عدد المختبرين المطلوب<input type="number" min={1} max={500} value={minTesters} onChange={e=>setMinTesters(Number(e.target.value))}/></label>
         <label>المدة التقديرية بالدقائق<input type="number" min={1} max={1440} value={duration} onChange={e=>setDuration(Number(e.target.value))}/></label>
         <label>تعليمات المختبر<textarea rows={3} maxLength={12000} value={instructions} onChange={e=>setInstructions(e.target.value)}/></label>
+        <section className="dashboard-card">
+          <h3>خطوات الاختبار</h3>
+          <p>اكتب الخطوات بالترتيب. يمكن إضافة 50 خطوة كحد أقصى.</p>
+          {steps.map((step,index)=><div className="auth-form" key={index}>
+            <label>عنوان الخطوة {index+1}<input required={index===0} maxLength={160} value={step.title} onChange={e=>setSteps(rows=>rows.map((row,i)=>i===index?{...row,title:e.target.value}:row))}/></label>
+            <label>شرح الخطوة<textarea required={index===0} maxLength={4000} rows={2} value={step.description} onChange={e=>setSteps(rows=>rows.map((row,i)=>i===index?{...row,description:e.target.value}:row))}/></label>
+            <label><input type="checkbox" checked={step.isRequired} onChange={e=>setSteps(rows=>rows.map((row,i)=>i===index?{...row,isRequired:e.target.checked}:row))}/> خطوة إلزامية</label>
+            {steps.length>1&&<button type="button" className="button button-quiet" onClick={()=>setSteps(rows=>rows.filter((_,i)=>i!==index))}>حذف الخطوة</button>}
+          </div>)}
+          <button type="button" className="button button-outline" disabled={steps.length>=50} onClick={()=>setSteps(rows=>[...rows,{title:"",description:"",isRequired:true}])}>＋ إضافة خطوة</button>
+        </section>
+        <section className="dashboard-card">
+          <h3>متطلبات المختبر</h3>
+          <p>حدد الأجهزة أو الحسابات أو الشبكات اللازمة قبل بدء الاختبار.</p>
+          {requirements.map((item,index)=><div className="auth-form" key={index}>
+            <label>نوع المتطلب<select value={item.type} onChange={e=>setRequirements(rows=>rows.map((row,i)=>i===index?{...row,type:e.target.value as typeof row.type}:row))}>
+              <option value="device">الجهاز</option><option value="android_version">إصدار Android</option><option value="account">حساب</option><option value="network">الشبكة</option><option value="eligibility">الأهلية</option><option value="other">أخرى</option>
+            </select></label>
+            <label>العنوان<input maxLength={160} value={item.title} onChange={e=>setRequirements(rows=>rows.map((row,i)=>i===index?{...row,title:e.target.value}:row))}/></label>
+            <label>التفاصيل<textarea rows={2} maxLength={2000} value={item.description} onChange={e=>setRequirements(rows=>rows.map((row,i)=>i===index?{...row,description:e.target.value}:row))}/></label>
+            <label><input type="checkbox" checked={item.isMandatory} onChange={e=>setRequirements(rows=>rows.map((row,i)=>i===index?{...row,isMandatory:e.target.checked}:row))}/> متطلب إلزامي</label>
+            <button type="button" className="button button-quiet" onClick={()=>setRequirements(rows=>rows.filter((_,i)=>i!==index))}>حذف المتطلب</button>
+          </div>)}
+          <button type="button" className="button button-outline" disabled={requirements.length>=50} onClick={()=>setRequirements(rows=>[...rows,{type:"other",title:"",description:"",isMandatory:true}])}>＋ إضافة متطلب</button>
+        </section>
         <div className="detail-actions"><button className="button button-primary" disabled={busy}>حفظ كمسودة</button><button type="button" className="button button-quiet" onClick={()=>setShowCreate(false)}>إلغاء</button></div>
       </form>}
       {loading?<div className="loading-screen">جارٍ تحميل الاختبارات...</div>:tests.length===0?<div className="apps-empty"><h2>لا توجد اختبارات بعد</h2><p>بعد نشر تطبيقك، يمكنك إنشاء أول اختبار وإرساله للمراجعة.</p></div>:<div className="apps-grid">{tests.map(test=><article className="app-tile" key={test.id}><div className="app-tile-main"><span className="app-tile-icon app-tile-placeholder">✓</span><span className="app-tile-copy"><strong>{test.title}</strong><small>{test.test_type} · {test.min_testers} مختبراً</small><em className={"app-status status-"+test.status}>{statusLabel[test.status]??test.status}</em></span></div><div className="app-tile-footer"><span>{test.estimated_duration_minutes?test.estimated_duration_minutes+" دقيقة":"المدة غير محددة"}</span>{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<button onClick={()=>void submitTest(test.id)} disabled={busy}>إرسال للمراجعة</button>}{(test.status==="recruiting"||test.status==="ready")&&<button onClick={()=>{setCohortFor(test.id);setCohortName("مجموعة "+test.title);setCohortCapacity(test.min_testers);}}>إنشاء مجموعة</button>}</div>{cohortFor===test.id&&<form className="auth-form" onSubmit={e=>void createCohort(e,test.id)}><label>اسم المجموعة<input required minLength={2} maxLength={120} value={cohortName} onChange={e=>setCohortName(e.target.value)}/></label><label>السعة<input type="number" min={test.min_testers} max={500} value={cohortCapacity} onChange={e=>setCohortCapacity(Number(e.target.value))}/></label><button className="button button-primary" disabled={busy}>إنشاء وربط المجموعة</button></form>}</article>)}</div>}
