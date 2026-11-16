@@ -7,7 +7,8 @@ import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/assignment-details.css";
 
-type AssignmentDetails = { id:string; status:string; start_date:string|null; points_awarded:number|null; test:{id:string;title:string;description:string|null;short_summary:string|null;start_date:string|null;end_date:string|null;app:{name:string;icon_url:string|null;category:string|null}|null}|null };\ntype AssignmentAsset={id:string;title:string;original_filename:string;mime_type:string;size_bytes:number;download_url:string};
+type AssignmentDetails = { id:string; status:string; start_date:string|null; points_awarded:number|null; test:{id:string;title:string;description:string|null;short_summary:string|null;start_date:string|null;end_date:string|null;app:{name:string;icon_url:string|null;category:string|null}|null}|null };
+type AssignmentAsset={id:string;title:string;original_filename:string;mime_type:string;size_bytes:number;download_url:string};
 const dateLabel=(v:string|null)=>v?new Date(v+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"2-digit",year:"numeric"}):"Not scheduled";
 
 export default function AssignmentDetailsPage(){
