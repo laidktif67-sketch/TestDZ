@@ -18,13 +18,13 @@ export default function WithdrawalStatusPage() {
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
-    const client = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
-    if (!client) { setLoading(false); return; }
-    const db = client;
+    const authClient = supabase;
+    const db: any = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
+    if (!authClient || !db) { setLoading(false); return; }
     let alive = true;
     async function load() {
       try {
-        const { data: sessionData, error: sessionError } = await db.auth.getSession();
+        const { data: sessionData, error: sessionError } = await authClient.auth.getSession();
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
