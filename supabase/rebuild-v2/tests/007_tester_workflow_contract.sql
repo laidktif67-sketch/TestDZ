@@ -182,6 +182,32 @@ BEGIN
   END;
 
   UPDATE storage.objects
+  SET metadata=jsonb_build_object('mimetype','image/jpeg','size',1024),
+      owner_id=v_tester::text
+  WHERE bucket_id='test-evidence' AND name=v_path;
+  BEGIN
+    PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
+    RAISE EXCEPTION 'FAIL: submission finalized with mismatched evidence MIME';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    IF SQLERRM <> 'ATTACHMENT_UPLOAD_INCOMPLETE' THEN
+      RAISE EXCEPTION 'FAIL: unexpected MIME rejection: %',SQLERRM;
+    END IF;
+  END;
+
+  UPDATE storage.objects
+  SET metadata=jsonb_build_object('mimetype','application/pdf','size',1024),
+      owner_id=v_other::text
+  WHERE bucket_id='test-evidence' AND name=v_path;
+  BEGIN
+    PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
+    RAISE EXCEPTION 'FAIL: submission finalized with another uploader owner';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    IF SQLERRM <> 'ATTACHMENT_UPLOAD_INCOMPLETE' THEN
+      RAISE EXCEPTION 'FAIL: unexpected owner rejection: %',SQLERRM;
+    END IF;
+  END;
+
+  UPDATE storage.objects
   SET metadata=jsonb_build_object('mimetype','application/pdf','size',1024),
       owner_id=v_tester::text
   WHERE bucket_id='test-evidence' AND name=v_path;
