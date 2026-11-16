@@ -80,7 +80,7 @@ export default function ProfilePage() {
       setPhone(profile.phone ?? "");
       setBio(profile.bio ?? "");
       setSavedProfile({ displayName: profile.display_name ?? "", phone: profile.phone ?? "", bio: profile.bio ?? "" });
-      setInterests(Array.isArray(profile.interests) ? profile.interests.filter((item): item is string => typeof item === "string") : []);
+      setInterests(Array.isArray(profile.interests) ? profile.interests.filter((item: unknown): item is string => typeof item === "string") : []);
       setAvatarUrl(profile.avatar_url ?? "");
       setVerified(Boolean(profile.is_verified));
     }).catch(() => setError("We couldn't load your profile. Please refresh and try again."));
