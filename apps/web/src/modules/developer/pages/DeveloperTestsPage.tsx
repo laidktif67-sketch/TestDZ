@@ -7,10 +7,14 @@ import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import {
   createDeveloperTest,
   createDeveloperTestCohort,
+  listDeveloperCohorts,
+  updateDeveloperTestCohort,
+  transitionDeveloperTestCohort,
   saveDeveloperTestContent,
   listApps,
   listDeveloperTests,
   submitDeveloperTestForReview,
+  type DeveloperCohort,
 } from "../../../features/apps/apps-api";
 import { Brand } from "../../../shared/components/Brand";
 
@@ -33,7 +37,7 @@ export default function DeveloperTestsPage() {
   const navigate=useNavigate();
   const [userId,setUserId]=useState<string|null>(null);
   const [apps,setApps]=useState<AppRecord[]>([]);
-  const [tests,setTests]=useState<DeveloperTest[]>([]);
+  const [tests,setTests]=useState<DeveloperTest[]>([]);\n  const [cohorts,setCohorts]=useState<DeveloperCohort[]>([]);
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
@@ -51,11 +55,11 @@ export default function DeveloperTestsPage() {
   const [requirements,setRequirements]=useState<Array<{type:"device"|"android_version"|"account"|"network"|"eligibility"|"other";title:string;description:string;isMandatory:boolean}>>([{type:"device",title:"",description:"",isMandatory:true}]);
   const [cohortFor,setCohortFor]=useState<string|null>(null);
   const [cohortName,setCohortName]=useState("");
-  const [cohortCapacity,setCohortCapacity]=useState(12);
+  const [cohortCapacity,setCohortCapacity]=useState(12);\n  const [editingCohortId,setEditingCohortId]=useState<string|null>(null);\n  const [editCohortName,setEditCohortName]=useState(\"\");\n  const [editCohortCapacity,setEditCohortCapacity]=useState(1);\n  const [editCohortStartsAt,setEditCohortStartsAt]=useState(\"\");\n  const [editCohortEndsAt,setEditCohortEndsAt]=useState(\"\");
 
   const load=useCallback(async(id:string)=>{
     setLoading(true);setError("");
-    const [appResult,testResult]=await Promise.all([listApps(id),listDeveloperTests(id)]);
+    const [appResult,testResult,cohortResult]=await Promise.all([listApps(id),listDeveloperTests(id),listDeveloperCohorts(id)]);
     if(appResult.error)setError("تعذر تحميل تطبيقاتك.");
     else setApps((appResult.data??[]) as AppRecord[]);
     if(testResult.error)setError("تعذر تحميل الاختبارات.");
@@ -118,6 +122,41 @@ export default function DeveloperTestsPage() {
     setBusy(false);
   }
 
+  function beginEditCohort(cohort:DeveloperCohort){
+    setEditingCohortId(cohort.id);
+    setEditCohortName(cohort.name);
+    setEditCohortCapacity(cohort.capacity);
+    setEditCohortStartsAt(cohort.starts_at?new Date(cohort.starts_at).toISOString().slice(0,16):"");
+    setEditCohortEndsAt(cohort.ends_at?new Date(cohort.ends_at).toISOString().slice(0,16):"");
+  }
+
+  async function saveCohort(event:FormEvent<HTMLFormElement>,cohort:DeveloperCohort){
+    event.preventDefault();setBusy(true);setError("");setNotice("");
+    const {error:rpcError}=await updateDeveloperTestCohort({
+      cohortId:cohort.id,name:editCohortName,capacity:editCohortCapacity,
+      startsAt:editCohortStartsAt?new Date(editCohortStartsAt).toISOString():null,
+      endsAt:editCohortEndsAt?new Date(editCohortEndsAt).toISOString():null,
+      reason:"Developer updated forming cohort settings",
+    });
+    if(rpcError)setError("تعذر تحديث المجموعة: "+rpcError.message);
+    else{setNotice("تم تحديث المجموعة.");setEditingCohortId(null);if(userId)await load(userId);}
+    setBusy(false);
+  }
+
+  async function changeCohortStatus(cohort:DeveloperCohort,status:"ready"|"running"|"completed"|"cancelled"){
+    const reasons:Record<typeof status,string>={
+      ready:"Minimum tester capacity reached; cohort is ready",
+      running:"Developer started the approved cohort",
+      completed:"All cohort assignments reached a terminal state",
+      cancelled:"Developer cancelled the cohort before launch",
+    };
+    setBusy(true);setError("");setNotice("");
+    const {error:rpcError}=await transitionDeveloperTestCohort(cohort.id,status,reasons[status]);
+    if(rpcError)setError("تعذر تغيير حالة المجموعة: "+rpcError.message);
+    else{setNotice("تم تحديث حالة المجموعة إلى: "+({ready:"جاهزة",running:"جارية",completed:"مكتملة",cancelled:"ملغاة"}[status])+".");if(userId)await load(userId);}
+    setBusy(false);
+  }
+
   if(!isTesterWorkflowV2Enabled)return <main className="dashboard-shell"><section className="dashboard-welcome container"><h1>إدارة الاختبارات V2</h1><p>هذه الميزة غير مفعّلة في هذه البيئة. لم يتم الرجوع تلقائياً إلى مخطط البيانات القديم.</p><Link to="/developer-dashboard">العودة إلى لوحة المطوّر</Link></section></main>;
 
   const publishedApps=apps.filter(app=>app.status==="published");
@@ -164,7 +203,24 @@ export default function DeveloperTestsPage() {
         </section>
         <div className="detail-actions"><button className="button button-primary" disabled={busy}>حفظ كمسودة</button><button type="button" className="button button-quiet" onClick={()=>setShowCreate(false)}>إلغاء</button></div>
       </form>}
-      {loading?<div className="loading-screen">جارٍ تحميل الاختبارات...</div>:tests.length===0?<div className="apps-empty"><h2>لا توجد اختبارات بعد</h2><p>بعد نشر تطبيقك، يمكنك إنشاء أول اختبار وإرساله للمراجعة.</p></div>:<div className="apps-grid">{tests.map(test=><article className="app-tile" key={test.id}><div className="app-tile-main"><span className="app-tile-icon app-tile-placeholder">✓</span><span className="app-tile-copy"><strong>{test.title}</strong><small>{test.test_type} · {test.min_testers} مختبراً</small><em className={"app-status status-"+test.status}>{statusLabel[test.status]??test.status}</em></span></div><div className="app-tile-footer"><span>{test.estimated_duration_minutes?test.estimated_duration_minutes+" دقيقة":"المدة غير محددة"}</span>{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<button onClick={()=>void submitTest(test.id)} disabled={busy}>إرسال للمراجعة</button>}{(test.status==="recruiting"||test.status==="ready")&&<button onClick={()=>{setCohortFor(test.id);setCohortName("مجموعة "+test.title);setCohortCapacity(test.min_testers);}}>إنشاء مجموعة</button>}</div>{cohortFor===test.id&&<form className="auth-form" onSubmit={e=>void createCohort(e,test.id)}><label>اسم المجموعة<input required minLength={2} maxLength={120} value={cohortName} onChange={e=>setCohortName(e.target.value)}/></label><label>السعة<input type="number" min={test.min_testers} max={500} value={cohortCapacity} onChange={e=>setCohortCapacity(Number(e.target.value))}/></label><button className="button button-primary" disabled={busy}>إنشاء وربط المجموعة</button></form>}</article>)}</div>}
+      {loading?<div className="loading-screen">جارٍ تحميل الاختبارات...</div>:tests.length===0?<div className="apps-empty"><h2>لا توجد اختبارات بعد</h2><p>بعد نشر تطبيقك، يمكنك إنشاء أول اختبار وإرساله للمراجعة.</p></div>:<div className="apps-grid">{tests.map(test=><article className="app-tile" key={test.id}><div className="app-tile-main"><span className="app-tile-icon app-tile-placeholder">✓</span><span className="app-tile-copy"><strong>{test.title}</strong><small>{test.test_type} · {test.min_testers} مختبراً</small><em className={"app-status status-"+test.status}>{statusLabel[test.status]??test.status}</em></span></div><div className="app-tile-footer"><span>{test.estimated_duration_minutes?test.estimated_duration_minutes+" دقيقة":"المدة غير محددة"}</span>{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<button onClick={()=>void submitTest(test.id)} disabled={busy}>إرسال للمراجعة</button>}{(test.status==="recruiting"||test.status==="ready")&&<button onClick={()=>{setCohortFor(test.id);setCohortName("مجموعة "+test.title);setCohortCapacity(test.min_testers);}}>إنشاء مجموعة</button>}</div>{cohortFor===test.id&&<form className="auth-form" onSubmit={e=>void createCohort(e,test.id)}><label>اسم المجموعة<input required minLength={2} maxLength={120} value={cohortName} onChange={e=>setCohortName(e.target.value)}/></label><label>السعة<input type="number" min={test.min_testers} max={500} value={cohortCapacity} onChange={e=>setCohortCapacity(Number(e.target.value))}/></label><button className="button button-primary" disabled={busy}>إنشاء وربط المجموعة</button></form>}
+        {cohorts.filter(cohort=>cohort.test_id===test.id).map(cohort=><section className="dashboard-card" key={cohort.id}>
+          <div className="apps-heading"><div><h3>{cohort.name}</h3><p>السعة: {cohort.capacity} · الحالة: {({forming:"قيد التكوين",ready:"جاهزة",running:"جارية",completed:"مكتملة",cancelled:"ملغاة"} as Record<string,string>)[cohort.status]}</p><small>{cohort.starts_at?"البداية: "+new Date(cohort.starts_at).toLocaleString():"موعد البداية غير محدد"} · {cohort.ends_at?"النهاية: "+new Date(cohort.ends_at).toLocaleString():"موعد النهاية غير محدد"}</small></div>
+          {cohort.status==="forming"&&<button className="button button-outline" type="button" onClick={()=>beginEditCohort(cohort)}>تعديل</button>}</div>
+          {editingCohortId===cohort.id&&<form className="auth-form" onSubmit={e=>void saveCohort(e,cohort)}>
+            <label>اسم المجموعة<input required minLength={2} maxLength={120} value={editCohortName} onChange={e=>setEditCohortName(e.target.value)}/></label>
+            <label>السعة<input type="number" min={test.min_testers} max={500} value={editCohortCapacity} onChange={e=>setEditCohortCapacity(Number(e.target.value))}/></label>
+            <label>موعد البداية<input type="datetime-local" value={editCohortStartsAt} onChange={e=>setEditCohortStartsAt(e.target.value)}/></label>
+            <label>موعد النهاية<input type="datetime-local" value={editCohortEndsAt} onChange={e=>setEditCohortEndsAt(e.target.value)}/></label>
+            <button className="button button-primary" disabled={busy}>حفظ التعديلات</button><button type="button" className="button button-quiet" onClick={()=>setEditingCohortId(null)}>إلغاء</button>
+          </form>}
+          <div className="detail-actions">
+            {cohort.status==="forming"&&<><button type="button" className="button button-primary" disabled={busy} onClick={()=>void changeCohortStatus(cohort,"ready")}>اعتماد الجاهزية</button><button type="button" className="button button-quiet" disabled={busy} onClick={()=>void changeCohortStatus(cohort,"cancelled")}>إلغاء المجموعة</button></>}
+            {cohort.status==="ready"&&<><button type="button" className="button button-primary" disabled={busy} onClick={()=>void changeCohortStatus(cohort,"running")}>بدء الاختبار</button><button type="button" className="button button-quiet" disabled={busy} onClick={()=>void changeCohortStatus(cohort,"cancelled")}>إلغاء المجموعة</button></>}
+            {cohort.status==="running"&&<button type="button" className="button button-outline" disabled={busy} onClick={()=>void changeCohortStatus(cohort,"completed")}>إنهاء المجموعة</button>}
+          </div>
+        </section>)}
+      </article>)}</div>}
     </section>
   </main>;
 }
