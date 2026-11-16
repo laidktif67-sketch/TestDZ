@@ -10,11 +10,12 @@ import "../styles/discover-tests.css";
 import "../styles/test-overview.css";
 
 type TestPreview = {
- id:string; app_id:string; title:string; description:string|null; short_summary?:string|null;
+ id:string; app_id:string; title:string; description:string|null; short_summary?:string|null; test_type:string;
  status:string; min_testers:number; start_date:string|null; end_date:string|null;
  app:{name:string;icon_url:string|null;category:string|null;play_store_url?:string|null;description?:string|null}|null;
  steps?:{id:string;step_order:number;title:string;description:string;is_required:boolean}[];
  requirements?:{id:string;requirement_type:string;title:string;description:string;is_mandatory:boolean;sort_order:number}[];
+ builds?:{id:string;version_label:string;original_filename:string;size_bytes:number;download_url:string}[];
 };
 function dateLabel(value:string|null){if(!value)return "To be announced";const date=new Date(value+"T00:00:00");return Number.isNaN(date.getTime())?value:date.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"2-digit"});}
 function initials(value:string){return value.split(/\s+/).slice(0,2).map(part=>part[0]||"").join("").toUpperCase()||"T";}
@@ -35,7 +36,7 @@ export default function TestPreviewPage(){
     const [profile,notifications,testResult,assignmentResult]=await Promise.all([
      supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
      supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
-     supabaseV2.from("tests").select("id,app_id,title,description,short_summary,status,min_testers,start_date,end_date").eq("id",id).maybeSingle(),
+     supabaseV2.from("tests").select("id,app_id,title,description,short_summary,test_type,status,min_testers,start_date,end_date").eq("id",id).maybeSingle(),
      supabaseV2.from("assignments").select("id,status").eq("test_id",id).eq("tester_id",session.user.id).maybeSingle()
     ]);
     if(!alive)return;
@@ -45,14 +46,20 @@ export default function TestPreviewPage(){
     if(testResult.error||!testResult.data){
      setError("This test could not be found or is no longer available.");
     }else{
-     const [appResult,stepsResult,requirementsResult]=await Promise.all([
+     const [appResult,stepsResult,requirementsResult,buildsResult]=await Promise.all([
       supabaseV2.from("apps").select("name,icon_url,category,play_store_url,description").eq("id",testResult.data.app_id).maybeSingle(),
       supabaseV2.from("test_steps").select("id,step_order,title,description,is_required").eq("test_id",id).order("step_order"),
-      supabaseV2.from("test_requirements").select("id,requirement_type,title,description,is_mandatory,sort_order").eq("test_id",id).order("sort_order")
+      supabaseV2.from("test_requirements").select("id,requirement_type,title,description,is_mandatory,sort_order").eq("test_id",id).order("sort_order"),
+      supabaseV2.from("test_builds").select("id,version_label,original_filename,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false})
      ]);
      if(!alive)return;
-     if(appResult.error||stepsResult.error||requirementsResult.error)setError("Test details could not be fully loaded.");
-     setTest({...testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[]} as unknown as TestPreview);
+     if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error)setError("Test details could not be fully loaded.");
+     const visibleBuilds=assignmentResult.data?(buildsResult.data??[]):[];
+     const signedBuilds=await Promise.all(visibleBuilds.map(async build=>{
+      const {data:signed,error:signedError}=await supabaseV2.storage.from("test-builds").createSignedUrl(build.storage_path,300);
+      return signedError||!signed?.signedUrl?null:{id:build.id,version_label:build.version_label,original_filename:build.original_filename,size_bytes:build.size_bytes,download_url:signed.signedUrl};
+     }));
+     setTest({...testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[],builds:signedBuilds.filter((build):build is NonNullable<typeof build>=>!!build)} as unknown as TestPreview);
     }
     if(assignmentResult.data)setAlreadyAssigned(true);
     setLoading(false);
@@ -123,6 +130,7 @@ export default function TestPreviewPage(){
       </section>
       <aside className="to-side-column">
        {test.requirements?.length?<article className="to-panel to-requirements"><h2><span><Icon name="users" size={27}/></span>Test Requirements</h2><ul>{test.requirements.map(item=><li key={item.id}><i><Icon name="check" size={15}/></i><span><strong>{item.title}</strong> — {item.description}{item.is_mandatory?" · Required":" · Optional"}</span></li>)}</ul></article>:<article className="to-panel to-requirements"><h2><span><Icon name="users" size={27}/></span>Eligibility</h2><ul><li><i><Icon name="check" size={15}/></i>Android device (v8.0+)</li><li><i><Icon name="check" size={15}/></i>Internet connection</li><li><i><Icon name="check" size={15}/></i>Basic knowledge of mobile apps</li></ul></article>}
+       {test.test_type==="apk_testing"&&<article className="to-panel to-requirements"><h2><span><Icon name="download" size={22}/></span>Private APK builds</h2>{test.builds?.length?<ul>{test.builds.map(build=><li key={build.id}><i><Icon name="download" size={15}/></i><span><strong>{build.version_label}</strong> · {(build.size_bytes/1048576).toFixed(1)} MB<br/><a href={build.download_url} target="_blank" rel="noreferrer">Download {build.original_filename}</a></span></li>)}</ul>:<p>APK download is available after you join this test.</p>}</article>}
        <article className="to-panel to-checklist"><h2><span><Icon name="tests" size={25}/></span>Requirements</h2><ul><li><i><Icon name="check" size={15}/></i>Install the latest version of TestDZ app</li><li><i><Icon name="check" size={15}/></i>Test main features (login, tests, wallet)</li><li><i><Icon name="check" size={15}/></i>Report any bugs or issues</li></ul></article>
        <article className="to-panel to-feedback-banner"><div className="to-trophy" aria-hidden="true">🏆</div><div><h2>Your Feedback Matters!</h2><p>Help us build a better app and earn rewards.</p></div></article>
       </aside>
