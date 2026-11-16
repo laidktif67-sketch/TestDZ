@@ -142,3 +142,34 @@ The last local Termux inventory also found:
 - `frontend/` contained only `package-lock.json` and `.env.local` at the inspected depth; it had no `package.json` or source files. Never upload or display `.env.local`.
 
 If the user deletes local worktrees, the already-committed `.skill-lab/global/` remains recoverable from V2. The untracked `.agents/` and `.skill-lab/project/` content would not be recoverable from GitHub unless separately archived or committed. Do not mix these agent-only directories into application source or upload them without a deliberate decision.
+
+
+### Exact FixLab check-in function evidence
+
+A read-only `pg_get_functiondef` inspection confirmed the current implementation:
+
+- Public-facing wrapper: `rebuild_v2.submit_checkin(p_assignment_id uuid, p_note text DEFAULT NULL)`.
+- Wrapper is `SECURITY DEFINER`, has an empty `search_path`, sets `row_security = off`, and delegates to `rebuild_v2_private.submit_checkin_impl`.
+- Private implementation is also `SECURITY DEFINER`, with empty `search_path` and `row_security = off`.
+- The implementation explicitly checks `auth.uid()`, validates note length, locks the assignment row `FOR UPDATE`, verifies tester ownership and active status, and handles a duplicate unique violation idempotently.
+- The date defect is specifically caused by using `CURRENT_DATE` in the existing-checkin lookup, insert, and unique-violation recovery lookup. The function does not derive the business date in `Africa/Algiers`.
+
+**Safe correction design (not applied):** compute one `v_checkin_date := (now() AT TIME ZONE 'Africa/Algiers')::date` after authentication and use that same variable for all three date operations. Add pgTAP cases that set the transaction time to UTC 23:xx and prove the resulting business date is the next Algeria calendar day, plus same-day duplicate and concurrent-submission coverage. Do not change reward/points balances or create any wallet entries.
+
+The exposed wrapper currently has `authenticated` EXECUTE and `anon` EXECUTE is false. The private implementation itself has no direct `authenticated` EXECUTE in the inspected privilege result. Keep that boundary when reconstructing the canonical migration.
+
+### Runtime function inventory clarification
+
+The earlier seven-function gap refers to **missing committed migration definitions**, not absent FixLab runtime objects. The runtime catalog confirmed these exact exposed wrappers and signatures:
+
+| Wrapper | Arguments | Return | SECURITY DEFINER |
+|---|---|---|---|
+| `create_test` | `p_app_id uuid, p_title text, p_description text, p_short_summary text, p_test_type text, p_min_testers integer, p_start_date date, p_end_date date, p_duration integer, p_instructions text` | `uuid` | No |
+| `update_test` | `p_test_id uuid` plus the same test fields | `void` | No |
+| `save_test_content` | `p_test_id uuid, p_steps jsonb, p_requirements jsonb` | `void` | No |
+| `submit_checkin` | `p_assignment_id uuid, p_note text` | `uuid` | Yes |
+| `create_assignment_submission` | `p_assignment_id uuid, p_summary text, p_comments text` | `uuid` | Yes |
+| `register_assignment_submission_attachment` | `p_submission_id uuid, p_file_id uuid, p_extension text, p_original_filename text, p_mime_type text, p_size_bytes bigint` | `text` | Yes |
+| `finalize_assignment_submission` | `p_submission_id uuid` | `boolean` | Yes |
+
+Each exposed wrapper had `authenticated` EXECUTE and `anon` EXECUTE false in the FixLab catalog snapshot. The submission wrappers delegate to private implementation functions. This catalog inventory is not a replacement for extracting the full function bodies, grants, dependent tables, triggers, indexes, RLS policies, and Storage policies into reviewed migration files.
