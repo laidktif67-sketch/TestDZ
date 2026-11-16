@@ -224,24 +224,30 @@ A read-only catalog inspection recovered live function definitions from FixLab a
 - Effective privilege check for role `authenticated`: schema `USAGE` on `rebuild_v2_private` is true; 46/57 private functions are executable; 11/57 are not.
 - Effective privilege check for `anon`: zero of the 57 private functions are executable.
 
-### Security interpretation — least-privilege gap, not yet a proven API exploit
+### Security interpretation — dependency-backed grants with four explicit grants to review
 
-The private schema was previously confirmed absent from the PostgREST exposed-schema list. That prevents treating these functions as ordinary exposed RPC endpoints through the configured REST schema list. However, the current database grants still allow `authenticated` to use the schema and directly execute 46 private routines, 46 of which are SECURITY DEFINER. This is broader than the intended "private implementation" boundary and should be treated as a confirmed least-privilege gap.
+The private schema is absent from the FixLab PostgREST exposed-schema list. The 46 authenticated EXECUTE grants are not all unexplained over-grants: a dependency recheck classified every one of them:
 
-A direct exploit through the application's current PostgREST route has **not** been demonstrated. Several inspected implementations independently enforce authorization:
+- **31 functions** are private callees of `SECURITY INVOKER` wrappers in `rebuild_v2`. The wrapper runs as `authenticated`, so the role needs EXECUTE on the private callee even though the callee itself is not an exposed REST endpoint.
+- **11 functions** are referenced by RLS or Storage policies: `has_role`, `can_manage_app_icon`, `can_access_developer_feedback_attachment`, and the upload/read helpers for test evidence, support attachments, test assets, and test builds. These grants are needed while evaluating those policies.
+- **4 functions** have explicit authenticated EXECUTE grants but no call sites in any user-defined function or policy were found: `grant_role`, `post_wallet_entry`, `request_developer_role`, and `review_role_request`. The security contract directly exercises `grant_role` and `post_wallet_entry` to verify that callers without a valid identity are rejected; the intended use of the other two grants should be confirmed before changing them.
+
+This dependency map explains all 46 grants as 31 invoker-wrapper dependencies, 11 policy dependencies, and four explicit authorization-gated routines. It does **not** establish a direct PostgREST exploit because `rebuild_v2_private` is not exposed. The remaining review item is whether the four explicit grants are still needed, not a blanket revoke of all private functions.
+
+Inspected guards include:
 - `grant_role` checks the caller has the admin role and records an audit event.
 - `post_wallet_entry` checks admin/financial role, validates the operation, locks the wallet, enforces idempotency, and records an audit event.
 - `create_test_impl` checks the developer role and ownership of a published app.
 - `review_test_impl` checks admin role and pending-review state.
 - `submit_checkin_impl` checks authenticated identity, assignment ownership, and active status.
 
-These guards reduce the impact of direct invocation for the inspected routines, but do not justify granting broad EXECUTE on private SECURITY DEFINER helpers. Before any grant change, enumerate every caller/dependency and prove wrappers execute as an owner that retains required privileges. Then test that authenticated users cannot invoke private functions directly while public wrapper RPCs continue to work. Do not apply blanket REVOKE statements based only on this inventory.
+Do not revoke the 31 invoker-wrapper or 11 policy-helper grants without redesigning and testing their call paths. Keep the private schema unexposed and add regression tests for both the required invoker/policy permissions and the four explicit grants before any privilege change.
 
-### Confirmed check-in date defect remains in live FixLab definition
+### Confirmed live FixLab date defect; candidate-source correction merged
 
-The current live definition of `rebuild_v2_private.submit_checkin_impl` still uses `CURRENT_DATE` in its lookup, insert, and unique-violation recovery paths. The FixLab database session timezone is `UTC`; the inspected timestamp was `2026-11-16 22:48:54+00`, which is `23:48:54` in `Africa/Algiers`. Therefore, during the first hour after midnight in Algeria (00:00–00:59), UTC `CURRENT_DATE` can still represent the previous calendar day. This is a confirmed timezone-dependent defect in the live function definition, although the current read-only sample was not itself inside the rollover hour.
+The current live FixLab definition of `rebuild_v2_private.submit_checkin_impl` still uses `CURRENT_DATE` in its lookup, insert, and unique-violation recovery paths. The FixLab database session timezone is `UTC`; during 00:00–00:59 in Algeria, UTC `CURRENT_DATE` can still represent the previous calendar day. This remains a confirmed defect in the hosted FixLab function until a FixLab-only patch is separately validated.
 
-Proposed correction remains to calculate one explicit `v_checkin_date := (now() AT TIME ZONE 'Africa/Algiers')::date` and use it consistently for lookup, insert, and unique-violation recovery. Required tests must simulate UTC 23:xx / Algeria 00:xx, duplicate submissions, and concurrent submissions. No fix was applied.
+The candidate-source correction is now merged in [PR #44](https://github.com/laidktif67-sketch/TestDZ/pull/44): it computes the Algeria-local date through `rebuild_v2_private.algeria_local_date(timestamptz)` and uses it consistently in discovery, joining, assignment scheduling, and check-in lookup/insert/retry; script 001's check-in default is also Algeria-local. The UTC 23:xx / Algeria 00:xx regression and column-default assertion passed in the Rebuild V2 CI run. Duplicate and concurrency checks from the existing contract remain in place. No hosted FixLab function or data was changed.
 
 ### Source-recovery boundary
 
