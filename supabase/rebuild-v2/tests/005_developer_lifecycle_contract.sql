@@ -1,5 +1,5 @@
 -- Developer app -> test -> cohort -> tester join runtime contract.
--- Run ONLY against isolated TestDZ-FixLab after candidate SQL 001..008.
+-- Run ONLY against isolated TestDZ-FixLab after candidate SQL 001..014.
 -- Synthetic Auth/profile/app/test/cohort/assignment rows are rolled back.
 
 BEGIN;
@@ -255,7 +255,7 @@ SELECT jsonb_build_object(
  'test_steps_after_rollback',(SELECT count(*) FROM rebuild_v2.test_steps WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
  'test_requirements_after_rollback',(SELECT count(*) FROM rebuild_v2.test_requirements WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
  'test_builds_after_rollback',(SELECT count(*) FROM rebuild_v2.test_builds WHERE original_filename='lifecycle.apk'),
- 'storage_apk_objects_after_rollback',(SELECT count(*) FROM storage.objects WHERE bucket_id='test-builds' AND name LIKE '%lifecycle.apk'),
+ 'storage_apk_objects_after_rollback',(SELECT count(*) FROM storage.objects WHERE bucket_id='test-builds' AND name LIKE '%/50000000-0000-4000-8000-000000000004.apk'),
  'cohorts_after_rollback',(SELECT count(*) FROM rebuild_v2.cohorts WHERE name IN ('Lifecycle Cohort','Updated Lifecycle Cohort')),
  'assignments_after_rollback',(SELECT count(*) FROM rebuild_v2.assignments WHERE tester_id='50000000-0000-4000-8000-000000000003')
 ) AS rollback_cleanup_check;
