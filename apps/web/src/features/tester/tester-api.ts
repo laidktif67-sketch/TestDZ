@@ -71,3 +71,71 @@ export async function getDiscoverTestsPageData(userId: string) {
     hasError: Boolean(profile.error || wallet.error || assignments.error || notifications.error || testRows.error),
   };
 }
+
+export async function getMyTestsPageData(userId: string) {
+  const client = getAppDataClient();
+  const [roleRes, profileRes, walletRes, assignmentRes, feedbackRes, noticeRes] = await Promise.all([
+    client.from("user_roles").select("role").eq("user_id", userId),
+    client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
+    client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
+    isTesterWorkflowV2Enabled
+      ? client.from("assignments").select("id,status,started_at,assigned_at,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("assigned_at", { ascending: false })
+      : client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("created_at", { ascending: false }),
+    client.from("feedback").select("id,quality_status,created_at,assignment_id").eq("tester_id", userId).order("created_at", { ascending: false }),
+    client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
+  ]);
+
+  const assignments = isTesterWorkflowV2Enabled
+    ? ((assignmentRes.data ?? []) as any[]).map((assignment) => ({
+        id: assignment.id,
+        status: assignment.status,
+        start_date: assignment.started_at || assignment.assigned_at,
+        completed_at: assignment.completed_at,
+        created_at: assignment.created_at || assignment.assigned_at,
+        points_awarded: null,
+        test: assignment.test || null,
+        checkins: assignment.checkins || [],
+      }))
+    : ((assignmentRes.data ?? []) as any[]);
+
+  const feedback = (feedbackRes.data ?? []) as any[];
+  const activities: { id: string; kind: "checkin" | "feedback" | "completed"; title: string; detail: string; date: string }[] = [];
+  assignments.forEach((assignment: any) => {
+    if (assignment.completed_at) activities.push({
+      id: "done-" + assignment.id,
+      kind: "completed",
+      title: "You completed a test",
+      detail: assignment.test?.title || "Test",
+      date: assignment.completed_at,
+    });
+    (assignment.checkins ?? []).forEach((checkin: any) => activities.push({
+      id: "check-" + checkin.id,
+      kind: "checkin",
+      title: "You completed a check-in",
+      detail: assignment.test?.title || "Test",
+      date: checkin.created_at || checkin.checkin_date,
+    }));
+  });
+  feedback.forEach((item: any) => {
+    const assignment = assignments.find((row: any) => row.id === item.assignment_id);
+    activities.push({
+      id: "feedback-" + item.id,
+      kind: "feedback",
+      title: "You submitted feedback",
+      detail: assignment?.test?.title || "Test feedback",
+      date: item.created_at,
+    });
+  });
+
+  return {
+    roles: ((roleRes.data ?? []) as { role: string }[]).map((row) => row.role),
+    displayName: profileRes.data?.display_name?.trim() ?? "",
+    avatarUrl: profileRes.data?.avatar_url ?? "",
+    assignments,
+    points: Number(walletRes.data?.earned_points ?? 0),
+    acceptedFeedback: feedback.filter((item) => item.quality_status === "accepted").length,
+    notifications: noticeRes.count ?? 0,
+    activities: activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4),
+    hasError: Boolean(roleRes.error || profileRes.error || walletRes.error || assignmentRes.error || feedbackRes.error || noticeRes.error),
+  };
+}
