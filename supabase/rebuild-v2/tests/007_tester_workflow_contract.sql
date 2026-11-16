@@ -168,13 +168,21 @@ BEGIN
     'test-evidence',v_path,v_tester,v_tester::text,
     jsonb_build_object('mimetype','application/pdf','size',1024)
   );
+  IF (SELECT count(*) FROM storage.objects
+      WHERE bucket_id='test-evidence' AND name=v_path) <> 1 THEN
+    RAISE EXCEPTION 'FAIL: owner could not read evidence through Storage SELECT RLS';
+  END IF;
 
-  -- An unrelated authenticated user must be rejected by the actual INSERT policy.
+  -- An unrelated authenticated user must neither read nor upload the object.
   PERFORM set_config('request.jwt.claim.sub',v_other::text,true);
   PERFORM set_config(
     'request.jwt.claims',
     jsonb_build_object('sub',v_other,'role','authenticated')::text,true
   );
+  IF (SELECT count(*) FROM storage.objects
+      WHERE bucket_id='test-evidence' AND name=v_path) <> 0 THEN
+    RAISE EXCEPTION 'FAIL: unrelated user read private evidence through Storage SELECT RLS';
+  END IF;
   BEGIN
     INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
     VALUES (
