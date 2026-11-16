@@ -82,3 +82,62 @@ The approved direction is to preserve the existing candidate schema and data, ar
 - Do not run `supabase db pull` against FixLab as a shortcut; CLI v3 defaults and hosted migration-history behavior must be considered before any hosted command.
 - Do not change `supabase/config.toml` project targeting or run a hosted CLI command until the target project ref is explicitly verified.
 - No Production cutover is authorized by this document.
+
+
+## Approved architecture decision (2026-11-16): V2 only
+
+The product owner explicitly approved the following target architecture:
+
+- `rebuild_v2` is the sole application data/API schema after cutover.
+- `rebuild_v2_private` remains internal and must never be exposed through PostgREST.
+- The old `public` application schema is legacy and will no longer be an active application data source after cutover.
+- The legacy schema and migration files are preserved during the transition; this approval is not permission to drop tables, delete rows, reset Auth, or delete Storage objects now.
+- Supabase Auth remains the shared authentication service. The frontend's Supabase client must continue using the project's Auth and Storage services while its database calls are routed explicitly to `rebuild_v2`.
+- The current `VITE_TESTER_WORKFLOW_V2_ENABLED` switch is transitional. Do not flip it in Production or remove the fallback until the application compatibility gates below pass and a separately approved deployment/cutover is ready.
+
+## V2-only cutover work plan
+
+### Phase A — application contract migration (repository work only)
+
+1. Replace the transitional dual-schema selection with one central, typed V2 Data API client once all callers have been mapped. Keep Auth and Storage access on the base Supabase client; route table and RPC calls through the V2 schema client.
+2. Migrate every direct `supabase.from(...)` and `supabase.rpc(...)` call in pages/hooks/components to feature API modules. No page should choose a database schema itself.
+3. Reconcile confirmed field/table mismatches before enabling the corresponding page:
+   - `points_ledger` → canonical `wallet_ledger` contract; read-only UI must not write ledger entries.
+   - `assignments.start_date` / `points_awarded` → explicit V2 schedule fields and server-owned reward/ledger semantics.
+   - `checkins.evidence_url` → private `evidence_path` plus an authorized signed-URL flow where a UI preview is required.
+   - `profiles.subscription_tier` → derive from the canonical subscription/plan relation; do not add a duplicate client-maintained profile field.
+4. Replace direct support ticket/message/attachment writes with the V2 RPCs; replace notification read-state updates with `mark_notification_read` / `mark_all_notifications_read`.
+5. Redesign the leaderboard as an opt-in, privacy-safe aggregate RPC/view. Do not weaken profile, role, or wallet-ledger RLS to support client-side enumeration.
+6. Keep withdrawal UI explicitly preview-only; no withdrawal/payout flow is authorized. Do not connect referral rewards or test rewards to wallet posting until their server-side contracts and business rules are approved.
+7. Complete admin and financial staff workflows only after their role boundaries and UI/API contracts are designed. Missing UI must not be replaced with broad table grants.
+8. Make the feedback and report forms state clearly that they are not submitted until their validated V2 submission RPC and attachment flow exist. Do not imply that UI-only forms persist data.
+
+### Phase B — verification gates
+
+- Add route/API contract tests that fail if application modules access the default `public` schema for application data.
+- Add tests for all mapped table fields, RPC argument/result shapes, Storage upload/download paths, and Auth role routing.
+- Verify that every active route works against a clean V2 database with synthetic users for tester, developer, admin, financial, and support roles.
+- Verify cross-user isolation, staff-only access, and negative cases. In particular, the leaderboard must not reveal private profile or financial information.
+- Run TypeScript, production build, unit/integration tests, and the isolated Supabase replay workflow. Record actual results; do not infer build success from SQL CI.
+- Review the Supabase security advisor and Storage policies after the final application contract is wired.
+
+### Phase C — database baseline and hosted cutover (separate approval required)
+
+- Produce a clean V2 baseline only after Phases A and B are complete.
+- Archive the 31 legacy repository migrations and the 21 FixLab history records/inventory without losing their provenance. Recover hosted migration SQL where possible; version/name inventory alone is not a SQL archive.
+- Compare the clean baseline against FixLab's complete catalog before any history operation.
+- Take and verify a restorable backup of the target project; rehearse rollback.
+- Apply the V2 schema to the intended hosted target only after explicit project-ref verification and a separate approval. Production is not implicitly authorized by this architecture decision.
+- Cut over the frontend environment flag only when the exact target project contains the verified V2 schema, PostgREST exposes `rebuild_v2`, and all production compatibility gates pass.
+- Keep `public` intact through a monitored rollback window. Drop/retire it only after explicit approval and proof that no application, scheduled job, integration, or external client depends on it.
+
+## Current known compatibility blockers (must be resolved before cutover)
+
+- Core developer app APIs and profile APIs have transitional V2 selection, but the V2 feature flag still permits fallback to `public`.
+- Identity role retrieval has transitional V2 selection; signup/session/Auth operations remain on Supabase Auth as intended.
+- The compatibility audit identifies direct legacy-schema usage in tester pages for points ledger, assignment reward/date fields, check-in evidence, support writes, notifications, privacy export, and leaderboard aggregation.
+- The leaderboard's current cross-user client queries conflict with the intended V2 privacy model; this is a blocker, not a reason to weaken RLS.
+- Feedback submission and problem reports are UI-only in the reviewed pages; referrals have no connected data workflow; withdrawal remains preview-only.
+- Admin/staff UI and API coverage is incomplete. V2 schema presence alone does not make those workflows operational.
+
+This decision establishes the target architecture. It does not certify application cutover readiness and does not authorize a hosted database change or deployment.
