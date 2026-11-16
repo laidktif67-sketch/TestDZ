@@ -75,12 +75,12 @@ The following pages still contain direct database access and/or explicit legacy 
 ### Tester workflow and activity
 - `ActiveAssignmentProgressPage.tsx`: initial reads and V2 `start_assignment`/`submit_checkin` actions are centralized in `tester-api.ts`; no page-level `.from()`/`.rpc()` calls remain. Live cross-user leaderboard enumeration has been removed; rankings await a privacy-safe aggregate.
 - `AssignmentSubmissionPage.tsx`: initial reads and V2 submission lifecycle RPCs/attachment metadata operations are centralized in `tester-api.ts`; only binary upload and signed-object checks remain in the page through the base Storage client.
-- `ActivityHistoryPage.tsx`: V2 path uses `wallet_ledger`; legacy path reads `points_ledger`.
+- `ActivityHistoryPage.tsx`: V2 path does not read reward ledgers while rewards are disabled; legacy path reads `points_ledger`.
 - `CheckInHistoryPage.tsx`: page-level data calls are now extracted; schema-specific V2/legacy reads remain centralized in `tester-api.ts`.
 - `DiscoverTestsPage.tsx`: V2 and public read branches; V2 uses `get_discoverable_tests`.
 - `FeedbackHistoryPage.tsx`: page-level data calls are now extracted; V2 intentionally omits the legacy `points_ledger` read.
-- `MyTestsPage.tsx`: V2 and public read branches for roles, profiles, wallets, assignments, feedback, notifications.
-- `TesterDashboardPage.tsx`: V2 and public read branches for profile, wallet, assignments, tests, notifications.
+- `MyTestsPage.tsx`: V2 reads roles, profiles, assignments, feedback, and notifications; wallet reads are legacy-only while rewards are disabled.
+- `TesterDashboardPage.tsx`: V2 reads profile, assignments, discoverable tests, and notifications; wallet reads are legacy-only while rewards are disabled.
 - `TesterLeaderboardPage.tsx`: personal profile/notification shell reads are centralized in `getTesterLeaderboardPageData`; cross-user profile/role/ledger enumeration has been removed from both V2 and legacy paths. Rankings and period filters remain unavailable until a privacy-safe aggregate API is designed and approved.
 - `WalletRewardsPage.tsx`: V2 reads `wallet_ledger`, public fallback reads `points_ledger`; no reward posting should be enabled.
 
