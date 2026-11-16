@@ -73,7 +73,7 @@ BEGIN
  v_feedback:=rebuild_v2.submit_tester_feedback(
   v_assignment,'usability',
   'The app navigation is confusing and the settings control is difficult to locate during the test.',
-  3
+  3::smallint
  );
  PERFORM set_config('testdz.feedback_id',v_feedback::text,true);
  PERFORM set_config('testdz.assignment_id',v_assignment::text,true);
