@@ -12,7 +12,7 @@ function getClient() {
   return supabase;
 }
 
-function getDataClient() {
+function getDataClient(): any {
   const client = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
   if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
   return client;
@@ -41,7 +41,7 @@ export const profilesApi = {
   },
 
   completeOnboarding(roles: string[], interests: string[]) {
-    const client = isTesterWorkflowV2Enabled ? supabaseV2 : getClient();
+    const client = getDataClient();
     if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
     return client.rpc("complete_onboarding", {
       p_roles: roles,
