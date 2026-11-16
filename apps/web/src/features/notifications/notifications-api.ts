@@ -1,6 +1,12 @@
 import { getAppDataClient } from "../../lib/supabase-data";
 import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
 
+/** Count unread notifications for shared feature-page headers. */
+export function getUnreadNotificationCount(userId: string) {
+  return getAppDataClient().from("notifications").select("id", { count: "exact", head: true })
+    .eq("user_id", userId).is("read_at", null);
+}
+
 /** Read the notifications center through the central application data client. */
 export async function getNotificationsCenterPageData(userId: string) {
   const client = getAppDataClient();
