@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getTesterTestPreviewPageData, joinTesterTest } from "../../../features/tester/test-preview-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -33,58 +34,35 @@ export default function TestPreviewPage(){
   if(!session||!id||!client){setLoading(false);return;}
   let alive=true;
   const load=async()=>{
-   if(isTesterWorkflowV2Enabled&&supabaseV2){
-    const [profile,notifications,testResult,assignmentResult]=await Promise.all([
-     supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
-     supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
-     supabaseV2.from("tests").select("id,app_id,title,description,short_summary,test_type,status,min_testers,start_date,end_date").eq("id",id).maybeSingle(),
-     supabaseV2.from("assignments").select("id,status").eq("test_id",id).eq("tester_id",session.user.id).maybeSingle()
-    ]);
-    if(!alive)return;
-    setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
-    setAvatar(profile.data?.avatar_url||"");
-    setUnread(notifications.count??0);
-    if(testResult.error||!testResult.data){
-     setError("This test could not be found or is no longer available.");
-    }else{
-     const [appResult,stepsResult,requirementsResult,buildsResult,assetsResult]=await Promise.all([
-      supabaseV2.from("apps").select("name,icon_url,category,play_store_url,description").eq("id",testResult.data.app_id).maybeSingle(),
-      supabaseV2.from("test_steps").select("id,step_order,title,description,is_required").eq("test_id",id).order("step_order"),
-      supabaseV2.from("test_requirements").select("id,requirement_type,title,description,is_mandatory,sort_order").eq("test_id",id).order("sort_order"),
-      supabaseV2.from("test_builds").select("id,version_label,original_filename,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false}),
-      supabaseV2.from("test_assets").select("id,title,original_filename,file_extension,mime_type,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false})
-     ]);
-     if(!alive)return;
-     if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error||assetsResult.error)setError("Test details could not be fully loaded.");
-     const visibleBuilds=assignmentResult.data?(buildsResult.data??[]):[];
-     const signedBuilds=await Promise.all(visibleBuilds.map(async build=>{
-      const {data:signed,error:signedError}=await client.storage.from("test-builds").createSignedUrl(build.storage_path,300);
-      return signedError||!signed?.signedUrl?null:{id:build.id,version_label:build.version_label,original_filename:build.original_filename,size_bytes:build.size_bytes,download_url:signed.signedUrl};
-     }));
-     const visibleAssets=assignmentResult.data?(assetsResult.data??[]):[];
-     const signedAssets=await Promise.all(visibleAssets.map(async asset=>{
-      const {data:signed,error:signedError}=await client.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
-      return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,file_extension:asset.file_extension,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
-     }));
-     setTest({...testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[],builds:signedBuilds.filter((build):build is NonNullable<typeof build>=>!!build),assets:signedAssets.filter((asset):asset is NonNullable<typeof asset>=>!!asset)} as unknown as TestPreview);
-    }
-    if(assignmentResult.data)setAlreadyAssigned(true);
-    setLoading(false);
-    return;
-   }
-   const [profile,notifications,testResult,assignmentResult]=await Promise.all([
-    client.from("profiles").select("display_name,avatar_url").eq("id",session.user.id).maybeSingle(),
-    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",session.user.id).is("read_at",null),
-    client.from("tests").select("id,app_id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category,play_store_url,description)").eq("id",id).maybeSingle(),
-    client.from("assignments").select("id,status").eq("test_id",id).eq("tester_id",session.user.id).maybeSingle()
-   ]);
+   const result=await getTesterTestPreviewPageData(id,session.user.id);
    if(!alive)return;
-   setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
-   setAvatar(profile.data?.avatar_url||"");
-   setUnread(notifications.count??0);
-   if(testResult.error||!testResult.data)setError("This test could not be found or is no longer available.");
-   else setTest(testResult.data as unknown as TestPreview);
-   if(assignmentResult.data)setAlreadyAssigned(true);
+   setName(result.profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
+   setAvatar(result.profile.data?.avatar_url||"");
+   setUnread(result.notifications.count??0);
+   if(result.testResult.error||!result.testResult.data){
+    setError("This test could not be found or is no longer available.");
+   }else if(result.isV2){
+    const appResult=result.appResult!;
+    const stepsResult=result.stepsResult!;
+    const requirementsResult=result.requirementsResult!;
+    const buildsResult=result.buildsResult!;
+    const assetsResult=result.assetsResult!;
+    if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error||assetsResult.error)setError("Test details could not be fully loaded.");
+    const visibleBuilds=result.assignmentResult.data?(buildsResult.data??[]):[];
+    const signedBuilds=await Promise.all(visibleBuilds.map(async build=>{
+     const {data:signed,error:signedError}=await client.storage.from("test-builds").createSignedUrl(build.storage_path,300);
+     return signedError||!signed?.signedUrl?null:{id:build.id,version_label:build.version_label,original_filename:build.original_filename,size_bytes:build.size_bytes,download_url:signed.signedUrl};
+    }));
+    const visibleAssets=result.assignmentResult.data?(assetsResult.data??[]):[];
+    const signedAssets=await Promise.all(visibleAssets.map(async asset=>{
+     const {data:signed,error:signedError}=await client.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
+     return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,file_extension:asset.file_extension,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
+    }));
+    setTest({...result.testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[],builds:signedBuilds.filter((build):build is NonNullable<typeof build>=>!!build),assets:signedAssets.filter((asset):asset is NonNullable<typeof asset>=>!!asset)} as unknown as TestPreview);
+   }else{
+    setTest(result.testResult.data as unknown as TestPreview);
+   }
+   if(result.assignmentResult.data)setAlreadyAssigned(true);
    setLoading(false);
   };
   void load().catch(()=>{if(alive){setError("Unable to load this test. Please try again.");setLoading(false);}});
@@ -93,9 +71,9 @@ export default function TestPreviewPage(){
  if(!identityLoading&&!session&&!previewMode)return <Navigate to="/auth" replace/>;
  const nav=[{label:"Dashboard",icon:"flask",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
  const handleAccept=async()=>{
-  if(!isTesterWorkflowV2Enabled||!supabaseV2||!id||joining)return;
+  if(!isTesterWorkflowV2Enabled||!id||joining)return;
   setJoining(true);setError("");
-  const {data,error:joinError}=await supabaseV2.rpc("join_test",{p_test_id:id});
+  const {data,error:joinError}=await joinTesterTest(id);
   if(joinError||!data){
    setError(joinError?.message||"This test could not be joined. It may have reached capacity.");
    setJoining(false);
