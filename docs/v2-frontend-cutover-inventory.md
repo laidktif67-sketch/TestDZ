@@ -97,6 +97,23 @@ The dashboard, discovery, my tests, activity, check-in history, feedback history
 
 All extracted modules continue using `getAppDataClient()` and the existing V2/legacy selector. This is a frontend organization change only: no schema, migration, hosted data, Storage policy, feature flag, environment, or deployment changes.
 
+## Profile, privacy, referral, and security API extraction (2026-11-16)
+
+Additional tester-facing operations were moved out of page components:
+
+- `features/profiles/profiles-api.ts`: profile header, profile/security settings reads and writes, locale updates, and existing avatar/profile lifecycle.
+- `features/privacy/privacy-api.ts`: account profile summary and user-owned data/activity export queries. The user-initiated export retains its current data scope; it does not mutate wallet balances or post rewards.
+- `features/referrals/referrals-api.ts`: referral page shell reads and current-user referral history. Referral creation and reward posting remain disabled.
+- `features/wallet/wallet-api.ts`: wallet presentation reads plus a clearly named legacy-only withdrawal preview reader. V2 withdrawals remain disabled.
+- `shared/auth/identity-api.ts`: current user's security activity and active-session RPC reads.
+- `features/tester/feedback-api.ts`: guarded tester feedback submission.
+- `features/tester/test-preview-api.ts`: test preview reads and guarded `join_test` action.
+- `features/tester/assignments-api.ts`: assignment detail reads, in addition to assignment progress/submission workflows.
+
+Pages updated to consume these APIs include Privacy Data Management, Referral Program/History, Notification Preferences, Settings Security, Login Activity/Security, Active Sessions, Language & Appearance, Submit Feedback, Assignment Details, Test Preview, and the legacy-only Withdrawal Request preview.
+
+Page-level database `.from()`/`.rpc()` calls were removed from these reviewed pages. Supabase Auth and Storage SDK calls remain at the UI boundary where appropriate; they are not application-table queries. No schema, migration, hosted data, feature flag, environment, or deployment changes were made.
+
 ## Confirmed remaining migration inventory
 
 The following pages still contain direct database access and/or explicit legacy fallback branches. They are not yet V2-only and must be migrated through feature API modules before removing the fallback:
