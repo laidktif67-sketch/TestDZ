@@ -394,12 +394,12 @@ revoke all on function rebuild_v2_private.prevent_immutable_mutation() from publ
 revoke all on function rebuild_v2_private.handle_new_auth_user() from public,anon,authenticated;
 revoke all on function rebuild_v2_private.has_role(uuid,text[]) from public,anon;
 revoke all on function rebuild_v2_private.grant_role(uuid,text,text) from public,anon,authenticated;
-revoke all on function rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid) from public,anon,authenticated;
+revoke all on function rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid) from public,anon;
 revoke all on function rebuild_v2_private.request_developer_role(text) from public,anon,authenticated;
 revoke all on function rebuild_v2_private.review_role_request(uuid,text,text) from public,anon,authenticated;
 
 grant execute on function rebuild_v2_private.has_role(uuid,text[]) to authenticated;
--- No client EXECUTE grant: this implementation has no exposed V2 RPC wrapper.
+grant execute on function rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid) to authenticated;
 -- No client EXECUTE grant: this implementation has no exposed V2 RPC wrapper.
 -- No client EXECUTE grant: this implementation has no exposed V2 RPC wrapper.
 -- No client EXECUTE grant: this implementation has no exposed V2 RPC wrapper.
