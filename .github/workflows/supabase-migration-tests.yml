@@ -6,11 +6,20 @@ on:
       - architecture-v1
       - main
     paths:
-      - "supabase/**"
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+      - "supabase/config.toml"
+      - "supabase/seed.sql"
       - ".github/workflows/supabase-migration-tests.yml"
   pull_request:
+    branches:
+      - architecture-v1
+      - main
     paths:
-      - "supabase/**"
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+      - "supabase/config.toml"
+      - "supabase/seed.sql"
       - ".github/workflows/supabase-migration-tests.yml"
   workflow_dispatch:
 
@@ -36,7 +45,7 @@ jobs:
           version: latest
 
       - name: Start isolated local Supabase services
-        run: supabase start -x studio,edge-runtime,storage-api,imgproxy,logflare,vector
+        run: supabase start -x edge-runtime,gotrue,imgproxy,kong,logflare,mailpit,postgres-meta,postgrest,realtime,storage-api,studio,supavisor,vector
 
       - name: Apply migrations and run SQL regression tests locally
         run: supabase test db

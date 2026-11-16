@@ -3,7 +3,8 @@ project_id = "naqjjykcglxiobkmdllj"
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "graphql_public"]
+# Expose the app-facing V2 schema to local PostgREST. Keep rebuild_v2_private hidden.
+schemas = ["public", "graphql_public", "rebuild_v2"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 

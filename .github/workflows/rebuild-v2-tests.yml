@@ -6,10 +6,14 @@ on:
       - rebuild/testdz-v2
     paths:
       - "supabase/rebuild-v2/**"
+      - "supabase/seed.sql"
+      - "supabase/config.toml"
       - ".github/workflows/rebuild-v2-tests.yml"
   pull_request:
     paths:
       - "supabase/rebuild-v2/**"
+      - "supabase/seed.sql"
+      - "supabase/config.toml"
       - ".github/workflows/rebuild-v2-tests.yml"
   workflow_dispatch:
 
@@ -41,7 +45,7 @@ jobs:
       - name: Start disposable local Supabase stack
         run: supabase start -x studio,edge-runtime,imgproxy,logflare,vector
 
-      - name: Apply all 18 candidate scripts and run contracts
+      - name: Apply candidate SQL, run contracts, then verify local PostgREST
         shell: bash
         run: |
           set -euo pipefail
@@ -85,6 +89,58 @@ jobs:
             psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$contract"
             echo "::endgroup::"
           done
+
+          echo "::group::Verify local PostgREST schema exposure"
+          test -n "${API_URL:-}" || { echo "API_URL was not exported by Supabase CLI"; exit 1; }
+          test -n "${ANON_KEY:-}" || { echo "ANON_KEY was not exported by Supabase CLI"; exit 1; }
+          test -n "${JWT_SECRET:-}" || { echo "JWT_SECRET was not exported by Supabase CLI"; exit 1; }
+          psql "$DB_URL" -X -v ON_ERROR_STOP=1 -c "NOTIFY pgrst, 'reload schema';"
+          sleep 1
+
+          test_jwt="$(python3 - <<'PY'
+          import base64, hashlib, hmac, json, os, time
+
+          def b64url(value):
+              return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+          header = b64url(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
+          payload = b64url(json.dumps({
+              "aud": "authenticated",
+              "role": "authenticated",
+              "sub": "00000000-0000-4000-8000-000000000001",
+              "iat": int(time.time()),
+              "exp": int(time.time()) + 300,
+          }, separators=(",", ":")).encode())
+          signing_input = f"{header}.{payload}".encode()
+          signature = hmac.new(os.environ["JWT_SECRET"].encode(), signing_input, hashlib.sha256).digest()
+          print(f"{header}.{payload}.{b64url(signature)}")
+          PY
+          )"
+
+          v2_status="$(curl --silent --show-error --output "$RUNNER_TEMP/rebuild-v2-response.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Authorization: Bearer $test_jwt" \
+            --header "Accept-Profile: rebuild_v2" \
+            "$API_URL/rest/v1/profiles?select=id&limit=0")"
+          if [[ "$v2_status" != "200" ]]; then
+            cat "$RUNNER_TEMP/rebuild-v2-response.json"
+            echo "Expected authenticated PostgREST access to rebuild_v2.profiles; received HTTP $v2_status"
+            exit 1
+          fi
+
+          private_status="$(curl --silent --show-error --output "$RUNNER_TEMP/rebuild-v2-private-openapi.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Authorization: Bearer $test_jwt" \
+            --header "Accept-Profile: rebuild_v2_private" \
+            --header "Accept: application/openapi+json" \
+            "$API_URL/rest/v1/")"
+          if [[ "$private_status" != "406" ]]; then
+            cat "$RUNNER_TEMP/rebuild-v2-private-openapi.json"
+            echo "Expected rebuild_v2_private to remain unexposed; received HTTP $private_status"
+            exit 1
+          fi
+          echo "PASS: rebuild_v2 is exposed and rebuild_v2_private remains unexposed."
+          echo "::endgroup::"
 
       - name: Stop disposable local Supabase stack
         if: always()
