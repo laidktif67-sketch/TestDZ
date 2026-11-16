@@ -15,7 +15,8 @@ type TestPreview = {
  app:{name:string;icon_url:string|null;category:string|null;play_store_url?:string|null;description?:string|null}|null;
  steps?:{id:string;step_order:number;title:string;description:string;is_required:boolean}[];
  requirements?:{id:string;requirement_type:string;title:string;description:string;is_mandatory:boolean;sort_order:number}[];
- builds?:{id:string;version_label:string;original_filename:string;size_bytes:number;download_url:string}[];\n assets?:{id:string;title:string;original_filename:string;file_extension:string;mime_type:string;size_bytes:number;download_url:string}[];
+ builds?:{id:string;version_label:string;original_filename:string;size_bytes:number;download_url:string}[];
+ assets?:{id:string;title:string;original_filename:string;file_extension:string;mime_type:string;size_bytes:number;download_url:string}[];
 };
 function dateLabel(value:string|null){if(!value)return "To be announced";const date=new Date(value+"T00:00:00");return Number.isNaN(date.getTime())?value:date.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"2-digit"});}
 function initials(value:string){return value.split(/\s+/).slice(0,2).map(part=>part[0]||"").join("").toUpperCase()||"T";}
@@ -46,11 +47,12 @@ export default function TestPreviewPage(){
     if(testResult.error||!testResult.data){
      setError("This test could not be found or is no longer available.");
     }else{
-     const [appResult,stepsResult,requirementsResult,buildsResult]=await Promise.all([
+     const [appResult,stepsResult,requirementsResult,buildsResult,assetsResult]=await Promise.all([
       supabaseV2.from("apps").select("name,icon_url,category,play_store_url,description").eq("id",testResult.data.app_id).maybeSingle(),
       supabaseV2.from("test_steps").select("id,step_order,title,description,is_required").eq("test_id",id).order("step_order"),
       supabaseV2.from("test_requirements").select("id,requirement_type,title,description,is_mandatory,sort_order").eq("test_id",id).order("sort_order"),
-      supabaseV2.from("test_builds").select("id,version_label,original_filename,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false}),\n      supabaseV2.from("test_assets").select("id,title,original_filename,file_extension,mime_type,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false})
+      supabaseV2.from("test_builds").select("id,version_label,original_filename,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false}),
+      supabaseV2.from("test_assets").select("id,title,original_filename,file_extension,mime_type,size_bytes,storage_path").eq("test_id",id).eq("status","uploaded").order("created_at",{ascending:false})
      ]);
      if(!alive)return;
      if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error||assetsResult.error)setError("Test details could not be fully loaded.");
@@ -59,7 +61,12 @@ export default function TestPreviewPage(){
       const {data:signed,error:signedError}=await client.storage.from("test-builds").createSignedUrl(build.storage_path,300);
       return signedError||!signed?.signedUrl?null:{id:build.id,version_label:build.version_label,original_filename:build.original_filename,size_bytes:build.size_bytes,download_url:signed.signedUrl};
      }));
-     setTest({...testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[],builds:signedBuilds.filter((build):build is NonNullable<typeof build>=>!!build)} as unknown as TestPreview);
+     const visibleAssets=assignmentResult.data?(assetsResult.data??[]):[];
+     const signedAssets=await Promise.all(visibleAssets.map(async asset=>{
+      const {data:signed,error:signedError}=await client.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
+      return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,file_extension:asset.file_extension,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
+     }));
+     setTest({...testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[],builds:signedBuilds.filter((build):build is NonNullable<typeof build>=>!!build),assets:signedAssets.filter((asset):asset is NonNullable<typeof asset>=>!!asset)} as unknown as TestPreview);
     }
     if(assignmentResult.data)setAlreadyAssigned(true);
     setLoading(false);
