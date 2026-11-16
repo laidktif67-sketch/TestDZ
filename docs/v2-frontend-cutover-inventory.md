@@ -13,6 +13,13 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Work completed in this pass
 
+## Tester reward-read cleanup (2026-11-16)
+
+- Extended the reward-disabled behavior to the Discover Tests and Activity History APIs: V2 no longer reads `wallets.earned_points` or enumerates `wallet_ledger` for these screens while reward posting remains disabled.
+- The API preserves stable empty-result shapes so existing UI states continue to render the already-labeled unavailable reward values; legacy reads remain isolated to the transitional fallback.
+- No changes to wallet schema, ledger entries, reward posting, withdrawals, or any hosted database were made.
+- Frontend CI/typecheck/build remains required for the latest commits.
+
 ## Tester dashboard and My Tests reward gating (2026-11-16)
 
 - Reviewed the V2 data paths for `TesterDashboardPage.tsx` and `MyTestsPage.tsx`.
