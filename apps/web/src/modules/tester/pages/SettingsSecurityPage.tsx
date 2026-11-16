@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { profilesApi } from "../../../features/profiles/profiles-api";
 import { getPrivacyDataExport } from "../../../features/privacy/privacy-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
