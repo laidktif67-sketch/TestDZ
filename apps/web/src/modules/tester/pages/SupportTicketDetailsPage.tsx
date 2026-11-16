@@ -24,7 +24,7 @@ export default function SupportTicketDetailsPage(){
  const firstName=name.split(/[\s._-]+/)[0]||"Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
  const load=useCallback(async()=>{
-  const client=isTesterWorkflowV2Enabled?supabaseV2:supabase;
+  const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;
   if(!client||!user||!id){setLoading(false);return;}
   setLoading(true);setError("");
   const {data:ticketData,error:ticketError}=await client.from("support_tickets").select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by").eq("id",id).maybeSingle();
@@ -42,9 +42,9 @@ export default function SupportTicketDetailsPage(){
  const canReply=!!ticket&&ticket.status!=="closed"&&(ticket.user_id===user?.id||roles.includes("support")||roles.includes("admin"));
  const customerMessages=useMemo(()=>new Set(messages.filter(m=>m.sender_id===ticket?.user_id).map(m=>m.id)),[messages,ticket?.user_id]);
  async function sendReply(event:FormEvent<HTMLFormElement>){
-  event.preventDefault();const client=isTesterWorkflowV2Enabled?supabaseV2:supabase;if(!client||!user||!ticket||!reply.trim())return;
+  event.preventDefault();const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;if(!client||!user||!ticket||!reply.trim())return;
   setSending(true);setError("");setNotice("");
-  if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
+  if(!supabase){setSending(false);setError("Storage is unavailable.");return;}\n   if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
    setSending(false);setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
   }
   const {data:messageData,error:insertError}=isTesterWorkflowV2Enabled ? await client.rpc("send_support_message",{p_ticket_id:ticket.id,p_body:reply.trim()}) : await client.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()}).select("id").single();
@@ -53,7 +53,7 @@ export default function SupportTicketDetailsPage(){
   if(selectedFile){
    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
-    const {error:uploadError}=await client.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
+    const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
     const {error:metadataError}=isTesterWorkflowV2Enabled ? await client.rpc("add_support_attachment",{p_ticket_id:ticket.id,p_message_id:messageId,p_storage_path:storagePath,p_original_filename:selectedFile.name.slice(0,255),p_mime_type:selectedFile.type,p_size_bytes:selectedFile.size}) : await client.from("support_ticket_attachments").insert({ticket_id:ticket.id,message_id:messageId,uploaded_by:user.id,storage_path:storagePath,original_filename:selectedFile.name,mime_type:selectedFile.type,size_bytes:selectedFile.size});
    if(metadataError){setSending(false);setReply("");setSelectedFile(null);await load();setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");return;}
@@ -61,9 +61,9 @@ export default function SupportTicketDetailsPage(){
   setSending(false);setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
  }
  async function openAttachment(item:Attachment){
-  const client=isTesterWorkflowV2Enabled?supabaseV2:supabase;
+  const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;
   if(!client){return;}setError("");
-  const {data,error:storageError}=await client.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
+  if(!supabase)return;\n   const {data,error:storageError}=await supabase.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
   if(storageError||!data?.signedUrl){setError("This attachment is not available or you do not have permission to access it.");return;}
   window.open(data.signedUrl,"_blank","noopener,noreferrer");
  }
