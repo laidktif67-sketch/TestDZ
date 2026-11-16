@@ -6,7 +6,7 @@ export async function getActivityHistoryPageData(userId: string) {
   const [profile, assignmentResult, feedbackResult, ledgerResult, notice] = await Promise.all([
     client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
     isTesterWorkflowV2Enabled
-      ? client.from("assignments").select("id,status,started_at,assigned_at,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("assigned_at", { ascending: false })
+      ? client.from("assignments").select("id,status,started_at,assigned_at,completed_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("assigned_at", { ascending: false })
       : client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("created_at", { ascending: false }),
     client.from("feedback").select("id,assignment_id,rating,quality_status,created_at").eq("tester_id", userId).order("created_at", { ascending: false }),
     isTesterWorkflowV2Enabled
