@@ -104,7 +104,9 @@ BEGIN
   FOR UPDATE OF t;
   IF NOT FOUND THEN RAISE EXCEPTION 'COHORT_TEST_NOT_FOUND' USING errcode='P0002'; END IF;
 
-  PERFORM 1 FROM rebuild_v2.assignments a WHERE a.cohort_id=p_cohort_id FOR UPDATE;\n\n  SELECT count(*) FILTER (WHERE a.status NOT IN ('withdrawn','rejected'))::integer,
+  PERFORM 1 FROM rebuild_v2.assignments a WHERE a.cohort_id=p_cohort_id FOR UPDATE;
+
+  SELECT count(*) FILTER (WHERE a.status NOT IN ('withdrawn','rejected'))::integer,
          count(*) FILTER (WHERE a.status='active')::integer,
          count(*) FILTER (WHERE a.status IN ('pending','active'))::integer
   INTO v_assigned,v_active,v_unfinished
