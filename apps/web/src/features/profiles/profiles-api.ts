@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../lib/supabase-v2";
+import { getAppDataClient } from "../../lib/supabase-data";
 import type {
   AvatarUploadInput,
   AvatarUploadResult,
@@ -13,9 +13,7 @@ function getClient() {
 }
 
 function getDataClient(): any {
-  const client = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
-  if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
-  return client;
+  return getAppDataClient();
 }
 
 const AVATAR_EXTENSIONS = {
