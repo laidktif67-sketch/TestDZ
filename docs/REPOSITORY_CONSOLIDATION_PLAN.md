@@ -421,13 +421,14 @@ The mapping above is a consolidation map based on the recorded migration names a
 - Any future FixLab-only patch must have a tracked SQL source and an explicit history/version plan; no Production migration or history operation is authorized by this inventory.
 
 
-## 20. Read-only FixLab-to-candidate object-name parity (2026-11-16)
+## 20. Read-only FixLab-to-candidate object and column parity (2026-11-16)
 
 The live FixLab catalog was compared against the 18 ordered candidate scripts by object names. This is stronger than count-only comparison, but it is still not a full definition/hash comparison.
 
 | Object class | FixLab live | Candidate source final set | Name parity |
 |---|---:|---:|---|
 | Base tables in `rebuild_v2` | 47 | 47 | Exact set match; no missing or extra table names |
+| Column names across those tables | 439 | 439 | Exact set match per table; no missing or extra column names |
 | Functions in `rebuild_v2` + `rebuild_v2_private` | 96 | 97 | All 96 live names exist in source; candidate has one additional helper |
 | Policies in `rebuild_v2` + `storage` | 66 | 66 | Exact final set match after applying source DROP POLICY statements |
 | Application triggers in `auth` + `rebuild_v2` | 7 | 7 | Exact set match |
