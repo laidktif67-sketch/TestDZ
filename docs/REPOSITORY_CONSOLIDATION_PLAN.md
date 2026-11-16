@@ -337,3 +337,19 @@ Treat `supabase/rebuild-v2/` as the current candidate replay source, not as an a
 3. Resolve the 24 legacy `public` tables and the frontend feature-flag compatibility path.
 4. Only then propose a canonical migration-history baseline, backup/restore rehearsal, and explicit cutover/rollback plan.
 5. Keep Production, Auth users, Storage objects, and hosted migration history untouched until separate approval.
+
+
+## 18. Local PostgREST schema exposure alignment (2026-11-16)
+
+A local-runtime compatibility gap was found after the V2 date correction:
+
+- The frontend's V2 client explicitly selects `.schema("rebuild_v2")` when `VITE_TESTER_WORKFLOW_V2_ENABLED=true`.
+- FixLab's live PostgREST configuration exposes `rebuild_v2` and does not expose `rebuild_v2_private`.
+- The committed local `supabase/config.toml` exposed only `public` and `graphql_public`, so a fresh local stack would not match the schema selection expected by the V2 frontend.
+- The existing Rebuild V2 CI exercised SQL directly through PostgreSQL and therefore did not detect this PostgREST exposure mismatch.
+
+[PR #45](https://github.com/laidktif67-sketch/TestDZ/pull/45) adds `rebuild_v2` to the local `api.schemas` list while keeping `rebuild_v2_private` excluded. It also adds an HTTP contract to the Rebuild V2 workflow: an authenticated request must reach `rebuild_v2.profiles`, while a request selecting `rebuild_v2_private` must be rejected as an unexposed schema.
+
+The existing `project_id` in `supabase/config.toml` remains unchanged and still identifies Production. This PR changes local service configuration only; no remote CLI command, hosted API setting, database schema, data, Auth user, Storage object, or deployment has been changed. PR #45's local Rebuild V2 and legacy migration workflows are pending at the time of this note.
+
+Do not add `rebuild_v2_private` to PostgREST's exposed schema list. The private schema is an internal implementation boundary, not a browser-facing API.
