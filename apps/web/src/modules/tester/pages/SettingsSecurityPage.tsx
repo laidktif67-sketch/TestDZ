@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { profilesApi } from "../../../features/profiles/profiles-api";
+import { getPrivacyDataExport } from "../../../features/privacy/privacy-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -69,11 +71,8 @@ export default function SettingsSecurityPage() {
   useEffect(() => {
     if (!user || !supabase) return;
     let alive = true;
-    const client = supabase;
-    const profileQuery = isTesterWorkflowV2Enabled && supabaseV2
-      ? supabaseV2.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle()
-      : client.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle();
-    Promise.all([profileQuery, client.auth.mfa.listFactors()]).then(([profile, factors]) => {
+    const profileQuery = profilesApi.getSecuritySettingsProfile(user.id);
+    Promise.all([profileQuery, supabase.auth.mfa.listFactors()]).then(([profile, factors]) => {
       if (!alive) return;
       if (profile.error) setError("Profile settings could not be loaded. Please refresh and try again.");
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
@@ -101,9 +100,7 @@ export default function SettingsSecurityPage() {
     if (isTesterWorkflowV2Enabled && !supabaseV2) { alert("V2 profile settings are unavailable because the V2 client is not initialized.", true); return; }
     if (!name.trim()) { alert("Your display name cannot be empty.", true); return; }
     setBusy(true); alert("");
-    const result = isTesterWorkflowV2Enabled
-      ? await supabaseV2!.from("profiles").update({ display_name: name.trim(), locale }).eq("id", user.id)
-      : await supabase.from("profiles").update({ display_name: name.trim(), locale }).eq("id", user.id);
+    const result = await profilesApi.updateSecuritySettings(user.id, { display_name: name.trim(), locale });
     setBusy(false);
     if (result.error) alert("Could not save account settings. Please try again.", true);
     else alert("Account settings saved successfully.");
@@ -180,13 +177,8 @@ export default function SettingsSecurityPage() {
       return;
     }
     setBusy(true);
-    const [profile, notices, checkins, feedback, ledger] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-      supabase.from("notifications").select("*").eq("user_id", user.id),
-      supabase.from("checkins").select("*").eq("tester_id", user.id),
-      supabase.from("feedback").select("*").eq("tester_id", user.id),
-      supabase.from("points_ledger").select("*").eq("user_id", user.id)
-    ]);
+    const { profile, notifications: notices, checkins, feedback, ledger } =
+      await getPrivacyDataExport(user.id, false);
     setBusy(false);
     const payload = { exported_at: new Date().toISOString(), account: { id: user.id, email: user.email }, profile: profile.data, notifications: notices.data || [], checkins: checkins.data || [], feedback: feedback.data || [], points_ledger: ledger.data || [] };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
