@@ -183,5 +183,6 @@ The following pages still contain direct database access and/or explicit legacy 
 
 - A repository-wide scan of the TypeScript/TSX application source found no imports or references to the temporary `features/tester/tester-api.ts` barrel. The barrel was deleted; feature pages import the focused domain APIs directly.
 - `WithdrawalStatusPage.tsx` now uses `profilesApi.getHeaderProfile(user.id)` for profile header data. Auth session access remains through the base Supabase client; no page-level profile table query remains.
-- Latest verified branch commit at this checkpoint: `bcd77b8299b643cc2d133c8618885d855f87c21e`. The subsequent barrel-deletion commit is `243c797c3765bcc2ea643048449755cfe7592664`; its CI run is pending and must pass before treating the deletion as verified.
-- No feature flag cutover, schema changes, migrations, hosted data changes, deployments, or Production operations were performed.
+- The compatibility-barrel deletion commit `243c797c3765bcc2ea643048449755cfe7592664` passed both Frontend CI and TestDZ CI (runs `43962054947` and `43962054923`): data-boundary check, TypeScript typecheck, and production build succeeded.
+- The latest code change moves DeveloperReviewQueuePage's two direct table reads into `features/apps/apps-api.ts` (`getAdminReviewQueue`). Commit: `920026078179272e55eb85f0987e20e3a4121c87`; CI is pending.
+- No feature flag cutover, schema changes, migrations, hosted data changes, deployments, PR #18 edits, or Production operations were performed.
