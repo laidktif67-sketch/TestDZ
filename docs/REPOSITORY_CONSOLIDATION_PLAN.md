@@ -497,13 +497,13 @@ The wallet posting implementation, `post_wallet_entry(...)`, also has no applica
 
 A read-only SQL fingerprint query was executed against FixLab to go beyond name/count parity. It hashes sorted canonical catalog definitions for columns (including types, nullability, defaults, identity/generated flags), constraints (including validation/deferrability and definitions), indexes (including definitions and validity flags), comparable function definitions/security attributes/owners, RLS and Storage policies (roles normalized to role names), application triggers, and Storage bucket metadata.
 
-The five already documented date-delta functions are excluded from the comparable function fingerprint: `algeria_local_date` exists only in the candidate, while `get_discoverable_tests_impl`, `join_test_impl`, `start_assignment_impl`, and `submit_checkin_impl` intentionally differ until FixLab receives a reviewed patch. Supabase-managed Storage policies and triggers are also excluded from the application-only policy/trigger scope; policy roles are normalized to role names and MIME allowlists are sorted for stable comparison.
+The five already documented date-delta functions are excluded from the comparable function fingerprint: `algeria_local_date` exists only in the candidate, while `get_discoverable_tests_impl`, `join_test_impl`, `start_assignment_impl`, and `submit_checkin_impl` intentionally differ until FixLab receives a reviewed patch. The `checkins.checkin_date` column is also excluded from the column fingerprint because its default is intentionally changed to Algeria-local date in candidate. Supabase-managed Storage policies and triggers are excluded from the application-only policy/trigger scope; policy roles are normalized to role names and MIME allowlists are sorted for stable comparison.
 
 ### FixLab live baseline
 
 | Catalog class | Count | MD5 fingerprint |
 |---|---:|---|
-| Columns | 439 | `6b2e2bfcf01345a2df6872e1d1440a1a` |
+| Columns (excluding known check-in default delta) | 438 | `55223a31fba39a5de98db3f24ae449aa` |
 | Constraints | 297 | `59b3c93fe0464ae76e0f40f4d4d69d50` |
 | Indexes | 157 | `786a77cadcbb7f11f9cd5ca23d3d0641` |
 | Comparable functions | 92 | `e067f3b2adde6b98818e3c2ac9b9c44c` |
