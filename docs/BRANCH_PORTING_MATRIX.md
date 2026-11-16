@@ -1,7 +1,7 @@
 # TestDZ Branch and Feature Porting Matrix
 
 **Reviewed:** 2026-11-16  
-**Candidate baseline:** `rebuild/testdz-v2` — `6a60e6f04ba05d6af6ee962a306e795c39fa2eb7`  
+**Candidate baseline:** `rebuild/testdz-v2` — `e8cb30e6494f56af9ecc42be72ba31073d9a49e3`  
 **Purpose:** Identify useful work in open PRs and side branches without merging incompatible histories.
 
 ## Current GitHub inventory
