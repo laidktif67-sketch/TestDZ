@@ -146,7 +146,7 @@ The following pages still contain direct database access and/or explicit legacy 
 - `PrivacyDataManagementPage.tsx`: account/data export queries are centralized in `features/privacy/privacy-api.ts`; Auth metadata remains in `identity-api.ts`. The export includes only the signed-in user's rows. Review its V2 export scope before removing the legacy fallback.
 - `ReferralHistoryPage.tsx` and `ReferralProgramPage.tsx`: profile/notification/referral reads are centralized in `features/referrals/referrals-api.ts` and their domain APIs. Referral tracking remains read-only; invitation creation and reward posting are disabled. The referral history query no longer selects or exposes the referred user's UUID.
 - `TesterProfilePage.tsx` and `ProfileCompletionPage.tsx`: profile reads, updates, and avatar Storage workflow use `features/profiles/profiles-api.ts`; Auth metadata remains in `identity-api.ts`.
-- `WithdrawalStatusPage.tsx`: profile reads still use a legacy-capable selector; withdrawals remain preview-only.
+- `WithdrawalStatusPage.tsx`: profile header reads now use `features/profiles/profiles-api.ts`; withdrawals remain preview-only.
 - `WithdrawalRequestPage.tsx`: intentionally preview-only; it must not become a live withdrawal workflow as part of schema cleanup.
 
 ## Blocking compatibility decisions already established
@@ -163,7 +163,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 1. Extract tester dashboard, discover tests, my tests, activity history, check-in history, feedback history, and active-assignment reads/actions into feature API modules (completed). Assignment submission initial reads are extracted; submission workflow actions remain pending.
 2. Reconcile the points/date/evidence fields in those APIs against the actual V2 schema and tests.
-3. Wallet, notification, support, privacy, referral, and profile API modules are now separated. Dashboard/activity/assignment APIs are also separated. Verify remaining imports of the compatibility `tester-api.ts` barrel, then remove it and add static checks against page-level database calls.
+3. Wallet, notification, support, privacy, referral, profile, dashboard, activity, assignment, feedback, and test-preview APIs are separated by domain. A repository source scan found no consumers of the temporary `features/tester/tester-api.ts` barrel; it was removed in commit `243c797c3765bcc2ea643048449755cfe7592664`. The frontend data-boundary check remains enabled.
 4. Implement a dedicated privacy-safe leaderboard aggregate contract; cross-user client-side enumeration is now removed from the active-assignment page but remains to be checked in `TesterLeaderboardPage.tsx`.
 5. Complete profile export and remaining read-only/referral display routes.
 6. Add static source checks preventing direct page-level database access and legacy fallback references.
@@ -173,5 +173,15 @@ The following pages still contain direct database access and/or explicit legacy 
 
 - The existing isolated SQL CI run remains successful for 18 scripts and 9 SQL contracts.
 - Frontend CI and project CI passed on commit `c58de13cc7f4fb88252721925ad114bcc860a10a`: page data-boundary check, TypeScript typecheck, and production build all succeeded. Workflow runs: `43957061110` and `43957061097`.
-- Referral privacy hardening was committed after that verification in `ebe6351f4153d0f771224e3faaea4ce6c46f55ec` and `54fb04eadfb94b29e40ad83b055021e3b0bcb876`; these two latest commits still require a fresh CI run.
+- Referral privacy hardening passed Frontend CI and TestDZ CI on `54fb04eadfb94b29e40ad83b055021e3b0bcb876` (workflow runs `43960081504` and `43960081548`).
+- `WithdrawalStatusPage.tsx` profile-read extraction and the compatibility-barrel removal are recorded in commits `19dc7d743ff9b28f0c0969cffcaabe11c02e7ff6`, `bcd77b8299b643cc2d133c8618885d855f87c21e`, and `243c797c3765bcc2ea643048449755cfe7592664`. The first extraction commit exposed a TypeScript nullability issue; it was fixed in `bcd77b8`.
+- Frontend CI and TestDZ CI both passed on `bcd77b8299b643cc2d133c8618885d855f87c21e` (workflow runs `43961645835` and `43961642217`): tester page data-boundary check, TypeScript typecheck, and production build all succeeded.
 - No database writes, hosted schema changes, Vercel environment changes, deployments, PR #18 edits, or Production changes were made in this pass.
+
+
+## Latest API-boundary status (2026-11-16)
+
+- A repository-wide scan of the TypeScript/TSX application source found no imports or references to the temporary `features/tester/tester-api.ts` barrel. The barrel was deleted; feature pages import the focused domain APIs directly.
+- `WithdrawalStatusPage.tsx` now uses `profilesApi.getHeaderProfile(user.id)` for profile header data. Auth session access remains through the base Supabase client; no page-level profile table query remains.
+- Latest verified branch commit at this checkpoint: `bcd77b8299b643cc2d133c8618885d855f87c21e`. The subsequent barrel-deletion commit is `243c797c3765bcc2ea643048449755cfe7592664`; its CI run is pending and must pass before treating the deletion as verified.
+- No feature flag cutover, schema changes, migrations, hosted data changes, deployments, or Production operations were performed.
