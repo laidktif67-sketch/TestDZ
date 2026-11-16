@@ -371,3 +371,51 @@ PR #45 was squash-merged into `rebuild/testdz-v2` as `e8cb30e6494f56af9ecc42be72
 The existing `project_id` in `supabase/config.toml` remains unchanged and still identifies Production. The seed is local initialization, not a migration. No remote CLI command, hosted API setting, database schema, data, Auth user, Storage object, or deployment was changed.
 
 Do not add `rebuild_v2_private` to PostgREST's exposed schema list. The private schema is an internal implementation boundary, not a browser-facing API.
+
+
+## 19. FixLab migration-history inventory and consolidation map (2026-11-16)
+
+A fresh read-only query of `supabase_migrations.schema_migrations` on FixLab returned 21 records. The records split into an earlier FixLab fixture/legacy group and a later V2 development group. The V2 branch's active `supabase/migrations` directory currently ends at `20261112000100_support_ticket_conversations.sql`; it does not contain the November 15–16 FixLab history files.
+
+### Pre-V2 / fixture / legacy history (8 records)
+
+| Version | Recorded name | Current treatment |
+|---|---|---|
+| `20261115095605` | `fixlab_initial_core_schema_fixture` | Historical FixLab fixture; not copied into the V2 candidate replay |
+| `20261115095608` | `test_details_only_schema_candidate` | Historical test-details prototype |
+| `20261115095618` | `enable_pgtap_for_fixlab` | Test infrastructure, not an application-schema migration |
+| `20261115101419` | `fixlab_split_test_detail_owner_policies` | Legacy/prototype ownership-policy change |
+| `20261115101706` | `fixlab_enforce_test_app_developer_ownership` | Legacy/prototype ownership enforcement |
+| `20261115102554` | `restrict_test_detail_table_grants` | Legacy/prototype table-grant restriction |
+| `20261115102751` | `fix_android_package_name_validation` | Historical validation patch |
+| `20261115102836` | `restrict_test_lifecycle_column_writes` | Legacy/prototype lifecycle write restriction |
+
+These rows remain part of the hosted FixLab audit history. They are not a reason to replay the old fixture schema into the V2 candidate.
+
+### V2 development history (13 records)
+
+| Version | Recorded name | Consolidated candidate area |
+|---|---|---|
+| `20261115160318` | `rebuild_v2_sandbox_namespace` | `001_schema.sql` and `002_security.sql` — V2 namespace and security foundation |
+| `20261115193304` | `fixlab_v2_developer_lifecycle_candidate` | `008_developer_lifecycle.sql` |
+| `20261115193600` | `fixlab_lock_app_edits_during_review` | `009_lock_app_edits_during_review.sql` |
+| `20261115193720` | `fixlab_guard_test_cohort_capacity` | `010_guard_test_cohort_capacity.sql` |
+| `20261116145646` | `fixlab_v2_test_content_authoring` | `011_test_content_authoring.sql` |
+| `20261116145833` | `fixlab_v2_test_content_authoring_validation` | Consolidated with `011_test_content_authoring.sql` |
+| `20261116150813` | `fixlab_v2_cohort_management` | `012_cohort_management.sql` |
+| `20261116151440` | `fixlab_v2_private_test_builds` | `013_private_test_builds.sql` |
+| `20261116151830` | `fixlab_v2_harden_test_build_storage_helper` | `014_harden_test_build_storage_helper.sql` |
+| `20261116153736` | `fixlab_v2_private_test_media_assets` | `015_private_test_media_assets.sql` |
+| `20261116154657` | `fixlab_v2_private_developer_feedback` | `016_private_developer_feedback.sql` |
+| `20261116162502` | `enforce_assignment_schedule` | `017_enforce_assignment_schedule.sql` |
+| `20261116162951` | `verify_submission_evidence_metadata` | `018_verify_submission_evidence_metadata.sql` |
+
+The mapping above is a consolidation map based on the recorded migration names and the ordered candidate README; it is **not** a claim that each hosted history row is byte-for-byte equivalent to one candidate file. Some hosted records are combined into a single candidate script. Exact live-to-clean object comparison remains a separate required gate.
+
+### Consequences
+
+- Keep the 21 hosted history rows intact. Do not delete, rewrite, or mark them as a new baseline yet.
+- Do not create empty placeholder files for missing timestamped versions. The V2 source of truth is the ordered 18-script candidate sequence under `supabase/rebuild-v2/`.
+- Do not move the 18 candidate scripts into `supabase/migrations/` while that directory still represents the earlier public/legacy migration lineage.
+- Complete the catalog-level comparison (columns/defaults, constraints, indexes, function bodies and attributes, grants, RLS/Storage policies, triggers, buckets, extensions) before any FixLab baseline/history repair.
+- Any future FixLab-only patch must have a tracked SQL source and an explicit history/version plan; no Production migration or history operation is authorized by this inventory.
