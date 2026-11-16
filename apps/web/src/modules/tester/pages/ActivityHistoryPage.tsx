@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getActivityHistoryPageData } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -92,43 +93,21 @@ export default function ActivityHistoryPage() {
     let alive=true;const client=supabase;const userId=session.user.id;const userEmail=session.user.email;
     async function load(){
       setLoading(true);setError("");
-      if(isTesterWorkflowV2Enabled&&supabaseV2){
-        const [profile,assignmentResult,feedbackResult,ledgerResult,notice]=await Promise.all([
-          supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-          supabaseV2.from("assignments").select("id,status,started_at,assigned_at,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id",userId).order("assigned_at",{ascending:false}),
-          supabaseV2.from("feedback").select("id,assignment_id,rating,quality_status,created_at").eq("tester_id",userId).order("created_at",{ascending:false}),
-          supabaseV2.from("wallet_ledger").select("amount,reference_id,wallet_type").eq("user_id",userId).eq("wallet_type","earned_points"),
-          supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
-        ]);
-        if(!alive)return;
-        setName(profile.data?.display_name?.trim()||userEmail?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");
-        if(assignmentResult.error){setError("We couldn't load your test activity. Please refresh and try again.");setAssignments([]);}
-        else setAssignments((assignmentResult.data??[]).map((row:any)=>({
-          id:row.id,status:row.status,start_date:row.started_at||row.assigned_at,
-          completed_at:row.completed_at,created_at:row.created_at||row.assigned_at,
-          test:row.test||null,checkins:row.checkins||[]
-        })) as Assignment[]);
-        if(!feedbackResult.error)setFeedback((feedbackResult.data??[]) as Feedback[]);
-        if(!ledgerResult.error)setLedger((ledgerResult.data??[]) as Ledger[]);
-        setNotifications(notice.count??0);
-        if(profile.error||feedbackResult.error||ledgerResult.error||notice.error)setError("Some activity details could not be loaded. Your test history is still available where possible.");
-        setLoading(false);return;
-      }
-      const [profile,assignmentResult,feedbackResult,ledgerResult,notice]=await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-        client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id",userId).order("created_at",{ascending:false}),
-        client.from("feedback").select("id,assignment_id,rating,quality_status,created_at").eq("tester_id",userId).order("created_at",{ascending:false}),
-        client.from("points_ledger").select("amount,reference_id,wallet_type").eq("user_id",userId).eq("wallet_type","earned_points"),
-        client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
-      ]);
+      const result = await getActivityHistoryPageData(userId);
       if(!alive)return;
-      setName(profile.data?.display_name?.trim()||userEmail?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");
-      if(assignmentResult.error){setError("We couldn't load your test activity. Please refresh and try again.");setAssignments([]);}
-      else setAssignments((assignmentResult.data??[]) as unknown as Assignment[]);
-      if(!feedbackResult.error)setFeedback((feedbackResult.data??[]) as Feedback[]);
-      if(!ledgerResult.error)setLedger((ledgerResult.data??[]) as Ledger[]);
-      setNotifications(notice.count??0);
-      if(profile.error||feedbackResult.error||ledgerResult.error||notice.error)setError("Some activity details could not be loaded. Your test history is still available where possible.");
+      setName(result.displayName||userEmail?.split("@")[0]||"Tester");
+      setAvatar(result.avatarUrl);
+      if(result.assignmentError){
+        setError("We couldn't load your test activity. Please refresh and try again.");
+        setAssignments([]);
+      } else {
+        setAssignments(result.assignments as Assignment[]);
+      }
+      if(!result.feedbackError)setFeedback(result.feedback as Feedback[]);
+      if(!result.ledgerError)setLedger(result.ledger as Ledger[]);
+      setNotifications(result.notifications);
+      if(result.profileError||result.feedbackError||result.ledgerError||result.notificationError)
+        setError("Some activity details could not be loaded. Your test history is still available where possible.");
       setLoading(false);
     }
     void load().catch(()=>{if(alive){setError("Something went wrong while loading activity history.");setLoading(false);}});
