@@ -272,7 +272,7 @@ export async function uploadDeveloperTestBuild(input: {
   }
   const { data: path, error: registerError } = await dataClient().rpc("register_test_build", {
     p_test_id: input.testId,
-    p_file_id: fileId,
+    p_file_id: input.fileId,
     p_version_label: input.versionLabel,
     p_original_filename: input.file.name,
     p_size_bytes: input.file.size,
@@ -349,7 +349,7 @@ export async function uploadDeveloperTestAsset(input: {
   }
   const { data: path, error: registerError } = await dataClient().rpc("register_test_asset", {
     p_test_id: input.testId,
-    p_file_id: fileId,
+    p_file_id: input.fileId,
     p_title: input.title,
     p_original_filename: input.file.name,
     p_mime_type: mime,
