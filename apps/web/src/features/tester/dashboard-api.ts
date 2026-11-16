@@ -154,5 +154,3 @@ export async function getTesterLeaderboardPageData(userId: string) {
   ]);
   return { profile, notifications };
 }
-
-// Transitional re-exports; pages should import their domain API directly.
