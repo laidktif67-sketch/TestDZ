@@ -112,6 +112,15 @@ Additional tester-facing operations were moved out of page components:
 
 Pages updated to consume these APIs include Privacy Data Management, Referral Program/History, Notification Preferences, Settings Security, Login Activity/Security, Active Sessions, Language & Appearance, Submit Feedback, Assignment Details, Test Preview, and the legacy-only Withdrawal Request preview.
 
+Further tester API boundaries added in the same pass:
+
+- `features/tester/test-preview-api.ts`: test preview aggregation and `join_test`.
+- `features/tester/feedback-api.ts`: feedback submission RPC.
+- `features/tester/assignments-api.ts`: assignment details aggregation.
+- `features/profiles/profiles-api.ts`: reusable header/security profile reads and locale/security updates.
+- `shared/auth/identity-api.ts`: active sessions and security activity RPCs.
+- `features/notifications/notifications-api.ts`: reusable unread notification count.
+
 Page-level database `.from()`/`.rpc()` calls were removed from these reviewed pages. Supabase Auth and Storage SDK calls remain at the UI boundary where appropriate; they are not application-table queries. No schema, migration, hosted data, feature flag, environment, or deployment changes were made.
 
 ## Confirmed remaining migration inventory
