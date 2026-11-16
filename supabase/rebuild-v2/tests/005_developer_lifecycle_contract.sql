@@ -194,8 +194,7 @@ BEGIN
 END;
 $test$;
 
--- Simulate the Storage service completing the private upload between registration and finalize.
-RESET ROLE;
+-- Simulate the Storage upload through the authenticated role and its INSERT policy.
 INSERT INTO storage.objects(bucket_id,name,metadata,owner,owner_id)
 VALUES(
   'test-builds',
