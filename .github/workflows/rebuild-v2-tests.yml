@@ -40,8 +40,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
 
-      - name: Start disposable local database before V2 schema replay
-        run: supabase start -x edge-runtime,gotrue,imgproxy,kong,logflare,mailpit,postgres-meta,postgrest,realtime,storage-api,studio,supavisor,vector
+      - name: Start disposable local Supabase stack
+        run: supabase start -x studio,edge-runtime,imgproxy,logflare,vector
 
       - name: Apply candidate SQL, run contracts, then verify local PostgREST
         shell: bash
@@ -87,15 +87,6 @@ jobs:
             psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$contract"
             echo "::endgroup::"
           done
-
-          echo "::group::Start local API after V2 schema replay"
-          supabase stop --no-backup
-          supabase start -x studio,edge-runtime,imgproxy,logflare,vector
-          supabase status --output env > "$RUNNER_TEMP/supabase.env"
-          set -a
-          source "$RUNNER_TEMP/supabase.env"
-          set +a
-          echo "::endgroup::"
 
           echo "::group::Verify local PostgREST schema exposure"
           test -n "${API_URL:-}" || { echo "API_URL was not exported by Supabase CLI"; exit 1; }
