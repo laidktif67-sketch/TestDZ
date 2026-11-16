@@ -153,3 +153,12 @@ This decision establishes the target architecture. It does not certify applicati
 - Added `.github/workflows/frontend-ci.yml`. Run `43946437297` passed on code commit `589fa2a8d2f69e4f2a208493fe4eb7fb7362d75e`: `npm ci`, `npm run typecheck`, and `npm run build` all succeeded. The existing TestDZ CI run `43946437375` also passed on the same code commit.
 - The earlier frontend run `43946352807` failed on a helper return-type mismatch; the type was corrected and the later run passed. The earlier failure is retained here for provenance, not treated as current.
 - No Supabase project, database schema, migration history, Storage object, Auth user, Vercel setting, deployment, or PR #18 was changed in this work.
+
+
+### Tester data-access extraction — 2026-11-16
+
+- Added `apps/web/src/features/tester/tester-api.ts` to own database queries for the tester dashboard, test discovery, and My Tests screens.
+- `TesterDashboardPage.tsx`, `DiscoverTestsPage.tsx`, and `MyTestsPage.tsx` no longer contain application table/RPC queries; they retain base-client Auth/session handling only.
+- The API module preserves the current legacy/V2 query differences without changing DB contracts or turning on rewards. In V2, discovery continues through `get_discoverable_tests`; assignment timestamps are mapped from `started_at/assigned_at`; reward balances remain display-only and reward posting stays disabled.
+- Verification on commit `74749b107773367afe88f9ad9e58ef2b6dbe254f`: frontend CI run `43947071159` passed (`npm ci`, TypeScript, production build); TestDZ CI run `43947070976` passed.
+- Remaining page-level database access is still present in assignment progress/submission, check-in/activity/feedback history, leaderboard, wallet, support, notification, privacy export, referrals, and withdrawal-display routes. The feature flag and legacy fallback remain required until those routes are migrated and the isolated PostgREST smoke test is complete.
