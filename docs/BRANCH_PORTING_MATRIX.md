@@ -74,3 +74,27 @@ The scan covered all 31 committed V2 SQL migration files at the baseline SHA. Th
 - No Production or FixLab database changed by this audit.
 - No migration applied or generated.
 - No Vercel setting or deployment changed.
+
+
+## Fresh FixLab runtime verification (read-only, 2026-11-16)
+
+The connected project `TestDZ-FixLab` (`bxjqwqidmxxnsgnpyzxv`) is `ACTIVE_HEALTHY`. Its current migration history contains 21 applied entries, latest `20261116162951 verify_submission_evidence_metadata`. This is later than the committed V2 migration set, which ends on 2026-11-12.
+
+The FixLab database currently contains the following V2 API wrappers in `rebuild_v2`, with corresponding implementation routines in `rebuild_v2_private`:
+- `create_test`, `update_test`, `save_test_content`
+- `submit_checkin`
+- `create_assignment_submission`, `register_assignment_submission_attachment`, `finalize_assignment_submission`
+
+The wrappers were observed with `authenticated` EXECUTE and `anon` EXECUTE false. Several wrappers are SECURITY DEFINER and delegate to private implementation routines. This is evidence of current FixLab runtime state only; it does not supply a reproducible committed migration history. Recover and review the complete wrapper and implementation SQL, grants, constraints, policies, triggers, and Storage policies before reconstructing the canonical migration set.
+
+### Confirmed V2 check-in timezone defect
+
+- FixLab database setting `TimeZone` is `UTC`.
+- The current `rebuild_v2_private.submit_checkin_impl` derives the check-in date with `CURRENT_DATE`.
+- Algeria local time is UTC+1; therefore between 00:00 and 00:59 Africa/Algiers, `CURRENT_DATE` still represents the previous Algeria calendar day.
+- The V2 frontend displays local dates, so a check-in made during that hour can be recorded against the prior date or return the prior day's existing check-in ID.
+
+**Classification:** Confirmed timezone-boundary defect in the FixLab V2 candidate, not a speculative risk.
+
+**Required correction:** Derive the business date explicitly from `(now() AT TIME ZONE 'Africa/Algiers')::date` (or a single documented Algeria business-time helper), and add a regression test covering UTC 23:xx / Algeria 00:xx plus duplicate-submission behavior. Do not copy PR #29's legacy points/wallet award logic when correcting the date. No change has been applied.
+
