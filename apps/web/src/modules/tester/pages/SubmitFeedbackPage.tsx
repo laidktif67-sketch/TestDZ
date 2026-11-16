@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { submitTesterFeedback } from "../../../features/tester/feedback-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/submit-feedback.css";
@@ -83,7 +84,7 @@ export default function SubmitFeedbackPage() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!isTesterWorkflowV2Enabled || !supabaseV2) {
+    if (!isTesterWorkflowV2Enabled) {
       setMessage("Secure feedback submission is not enabled in this environment yet.");
       return;
     }
@@ -101,12 +102,7 @@ export default function SubmitFeedbackPage() {
       "Description: " + description.trim(),
       steps.trim() ? "Steps to reproduce: " + steps.trim() : ""
     ].filter(Boolean).join("\n\n");
-    const result = await supabaseV2.rpc("submit_tester_feedback", {
-      p_assignment_id: assignmentId,
-      p_category: category,
-      p_body: body,
-      p_rating: null
-    });
+    const result = await submitTesterFeedback({ assignmentId, category, body });
     if (result.error) {
       setMessage("Your feedback could not be submitted. Check that the assignment is active or completed, then try again.");
     } else {
