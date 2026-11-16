@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { getActiveAssignmentProgressPageData, startTesterAssignment, submitTesterDailyCheckin } from "../../../features/tester/tester-api";
+import { getActiveAssignmentProgressPageData, startTesterAssignment, submitTesterDailyCheckin } from "../../../features/tester/assignments-api";
 import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
