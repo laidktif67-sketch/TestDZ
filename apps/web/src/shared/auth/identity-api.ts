@@ -5,7 +5,6 @@ import type {
   AccountRole,
   IdentityOAuthProvider,
   IdentitySignUpInput,
-  IdentityUserMetadataUpdate,
 } from "@testdz/types";
 
 export type { AccountRole, IdentityOAuthProvider } from "@testdz/types";
@@ -92,7 +91,7 @@ export const identityApi = {
     return getClient().auth.updateUser({ password });
   },
 
-  updateUserMetadata(data: IdentityUserMetadataUpdate) {
+  updateUserMetadata(data: Record<string, unknown>) {
     return getClient().auth.updateUser({ data });
   },
 
