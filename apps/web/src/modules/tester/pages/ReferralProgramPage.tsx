@@ -21,7 +21,7 @@ export default function ReferralProgramPage() {
     if (!session?.user?.id || !supabase) { setLoading(false); return; }
     let alive = true;
     const userId = session.user.id;
-    const client = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
+    const client: any = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
     if (!client) { setLoading(false); return; }
     Promise.all([
       client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
