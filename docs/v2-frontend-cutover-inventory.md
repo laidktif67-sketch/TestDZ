@@ -13,6 +13,13 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Work completed in this pass
 
+## Support page API extraction (2026-11-16)
+
+- Added feature API functions for listing/creating the signed-in user's support tickets, loading ticket/conversation/attachment metadata, sending replies, and registering attachment metadata.
+- `SupportCenterPage.tsx` and `SupportTicketDetailsPage.tsx` no longer perform direct table/RPC operations. File byte upload and signed URL creation remain on the base Supabase Storage client by design.
+- V2 support mutations continue to use the existing guarded RPCs; legacy inserts remain isolated inside the API module for the transition only.
+- No support data, schema, Storage objects, or hosted project settings were modified. Frontend CI is required for verification.
+
 ## Wallet and notifications API extraction (2026-11-16)
 
 - Added `getWalletRewardsPageData` to `tester-api.ts`; `WalletRewardsPage.tsx` no longer queries tables directly. V2 now reads only profile and unread-notification metadata: it does not read `wallets`, `wallet_ledger`, earned points, or purchased credits while reward/payment rules remain disabled. Legacy wallet/points reads remain isolated in the API fallback.
