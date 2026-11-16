@@ -8,12 +8,12 @@ This is an isolated rebuild candidate, not a production migration.
 - Supabase validation project: TestDZ-FixLab (`bxjqwqidmxxnsgnpyzxv`).
 - Candidate schema: `rebuild_v2`; helper schema: `rebuild_v2_private`.
 - Candidate source: the 18 ordered SQL scripts in `supabase/rebuild-v2/`.
-- The candidate scripts remain outside `supabase/migrations` until clean replay, application compatibility, security tests, and rollback planning are complete.
+- The candidate scripts remain outside `supabase/migrations` until live-to-clean catalog comparison, legacy-schema scope, application compatibility, security review, backup, and rollback gates are complete.
 - Production project `naqjjykcglxiobkmdllj` has not been modified by this rebuild work.
 
 ## Candidate model
 
-The current candidate contains 47 tables and seven Storage buckets.
+The final candidate contains 47 tables and seven Storage buckets.
 
 The model covers identity and authorization, developer apps and tests, tester assignments and evidence, cohorts, moderation and trust, financial wallets and ledger, subscriptions and payments, support workflows, notifications, and developer feedback.
 
@@ -27,33 +27,45 @@ The model covers identity and authorization, developer apps and tests, tester as
 - Security-definer helpers live in the private schema, use fixed search paths, and are not executable by anon.
 - Private Storage buckets enforce owner/participant checks and metadata verification for test builds, media, feedback attachments, support attachments, and submitted evidence.
 
-## Validation completed
+## Validation completed (2026-11-16)
 
-- The candidate schema and scripts through 018 have been applied to the isolated FixLab candidate schema.
-- Live read-only inventory previously confirmed 47 tables in `rebuild_v2`, all 47 with RLS and FORCE RLS, and seven Storage buckets.
-- The candidate includes phase-one and later workflow contracts for app lifecycle, profiles, developer lifecycle, private test media, tester workflow, and developer feedback privacy.
-- The role matrix and all frontend routes are not yet fully covered by end-to-end tests.
-- The final-state contract added alongside this plan still needs to be executed against FixLab and the clean local replay.
+- GitHub Actions run [#8](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43944382982), commit `665ea461430c958132108c2310d5c11a59469d6c`, completed successfully.
+- CI built a disposable local Supabase stack, applied all 18 candidate SQL scripts in numeric order, passed all nine contracts (the phase-one security contract plus eight post-phase contracts), and stopped the stack successfully.
+- The wallet idempotency contract returned `rebuild_v2_wallet_idempotency_contract: PASS`.
+- Contract fixtures were rolled back. The final-state cleanup check reported zero remaining app, profile, and auth-user fixtures.
+- Read-only FixLab inventory confirmed 47 `rebuild_v2` tables, RLS and FORCE RLS on all 47, 439 columns, 297 constraints, 157 indexes, 48 candidate RLS policies, 96 candidate functions (39 in `rebuild_v2`, 57 in `rebuild_v2_private`), six candidate triggers, seven Storage buckets, and 18 Storage object policies.
+- FixLab's `post_wallet_entry` definition was read back and confirmed to compare the full idempotency identity: user, wallet type, amount, entry type, reference type/id, actor, and reason.
+- FixLab's current hosted migration history still contains 21 records. No history repair/reset has been performed.
+
+## Important scope finding: legacy public schema
+
+FixLab also contains 24 tables in the `public` schema, alongside the 47 candidate tables in `rebuild_v2`. The current frontend source selects `rebuild_v2` only when `VITE_TESTER_WORKFLOW_V2_ENABLED === "true"`; when the flag is false or unset, several core API modules use the legacy default `public` schema.
+
+Therefore, the 18 candidate scripts are a reproducible baseline for the V2 candidate schema, but they are not yet proven to be a complete baseline for every currently supported application path. Before replacing the old migration history, decide whether:
+1. the legacy `public` schema remains part of the supported product and must be represented in the replacement baseline; or
+2. all active routes and APIs are deliberately cut over to V2, with compatibility and rollback tests, before the legacy schema is excluded.
+
+FixLab's security advisor also reports four INFO findings for legacy public tables with RLS enabled but no policies: `public.audit_logs`, `public.fraud_reviews`, `public.platform_config`, and `public.user_roles`. These tables are deny-by-default for ordinary roles under RLS, but their intended use and grants still need review before retaining or retiring the legacy schema. The current statistics estimate zero live rows in all 24 public tables; this is an estimate, not a substitute for a final preservation check.
 
 ## Remaining validation gates
 
-1. **Clean replay:** apply all 18 scripts in numeric order to a disposable empty Supabase local stack and confirm the final 47-table/seven-bucket contract passes.
-2. **Contract suite:** run the phase-one security contract after 001–006, then run the final-state and workflow contracts after 001–018.
-3. **Frontend compatibility:** complete the route/API-to-SQL mapping, including roles, tester rewards, referrals, reports, leaderboard privacy, and admin workflows.
-4. **CI:** the new `.github/workflows/rebuild-v2-tests.yml` applies the 18 candidate scripts to a disposable local Supabase stack and runs the phase-one and final contract suites. Its first GitHub Actions run must pass before this gate is considered complete.
+1. **Exact live-to-clean comparison:** compare columns, constraints, indexes, function bodies and security attributes, policies, grants, triggers, extensions, and Storage bucket configuration between FixLab and a clean replay. CI proves clean replay and contract behavior; it does not by itself prove complete catalog equivalence.
+2. **Legacy-schema decision:** determine whether the public schema remains in scope or whether V2 cutover is required before establishing a V2-only baseline.
+3. **Frontend compatibility:** complete route/API-to-SQL mapping, including roles, tester rewards, referrals, reports, leaderboard privacy, and admin workflows.
+4. **Security follow-up:** resolve or explicitly document the four legacy public-schema advisor findings.
 5. **Backup and restore:** verify a restorable Production backup and rehearse restoration before any production migration.
 6. **Data preservation:** approve explicit mappings for existing Auth users, Storage buckets/objects, and any data that must be retained.
 7. **Cutover and rollback:** prepare a tested rollback plan and obtain explicit approval before any Production action.
 
 ## Migration-history strategy
 
-The approved direction is to preserve the existing candidate schema and data, archive the old migration files in Git rather than permanently deleting them, and establish a new baseline/history only after a clean replay is proven. The 21 existing FixLab migration-history records must not be removed until the replacement baseline is verified and the exact history operation is reviewed. Do not change Production migration history.
+The approved direction is to preserve the existing candidate schema and data, archive old migration files in Git rather than permanently deleting them, and establish a new baseline/history only after clean replay, catalog comparison, and legacy-schema scope are resolved. The 21 existing FixLab migration-history records must not be removed until the replacement baseline is verified and the exact history operation is reviewed. Do not change Production migration history.
 
 ## Safety boundary
 
 - Do not apply candidate scripts to Production.
 - Do not drop or reset the existing FixLab candidate schema or its data as part of this validation.
 - Do not delete Auth users or Storage objects.
-- Do not run `supabase db pull` against FixLab as a shortcut; the current CLI v3 defaults and remote-history behavior must be considered before any hosted command.
+- Do not run `supabase db pull` against FixLab as a shortcut; CLI v3 defaults and hosted migration-history behavior must be considered before any hosted command.
 - Do not change `supabase/config.toml` project targeting or run a hosted CLI command until the target project ref is explicitly verified.
 - No Production cutover is authorized by this document.
