@@ -17,6 +17,7 @@ on:
       - "packages/**"
       - "package.json"
       - "package-lock.json"
+      - "scripts/check-tester-page-data-boundary.mjs"
       - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
 
