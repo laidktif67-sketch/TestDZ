@@ -1,6 +1,6 @@
 import { useEffect,useState } from "react";
 import { Link } from "react-router-dom";
-import { getTesterLeaderboardPageData } from "../../../features/tester/tester-api";
+import { getTesterLeaderboardPageData } from "../../../features/tester/dashboard-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar,{Icon} from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
