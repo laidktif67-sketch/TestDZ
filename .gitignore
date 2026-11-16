@@ -24,7 +24,6 @@ pnpm-debug.log*
 test-results/
 playwright-report/
 blob-report/
-artifacts/
 
 # Framework and deployment caches
 .vercel/
