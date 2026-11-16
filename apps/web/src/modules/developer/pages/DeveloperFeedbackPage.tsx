@@ -69,7 +69,7 @@ export default function DeveloperFeedbackPage(){
     setPriority(selected.priority);
     setResolutionNote(selected.resolution_note??"");
     let alive=true;
-    void listDeveloperFeedbackMessages(selected.feedback_id).then(result=>{
+    void listDeveloperFeedbackMessages(selected.feedback_id).then((result: { data: unknown; error: { message: string } | null })=>{
       if(!alive)return;
       if(result.error){setError("Could not load the feedback conversation.");setMessages([]);}
       else setMessages((result.data??[]) as DeveloperFeedbackMessage[]);
