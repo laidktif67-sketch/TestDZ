@@ -119,6 +119,10 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.assignments WHERE id=v_assignment AND tester_id='50000000-0000-4000-8000-000000000003' AND cohort_id=v_cohort) THEN
     RAISE EXCEPTION 'FAIL: tester could not join approved test cohort';
   END IF;
+  SELECT count(*) INTO v_count FROM rebuild_v2.test_steps WHERE test_id=v_test;
+  IF v_count<>2 THEN RAISE EXCEPTION 'FAIL: assigned tester cannot read test steps under RLS'; END IF;
+  SELECT count(*) INTO v_count FROM rebuild_v2.test_requirements WHERE test_id=v_test;
+  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: assigned tester cannot read test requirements under RLS'; END IF;
 
   PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
