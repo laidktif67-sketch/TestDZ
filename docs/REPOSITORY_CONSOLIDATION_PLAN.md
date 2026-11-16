@@ -95,3 +95,27 @@ Do not delete local repositories/worktrees until all local-only Git commits are 
 ## 9. Current verification limits
 
 This plan is based on GitHub metadata, committed files, and previously recorded FixLab inspection results. It does not claim a fresh live database comparison, authenticated runtime smoke test, complete branch-by-branch code review, or Production validation. Those checks remain explicit gates.
+
+
+## 10. Branch comparison evidence (2026-11-16)
+
+The following GitHub compare results are history comparisons against `rebuild/testdz-v2`; ahead/behind counts are commit ancestry counts, **not counts of missing features**:
+
+| Branch | Ahead of V2 | Behind V2 | Changed paths reported |
+|---|---:|---:|---:|
+| `integrate/pr17-into-architecture` (PR #18 head) | 0 | 494 | 0 |
+| `feature/developer-full-lifecycle` | 896 | 494 | 235 |
+| `feat/developer-create-test-six-step` | 941 | 494 | 242 |
+| `fix/supabase-rebuild-fk-indexes` | 942 | 494 | 243 |
+| `feature/developer-my-tests-dashboard` | 279 | 494 | 69 |
+| `fix/security-c1-test-ownership` | 106 | 1,376 | 73 |
+| `fix/restrict-test-lifecycle-column-writes` | 108 | 1,376 | 74 |
+| `fix/test-app-developer-ownership-rls` | 101 | 1,376 | 70 |
+| `fix/test-details-only-rebuild-compatible` | 106 | 1,376 | 72 |
+| `fix/week-5-fk-reconciliation` | 105 | 1,376 | 70 |
+| `fix/unify-tester-sidebar` | 52 | 494 | 27 |
+| `chore/engineering-governance` | 21 | 494 | 15 |
+
+The Week 5 ownership/FK branch family is based on a substantially different history from V2. Its recent migrations target the legacy `public.apps` and `public.tests` objects, while the candidate V2 application schema is `rebuild_v2`. Do not copy or apply those migrations verbatim to the V2 candidate schema. Port the invariant and tests only after translating them to the actual V2 schema and checking existing constraints and RPC ownership.
+
+A lookup of local commit `94a27dfa` (`fix/secure-test-creation-ownership`) returned no matching GitHub commit, and that branch was absent from the 45 remote branches. This confirms that the local branch must be pushed or bundled before local repository deletion. The older local worktree inventory also recorded untracked `skills-lab` changes; re-check its current local-vs-remote state before deleting the worktree.
