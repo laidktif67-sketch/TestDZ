@@ -40,7 +40,7 @@ export const identityApi = {
   },
 
   getUserRoles(userId: string): Promise<AccountRole[]> {
-    const client = isTesterWorkflowV2Enabled ? supabaseV2 : getClient();
+    const client: any = isTesterWorkflowV2Enabled ? supabaseV2 : getClient();
     if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
     const query = client
       .from("user_roles")
@@ -50,8 +50,8 @@ export const identityApi = {
     return Promise.resolve(query).then(({ data, error }) => {
       if (error) throw error;
       return (data ?? [])
-        .map((row) => row.role)
-        .filter((role): role is AccountRole =>
+        .map((row: { role: string }) => row.role)
+        .filter((role: string): role is AccountRole =>
           ACCOUNT_ROLES.has(role as AccountRole)
         );
     });
