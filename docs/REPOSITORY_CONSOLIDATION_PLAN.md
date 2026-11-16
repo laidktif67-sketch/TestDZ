@@ -186,3 +186,24 @@ GitHub Actions run [43972628539](https://github.com/laidktif67-sketch/TestDZ/act
 ### Consolidation decision
 
 No package manifest, lockfile, source module, or workspace boundary was changed during this inventory. The two-workspace topology is coherent enough to retain. Future modularization should add a workspace only when a genuine reusable boundary exists (for example, a separately tested UI component library or a server-side package); do not split feature folders merely to increase package count.
+
+## 14. Fresh FixLab migration-provenance recheck (2026-11-16)
+
+A fresh read-only check was performed against the isolated `TestDZ-FixLab` project (`bxjqwqidmxxnsgnpyzxv`), not Production:
+
+- Project status: `ACTIVE_HEALTHY`; PostgreSQL `17.11.0.019`.
+- Hosted migration history still contains 21 entries, spanning `20261115095605` through `20261116162951`.
+- The V2 repository branch still contains 31 committed migration files, with the previously recorded last file `20261112000100_support_ticket_conversations.sql`.
+- Seven exact candidate migration paths corresponding to later FixLab versions were checked directly on `rebuild/testdz-v2` (including the V2 namespace, developer lifecycle, content authoring, cohort management, private test-build, private feedback, and final evidence-metadata migrations). All seven returned GitHub 404 / not found on that branch.
+- The FixLab table inventory returned 47 tables in `rebuild_v2`, alongside legacy `public` tables. RLS was reported enabled on all returned tables. The private schema has no tables in this inventory; it contains internal routines, not application tables.
+
+This confirms the migration reproducibility blocker remains open. The hosted migration history is not represented by matching checked-in SQL files, and the seven missing paths cannot be reconstructed from version/name metadata alone. Do not create placeholder migrations, mark these versions as applied in Git, run `db reset`, run `db push`, or change either hosted project to make the histories appear aligned.
+
+### Safe recovery work still required
+
+1. Export each FixLab migration body and all relevant dependent function definitions, grants, triggers, policies, and storage configuration using read-only inspection.
+2. Preserve the exports as source evidence before attempting to create canonical migration files.
+3. Reconcile each SQL body against the 31 committed V2 migration files and the 47-table candidate schema.
+4. Build and replay the canonical sequence in a disposable local database; compare the resulting schema and privileges before proposing any hosted reconciliation.
+
+The Supabase CLI v3 changelog was rechecked before this work. CLI v3 defaults database commands to the local stack and requires explicit `--remote` for hosted operations; unattended hosted changes require `--yes`. The existing repository guardrail against linked/remote CLI use remains in force. No SQL was executed, no migration was applied, and no database state was changed during this recheck.
