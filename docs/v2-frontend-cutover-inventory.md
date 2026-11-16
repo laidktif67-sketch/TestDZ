@@ -26,14 +26,14 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 - `ActiveAssignmentProgressPage.tsx` now delegates initial page data reads and both V2 workflow actions (`start_assignment`, `submit_checkin` plus its follow-up check-in read) to `tester-api.ts`. The page no longer calls `.from()` or `.rpc()` directly.
 - Removed live legacy leaderboard enumeration from the page/API path: it no longer queries all tester roles, other users' profiles, or their points ledgers. Rankings remain intentionally unavailable until a privacy-safe aggregate endpoint is implemented. The local development preview retains its static mock podium only.
 - V2 check-in reads select only `id,checkin_date`; the legacy evidence URL field remains isolated to the legacy branch. V2 reward totals remain disabled/zero in this page; no reward posting was added.
-- No database writes, schema changes, deployment, or Production changes were performed. Frontend CI for this extraction is pending verification.
+- No schema changes, hosted database writes, deployment, or Production changes were performed. The page's existing start/check-in actions still perform their intended workflow RPCs at runtime. Frontend CI for this extraction is pending verification.
 
 ## Assignment submission read extraction (2026-11-16)
 
 - Added `getAssignmentSubmissionPageData(assignmentId, userId)` to `apps/web/src/features/tester/tester-api.ts`.
 - `AssignmentSubmissionPage.tsx` now delegates its initial assignment, check-in, and feedback-count reads to that API for both the transitional V2 and legacy paths.
-- The page retains the final-submission workflow, V2 RPC calls, and base-client Storage uploads. Those write/Storage operations were deliberately not moved as part of this read-only extraction.
-- No reward posting, withdrawals, database changes, or deployment were performed.
+- The page now routes V2 submission lifecycle RPCs and attachment metadata queries through `tester-api.ts`. It retains only binary upload and signed-object existence checks through the base Supabase Storage client.
+- No reward posting, withdrawals, schema changes, hosted database changes, or deployment were performed.
 - TypeScript/build CI for this new commit has not yet been verified.
 
 ## Latest tester history extraction (2026-11-16)
@@ -42,7 +42,7 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 - Migrated `CheckInHistoryPage.tsx` and `FeedbackHistoryPage.tsx` to consume those feature API functions. Both pages retain Auth/session access through the base client, but no longer issue page-level `.from()` or `.rpc()` data calls.
 - Preserved the V2/legacy field differences inside the API module: V2 check-ins use private evidence paths and do not expose legacy evidence URLs or points-ledger values; V2 feedback history does not read the legacy `points_ledger`.
 - This is an extraction only. It does not enable reward posting, withdrawals, or any database changes.
-- The assignment progress and submission pages remain pending; they include workflow actions, Storage operations, and state transitions that require a separate contract-aware extraction.
+- Assignment progress and submission initial reads are now extracted; their workflow actions have also been moved into feature APIs. Binary Storage operations remain page-level by design.
 - CI status for these three commits is pending verification; do not treat earlier passing CI as covering this change.
 
 
@@ -58,7 +58,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 ### Tester workflow and activity
 - `ActiveAssignmentProgressPage.tsx`: initial reads and V2 `start_assignment`/`submit_checkin` actions are centralized in `tester-api.ts`; no page-level `.from()`/`.rpc()` calls remain. Live cross-user leaderboard enumeration has been removed; rankings await a privacy-safe aggregate.
-- `AssignmentSubmissionPage.tsx`: initial assignment/check-in/feedback reads are centralized in `tester-api.ts`; final submission RPC and base-client Storage uploads remain in the page pending a dedicated workflow extraction.
+- `AssignmentSubmissionPage.tsx`: initial reads and V2 submission lifecycle RPCs/attachment metadata operations are centralized in `tester-api.ts`; only binary upload and signed-object checks remain in the page through the base Storage client.
 - `ActivityHistoryPage.tsx`: V2 path uses `wallet_ledger`; legacy path reads `points_ledger`.
 - `CheckInHistoryPage.tsx`: page-level data calls are now extracted; schema-specific V2/legacy reads remain centralized in `tester-api.ts`.
 - `DiscoverTestsPage.tsx`: V2 and public read branches; V2 uses `get_discoverable_tests`.
