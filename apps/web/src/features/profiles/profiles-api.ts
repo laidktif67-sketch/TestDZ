@@ -47,6 +47,20 @@ export const profilesApi = {
     });
   },
 
+  getHeaderProfile(userId: string) {
+    return getDataClient().from("profiles")
+      .select("display_name,avatar_url").eq("id", userId).maybeSingle();
+  },
+
+  getSecuritySettingsProfile(userId: string) {
+    return getDataClient().from("profiles")
+      .select("display_name,avatar_url,locale").eq("id", userId).maybeSingle();
+  },
+
+  updateSecuritySettings(userId: string, input: { display_name: string; locale: string }) {
+    return getDataClient().from("profiles").update(input).eq("id", userId);
+  },
+
   getProfile(userId: string) {
     return getDataClient()
       .from("profiles")
