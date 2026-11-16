@@ -336,7 +336,7 @@ export async function uploadDeveloperTestAsset(input: {
 }) {
   const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "";
   const mime = TEST_ASSET_MIME_BY_EXTENSION[extension];
-  if (!mime || input.file.type !== mime) {
+  if (!mime || (input.file.type && input.file.type !== mime)) {
     return { error: new Error("TEST_ASSET_FILE_TYPE_INVALID"), stage: "validation" as const };
   }
   if (input.file.size < 1 || input.file.size > 52428800) {
