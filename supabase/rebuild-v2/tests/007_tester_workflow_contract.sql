@@ -58,6 +58,8 @@ DECLARE
   v_submission_again uuid;
   v_path text;
   v_capacity_error text;
+  v_start_error text;
+  v_started_at timestamptz;
   v_file constant uuid := '20000000-0000-4000-8000-000000000001';
 BEGIN
   PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
@@ -84,8 +86,42 @@ BEGIN
   UPDATE rebuild_v2.tests SET status='ready' WHERE id=v_test;
   UPDATE rebuild_v2.cohorts SET status='ready' WHERE name='V2 Synthetic Cohort';
 
-  IF rebuild_v2.start_assignment(v_assignment) IS NULL THEN
+  UPDATE rebuild_v2.cohorts
+  SET starts_at=now()+interval '1 day',ends_at=now()+interval '3 days'
+  WHERE id=(SELECT cohort_id FROM rebuild_v2.assignments WHERE id=v_assignment);
+  BEGIN
+    PERFORM rebuild_v2.start_assignment(v_assignment);
+    RAISE EXCEPTION 'FAIL: assignment started before cohort start time';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    GET STACKED DIAGNOSTICS v_start_error = MESSAGE_TEXT;
+    IF v_start_error <> 'ASSIGNMENT_OUTSIDE_TEST_WINDOW' THEN
+      RAISE EXCEPTION 'FAIL: unexpected early-start rejection: %',v_start_error;
+    END IF;
+  END;
+
+  UPDATE rebuild_v2.cohorts
+  SET starts_at=now()-interval '1 minute',ends_at=now()-interval '1 second'
+  WHERE id=(SELECT cohort_id FROM rebuild_v2.assignments WHERE id=v_assignment);
+  BEGIN
+    PERFORM rebuild_v2.start_assignment(v_assignment);
+    RAISE EXCEPTION 'FAIL: assignment started after cohort end time';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    GET STACKED DIAGNOSTICS v_start_error = MESSAGE_TEXT;
+    IF v_start_error <> 'ASSIGNMENT_OUTSIDE_TEST_WINDOW' THEN
+      RAISE EXCEPTION 'FAIL: unexpected late-start rejection: %',v_start_error;
+    END IF;
+  END;
+
+  UPDATE rebuild_v2.cohorts SET ends_at=now()+interval '3 days'
+  WHERE id=(SELECT cohort_id FROM rebuild_v2.assignments WHERE id=v_assignment);
+  v_started_at:=rebuild_v2.start_assignment(v_assignment);
+  IF v_started_at IS NULL THEN
     RAISE EXCEPTION 'FAIL: start assignment';
+  END IF;
+  UPDATE rebuild_v2.cohorts SET ends_at=now()-interval '1 second'
+  WHERE id=(SELECT cohort_id FROM rebuild_v2.assignments WHERE id=v_assignment);
+  IF rebuild_v2.start_assignment(v_assignment) IS DISTINCT FROM v_started_at THEN
+    RAISE EXCEPTION 'FAIL: started assignment retry must preserve original timestamp';
   END IF;
 
   v_checkin := rebuild_v2.submit_checkin(v_assignment,'Synthetic daily check-in');
