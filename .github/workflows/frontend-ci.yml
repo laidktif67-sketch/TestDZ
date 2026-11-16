@@ -9,6 +9,7 @@ on:
       - "packages/**"
       - "package.json"
       - "package-lock.json"
+      - "scripts/check-tester-page-data-boundary.mjs"
       - ".github/workflows/frontend-ci.yml"
   pull_request:
     paths:
@@ -42,6 +43,9 @@ jobs:
 
       - name: Install locked dependencies
         run: npm ci
+
+      - name: Tester page data-boundary check
+        run: npm run check:data-boundary
 
       - name: TypeScript typecheck
         run: npm run typecheck
