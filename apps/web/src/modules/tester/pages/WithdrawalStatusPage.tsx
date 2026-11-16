@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { profilesApi } from "../../../features/profiles/profiles-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/withdrawal-status.css";
@@ -18,10 +18,8 @@ export default function WithdrawalStatusPage() {
   const firstName = name.split(/\s+/)[0] || "Tester";
 
   useEffect(() => {
-    const authClient = supabase;
-    const db: any = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
-    if (!authClient || !db) { setLoading(false); return; }
-    const auth = authClient;
+    const auth = supabase;
+    if (!auth || !profilesApi.isConfigured()) { setLoading(false); return; }
     let alive = true;
     async function load() {
       try {
@@ -29,7 +27,7 @@ export default function WithdrawalStatusPage() {
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
-        const { data: profile, error } = await db.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle();
+        const { data: profile, error } = await profilesApi.getHeaderProfile(user.id);
         if (error) throw error;
         if (alive) {
           setName(profile?.display_name?.trim() || user.email?.split("@")[0] || "Tester");
