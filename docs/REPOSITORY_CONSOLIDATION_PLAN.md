@@ -497,7 +497,7 @@ The wallet posting implementation, `post_wallet_entry(...)`, also has no applica
 
 A read-only SQL fingerprint query was executed against FixLab to go beyond name/count parity. It hashes sorted canonical catalog definitions for columns (including types, nullability, defaults, identity/generated flags), constraints (including validation/deferrability and definitions), indexes (including definitions and validity flags), comparable function definitions/security attributes/owners, RLS and Storage policies (roles normalized to role names), application triggers, and Storage bucket metadata.
 
-The two already documented date-delta functions are excluded from the comparable function fingerprint: `algeria_local_date` exists only in the candidate, and `submit_checkin_impl` intentionally differs until FixLab receives a reviewed patch.
+The five already documented date-delta functions are excluded from the comparable function fingerprint: `algeria_local_date` exists only in the candidate, while `get_discoverable_tests_impl`, `join_test_impl`, `start_assignment_impl`, and `submit_checkin_impl` intentionally differ until FixLab receives a reviewed patch. Supabase-managed Storage policies and triggers are also excluded from the application-only policy/trigger scope; policy roles are normalized to role names and MIME allowlists are sorted for stable comparison.
 
 ### FixLab live baseline
 
@@ -506,12 +506,12 @@ The two already documented date-delta functions are excluded from the comparable
 | Columns | 439 | `6b2e2bfcf01345a2df6872e1d1440a1a` |
 | Constraints | 297 | `59b3c93fe0464ae76e0f40f4d4d69d50` |
 | Indexes | 157 | `786a77cadcbb7f11f9cd5ca23d3d0641` |
-| Comparable functions | 95 | `d02f532b87f369be104475aaec409147` |
+| Comparable functions | 92 | `e067f3b2adde6b98818e3c2ac9b9c44c` |
 | RLS + Storage policies | 66 | `2773b5f980046e8b208337e6f1362a89` |
 | Application triggers | 7 | `fae73e6683552c9c4117a908b79fe2e4` |
-| Storage buckets | 7 | `29047a12b734c63d031f28c63c928d10` |
+| Storage buckets | 7 | `db8856a0085f654d3c8ca42948c1c3a6` |
 
-[PR #48](https://github.com/laidktif67-sketch/TestDZ/pull/48) adds the same read-only fingerprint query to the isolated V2 CI workflow so it emits the candidate-side hashes after replaying all 18 scripts. The query itself has been executed successfully against FixLab. Candidate-side CI is still running; no hash parity claim is made yet.
+[PR #48](https://github.com/laidktif67-sketch/TestDZ/pull/48) adds the same read-only fingerprint query to the isolated V2 CI workflow so it emits candidate-side hashes after replaying all 18 scripts. The query itself has been executed successfully against FixLab. Candidate-side CI is running after the scope normalization; no hash parity claim is made yet.
 
 If the candidate hashes match these FixLab values, that will establish a strong parity result for these catalog classes after excluding the two known date deltas. It will not prove data parity, object contents, grants, or Production readiness. If a hash differs, compare the sorted catalog entries for that class and explain each difference before any FixLab migration or baseline repair.
 
