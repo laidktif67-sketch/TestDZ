@@ -18,6 +18,8 @@ export default function AssignmentDetailsPage(){
  useEffect(()=>{
   if(preview){setData({id:"preview-assignment",status:"active",start_date:"2026-11-07",points_awarded:75,test:{id:"preview-test",title:"Performance Testing",description:"Help us test the app’s performance and stability under different conditions. Focus on responsiveness, smoothness, crashes and battery usage.",short_summary:"Test the app performance under different conditions.",start_date:"2026-11-07",end_date:"2026-11-14",app:{name:"PlayStore App",icon_url:null,category:"Android application"}}});setLoading(false);return;}
   if(!session?.user?.id||!id){setLoading(false);return;}
+  const storageClient=supabase;
+  if(!storageClient){setError("Database connection is unavailable.");setLoading(false);return;}
   let alive=true;
   (async()=>{
    if(isTesterWorkflowV2Enabled&&supabaseV2){
@@ -33,7 +35,7 @@ export default function AssignmentDetailsPage(){
     ]);
     if(!alive)return;
     const signedAssets=await Promise.all((assetResult.data??[]).map(async asset=>{
-     const {data:signed,error:signedError}=await supabase.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
+     const {data:signed,error:signedError}=await storageClient.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
      return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
     }));
     setAssets(signedAssets.filter((asset):asset is NonNullable<typeof asset>=>!!asset));
