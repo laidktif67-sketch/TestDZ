@@ -12,10 +12,15 @@ TestDZ is an Algeria-first platform that helps Android developers organize close
 - Database region: eu-west-3 (Paris).
 - Payments, trials, and referrals: disabled by default until their workflows are implemented and verified.
 
-## Documentation
+## Documentation and engineering governance
 
 - [Master Blueprint v2.0](docs/MASTER_BLUEPRINT.md) — canonical product, architecture, data and implementation reference.
 - [Architecture notes](docs/ARCHITECTURE.md) — approved target architecture and technical guardrails.
+- [Engineering Playbook](docs/ENGINEERING_PLAYBOOK.md) — specialist responsibilities, implementation workflow, security invariants, and review gates.
+- [Repository Consolidation Plan](docs/REPOSITORY_CONSOLIDATION_PLAN.md) — V2 baseline, migration provenance, branch cleanup stages, and environment safeguards.
+- [Branch Porting Matrix](docs/BRANCH_PORTING_MATRIX.md) — evidence-based decisions for recovering useful work from historical branches and PRs.
+- [Agent instructions](AGENTS.md) — repository-wide rules for coding agents.
+- [Vendored agent skills](.skill-lab/global/) — versioned skills used by the repository workflow.
 
 ## Core principles
 
