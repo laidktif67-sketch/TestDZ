@@ -90,7 +90,7 @@ export default function ActivityHistoryPage() {
       setLedger([{amount:50,reference_id:"demo-1",wallet_type:"earned_points"},{amount:45,reference_id:"demo-2",wallet_type:"earned_points"},{amount:45,reference_id:"demo-3",wallet_type:"earned_points"}]);setNotifications(3);setLoading(false);return;
     }
     if(!session?.user?.id||!supabase){setLoading(false);return;}
-    let alive=true;const client=supabase;const userId=session.user.id;const userEmail=session.user.email;
+    let alive=true;const userId=session.user.id;const userEmail=session.user.email;
     async function load(){
       setLoading(true);setError("");
       const result = await getActivityHistoryPageData(userId);
