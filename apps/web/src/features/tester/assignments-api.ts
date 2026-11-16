@@ -247,3 +247,23 @@ export async function getTesterAssignmentDetailsPageData(assignmentId: string, u
     .eq("id", assignmentId).eq("tester_id", userId).maybeSingle();
   return { data: assignment.data, assets: [], error: assignment.error };
 }
+
+/** Legacy-only completion summary reads; the V2 screen intentionally redirects to the wallet. */
+export async function getLegacyTesterCompletionSummaryPageData(assignmentId: string, userId: string) {
+  const client = getAppDataClient();
+  const [assignment, checkins, feedback, ledger, profile] = await Promise.all([
+    client.from("assignments")
+      .select("id,status,start_date,completed_at,points_awarded,test:tests(title,start_date,end_date,app:apps(name,icon_url))")
+      .eq("id", assignmentId).eq("tester_id", userId).maybeSingle(),
+    client.from("checkins").select("id,checkin_date")
+      .eq("assignment_id", assignmentId).eq("tester_id", userId).order("checkin_date"),
+    client.from("feedback").select("id,body,quality_status,created_at,reviewed_at")
+      .eq("assignment_id", assignmentId).eq("tester_id", userId)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    client.from("points_ledger").select("id,amount,reason,reference_id,reference_type,created_at")
+      .eq("user_id", userId).eq("wallet_type", "earned_points")
+      .eq("reference_id", assignmentId).order("created_at"),
+    client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
+  ]);
+  return { assignment, checkins, feedback, ledger, profile };
+}
