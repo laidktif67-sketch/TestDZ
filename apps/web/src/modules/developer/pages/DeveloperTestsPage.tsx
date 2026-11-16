@@ -153,10 +153,13 @@ export default function DeveloperTestsPage() {
     const version=(apkVersions[testId]??"").trim();
     if(!version){setError("أدخل رقم إصدار APK.");return;}
     setBusy(true);setError("");setNotice("");
-    const result=await uploadDeveloperTestBuild({userId,testId,file:apkFiles[testId] as File,versionLabel:version});
-    if(result.error)setError("تعذر رفع/التحقق من APK ("+result.stage+"): "+result.error.message);
-    else{setNotice("تم رفع APK إلى التخزين الخاص والتحقق منه بنجاح.");setApkFiles(rows=>({...rows,[testId]:null}));await load(userId);}
-    setBusy(false);
+    try{
+      const result=await uploadDeveloperTestBuild({userId,testId,file:apkFiles[testId] as File,versionLabel:version});
+      if(result.error)setError("تعذر رفع/التحقق من APK ("+result.stage+"): "+result.error.message);
+      else{setNotice("تم رفع APK إلى التخزين الخاص والتحقق منه بنجاح.");setApkFiles(rows=>({...rows,[testId]:null}));await load(userId);}
+    }catch(uploadError){
+      setError("حدث خطأ غير متوقع أثناء رفع APK: "+(uploadError instanceof Error?uploadError.message:"UNKNOWN_UPLOAD_ERROR"));
+    }finally{setBusy(false);}
   }
   async function uploadTestAsset(testId:string){
     const file=assetFiles[testId];
@@ -164,10 +167,13 @@ export default function DeveloperTestsPage() {
     if(!userId||!file){setError("اختر ملفاً لإرفاقه بالاختبار أولاً.");return;}
     if(!title){setError("أدخل عنواناً واضحاً للمرفق.");return;}
     setBusy(true);setError("");setNotice("");
-    const result=await uploadDeveloperTestAsset({userId,testId,file,title});
-    if(result.error)setError("تعذر رفع/التحقق من المرفق ("+result.stage+"): "+result.error.message);
-    else{setNotice("تم رفع مرفق الاختبار إلى التخزين الخاص والتحقق منه.");setAssetFiles(rows=>({...rows,[testId]:null}));setAssetTitles(rows=>({...rows,[testId]:""}));await load(userId);}
-    setBusy(false);
+    try{
+      const result=await uploadDeveloperTestAsset({userId,testId,file,title});
+      if(result.error)setError("تعذر رفع/التحقق من المرفق ("+result.stage+"): "+result.error.message);
+      else{setNotice("تم رفع مرفق الاختبار إلى التخزين الخاص والتحقق منه.");setAssetFiles(rows=>({...rows,[testId]:null}));setAssetTitles(rows=>({...rows,[testId]:""}));await load(userId);}
+    }catch(uploadError){
+      setError("حدث خطأ غير متوقع أثناء رفع المرفق: "+(uploadError instanceof Error?uploadError.message:"UNKNOWN_UPLOAD_ERROR"));
+    }finally{setBusy(false);}
   }
 
   function beginEditCohort(cohort:DeveloperCohort){
