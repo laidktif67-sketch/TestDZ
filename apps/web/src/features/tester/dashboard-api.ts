@@ -11,7 +11,7 @@ export async function getTesterDashboardData(userId: string) {
   if (isTesterWorkflowV2Enabled) {
     const [profileRes, assignmentRes, testRes, notificationRes] = await Promise.all([
       client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-      client.from("assignments").select("id,status,started_at,assigned_at,created_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id", userId),
+      client.from("assignments").select("id,status,started_at,assigned_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id", userId),
       client.rpc("get_discoverable_tests"),
       client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
     ]);
@@ -79,7 +79,7 @@ export async function getMyTestsPageData(userId: string) {
     client.from("user_roles").select("role").eq("user_id", userId),
     client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
     isTesterWorkflowV2Enabled
-      ? client.from("assignments").select("id,status,started_at,assigned_at,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("assigned_at", { ascending: false })
+      ? client.from("assignments").select("id,status,started_at,assigned_at,completed_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("assigned_at", { ascending: false })
       : client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("created_at", { ascending: false }),
     client.from("feedback").select("id,quality_status,created_at,assignment_id").eq("tester_id", userId).order("created_at", { ascending: false }),
     client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
