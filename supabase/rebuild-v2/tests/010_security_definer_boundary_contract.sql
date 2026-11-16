@@ -24,12 +24,15 @@ BEGIN
   IF has_function_privilege('authenticated',
        'rebuild_v2_private.grant_role(uuid,text,text)'::regprocedure, 'EXECUTE')
      OR has_function_privilege('authenticated',
-       'rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid)'::regprocedure, 'EXECUTE')
-     OR has_function_privilege('authenticated',
        'rebuild_v2_private.request_developer_role(text)'::regprocedure, 'EXECUTE')
      OR has_function_privilege('authenticated',
        'rebuild_v2_private.review_role_request(uuid,text,text)'::regprocedure, 'EXECUTE') THEN
-    RAISE EXCEPTION 'authenticated must not directly execute unwrapped privileged private implementations';
+    RAISE EXCEPTION 'authenticated must not directly execute unwrapped role-management implementations';
+  END IF;
+
+  IF NOT has_function_privilege('authenticated',
+       'rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid)'::regprocedure, 'EXECUTE') THEN
+    RAISE EXCEPTION 'authenticated financial context must retain wallet posting EXECUTE for the idempotency contract';
   END IF;
 
   IF has_function_privilege('anon',
