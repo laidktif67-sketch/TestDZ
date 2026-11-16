@@ -57,6 +57,19 @@ FixLab's security advisor also reports four INFO findings for legacy public tabl
 6. **Data preservation:** approve explicit mappings for existing Auth users, Storage buckets/objects, and any data that must be retained.
 7. **Cutover and rollback:** prepare a tested rollback plan and obtain explicit approval before any Production action.
 
+## Migration-history provenance finding
+
+A fresh comparison on 2026-11-16 found 31 SQL files under the repository's current `supabase/migrations/` directory and 21 records in FixLab's hosted `supabase_migrations.schema_migrations` history. **None of the 21 hosted version timestamps matches any of the 31 repository migration filenames.** The hosted history names are FixLab-specific records (including fixture, candidate, and hardening steps), while the checked-in migration files are the earlier legacy sequence.
+
+This means the two histories cannot be treated as a simple one-to-one list. Before any hosted history repair:
+- preserve the complete 21-row FixLab history inventory (version and name) in the archive;
+- identify which current candidate SQL files fully supersede each FixLab-only schema change;
+- identify whether any FixLab-only change is not represented in the 18 candidate scripts;
+- archive the 31 repository legacy migration files separately;
+- verify the exact target project ref and expected resulting history table before running any repair.
+
+The SQL bodies of the 21 hosted history records are not returned by the migration-list API. Do not claim they have been archived as SQL unless they are independently recovered and checked in. The current V2 candidate may represent their final schema effects, but that equivalence still requires verification.
+
 ## Migration-history strategy
 
 The approved direction is to preserve the existing candidate schema and data, archive old migration files in Git rather than permanently deleting them, and establish a new baseline/history only after clean replay, catalog comparison, and legacy-schema scope are resolved. The 21 existing FixLab migration-history records must not be removed until the replacement baseline is verified and the exact history operation is reviewed. Do not change Production migration history.
