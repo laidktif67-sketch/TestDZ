@@ -294,3 +294,80 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
     feedbackCount: feedbackResult.count || 0,
   };
 }
+
+
+/** Read-only active-assignment page data. Cross-user leaderboard enumeration is intentionally excluded. */
+export async function getActiveAssignmentProgressPageData(assignmentId: string, userId: string) {
+  const client = getAppDataClient();
+  const [profile, notice, checkins, feedback] = await Promise.all([
+    client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
+    client.from("notifications").select("id", { count: "exact", head: true })
+      .eq("user_id", userId).is("read_at", null),
+    client.from("checkins").select("id,checkin_date${isTesterWorkflowV2Enabled ? "" : ",evidence_url"}")
+      .eq("assignment_id", assignmentId).eq("tester_id", userId).order("checkin_date"),
+    client.from("feedback").select("id", { count: "exact", head: true })
+      .eq("assignment_id", assignmentId).eq("tester_id", userId),
+  ]);
+
+  if (isTesterWorkflowV2Enabled) {
+    const assignmentResult = await client.from("assignments")
+      .select("id,status,assigned_at,started_at,medical_extension_days,test_id")
+      .eq("id", assignmentId).eq("tester_id", userId).maybeSingle();
+    if (assignmentResult.error || !assignmentResult.data) {
+      return {
+        error: assignmentResult.error?.message || "This assignment could not be found.",
+        assignment: null, profile, notice, checkins, feedback, earned: 0,
+      };
+    }
+
+    const testResult = await client.from("tests")
+      .select("id,title,description,short_summary,start_date,end_date,app_id")
+      .eq("id", assignmentResult.data.test_id).maybeSingle();
+    if (testResult.error || !testResult.data) {
+      return {
+        error: testResult.error?.message || "The assigned test could not be found.",
+        assignment: null, profile, notice, checkins, feedback, earned: 0,
+      };
+    }
+    const appResult = await client.from("apps")
+      .select("name,icon_url,category,play_store_url")
+      .eq("id", testResult.data.app_id).maybeSingle();
+
+    return {
+      error: appResult.error ? "Some app information could not be loaded." : "",
+      profile, notice, checkins, feedback, earned: 0,
+      assignment: {
+        id: assignmentResult.data.id,
+        status: assignmentResult.data.status,
+        start_date: assignmentResult.data.started_at || assignmentResult.data.assigned_at,
+        medical_extension_days: assignmentResult.data.medical_extension_days || 0,
+        test: {
+          id: testResult.data.id, title: testResult.data.title,
+          description: testResult.data.description, short_summary: testResult.data.short_summary,
+          start_date: testResult.data.start_date, end_date: testResult.data.end_date,
+          app: appResult.data || null,
+        },
+      },
+    };
+  }
+
+  const [assignmentResult, ledgerResult] = await Promise.all([
+    client.from("assignments")
+      .select("id,status,start_date,medical_extension_days,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category,play_store_url))")
+      .eq("id", assignmentId).eq("tester_id", userId).maybeSingle(),
+    client.from("points_ledger").select("amount").eq("user_id", userId)
+      .eq("wallet_type", "earned_points").eq("reference_id", assignmentId),
+  ]);
+  if (assignmentResult.error || !assignmentResult.data) {
+    return {
+      error: assignmentResult.error?.message || "This assignment could not be found.",
+      assignment: null, profile, notice, checkins, feedback, earned: 0,
+    };
+  }
+  return {
+    error: "",
+    profile, notice, checkins, feedback,
+    earned: (ledgerResult.data ?? []).reduce((sum: number, row: { amount: number | string }) => sum + Number(row.amount || 0), 0),
+    assignment: assignmentResult.data,
+  };
+}
