@@ -49,12 +49,12 @@ export default function TestPreviewPage(){
     const assetsResult=result.assetsResult!;
     if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error||assetsResult.error)setError("Test details could not be fully loaded.");
     const visibleBuilds=result.assignmentResult.data?(buildsResult.data??[]):[];
-    const signedBuilds=await Promise.all(visibleBuilds.map(async build=>{
+    const signedBuilds=await Promise.all(visibleBuilds.map(async (build: any)=>{
      const {data:signed,error:signedError}=await client.storage.from("test-builds").createSignedUrl(build.storage_path,300);
      return signedError||!signed?.signedUrl?null:{id:build.id,version_label:build.version_label,original_filename:build.original_filename,size_bytes:build.size_bytes,download_url:signed.signedUrl};
     }));
     const visibleAssets=result.assignmentResult.data?(assetsResult.data??[]):[];
-    const signedAssets=await Promise.all(visibleAssets.map(async asset=>{
+    const signedAssets=await Promise.all(visibleAssets.map(async (asset: any)=>{
      const {data:signed,error:signedError}=await client.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
      return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,file_extension:asset.file_extension,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
     }));
