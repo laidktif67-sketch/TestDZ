@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { getTesterAssignmentDetailsPageData } from "../../../features/tester/assignments-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -31,7 +30,7 @@ export default function AssignmentDetailsPage(){
     setLoading(false);
     return;
    }
-   const signedAssets=await Promise.all((result.assets??[]).map(async asset=>{
+   const signedAssets=await Promise.all((result.assets??[]).map(async (asset: any)=>{
     const {data:signed,error:signedError}=await storageClient.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
     return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
    }));
