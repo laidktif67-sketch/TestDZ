@@ -239,6 +239,7 @@ export function transitionDeveloperTestCohort(cohortId: string, status: "ready" 
 export interface DeveloperTestBuild {
   id: string;
   test_id: string;
+  file_id: string;
   version_label: string;
   original_filename: string;
   size_bytes: number;
@@ -249,7 +250,7 @@ export interface DeveloperTestBuild {
 
 export function listDeveloperTestBuilds(developerId: string) {
   return dataClient().from("test_builds")
-    .select("id,test_id,version_label,original_filename,size_bytes,status,uploaded_at,created_at")
+    .select("id,test_id,file_id,version_label,original_filename,size_bytes,status,uploaded_at,created_at")
     .eq("developer_id", developerId)
     .order("created_at", { ascending: false });
 }
@@ -260,6 +261,7 @@ export async function uploadDeveloperTestBuild(input: {
   testId: string;
   file: File;
   versionLabel: string;
+  fileId: string;
 }) {
   const mime = "application/vnd.android.package-archive";
   if (!input.file.name.toLowerCase().endsWith(".apk") || input.file.type !== mime) {
@@ -268,7 +270,6 @@ export async function uploadDeveloperTestBuild(input: {
   if (input.file.size < 1 || input.file.size > 52428800) {
     return { error: new Error("APK_FILE_SIZE_INVALID"), stage: "validation" as const };
   }
-  const fileId = crypto.randomUUID();
   const { data: path, error: registerError } = await dataClient().rpc("register_test_build", {
     p_test_id: input.testId,
     p_file_id: fileId,
@@ -278,15 +279,17 @@ export async function uploadDeveloperTestBuild(input: {
     p_sha256: null,
   });
   if (registerError || !path) return { error: registerError ?? new Error("APK_REGISTRATION_FAILED"), stage: "registration" as const };
+  const { data: build, error: lookupError } = await dataClient().from("test_builds")
+    .select("id").eq("test_id", input.testId).eq("developer_id", input.userId).eq("storage_path", path).single();
+  if (lookupError || !build) return { error: lookupError ?? new Error("APK_BUILD_LOOKUP_FAILED"), stage: "verification" as const };
+  const existingFinalize = await dataClient().rpc("finalize_test_build", { p_build_id: build.id });
+  if (!existingFinalize.error) return { error: null, stage: "complete" as const };
   const upload = await client().storage.from("test-builds").upload(path, input.file, {
     upsert: false,
     contentType: mime,
     cacheControl: "3600",
   });
   if (upload.error) return { error: upload.error, stage: "upload" as const };
-  const { data: build, error: lookupError } = await dataClient().from("test_builds")
-    .select("id").eq("test_id", input.testId).eq("developer_id", input.userId).eq("storage_path", path).single();
-  if (lookupError || !build) return { error: lookupError ?? new Error("APK_BUILD_LOOKUP_FAILED"), stage: "verification" as const };
   const { error: finalizeError } = await dataClient().rpc("finalize_test_build", { p_build_id: build.id });
   if (finalizeError) return { error: finalizeError, stage: "verification" as const };
   return { error: null, stage: "complete" as const };
@@ -296,6 +299,7 @@ export async function uploadDeveloperTestBuild(input: {
 export interface DeveloperTestAsset {
   id: string;
   test_id: string;
+  file_id: string;
   title: string;
   original_filename: string;
   file_extension: string;
@@ -308,7 +312,7 @@ export interface DeveloperTestAsset {
 
 export function listDeveloperTestAssets(developerId: string) {
   return dataClient().from("test_assets")
-    .select("id,test_id,title,original_filename,file_extension,mime_type,size_bytes,status,uploaded_at,created_at")
+    .select("id,test_id,file_id,title,original_filename,file_extension,mime_type,size_bytes,status,uploaded_at,created_at")
     .eq("developer_id", developerId)
     .order("created_at", { ascending: false });
 }
@@ -333,6 +337,7 @@ export async function uploadDeveloperTestAsset(input: {
   testId: string;
   file: File;
   title: string;
+  fileId: string;
 }) {
   const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "";
   const mime = TEST_ASSET_MIME_BY_EXTENSION[extension];
@@ -342,7 +347,6 @@ export async function uploadDeveloperTestAsset(input: {
   if (input.file.size < 1 || input.file.size > 52428800) {
     return { error: new Error("TEST_ASSET_FILE_SIZE_INVALID"), stage: "validation" as const };
   }
-  const fileId = crypto.randomUUID();
   const { data: path, error: registerError } = await dataClient().rpc("register_test_asset", {
     p_test_id: input.testId,
     p_file_id: fileId,
@@ -352,15 +356,17 @@ export async function uploadDeveloperTestAsset(input: {
     p_size_bytes: input.file.size,
   });
   if (registerError || !path) return { error: registerError ?? new Error("TEST_ASSET_REGISTRATION_FAILED"), stage: "registration" as const };
+  const { data: asset, error: lookupError } = await dataClient().from("test_assets")
+    .select("id").eq("test_id", input.testId).eq("developer_id", input.userId).eq("storage_path", path).single();
+  if (lookupError || !asset) return { error: lookupError ?? new Error("TEST_ASSET_LOOKUP_FAILED"), stage: "verification" as const };
+  const existingFinalize = await dataClient().rpc("finalize_test_asset", { p_asset_id: asset.id });
+  if (!existingFinalize.error) return { error: null, stage: "complete" as const };
   const upload = await client().storage.from("test-assets").upload(path, input.file, {
     upsert: false,
     contentType: mime,
     cacheControl: "3600",
   });
   if (upload.error) return { error: upload.error, stage: "upload" as const };
-  const { data: asset, error: lookupError } = await dataClient().from("test_assets")
-    .select("id").eq("test_id", input.testId).eq("developer_id", input.userId).eq("storage_path", path).single();
-  if (lookupError || !asset) return { error: lookupError ?? new Error("TEST_ASSET_LOOKUP_FAILED"), stage: "verification" as const };
   const { error: finalizeError } = await dataClient().rpc("finalize_test_asset", { p_asset_id: asset.id });
   if (finalizeError) return { error: finalizeError, stage: "verification" as const };
   return { error: null, stage: "complete" as const };
