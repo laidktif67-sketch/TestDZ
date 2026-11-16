@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import { isTesterWorkflowV2Enabled, supabaseV2 } from "./supabase-v2";
 
@@ -12,7 +11,7 @@ import { isTesterWorkflowV2Enabled, supabaseV2 } from "./supabase-v2";
  * IMPORTANT: the legacy fallback is transitional and remains until every
  * application route has been migrated and the V2 cutover is approved.
  */
-export function getAppDataClient(): SupabaseClient<any> {
+export function getAppDataClient(): any {
   if (!supabase) throw new Error("SUPABASE_NOT_CONFIGURED");
 
   if (isTesterWorkflowV2Enabled) {
