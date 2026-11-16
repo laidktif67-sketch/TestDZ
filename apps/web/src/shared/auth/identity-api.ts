@@ -96,6 +96,10 @@ export const identityApi = {
     return getClient().auth.updateUser({ data });
   },
 
+  getMySecurityActivity(limit = 30) {
+    return getAppDataClient().rpc("get_my_security_activity", { p_limit: limit });
+  },
+
   getSession() {
     return getClient().auth.getSession();
   },
