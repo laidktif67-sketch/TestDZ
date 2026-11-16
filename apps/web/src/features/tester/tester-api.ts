@@ -9,14 +9,14 @@ export async function getTesterDashboardData(userId: string) {
   const client = getAppDataClient();
 
   if (isTesterWorkflowV2Enabled) {
-    const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
+    const [profileRes, assignmentRes, testRes, notificationRes] = await Promise.all([
       client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-      client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
       client.from("assignments").select("id,status,started_at,assigned_at,created_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id", userId),
       client.rpc("get_discoverable_tests"),
       client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
     ]);
-    return { isV2: true as const, profileRes, walletRes, assignmentRes, testRes, notificationRes };
+    // V2 reward posting is intentionally disabled; do not read a wallet balance for this dashboard.
+    return { isV2: true as const, profileRes, assignmentRes, testRes, notificationRes };
   }
 
   const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
@@ -74,16 +74,19 @@ export async function getDiscoverTestsPageData(userId: string) {
 
 export async function getMyTestsPageData(userId: string) {
   const client = getAppDataClient();
-  const [roleRes, profileRes, walletRes, assignmentRes, feedbackRes, noticeRes] = await Promise.all([
+  const [roleRes, profileRes, assignmentRes, feedbackRes, noticeRes] = await Promise.all([
     client.from("user_roles").select("role").eq("user_id", userId),
     client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-    client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
     isTesterWorkflowV2Enabled
       ? client.from("assignments").select("id,status,started_at,assigned_at,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("assigned_at", { ascending: false })
       : client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,end_date,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("created_at", { ascending: false }),
     client.from("feedback").select("id,quality_status,created_at,assignment_id").eq("tester_id", userId).order("created_at", { ascending: false }),
     client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
   ]);
+  // V2 reward balances remain unavailable until the reward workflow is approved and enabled.
+  const walletRes = isTesterWorkflowV2Enabled
+    ? null
+    : await client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle();
 
   const assignments = isTesterWorkflowV2Enabled
     ? ((assignmentRes.data ?? []) as any[]).map((assignment) => ({
@@ -132,11 +135,11 @@ export async function getMyTestsPageData(userId: string) {
     displayName: profileRes.data?.display_name?.trim() ?? "",
     avatarUrl: profileRes.data?.avatar_url ?? "",
     assignments,
-    points: Number(walletRes.data?.earned_points ?? 0),
+    points: walletRes ? Number(walletRes.data?.earned_points ?? 0) : 0,
     acceptedFeedback: feedback.filter((item) => item.quality_status === "accepted").length,
     notifications: noticeRes.count ?? 0,
     activities: activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4),
-    hasError: Boolean(roleRes.error || profileRes.error || walletRes.error || assignmentRes.error || feedbackRes.error || noticeRes.error),
+    hasError: Boolean(roleRes.error || profileRes.error || walletRes?.error || assignmentRes.error || feedbackRes.error || noticeRes.error),
   };
 }
 
