@@ -23,7 +23,7 @@ export default function WithdrawalStatusPage() {
     let alive = true;
     async function load() {
       try {
-        const { data: sessionData, error: sessionError } = await auth.auth.getSession();
+        const { data: sessionData, error: sessionError } = await auth!.auth.getSession();
         if (sessionError) throw sessionError;
         const user = sessionData.session?.user;
         if (!user) return;
