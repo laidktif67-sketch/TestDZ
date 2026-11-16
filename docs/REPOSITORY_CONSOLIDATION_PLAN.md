@@ -444,7 +444,7 @@ The 11 triggers in the `storage` schema are Supabase Storage platform lifecycle 
 
 ## 21. FixLab private function EXECUTE dependency audit (2026-11-16)
 
-A read-only catalog audit classified every function in `rebuild_v2_private` by its actual PostgreSQL EXECUTE privilege and discovered callers in V2 wrappers, RLS policies, Storage policies, and application triggers.
+A read-only catalog audit classified every function in `rebuild_v2_private` by its PostgreSQL EXECUTE privilege and discovered callers in V2 wrappers, RLS policies, Storage policies, and application triggers.
 
 ### Effective privilege inventory
 
@@ -455,27 +455,26 @@ A read-only catalog audit classified every function in `rebuild_v2_private` by i
 | EXECUTE denied to `authenticated` | 11 | Includes trigger-only and SECURITY DEFINER implementation functions |
 | Authenticated EXECUTE with a `rebuild_v2` wrapper dependency | 31 | Retain: current wrappers are invoker-mode and require underlying EXECUTE |
 | Authenticated EXECUTE with RLS/Storage policy dependency | 11 | Retain: policy evaluation calls these helpers |
-| Authenticated EXECUTE with no discovered wrapper, policy, or trigger dependency | 4 | Least-privilege candidate addressed by PR #47 |
+| Authenticated EXECUTE with no discovered wrapper, policy, or trigger dependency | 4 | Further classified below |
 
 The 11 policy dependencies comprise `rebuild_v2_private.has_role` plus ten Storage authorization helpers. These are deliberately retained because RLS and Storage policies call them during access evaluation. Blanket revocation from `authenticated` would break legitimate data access and Storage authorization. The 31 wrapper dependencies are also retained because the corresponding public-facing `rebuild_v2` wrappers currently execute as invokers.
 
-### Four unnecessary direct grants
+### Role-management grants and wallet contract
 
-FixLab has explicit `authenticated` EXECUTE grants on four SECURITY DEFINER implementations that have no discovered `rebuild_v2` wrapper, RLS/Storage policy, or trigger caller:
+Three SECURITY DEFINER role-management implementations had explicit `authenticated` EXECUTE grants but no discovered `rebuild_v2` wrapper, RLS/Storage policy, or trigger caller:
 
 - `grant_role(uuid,text,text)`
-- `post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid)`
 - `request_developer_role(text)`
 - `review_role_request(uuid,text,text)`
 
-Their function bodies perform internal role checks, and `rebuild_v2_private` is intentionally not a PostgREST-exposed schema. No externally demonstrated API exploit was established. The issue is a confirmed least-privilege excess: authenticated is granted direct execution despite no discovered application dependency.
+The wallet posting implementation, `post_wallet_entry(...)`, also has no application wrapper/policy/trigger caller, but its existing `009_wallet_idempotency_contract.sql` deliberately invokes it as an authenticated financial user to verify idempotency, actor binding, and ledger invariants. An initial PR #47 CI run demonstrated that removing this grant breaks that contract. The candidate was corrected to retain the wallet EXECUTE grant; it is not counted as a removable grant.
 
-[PR #47](https://github.com/laidktif67-sketch/TestDZ/pull/47) removes the four explicit grants and adds assertions that neither `authenticated` nor `anon` can execute these four implementations. It deliberately preserves the 11 RLS/Storage helpers and the 31 invoker-wrapper dependencies. PR #47 is a draft and its isolated Rebuild V2 CI run is pending; do not merge until the run passes and the privilege boundary is reviewed.
+[PR #47](https://github.com/laidktif67-sketch/TestDZ/pull/47) now removes only the three unused role-management grants and adds assertions that neither `authenticated` nor `anon` can execute them. It explicitly asserts that authenticated retains the wallet posting grant. The first CI run failed on the wallet contract after the over-broad initial revocation; the revised candidate restores the wallet grant and awaits a fresh isolated Rebuild V2 CI run. PR #47 remains a draft.
 
 ### Security interpretation and guardrails
 
 - This is defense-in-depth and least-privilege hardening, not a blanket SECURITY DEFINER vulnerability finding.
-- Do not revoke `rebuild_v2_private` schema USAGE or all private function grants as a shortcut; the current invoker wrappers and policy helpers rely on them.
+- Do not revoke `rebuild_v2_private` schema USAGE or all private function grants as a shortcut; current invoker wrappers and policy helpers rely on them.
 - Do not expose `rebuild_v2_private` in PostgREST.
-- Keep the live FixLab grants unchanged until the candidate change is merged, replayed, and separately validated against the hosted catalog.
+- Keep live FixLab grants unchanged until the revised candidate passes CI, is reviewed, and is separately validated against the hosted catalog.
 - No hosted database grants, functions, data, migration history, or Production settings were changed during this audit.
