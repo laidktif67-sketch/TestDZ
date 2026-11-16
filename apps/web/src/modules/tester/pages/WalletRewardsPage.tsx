@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getWalletRewardsPageData } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/wallet-rewards.css";
@@ -20,23 +21,21 @@ export default function WalletRewardsPage(){
  const {roles=[]}=useIdentity();const [name,setName]=useState("Tester");const [avatar,setAvatar]=useState("");const [workspaceMenuOpen,setWorkspaceMenuOpen]=useState(false);const [wallet,setWallet]=useState<WalletData>({earned_points:0,purchased_credits:0});const [ledger,setLedger]=useState<LedgerEntry[]>([]);const [notifications,setNotifications]=useState(0);const [filter,setFilter]=useState("all");const [search,setSearch]=useState("");const [period,setPeriod]=useState("6");const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [noticeOpen,setNoticeOpen]=useState(false);const [catalogNotice,setCatalogNotice]=useState(false);const [rulesOpen,setRulesOpen]=useState(false);const [animatedBalance,setAnimatedBalance]=useState(0);
  const isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer"),firstName=name.split(/\s+/)[0]||"Tester";
  useEffect(()=>{if(!supabase){setLoading(false);return;}let alive=true;async function load(userId:string,email?:string){try{
-  if(isTesterWorkflowV2Enabled&&supabaseV2){
-   const [profileRes,walletRes,ledgerRes,noticeRes]=await Promise.all([
-    supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-    supabaseV2.from("wallets").select("earned_points,purchased_credits").eq("user_id",userId).maybeSingle(),
-    supabaseV2.from("wallet_ledger").select("id,wallet_type,amount,entry_type,reason,reference_type,reference_id,created_at").eq("user_id",userId).eq("wallet_type","earned_points").order("created_at",{ascending:false}).range(0,999),
-    supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
-   ]);
-   if(!alive)return;
-   setName(profileRes.data?.display_name?.trim()||email?.split("@")[0]||"Tester");
-   setAvatar(profileRes.data?.avatar_url||"");
-   setWallet({earned_points:Number(walletRes.data?.earned_points??0),purchased_credits:Number(walletRes.data?.purchased_credits??0)});
-   setLedger((ledgerRes.data??[]).map((entry:any)=>({...entry,reason:entry.reason||entry.entry_type})) as LedgerEntry[]);
-   setNotifications(noticeRes.count??0);
-   if(profileRes.error||walletRes.error||ledgerRes.error||noticeRes.error)setError("Some wallet information could not be loaded. Please refresh and try again.");
-   return;
+  const result=await getWalletRewardsPageData(userId);
+  if(!alive)return;
+  const {profileRes,walletRes,ledgerRes,noticeRes}=result;
+  setName(profileRes.data?.display_name?.trim()||email?.split("@")[0]||"Tester");
+  setAvatar(profileRes.data?.avatar_url||"");
+  if(result.isV2){
+   // Points and purchased credits remain unavailable until their V2 business rules are approved.
+   setWallet({earned_points:0,purchased_credits:0});
+   setLedger([]);
+  }else{
+   setWallet({earned_points:Number(walletRes?.data?.earned_points??0),purchased_credits:Number(walletRes?.data?.purchased_credits??0)});
+   setLedger((ledgerRes?.data??[]) as LedgerEntry[]);
   }
-  const [profileRes,walletRes,ledgerRes,noticeRes]=await Promise.all([supabase!.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),supabase!.from("wallets").select("earned_points,purchased_credits").eq("user_id",userId).maybeSingle(),supabase!.from("points_ledger").select("id,wallet_type,amount,reason,reference_type,reference_id,created_at").eq("user_id",userId).eq("wallet_type","earned_points").order("created_at",{ascending:false}).range(0,999),supabase!.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)]);if(!alive)return;setName(profileRes.data?.display_name?.trim()||email?.split("@")[0]||"Tester");setAvatar(profileRes.data?.avatar_url||"");setWallet({earned_points:Number(walletRes.data?.earned_points??0),purchased_credits:Number(walletRes.data?.purchased_credits??0)});setLedger((ledgerRes.data??[]) as LedgerEntry[]);setNotifications(noticeRes.count??0);if(profileRes.error||walletRes.error||ledgerRes.error||noticeRes.error)setError("Some wallet information could not be loaded. Please refresh and try again.");}catch{if(alive)setError("We couldn't load your wallet. Check your connection and try again.");}finally{if(alive)setLoading(false);}}
+  setNotifications(noticeRes.count??0);
+  if(profileRes.error||walletRes?.error||ledgerRes?.error||noticeRes.error)setError("Some wallet information could not be loaded. Please refresh and try again.");}catch{if(alive)setError("We couldn't load your wallet. Check your connection and try again.");}finally{if(alive)setLoading(false);}}
  supabase.auth.getSession().then(({data,error:sessionError})=>{if(!alive)return;if(sessionError){setError("We couldn't verify your session. Please refresh and try again.");setLoading(false);return;}if(data.session)void load(data.session.user.id,data.session.user.email);else setLoading(false);}).catch(()=>{if(alive){setError("We couldn't verify your session. Please refresh and try again.");setLoading(false);}});
  const {data}=supabase.auth.onAuthStateChange((_event,session)=>{if(!alive)return;if(session){setLoading(true);window.setTimeout(()=>{if(alive)void load(session.user.id,session.user.email);},0);}else{setWallet({earned_points:0,purchased_credits:0});setLedger([]);setLoading(false);}});return()=>{alive=false;data.subscription.unsubscribe();};},[]);
  const periodStart=useMemo(()=>{if(period==="all")return null;const months=Number(period);const start=new Date();start.setDate(1);start.setHours(0,0,0,0);start.setMonth(start.getMonth()-(months-1));return start;},[period]);
@@ -58,7 +57,7 @@ export default function WalletRewardsPage(){
  <section className="tw-summary tw-summary-reference" aria-label="Wallet summary">
  <article className="tw-balance-card tw-balance-blue"><div className="tw-card-top"><span className="tw-card-icon">⭐</span><span className="tw-card-caption">TOTAL POINTS</span></div><div className="tw-card-content"><b>Total Points</b><strong>{isTesterWorkflowV2Enabled?"Unavailable":animatedBalance.toLocaleString()+" pts"}</strong><small>{isTesterWorkflowV2Enabled?"Reward posting is not enabled in V2":"Current earned-points balance"}</small></div></article>
  <article className="tw-balance-card tw-balance-green"><div className="tw-card-top"><span className="tw-card-icon">🎁</span><span className="tw-card-caption">AVAILABLE REWARDS</span></div><div className="tw-card-content"><b>Available Rewards</b><strong>—</strong><small>Reward catalogue not enabled</small></div><button className="tw-card-action" type="button" onClick={()=>setCatalogNotice(v=>!v)}>View Store <span>→</span></button></article>
- <article className="tw-balance-card tw-balance-gold"><div className="tw-card-top"><span className="tw-card-icon">👛</span><span className="tw-card-caption">PURCHASED CREDITS</span></div><div className="tw-card-content"><b>Purchased Credits</b><strong>{money(wallet.purchased_credits)} <i>credits</i></strong><small>Separate from earned points</small></div></article>
+ <article className="tw-balance-card tw-balance-gold"><div className="tw-card-top"><span className="tw-card-icon">👛</span><span className="tw-card-caption">PURCHASED CREDITS</span></div><div className="tw-card-content"><b>Purchased Credits</b><strong>{isTesterWorkflowV2Enabled?"Unavailable":money(wallet.purchased_credits)+" credits"}</strong><small>{isTesterWorkflowV2Enabled?"Purchases are not enabled in V2":"Separate from earned points"}</small></div></article>
  </section>
  <div className="tw-main-grid"><section className="tw-panel tw-transactions"><div className="tw-panel-heading tw-transaction-heading"><h2><Icon name="refresh" size={23}/> Transactions History</h2><div className="tw-toolbar-controls"><div className="tw-filters" role="group" aria-label="Filter transactions">{[{value:"all",label:"All"},{value:"earned",label:"Earned"},{value:"redeemed",label:"Spent"},{value:"bonus",label:"Bonus"}].map(item=><button key={item.value} type="button" className={filter===item.value?"active":""} onClick={()=>setFilter(item.value)}>{item.label}</button>)}</div><label className="tw-period"><Icon name="calendar" size={16}/><select value={period} onChange={e=>setPeriod(e.target.value)}><option value="1">Last Month</option><option value="3">Last 3 Months</option><option value="6">Last 6 Months</option><option value="12">Last Year</option><option value="all">All Time</option></select><Icon name="chevron" size={14}/></label><button className="tw-export" type="button" onClick={exportHistory} disabled={!filteredLedger.length}><Icon name="download" size={16}/>Export</button></div></div>
  <div className="tw-table-wrap"><table className="tw-table"><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Points</th><th>Status</th></tr></thead><tbody>{filteredLedger.map(entry=>{const kind=kindOf(entry);return <tr key={entry.id}><td>{formatDate(entry.created_at)}</td><td><span className={"tw-type-pill "+kind}>{kind==="redeemed"?"🎁 Reward":kind==="bonus"?"✨ Bonus":"⭐ Earned"}</span></td><td><span className="tw-row-description">{entry.reason}</span></td><td className={entry.amount<0?"negative":"positive"}>{entry.amount>0?"+":""}{entry.amount.toLocaleString()} pts</td><td><span className="tw-status-pill">Ledger entry</span></td></tr>;})}{!filteredLedger.length&&<tr><td colSpan={5} className="tw-empty"><span>🧾</span><strong>{ledger.length?"No transactions match this filter":"Your transaction history is empty"}</strong><small>Point activity will appear here when it is recorded.</small></td></tr>}</tbody></table></div><div className="tw-table-footer"><span>Showing {filteredLedger.length} of {periodLedger.length} transactions in selected period</span><span>Latest {ledger.length} ledger entries · read only</span></div></section>
