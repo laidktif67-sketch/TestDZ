@@ -14,6 +14,6 @@ export async function getReferralPageShellData(userId: string) {
 /** Read only referrals owned by the current referrer; reward posting stays disabled. */
 export function getReferralHistory(userId: string) {
   return getAppDataClient().from("referrals")
-    .select("id,referrer_id,referred_user_id,referral_code,status,created_at,qualified_at,rewarded_at")
+    .select("id,referrer_id,referral_code,status,created_at,qualified_at,rewarded_at")
     .eq("referrer_id", userId).order("created_at", { ascending: false });
 }
