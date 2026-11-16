@@ -98,3 +98,34 @@ The wrappers were observed with `authenticated` EXECUTE and `anon` EXECUTE false
 
 **Required correction:** Derive the business date explicitly from `(now() AT TIME ZONE 'Africa/Algiers')::date` (or a single documented Algeria business-time helper), and add a regression test covering UTC 23:xx / Algeria 00:xx plus duplicate-submission behavior. Do not copy PR #29's legacy points/wallet award logic when correcting the date. No change has been applied.
 
+
+
+### FixLab applied migration inventory (version/name only)
+
+The read-only migration-history query returned these 21 entries. The history records versions and names; it does not expose the original SQL bodies through the migration-list operation.
+
+| Version | Recorded name |
+|---|---|
+| `20261115095605` | `fixlab_initial_core_schema_fixture` |
+| `20261115095608` | `test_details_only_schema_candidate` |
+| `20261115095618` | `enable_pgtap_for_fixlab` |
+| `20261115101419` | `fixlab_split_test_detail_owner_policies` |
+| `20261115101706` | `fixlab_enforce_test_app_developer_ownership` |
+| `20261115102554` | `restrict_test_detail_table_grants` |
+| `20261115102751` | `fix_android_package_name_validation` |
+| `20261115102836` | `restrict_test_lifecycle_column_writes` |
+| `20261115160318` | `rebuild_v2_sandbox_namespace` |
+| `20261115193304` | `fixlab_v2_developer_lifecycle_candidate` |
+| `20261115193600` | `fixlab_lock_app_edits_during_review` |
+| `20261115193720` | `fixlab_guard_test_cohort_capacity` |
+| `20261116145646` | `fixlab_v2_test_content_authoring` |
+| `20261116145833` | `fixlab_v2_test_content_authoring_validation` |
+| `20261116150813` | `fixlab_v2_cohort_management` |
+| `20261116151440` | `fixlab_v2_private_test_builds` |
+| `20261116151830` | `fixlab_v2_harden_test_build_storage_helper` |
+| `20261116153736` | `fixlab_v2_private_test_media_assets` |
+| `20261116154657` | `fixlab_v2_private_developer_feedback` |
+| `20261116162502` | `enforce_assignment_schedule` |
+| `20261116162951` | `verify_submission_evidence_metadata` |
+
+Do not infer that a migration is reproducible from its name. Each version still needs its original SQL or an independently reviewed catalog reconstruction, plus object-level mapping and clean replay evidence.
