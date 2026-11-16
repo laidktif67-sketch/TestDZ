@@ -57,6 +57,7 @@ DECLARE
   v_submission uuid;
   v_submission_again uuid;
   v_path text;
+  v_capacity_error text;
   v_file constant uuid := '20000000-0000-4000-8000-000000000001';
 BEGIN
   PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
@@ -180,6 +181,21 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN
     NULL;
   END;
+
+  BEGIN
+    PERFORM rebuild_v2.join_test(v_test);
+    RAISE EXCEPTION 'FAIL: server allowed a second tester into a full cohort';
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    GET STACKED DIAGNOSTICS v_capacity_error = MESSAGE_TEXT;
+    IF v_capacity_error <> 'TEST_CAPACITY_FULL' THEN
+      RAISE EXCEPTION 'FAIL: unexpected full-capacity rejection: %',v_capacity_error;
+    END IF;
+  END;
+
+  IF (SELECT count(*) FROM rebuild_v2.assignments a
+      WHERE a.test_id=v_test AND a.status NOT IN ('withdrawn','rejected')) <> 1 THEN
+    RAISE EXCEPTION 'FAIL: full cohort assignment count changed';
+  END IF;
 
   IF (SELECT count(*) FROM rebuild_v2.get_discoverable_tests() d
       WHERE d.test_id=v_test) <> 0 THEN
