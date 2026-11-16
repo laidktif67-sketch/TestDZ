@@ -5,6 +5,25 @@
 
 BEGIN;
 
+-- Regression: UTC 23:30 is already the next calendar day in Algeria (UTC+1).
+-- A UTC session CURRENT_DATE would incorrectly remain on the previous date.
+DO $date_boundary$
+BEGIN
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:30:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must roll over at UTC 23:00';
+  END IF;
+  IF rebuild_v2_private.algeria_local_date('2026-11-16 00:30:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must remain on the new local day';
+  END IF;
+  IF rebuild_v2_private.algeria_local_date('2026-11-16 22:30:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must remain on the current local day';
+  END IF;
+END;
+$date_boundary$;
+
 INSERT INTO auth.users
   (id,aud,role,email,encrypted_password,email_confirmed_at,
    raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
