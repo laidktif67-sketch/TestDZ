@@ -57,6 +57,10 @@ export const profilesApi = {
       .select("display_name,avatar_url,locale").eq("id", userId).maybeSingle();
   },
 
+  updateLocale(userId: string, locale: string) {
+    return getDataClient().from("profiles").update({ locale }).eq("id", userId);
+  },
+
   updateSecuritySettings(userId: string, input: { display_name: string; locale: string }) {
     return getDataClient().from("profiles").update(input).eq("id", userId);
   },
