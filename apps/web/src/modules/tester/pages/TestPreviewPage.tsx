@@ -56,7 +56,7 @@ export default function TestPreviewPage(){
      if(appResult.error||stepsResult.error||requirementsResult.error||buildsResult.error)setError("Test details could not be fully loaded.");
      const visibleBuilds=assignmentResult.data?(buildsResult.data??[]):[];
      const signedBuilds=await Promise.all(visibleBuilds.map(async build=>{
-      const {data:signed,error:signedError}=await supabaseV2.storage.from("test-builds").createSignedUrl(build.storage_path,300);
+      const {data:signed,error:signedError}=await client.storage.from("test-builds").createSignedUrl(build.storage_path,300);
       return signedError||!signed?.signedUrl?null:{id:build.id,version_label:build.version_label,original_filename:build.original_filename,size_bytes:build.size_bytes,download_url:signed.signedUrl};
      }));
      setTest({...testResult.data,app:appResult.data||null,steps:stepsResult.data||[],requirements:requirementsResult.data||[],builds:signedBuilds.filter((build):build is NonNullable<typeof build>=>!!build)} as unknown as TestPreview);
