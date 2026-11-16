@@ -204,3 +204,46 @@ export async function finalizeTesterAssignmentSubmission(submissionId: string) {
     p_submission_id: submissionId,
   });
 }
+
+/** Load an assignment and its test metadata for the assignment-details screen. */
+export async function getTesterAssignmentDetailsPageData(assignmentId: string, userId: string) {
+  const client = getAppDataClient();
+  if (isTesterWorkflowV2Enabled) {
+    const assignment = await client.from("assignments")
+      .select("id,status,test_id,assigned_at,started_at,completed_at")
+      .eq("id", assignmentId).eq("tester_id", userId).maybeSingle();
+    if (assignment.error || !assignment.data) {
+      return { data: null, assets: [], error: assignment.error };
+    }
+    const test = await client.from("tests")
+      .select("id,title,description,short_summary,start_date,end_date,app_id")
+      .eq("id", assignment.data.test_id).maybeSingle();
+    if (test.error || !test.data) return { data: null, assets: [], error: test.error };
+    const [app, assets] = await Promise.all([
+      client.from("apps").select("name,icon_url,category").eq("id", test.data.app_id).maybeSingle(),
+      client.from("test_assets")
+        .select("id,title,original_filename,mime_type,size_bytes,storage_path")
+        .eq("test_id", test.data.id).eq("status", "uploaded")
+        .order("created_at", { ascending: false }),
+    ]);
+    return {
+      data: {
+        id: assignment.data.id,
+        status: assignment.data.status,
+        start_date: assignment.data.started_at || assignment.data.assigned_at,
+        points_awarded: null,
+        test: {
+          id: test.data.id, title: test.data.title, description: test.data.description,
+          short_summary: test.data.short_summary, start_date: test.data.start_date,
+          end_date: test.data.end_date, app: app.data || null,
+        },
+      },
+      assets: assets.data ?? [],
+      error: app.error || assets.error || null,
+    };
+  }
+  const assignment = await client.from("assignments")
+    .select("id,status,start_date,points_awarded,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category))")
+    .eq("id", assignmentId).eq("tester_id", userId).maybeSingle();
+  return { data: assignment.data, assets: [], error: assignment.error };
+}
