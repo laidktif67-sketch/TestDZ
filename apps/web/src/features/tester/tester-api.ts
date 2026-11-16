@@ -446,3 +446,15 @@ export async function finalizeTesterAssignmentSubmission(submissionId: string) {
     p_submission_id: submissionId,
   });
 }
+
+
+/** Minimal private context for the leaderboard shell; no cross-user ranking data is enumerated. */
+export async function getTesterLeaderboardPageData(userId: string) {
+  const client = getAppDataClient();
+  const [profile, notifications] = await Promise.all([
+    client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
+    client.from("notifications").select("id", { count: "exact", head: true })
+      .eq("user_id", userId).is("read_at", null),
+  ]);
+  return { profile, notifications };
+}
