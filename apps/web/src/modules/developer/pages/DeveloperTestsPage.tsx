@@ -170,7 +170,7 @@ export default function DeveloperTestsPage() {
     if(!title){setError("أدخل عنواناً واضحاً للمرفق.");return;}
     setBusy(true);setError("");setNotice("");
     try{
-      const pendingAsset=testAssets.find(asset=>asset.test_id===testId&&asset.status==="pending"&&asset.title===title&&asset.original_filename===file.name&&asset.mime_type===file.type&&asset.size_bytes===file.size);
+      const pendingAsset=testAssets.find(asset=>asset.test_id===testId&&asset.status==="pending"&&asset.title===title&&asset.original_filename===file.name&&asset.size_bytes===file.size);
       const result=await uploadDeveloperTestAsset({userId,testId,file,title,fileId:pendingAsset?.file_id??crypto.randomUUID()});
       if(result.error)setError("تعذر رفع/التحقق من المرفق ("+result.stage+"): "+result.error.message);
       else{setNotice("تم رفع مرفق الاختبار إلى التخزين الخاص والتحقق منه.");setAssetFiles(rows=>({...rows,[testId]:null}));setAssetTitles(rows=>({...rows,[testId]:""}));await load(userId);}
