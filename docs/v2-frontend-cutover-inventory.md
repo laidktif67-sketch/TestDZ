@@ -13,6 +13,15 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Work completed in this pass
 
+## Tester dashboard and My Tests reward gating (2026-11-16)
+
+- Reviewed the V2 data paths for `TesterDashboardPage.tsx` and `MyTestsPage.tsx`.
+- V2 dashboard and My Tests no longer read the materialized wallet balance while reward posting remains disabled. The dashboard's points milestone is hidden in V2, and its points statistic remains unavailable; the legacy fallback retains its existing balance read for the transitional period.
+- Role, profile, assignment, feedback, and notification reads remain routed through `tester-api.ts`; Auth session access remains on the base Supabase client.
+- No reward posting, wallet writes, schema changes, hosted database changes, environment changes, or deployment were introduced.
+- Frontend typecheck/build must be verified by GitHub Actions for this change before treating it as complete.
+
+
 ## Assignment submission workflow extraction (2026-11-16)
 
 - Added feature API operations for checking an existing submission, creating the server-managed draft, listing/registering attachment metadata, and finalizing the submission.
