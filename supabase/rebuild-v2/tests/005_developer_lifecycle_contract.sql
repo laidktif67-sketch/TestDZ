@@ -153,6 +153,8 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='cancelled') THEN
     RAISE EXCEPTION 'FAIL: cohort cancellation did not persist';
   END IF;
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.assignments WHERE id=v_assignment AND status='withdrawn') THEN
     RAISE EXCEPTION 'FAIL: pending assignment was not withdrawn on cancellation';
   END IF;
