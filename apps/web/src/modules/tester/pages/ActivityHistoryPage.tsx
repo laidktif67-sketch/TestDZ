@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
-import { getActivityHistoryPageData } from "../../../features/tester/tester-api";
+import { getActivityHistoryPageData } from "../../../features/tester/activity-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
