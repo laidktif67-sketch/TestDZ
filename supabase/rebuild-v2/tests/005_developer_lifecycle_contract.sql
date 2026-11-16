@@ -195,6 +195,8 @@ END;
 $test$;
 
 -- Simulate the Storage upload through the authenticated role and its INSERT policy.
+SELECT set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+SELECT set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 INSERT INTO storage.objects(bucket_id,name,metadata,owner,owner_id)
 VALUES(
   'test-builds',
