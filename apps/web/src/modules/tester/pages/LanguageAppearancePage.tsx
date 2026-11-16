@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { profilesApi } from "../../../features/profiles/profiles-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -63,9 +63,7 @@ export default function LanguageAppearancePage() {
   useEffect(() => {
     if (!user || !supabase) return;
     let alive = true;
-    const profileQuery = isTesterWorkflowV2Enabled && supabaseV2
-      ? supabaseV2.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle()
-      : supabase.from("profiles").select("display_name,avatar_url,locale").eq("id", user.id).maybeSingle();
+    const profileQuery = profilesApi.getSecuritySettingsProfile(user.id);
     Promise.all([
       profileQuery,
       Promise.resolve(user.user_metadata?.testdz_language_appearance as Partial<Preferences> | undefined)
@@ -90,11 +88,8 @@ export default function LanguageAppearancePage() {
   const update = <K extends keyof Preferences,>(key: K, value: Preferences[K]) => setPrefs(current => ({ ...current, [key]: value }));
   async function save() {
     if (!supabase || !user) { setError("Sign in to save your language and appearance preferences."); return; }
-    if (isTesterWorkflowV2Enabled && !supabaseV2) { setError("V2 profile settings are unavailable because the V2 client is not initialized."); return; }
     setBusy(true); setMessage(""); setError("");
-    const profileResult = isTesterWorkflowV2Enabled
-      ? await supabaseV2!.from("profiles").update({ locale: language }).eq("id", user.id)
-      : await supabase.from("profiles").update({ locale: language }).eq("id", user.id);
+    const profileResult = await profilesApi.updateLocale(user.id, language);
     if (profileResult.error) {
       setBusy(false); setError("Your language preference could not be saved. Please try again."); return;
     }
