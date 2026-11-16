@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { supabase } from "../../../lib/supabase";
 import { getTesterSupportTickets, createTesterSupportTicket } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
