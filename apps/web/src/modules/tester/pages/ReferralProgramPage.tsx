@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { getReferralPageShellData } from "../../../features/referrals/referrals-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/referral-program.css";
@@ -21,12 +21,7 @@ export default function ReferralProgramPage() {
     if (!session?.user?.id || !supabase) { setLoading(false); return; }
     let alive = true;
     const userId = session.user.id;
-    const client: any = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
-    if (!client) { setLoading(false); return; }
-    Promise.all([
-      client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-      client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
-    ]).then(([profile, notification]) => {
+    getReferralPageShellData(userId).then(({ profile, notifications: notification }) => {
       if (!alive) return;
       if (profile.error || notification.error) {
         setLoading(false);
