@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { identityApi } from "../../../shared/auth/identity-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -40,19 +40,9 @@ export default function ActiveSessionsPage() {
     let alive = true;
     async function loadSessions() {
       if (!supabase) { if (alive) setSessionReady(true); return; }
-      if (isTesterWorkflowV2Enabled && !supabaseV2) {
-        if (alive) {
-          setSessionsUnavailable(true);
-          setError("V2 session history is unavailable because the V2 client is not initialized.");
-          setSessionReady(true);
-        }
-        return;
-      }
       const [auth, result] = await Promise.all([
         supabase.auth.getSession(),
-        isTesterWorkflowV2Enabled
-          ? supabaseV2!.rpc("get_my_active_sessions")
-          : supabase.rpc("get_my_active_sessions"),
+        identityApi.getMyActiveSessions(),
       ]);
       if (!alive) return;
       if (auth.error) setError("Could not verify the current session. Refresh and try again.");
@@ -71,9 +61,7 @@ export default function ActiveSessionsPage() {
     setBusy(true); setMessage(""); setError("");
     const result = await supabase.auth.signOut({ scope: "others" });
     if (result.error) { setBusy(false); setError("Could not sign out other sessions. Please try again."); return; }
-    const refreshed = isTesterWorkflowV2Enabled
-      ? await supabaseV2?.rpc("get_my_active_sessions")
-      : await supabase.rpc("get_my_active_sessions");
+    const refreshed = await identityApi.getMyActiveSessions();
     if (!refreshed) {
       setBusy(false);
       setSessionsUnavailable(true);
