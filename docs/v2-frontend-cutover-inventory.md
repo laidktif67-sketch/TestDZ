@@ -13,6 +13,16 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Work completed in this pass
 
+## Latest tester history extraction (2026-11-16)
+
+- Added `getCheckInHistoryPageData(userId)` and `getFeedbackHistoryPageData(userId)` to `apps/web/src/features/tester/tester-api.ts`.
+- Migrated `CheckInHistoryPage.tsx` and `FeedbackHistoryPage.tsx` to consume those feature API functions. Both pages retain Auth/session access through the base client, but no longer issue page-level `.from()` or `.rpc()` data calls.
+- Preserved the V2/legacy field differences inside the API module: V2 check-ins use private evidence paths and do not expose legacy evidence URLs or points-ledger values; V2 feedback history does not read the legacy `points_ledger`.
+- This is an extraction only. It does not enable reward posting, withdrawals, or any database changes.
+- The assignment progress and submission pages remain pending; they include workflow actions, Storage operations, and state transitions that require a separate contract-aware extraction.
+- CI status for these three commits is pending verification; do not treat earlier passing CI as covering this change.
+
+
 - Added `apps/web/src/lib/supabase-data.ts` with `getAppDataClient()` and `getSupabaseServiceClient()`.
 - Routed app feature APIs, profile feature APIs, identity role retrieval, and the developer dashboard's profile read through the central Data API selector.
 - Preserved base-client usage for Auth and Storage.
