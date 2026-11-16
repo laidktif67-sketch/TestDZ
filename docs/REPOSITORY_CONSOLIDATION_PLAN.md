@@ -146,3 +146,13 @@ Do not dispatch this workflow. Do not change its secrets, environment, branch gu
 ### Validation limits
 
 The workflow files were read from `rebuild/testdz-v2`; recent Actions metadata was inspected read-only. The two workflow trigger files were edited on this governance branch and read back to verify their branch filters. No workflow was manually dispatched or rerun. No migration was applied and no Supabase project was changed.
+
+
+### CI action and CLI reproducibility hardening
+
+- The V2 frontend workflow now pins `actions/setup-node` to the verified v4.4.0 commit SHA `49933ea5288caeca8642d1e84afbd3f7d6820020` rather than the moving `@v4` tag.
+- The isolated Rebuild V2 database-test workflow now pins `supabase/setup-cli` to the verified v3.2.0 action commit `689adcfb80d947100a1eab127289b97d1fb07b13` and the Supabase CLI itself to stable `3.1.0`, rather than resolving `latest` on each run.
+- This is a local disposable-stack test workflow only. Its commands remain `supabase start`, local `psql` against the local stack URL, and `supabase stop`; no hosted target or credentials were added.
+- The pin was chosen after reviewing the Supabase CLI v3 migration guidance: v3 changes local/remote command defaults and unattended hosted-change confirmation. Pinning avoids a future unreviewed CLI upgrade changing CI behavior. See the [Supabase CLI v3 migration guide](https://supabase.com/docs/guides/local-development/cli/migrating-to-v3) and [Supabase changelog](https://supabase.com/changelog).
+
+These changes are on the governance PR branch. They require the newly triggered V2 isolated database-test workflow to complete before being considered verified.
