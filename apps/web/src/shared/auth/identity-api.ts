@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../lib/supabase-v2";
+import { getAppDataClient } from "../../lib/supabase-data";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import type {
   AccountRole,
@@ -41,8 +41,7 @@ export const identityApi = {
   },
 
   getUserRoles(userId: string): Promise<AccountRole[]> {
-    const client: any = isTesterWorkflowV2Enabled ? supabaseV2 : getClient();
-    if (!client) throw new Error("SUPABASE_V2_NOT_CONFIGURED");
+    const client = getAppDataClient();
     const query = client
       .from("user_roles")
       .select("role")
