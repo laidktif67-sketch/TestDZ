@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
-import { reviewDeveloperApp, reviewDeveloperTest } from "../../../features/apps/apps-api";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getAdminReviewQueue, reviewDeveloperApp, reviewDeveloperTest, type AdminReviewApp, type AdminReviewTest } from "../../../features/apps/apps-api";
 import { Brand } from "../../../shared/components/Brand";
 
-type ReviewApp={id:string;name:string;package_name:string;description:string|null;category:string;developer_id:string;created_at:string};
-type ReviewTest={id:string;app_id:string;title:string;description:string|null;test_type:string;min_testers:number;developer_id:string;created_at:string};
 
 export default function DeveloperReviewQueuePage(){
  const navigate=useNavigate();
- const [apps,setApps]=useState<ReviewApp[]>([]);
- const [tests,setTests]=useState<ReviewTest[]>([]);
+ const [apps,setApps]=useState<AdminReviewApp[]>([]);
+ const [tests,setTests]=useState<AdminReviewTest[]>([]);
  const [notes,setNotes]=useState<Record<string,string>>({});
  const [loading,setLoading]=useState(true);
  const [busyId,setBusyId]=useState("");
@@ -19,14 +17,14 @@ export default function DeveloperReviewQueuePage(){
  const [notice,setNotice]=useState("");
 
  const load=useCallback(async()=>{
-  if(!supabaseV2)return;
   setLoading(true);setError("");
-  const [appResult,testResult]=await Promise.all([
-   supabaseV2.from("apps").select("id,name,package_name,description,category,developer_id,created_at").eq("status","submitted").order("created_at",{ascending:true}),
-   supabaseV2.from("tests").select("id,app_id,title,description,test_type,min_testers,developer_id,created_at").eq("status","submitted").order("created_at",{ascending:true}),
-  ]);
-  if(appResult.error||testResult.error)setError("تعذر تحميل طلبات المراجعة. تحقق من صلاحيات الإدارة والاتصال.");
-  else{setApps((appResult.data??[]) as ReviewApp[]);setTests((testResult.data??[]) as ReviewTest[]);}
+  try {
+   const {apps:appResult,tests:testResult}=await getAdminReviewQueue();
+   if(appResult.error||testResult.error)setError("تعذر تحميل طلبات المراجعة. تحقق من صلاحيات الإدارة والاتصال.");
+   else{setApps((appResult.data??[]) as AdminReviewApp[]);setTests((testResult.data??[]) as AdminReviewTest[]);}
+  } catch {
+   setError("تعذر تحميل طلبات المراجعة. تحقق من صلاحيات الإدارة والاتصال.");
+  }
   setLoading(false);
  },[]);
 
