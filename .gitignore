@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.turbo/
+.vite/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.template
+*.local
+
+# Logs and diagnostics
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+test-results/
+playwright-report/
+blob-report/
+artifacts/
+
+# Framework and deployment caches
+.vercel/
+.expo/
+.next/
+.turbo/
+
+# Local Supabase state (never migration source)
+supabase/.temp/
+supabase/.branches/
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
