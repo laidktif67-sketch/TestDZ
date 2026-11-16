@@ -16,8 +16,8 @@
 ## 2. Repository inventory
 
 The current GitHub snapshot reports:
-- 45 remote branches.
-- 26 open pull requests; all 26 are Draft.
+- 47 remote branches.
+- 27 open pull requests; all 27 are Draft.
 - Multiple PRs form dependent chains, especially tester, developer, medical-exception, support-ticket, and Week 5 database work.
 - No branch in the fetched branch list is protected.
 - The repository is currently **Public**, although the V2 README says **Private**. Repository visibility is an owner-level decision and has not been changed.
@@ -119,3 +119,8 @@ The following GitHub compare results are history comparisons against `rebuild/te
 The Week 5 ownership/FK branch family is based on a substantially different history from V2. Its recent migrations target the legacy `public.apps` and `public.tests` objects, while the candidate V2 application schema is `rebuild_v2`. Do not copy or apply those migrations verbatim to the V2 candidate schema. Port the invariant and tests only after translating them to the actual V2 schema and checking existing constraints and RPC ownership.
 
 The local-only commit `94a27dfa` on `fix/secure-test-creation-ownership` was subsequently pushed successfully. GitHub now confirms remote branch HEAD `94a27dfac444f317f6f2d09fce5db59b62aad2e0`. The commit contains a follow-up migration, client draft-creation change, and pgTAP coverage. The branch remains unprotected and has no PR. Its history is heavily divergent from V2 (942 commits ahead / 494 behind), and the candidate patch changes the legacy `public.tests` schema. Do not open a PR directly against V2 or merge this branch wholesale: first port the narrow ownership/default-draft invariant and its regression tests into the actual V2 schema, after inspecting V2 equivalents. The older local worktree inventory also recorded untracked `skills-lab` changes; re-check its current local-vs-remote state before deleting the worktree.
+
+
+## 11. Feature porting matrix
+
+The detailed PR/branch decisions, V2 feature evidence, migration provenance blocker, security cautions, and implementation order are maintained in [`BRANCH_PORTING_MATRIX.md`](./BRANCH_PORTING_MATRIX.md). The matrix was added after inspecting the current 47-branch / 27-open-PR GitHub inventory and scanning all 31 committed V2 migration files.
