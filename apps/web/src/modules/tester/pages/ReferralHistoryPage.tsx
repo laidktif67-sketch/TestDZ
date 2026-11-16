@@ -13,7 +13,7 @@ export default function ReferralHistoryPage(){
   if(!session?.user?.id||!supabase){setLoading(false);return;}
   let alive=true;
   const id=session.user.id;
-  const client=isTesterWorkflowV2Enabled?supabaseV2:supabase;
+  const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;
   if(!client){setLoading(false);return;}
   (async()=>{
    try{
