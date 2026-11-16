@@ -9,7 +9,7 @@ function client() {
   return supabase;
 }
 
-function dataClient() {
+function dataClient(): any {
   const selected = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
   if (!selected) throw new Error("SUPABASE_NOT_CONFIGURED");
   return selected;
@@ -278,7 +278,7 @@ export async function uploadDeveloperTestBuild(input: {
     p_sha256: null,
   });
   if (registerError || !path) return { error: registerError ?? new Error("APK_REGISTRATION_FAILED"), stage: "registration" as const };
-  const upload = await dataClient().storage.from("test-builds").upload(path, input.file, {
+  const upload = await client().storage.from("test-builds").upload(path, input.file, {
     upsert: false,
     contentType: mime,
     cacheControl: "3600",
