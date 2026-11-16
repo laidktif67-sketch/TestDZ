@@ -4,7 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
-import { getMyTestsPageData } from "../../../features/tester/tester-api";
+import { getMyTestsPageData } from "../../../features/tester/dashboard-api";
 import "../styles/tester-dashboard.css";
 import "../../../styles/my-tests.css";
 import TesterSidebar from "../components/TesterSidebar";
