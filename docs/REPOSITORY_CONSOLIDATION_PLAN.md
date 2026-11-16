@@ -354,8 +354,10 @@ A local-runtime compatibility gap was found after the V2 date correction:
 - The committed local `supabase/config.toml` exposed only `public` and `graphql_public`, so a fresh local stack would not match the schema selection expected by the V2 frontend.
 - The existing Rebuild V2 CI exercised SQL directly through PostgreSQL and therefore did not detect this PostgREST exposure mismatch.
 
-[PR #45](https://github.com/laidktif67-sketch/TestDZ/pull/45) adds `rebuild_v2` to the local `api.schemas` list while keeping `rebuild_v2_private` excluded. It also adds an HTTP contract to the Rebuild V2 workflow: an authenticated request must reach `rebuild_v2.profiles`, while a request selecting `rebuild_v2_private` must be rejected as an unexposed schema.
+[PR #45](https://github.com/laidktif67-sketch/TestDZ/pull/45) adds `rebuild_v2` to the local `api.schemas` list while keeping `rebuild_v2_private` excluded. It adds a local-only `supabase/seed.sql` bootstrap that creates the empty `rebuild_v2` schema before PostgREST starts; the 18 ordered candidate scripts remain the source for all application objects. The Rebuild V2 workflow then checks authenticated access to `rebuild_v2.profiles` and verifies that `rebuild_v2_private` is rejected as an unexposed schema.
 
-The existing `project_id` in `supabase/config.toml` remains unchanged and still identifies Production. This PR changes local service configuration only; no remote CLI command, hosted API setting, database schema, data, Auth user, Storage object, or deployment has been changed. PR #45's local Rebuild V2 and legacy migration workflows are pending at the time of this note.
+The legacy migration workflow is now scoped to PRs targeting `main` or `architecture-v1` and to legacy migration/test/config paths. It starts PostgreSQL only because it runs SQL tests, not API tests. The Rebuild V2 workflow also watches `supabase/seed.sql` and `supabase/config.toml` so future bootstrap/config changes cannot bypass validation.
+
+The existing `project_id` in `supabase/config.toml` remains unchanged and still identifies Production. The seed is local initialization, not a migration, and no remote CLI command, hosted API setting, database schema, data, Auth user, Storage object, or deployment has been changed. PR #45's local Rebuild V2 workflow is pending at the time of this note.
 
 Do not add `rebuild_v2_private` to PostgREST's exposed schema list. The private schema is an internal implementation boundary, not a browser-facing API.
