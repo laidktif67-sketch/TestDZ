@@ -39,7 +39,7 @@ jobs:
           sudo apt-get install --yes postgresql-client
 
       - name: Start disposable local database before V2 schema replay
-        run: supabase start -x rest,auth,realtime,storage,studio,edge-runtime,imgproxy,logflare,vector
+        run: supabase start -x edge-runtime,gotrue,imgproxy,kong,logflare,mailpit,postgres-meta,postgrest,realtime,storage-api,studio,supavisor,vector
 
       - name: Apply candidate SQL, run contracts, then verify local PostgREST
         shell: bash
