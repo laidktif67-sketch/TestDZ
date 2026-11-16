@@ -46,7 +46,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          supabase status --env --output-format text > "$RUNNER_TEMP/supabase.env"
+          supabase status --output env > "$RUNNER_TEMP/supabase.env"
           set -a
           source "$RUNNER_TEMP/supabase.env"
           set +a
