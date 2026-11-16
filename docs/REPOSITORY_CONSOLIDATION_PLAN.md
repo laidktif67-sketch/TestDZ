@@ -247,3 +247,38 @@ Proposed correction remains to calculate one explicit `v_checkin_date := (now() 
 This inspection recovered live definitions for selected high-impact routines and catalog metadata, but not a complete portable schema source. Function definitions alone do not reconstruct table DDL, constraints, indexes, policies, grants, triggers, Storage buckets/object policies, extensions, or migration ordering. Do not create migration files from partial function excerpts. Continue recovering those object classes and their dependencies before generating canonical migrations.
 
 Supabase CLI v3 changelog and migration guidance were checked before this inspection. No CLI command, DDL, DML, grant change, migration, or hosted mutation was performed.
+
+## 16. FixLab RLS and Storage configuration inventory (read-only, 2026-11-16)
+
+A further read-only catalog inspection recovered the active policy definitions, non-internal trigger definitions, and Storage bucket settings in FixLab.
+
+### RLS policy command distribution
+
+- `rebuild_v2`: 48 policies — 47 SELECT policies and 1 UPDATE policy (`profiles_update_self_v2`, with both USING and WITH CHECK bound to `auth.uid()`). No INSERT, DELETE, or other UPDATE policies were found in this schema snapshot. The V2 write path is therefore intentionally RPC-centric; do not add direct table-write grants/policies as a shortcut.
+- `storage.objects`: 18 policies — 7 INSERT, 7 SELECT, 2 UPDATE, and 2 DELETE policies.
+- Storage policy predicates delegate to private authorization helpers for app icons, developer feedback attachments, test evidence, support attachments, test assets, and test builds. This makes the private-function EXECUTE privilege inventory directly relevant to Storage policy behavior and must be included in the least-privilege dependency analysis.
+
+### Storage bucket inventory
+
+| Bucket | Public | Max size | Notable allowed MIME types |
+|---|---:|---:|---|
+| `app-icons` | yes | 512 KiB | PNG, JPEG |
+| `avatars` | yes | 2 MiB | JPEG, PNG, WebP |
+| `developer-feedback-attachments` | no | 10 MiB | images, text, PDF, ZIP |
+| `support-attachments` | no | 10 MiB | images, text, PDF, ZIP |
+| `test-assets` | no | 50 MiB | images, video, PDF, text, Office documents |
+| `test-builds` | no | 50 MiB | Android APK |
+| `test-evidence` | no | 10 MiB | images, text, PDF, ZIP |
+
+The two public buckets (`app-icons`, `avatars`) are recorded as current configuration, not automatically classified as defects. Confirm that public read access is intentional for each bucket and that no private user content is placed there. The remaining five buckets are private.
+
+### Trigger inventory
+
+The 18 non-internal triggers consist of:
+- `auth.users`: one after-insert trigger creates the V2 profile, default tester role, and wallet for a new Auth user.
+- `rebuild_v2`: six immutability triggers prevent UPDATE/DELETE on audit events, developer-feedback events, fraud events, play opt-in events, support-ticket events, and wallet ledger entries.
+- `storage`: eleven platform/storage lifecycle and safety triggers on buckets and objects. These are managed Storage infrastructure and should not be copied into application migrations as if they were app-owned definitions.
+
+### Migration reconstruction implication
+
+The candidate migration source must preserve the exact policy command distribution, each policy's USING/WITH CHECK expressions, bucket privacy/size/MIME configuration, application-owned triggers, and dependency ordering. Do not infer these from table names or regenerate generic owner policies. No policies, buckets, triggers, or database data were changed.
