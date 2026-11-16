@@ -58,10 +58,10 @@ export default function DeveloperTestsPage() {
   const [cohortName,setCohortName]=useState("");
   const [cohortCapacity,setCohortCapacity]=useState(12);
   const [editingCohortId,setEditingCohortId]=useState<string|null>(null);
-  const [editCohortName,setEditCohortName]=useState(\"\");
+  const [editCohortName,setEditCohortName]=useState("");
   const [editCohortCapacity,setEditCohortCapacity]=useState(1);
-  const [editCohortStartsAt,setEditCohortStartsAt]=useState(\"\");
-  const [editCohortEndsAt,setEditCohortEndsAt]=useState(\"\");
+  const [editCohortStartsAt,setEditCohortStartsAt]=useState("");
+  const [editCohortEndsAt,setEditCohortEndsAt]=useState("");
 
   const load=useCallback(async(id:string)=>{
     setLoading(true);setError("");
