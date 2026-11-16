@@ -22,7 +22,7 @@ SELECT set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001'
 SELECT set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
 DO $test$
-DECLARE v_app uuid; v_test uuid; v_cohort uuid; v_assignment uuid; v_count integer;
+DECLARE v_app uuid; v_test uuid; v_cohort uuid; v_assignment uuid; v_apk_test uuid; v_apk_path text; v_apk_build uuid; v_count integer;
 BEGIN
   v_app:=rebuild_v2.create_app('Lifecycle Demo App','dz.testdz.lifecycle','A synthetic application used only for a rolled-back developer lifecycle contract.','tools');
   PERFORM rebuild_v2.submit_app_for_review(v_app);
@@ -157,6 +157,33 @@ BEGIN
     RAISE EXCEPTION 'FAIL: pending assignment was not withdrawn on cancellation';
   END IF;
 
+  -- APK tests cannot be submitted until a private build is registered and verified.
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  v_apk_test:=rebuild_v2.create_test(v_app,'APK Build Contract','A synthetic APK test used to verify private artifact upload and participant-only download.','APK contract','apk_testing',1,NULL,NULL,30,'Install and verify this private test build.');
+  BEGIN
+    PERFORM rebuild_v2.submit_test_for_review(v_apk_test);
+    RAISE EXCEPTION 'FAIL: APK test submitted without verified build';
+  EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
+  END;
+  v_apk_build:='50000000-0000-4000-8000-000000000004';
+  v_apk_path:=rebuild_v2.register_test_build(v_apk_test,v_apk_build,'1.0.0','lifecycle.apk',2048,repeat('a',64));
+  IF NOT rebuild_v2_private.can_upload_test_build(v_apk_path) THEN
+    RAISE EXCEPTION 'FAIL: owner cannot upload registered APK build';
+  END IF;
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  IF rebuild_v2_private.can_upload_test_build(v_apk_path) THEN
+    RAISE EXCEPTION 'FAIL: non-owner can upload APK build';
+  END IF;
+  SELECT count(*) INTO v_count FROM rebuild_v2.test_builds WHERE test_id=v_apk_test;
+  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: tester can read pending APK metadata'; END IF;
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  PERFORM set_config('testdz.apk_test_id',v_apk_test::text,true);
+  PERFORM set_config('testdz.apk_build_id',v_apk_build::text,true);
+  PERFORM set_config('testdz.apk_path',v_apk_path,true);
+
   PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events
@@ -165,6 +192,55 @@ BEGIN
   IF v_count<>9 THEN RAISE EXCEPTION 'FAIL: expected audit events missing; got %',v_count; END IF;
 END;
 $test$;
+
+-- Simulate the Storage service completing the private upload between registration and finalize.
+RESET ROLE;
+INSERT INTO storage.objects(bucket_id,name,metadata,owner,owner_id)
+VALUES(
+  'test-builds',
+  current_setting('testdz.apk_path'),
+  jsonb_build_object('size','2048','mimetype','application/vnd.android.package-archive'),
+  '50000000-0000-4000-8000-000000000001'::uuid,
+  '50000000-0000-4000-8000-000000000001'
+);
+SET LOCAL ROLE authenticated;
+
+DO $apk_test$
+DECLARE v_test uuid:=current_setting('testdz.apk_test_id')::uuid;
+        v_build uuid:=current_setting('testdz.apk_build_id')::uuid;
+        v_path text:=current_setting('testdz.apk_path');
+        v_cohort uuid;
+        v_assignment uuid;
+        v_count integer;
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  IF NOT rebuild_v2.finalize_test_build(v_build) THEN RAISE EXCEPTION 'FAIL: private APK finalization failed'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.test_builds WHERE id=v_build AND status='uploaded') THEN
+    RAISE EXCEPTION 'FAIL: APK build not marked uploaded';
+  END IF;
+  PERFORM rebuild_v2.submit_test_for_review(v_test);
+
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  PERFORM rebuild_v2.review_test(v_test,'approved','Private APK build verified for tester distribution');
+
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  v_cohort:=rebuild_v2.create_test_cohort(v_test,'APK Private Cohort',1,NULL,NULL);
+
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  v_assignment:=rebuild_v2.join_test(v_test);
+  SELECT count(*) INTO v_count FROM rebuild_v2.test_builds WHERE id=v_build AND status='uploaded';
+  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: assigned tester cannot read uploaded APK metadata'; END IF;
+  IF NOT rebuild_v2_private.can_read_test_build(v_path) THEN
+    RAISE EXCEPTION 'FAIL: assigned tester cannot read private APK object';
+  END IF;
+  SELECT count(*) INTO v_count FROM storage.objects WHERE bucket_id='test-builds' AND name=v_path;
+  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: assigned tester cannot select private APK object'; END IF;
+END;
+$apk_test$;
 
 RESET ROLE;
 ROLLBACK;
@@ -176,6 +252,8 @@ SELECT jsonb_build_object(
  'tests_after_rollback',(SELECT count(*) FROM rebuild_v2.tests WHERE title='Lifecycle Test'),
  'test_steps_after_rollback',(SELECT count(*) FROM rebuild_v2.test_steps WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
  'test_requirements_after_rollback',(SELECT count(*) FROM rebuild_v2.test_requirements WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
+ 'test_builds_after_rollback',(SELECT count(*) FROM rebuild_v2.test_builds WHERE original_filename='lifecycle.apk'),
+ 'storage_apk_objects_after_rollback',(SELECT count(*) FROM storage.objects WHERE bucket_id='test-builds' AND name LIKE '%lifecycle.apk'),
  'cohorts_after_rollback',(SELECT count(*) FROM rebuild_v2.cohorts WHERE name IN ('Lifecycle Cohort','Updated Lifecycle Cohort')),
  'assignments_after_rollback',(SELECT count(*) FROM rebuild_v2.assignments WHERE tester_id='50000000-0000-4000-8000-000000000003')
 ) AS rollback_cleanup_check;
