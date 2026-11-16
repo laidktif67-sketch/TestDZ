@@ -389,3 +389,60 @@ export async function submitTesterDailyCheckin(assignmentId: string) {
     .eq("id", result.data).maybeSingle();
   return { error: checkin.error, checkin: checkin.data || null, recorded: true };
 }
+
+
+export type AssignmentSubmissionAttachment = {
+  file_id: string;
+  original_filename: string;
+  mime_type: string;
+  size_bytes: number;
+  storage_path: string;
+};
+
+/** Read the current submission state for the signed-in tester's assignment. */
+export async function getTesterAssignmentSubmission(assignmentId: string) {
+  return getAppDataClient().from("assignment_submissions")
+    .select("id,status").eq("assignment_id", assignmentId).maybeSingle();
+}
+
+/** Create or retrieve the server-managed submission draft. */
+export async function createTesterAssignmentSubmission(
+  assignmentId: string, summary: string, comments: string | null
+) {
+  return getAppDataClient().rpc("create_assignment_submission", {
+    p_assignment_id: assignmentId, p_summary: summary, p_comments: comments,
+  });
+}
+
+/** List the registered attachment metadata for a submission. */
+export async function getTesterSubmissionAttachments(submissionId: string) {
+  return getAppDataClient().from("assignment_submission_attachments")
+    .select("file_id,original_filename,mime_type,size_bytes,storage_path")
+    .eq("submission_id", submissionId);
+}
+
+/** Register an evidence file before uploading its bytes to private Storage. */
+export async function registerTesterSubmissionAttachment(input: {
+  submissionId: string;
+  fileId: string;
+  extension: string;
+  originalFilename: string;
+  mimeType: string;
+  sizeBytes: number;
+}) {
+  return getAppDataClient().rpc("register_assignment_submission_attachment", {
+    p_submission_id: input.submissionId,
+    p_file_id: input.fileId,
+    p_extension: input.extension,
+    p_original_filename: input.originalFilename,
+    p_mime_type: input.mimeType,
+    p_size_bytes: input.sizeBytes,
+  });
+}
+
+/** Finalize only after all evidence uploads have completed successfully. */
+export async function finalizeTesterAssignmentSubmission(submissionId: string) {
+  return getAppDataClient().rpc("finalize_assignment_submission", {
+    p_submission_id: submissionId,
+  });
+}
