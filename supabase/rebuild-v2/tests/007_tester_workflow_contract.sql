@@ -1,5 +1,5 @@
 -- Tester workflow V2 contract smoke test.
--- Run ONLY against an isolated disposable FixLab database after 007_tester_workflow.sql.
+-- Run only against an isolated disposable database after all candidate scripts through 018. The checks below exercise behavior introduced by scripts 017 and 018.
 -- All synthetic Auth users, rows, and Storage metadata are created inside one
 -- transaction and rolled back at the end. Never run against Production.
 

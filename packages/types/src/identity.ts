@@ -1,6 +1,8 @@
 export type IdentityOAuthProvider = "google" | "github" | "azure";
 export type IdentityAccountType = "tester" | "developer";
-export type AccountRole = "tester" | "developer" | "admin" | "support";
+
+// Keep this union aligned with the roles accepted by rebuild_v2.user_roles.
+export type AccountRole = "tester" | "developer" | "admin" | "financial" | "support";
 
 export interface IdentitySignUpInput {
   email: string;

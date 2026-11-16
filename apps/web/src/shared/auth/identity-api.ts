@@ -14,6 +14,7 @@ const ACCOUNT_ROLES = new Set<AccountRole>([
   "tester",
   "developer",
   "admin",
+  "financial",
   "support",
 ]);
 

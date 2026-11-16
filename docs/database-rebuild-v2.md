@@ -1,63 +1,59 @@
 # TestDZ database rebuild v2 — candidate
 
-## Status
+## Status and source of truth
 
 This is an isolated rebuild candidate, not a production migration.
 
-- Working branch: `rebuild/testdz-v2`
-- Base: PR #18 head `24bcaa1c01db69db1c15b55bca992ea9f3feaff0` (PR #18 remains open, draft, and unmerged).
-- Supabase validation project: `TestDZ-FixLab` (`bxjqwqidmxxnsgnpyzxv`, eu-west-3).
+- Working branch: `rebuild/testdz-v2`.
+- Supabase validation project: TestDZ-FixLab (`bxjqwqidmxxnsgnpyzxv`).
 - Candidate schema: `rebuild_v2`; helper schema: `rebuild_v2_private`.
-- Source scripts: `supabase/rebuild-v2/001_schema.sql` through `006_storage_policies.sql` (six ordered candidate scripts).
-- These scripts are intentionally outside `supabase/migrations` until application compatibility and clean replay tests are complete.
+- Candidate source: the 18 ordered SQL scripts in `supabase/rebuild-v2/`.
+- The candidate scripts remain outside `supabase/migrations` until clean replay, application compatibility, security tests, and rollback planning are complete.
+- Production project `naqjjykcglxiobkmdllj` has not been modified by this rebuild work.
 
 ## Candidate model
 
-The candidate contains 43 tables grouped around:
+The current candidate contains 47 tables and seven Storage buckets.
 
-1. Identity and authorization: profiles, user roles, role requests, devices.
-2. Product catalogue and test design: apps, tests, steps, requirements, media.
-3. Test operations: cohorts, cohort-test membership, assignments, check-ins, feedback, medical exceptions, Play opt-in events.
-4. Trust and moderation: reports, report attachments, disputes, fraud events/reviews, immutable audit events.
-5. Finance: wallets, immutable wallet ledger, plans, subscriptions, payments, refunds, coupons and redemptions, referrals.
-6. Support and platform operations: support tickets, messages, attachments, events, notifications, feature usage, event queue, platform configuration.
-7. Developer feedback workflow: messages, reviews, events, attachments.
+The model covers identity and authorization, developer apps and tests, tester assignments and evidence, cohorts, moderation and trust, financial wallets and ledger, subscriptions and payments, support workflows, notifications, and developer feedback.
 
 ## Security decisions
 
-- RLS is enabled and forced on every candidate table.
-- All 43 tables have at least one explicit policy (44 policies total).
-- No direct table-level client write grants are issued. Profile self-service updates are limited to display name, avatar, bio, locale, phone, and interests.
-- Signup creates only the default `tester` role and a wallet. User metadata is not used to assign privileged roles.
-- `admin`, `financial`, and `support` are never self-selectable. Admin bootstrap is an out-of-band trusted operation; an existing admin may grant non-admin staff roles.
-- The current production onboarding contract permits self-selection of `developer` (but not privileged staff roles); candidate `complete_onboarding` preserves that behavior. `role_requests` remains available for later developer-role requests or reinstatement workflows.
-- Internal support notes and their attachments are hidden from ticket owners.
-- Wallet entries are append-only, idempotent, row-locked, balance-checked, and audited. Only admin/financial roles can post them.
-- Security-definer helpers live in the private schema, have fixed search paths, and are not executable by anon.
+- RLS is enabled and forced on all 47 candidate tables.
+- User roles include `tester`, `developer`, `admin`, `financial`, and `support`.
+- Signup creates only the default `tester` role. User-editable Auth metadata is not used to assign privileged roles.
+- `admin`, `financial`, and `support` are not self-selectable. Admin bootstrap is an out-of-band trusted operation; an existing admin may grant permitted staff roles.
+- Financial ledger entries are append-only, idempotent, row-locked, balance-checked, and audited. Only admin/financial roles can post wallet entries.
+- Security-definer helpers live in the private schema, use fixed search paths, and are not executable by anon.
+- Private Storage buckets enforce owner/participant checks and metadata verification for test builds, media, feedback attachments, support attachments, and submitted evidence.
 
 ## Validation completed
 
-- Applied candidate schema, security, developer app lifecycle, onboarding/account-security, support/notification RPCs, and Storage bucket/policy scripts in the isolated FixLab schema.
-- Replayed all six scripts into a second isolated schema, `rebuild_v2_replay`, with replay-only Storage policy names to check reproducibility.
-- Replay result: 43 tables, 43 forced-RLS tables, 44 table policies covering all 43 tables, 13 app/onboarding/security/support/notification/attachment RPCs, 14 Storage object policies, zero authenticated direct table write grants, and zero anon execute grants for the candidate RPCs. Replay-only schemas and Storage policies were removed after verification.
-- Supabase security advisor currently reports four INFO RLS-enabled/no-policy findings in the pre-existing `public` schema only (`audit_logs`, `fraud_reviews`, `platform_config`, `user_roles`). The advisor output did not enumerate the isolated non-public candidate schema; candidate policy coverage was checked directly instead.
-- Performance advisor: no unindexed foreign keys remain in the candidate schema. Unused-index notices are expected because the candidate contains no workload data yet. The SQL security-contract test script completed with `rebuild_v2_security_contract: PASS`.
-- Privileged RPCs were checked to deny callers without an authenticated admin/financial identity; immutable-event trigger behavior was checked.
+- The candidate schema and scripts through 018 have been applied to the isolated FixLab candidate schema.
+- Live read-only inventory previously confirmed 47 tables in `rebuild_v2`, all 47 with RLS and FORCE RLS, and seven Storage buckets.
+- The candidate includes phase-one and later workflow contracts for app lifecycle, profiles, developer lifecycle, private test media, tester workflow, and developer feedback privacy.
+- The role matrix and all frontend routes are not yet fully covered by end-to-end tests.
+- The final-state contract added alongside this plan still needs to be executed against FixLab and the clean local replay.
 
-## Not yet completed
+## Remaining validation gates
 
-- Complete role-matrix RLS tests for financial and admin roles. Tester self/other isolation, developer app lifecycle, onboarding restrictions, support ticket ownership/staff access, internal-note visibility, notification read isolation, and support attachment object paths were tested with synthetic Auth users; all synthetic users and test data were cleaned up. Active-session and security-activity RPCs were checked for self-only reads.
-- Full app/API contract mapping for every frontend workflow and RPC. The first-pass route/data map is documented; remaining mismatches include points ledger, assignment fields/rewards, check-in evidence, leaderboard privacy, report submission, developer-feedback attachments, and unreviewed admin workflows.
-- Complete bucket-specific synthetic-user tests for avatars, app icons, developer-feedback attachments, and test evidence. Five buckets and 14 Storage object policies now exist in FixLab; support attachment owner-path and metadata tests passed. Production inventory confirmed five existing buckets and zero objects; no production bucket or object was changed.
-- Migration replay in a clean disposable Supabase project. The existing inactive rebuild project could not be restored because the organization reached its free active-project limit.
-- Verified production backup and restore rehearsal.
-- Data migration plan for the two existing production Auth users and existing Storage buckets.
-- Production cutover. The production project has not been modified.
+1. **Clean replay:** apply all 18 scripts in numeric order to a disposable empty Supabase local stack and confirm the final 47-table/seven-bucket contract passes.
+2. **Contract suite:** run the phase-one security contract after 001–006, then run the final-state and workflow contracts after 001–018.
+3. **Frontend compatibility:** complete the route/API-to-SQL mapping, including roles, tester rewards, referrals, reports, leaderboard privacy, and admin workflows.
+4. **CI:** add an isolated workflow that applies the candidate scripts themselves; the existing migration workflow only tests `supabase/migrations` and does not validate this candidate directory.
+5. **Backup and restore:** verify a restorable Production backup and rehearse restoration before any production migration.
+6. **Data preservation:** approve explicit mappings for existing Auth users, Storage buckets/objects, and any data that must be retained.
+7. **Cutover and rollback:** prepare a tested rollback plan and obtain explicit approval before any Production action.
+
+## Migration-history strategy
+
+The approved direction is to preserve the existing candidate schema and data, archive the old migration files in Git rather than permanently deleting them, and establish a new baseline/history only after a clean replay is proven. The 21 existing FixLab migration-history records must not be removed until the replacement baseline is verified and the exact history operation is reviewed. Do not change Production migration history.
 
 ## Safety boundary
 
-Do not move these scripts into the active migration directory, apply them to production, drop the existing `public` schema, delete migration history, or alter Auth/Storage until:
-1. a restorable backup is verified,
-2. app compatibility and role-isolation tests pass,
-3. the data-preservation mapping is approved, and
-4. a rollback plan is rehearsed.
+- Do not apply candidate scripts to Production.
+- Do not drop or reset the existing FixLab candidate schema or its data as part of this validation.
+- Do not delete Auth users or Storage objects.
+- Do not run `supabase db pull` against FixLab as a shortcut; the current CLI v3 defaults and remote-history behavior must be considered before any hosted command.
+- Do not change `supabase/config.toml` project targeting or run a hosted CLI command until the target project ref is explicitly verified.
+- No Production cutover is authorized by this document.
