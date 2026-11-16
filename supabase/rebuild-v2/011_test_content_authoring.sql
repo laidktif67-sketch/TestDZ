@@ -58,8 +58,8 @@ BEGIN
   LOOP
     IF jsonb_typeof(v_item)<>'object'
        OR jsonb_typeof(v_item->'type') IS DISTINCT FROM 'string'
-       OR jsonb_typeof(v_item->'title')<>'string'
-       OR jsonb_typeof(v_item->'description')<>'string'
+       OR jsonb_typeof(v_item->'title') IS DISTINCT FROM 'string'
+       OR jsonb_typeof(v_item->'description') IS DISTINCT FROM 'string'
        OR (v_item ? 'isMandatory' AND jsonb_typeof(v_item->'isMandatory') IS DISTINCT FROM 'boolean')
        OR (v_item->>'type') NOT IN ('device','android_version','account','network','eligibility','other')
        OR char_length(btrim(v_item->>'title')) NOT BETWEEN 2 AND 160
