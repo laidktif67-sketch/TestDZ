@@ -3,7 +3,8 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getTesterDashboardData } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/tester-dashboard.css";
@@ -93,14 +94,9 @@ export default function TesterDashboardPage() {
     let alive = true;
     const load = async (userId: string, userEmail?: string) => {
       try {
-        if(isTesterWorkflowV2Enabled&&supabaseV2){
-          const [profileRes,walletRes,assignmentRes,testRes,notificationRes]=await Promise.all([
-            supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-            supabaseV2.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
-            supabaseV2.from("assignments").select("id,status,started_at,assigned_at,created_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id",userId),
-            supabaseV2.rpc("get_discoverable_tests"),
-            supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null)
-          ]);
+        const dashboardData = await getTesterDashboardData(userId);
+        if(dashboardData.isV2){
+          const { profileRes, walletRes, assignmentRes, testRes, notificationRes } = dashboardData;
           if(!alive)return;
           const assignments=assignmentRes.data??[];
           setActiveAssignments(assignments.filter((a:any)=>a.status==="active").map((a:any)=>({
@@ -132,13 +128,7 @@ export default function TesterDashboardPage() {
           if(profileRes.error||walletRes.error||assignmentRes.error||testRes.error||notificationRes.error)setError("Some dashboard information could not be loaded. Check your connection and try again.");
           return;
         }
-        const [profileRes, walletRes, assignmentRes, testRes, notificationRes] = await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-        client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
-        client.from("assignments").select("id,status,start_date,created_at,completed_at,checkins(id,checkin_date),test:tests(title,end_date,app:apps(name))").eq("tester_id", userId),
-        client.from("tests").select("id,title,status,min_testers,app:apps(name,icon_url)", { count: "exact" }).in("status", ["recruiting","ready","running"]).order("created_at", { ascending: false }).limit(4),
-        client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null)
-      ]);
+        const { profileRes, walletRes, assignmentRes, testRes, notificationRes } = dashboardData;
       if (!alive) return;
       const assignments = assignmentRes.data ?? [];
       setActiveAssignments((assignments.filter((a: { status: string }) => a.status === "active") as unknown as ActiveAssignment[]).slice(0, 4));
