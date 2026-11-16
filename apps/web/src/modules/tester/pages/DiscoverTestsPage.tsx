@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getDiscoverTestsPageData } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -38,46 +39,15 @@ export default function DiscoverTestsPage(){
   if(!client){setLoading(false);setError("Supabase is not configured.");return;}
   let alive=true;
   const load=async(userId:string,email?:string)=>{
-   if(isTesterWorkflowV2Enabled&&supabaseV2){
-    const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
-     supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-     supabaseV2.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
-     supabaseV2.from("assignments").select("id,status").eq("tester_id",userId),
-     supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null),
-     supabaseV2.rpc("get_discoverable_tests")
-    ]);
-    if(!alive)return;
-    setName(profile.data?.display_name?.trim()||email?.split("@")[0]||"Tester");
-    setAvatar(profile.data?.avatar_url||"");
-    setPoints(Number(wallet.data?.earned_points??0));
-    setCompleted((assignments.data??[]).filter((a:{status:string})=>a.status==="completed").length);
-    setUnread(notifications.count??0);
-    const rows=(testRows.data??[]) as unknown as DiscoverableTestRow[];
-    setTests(rows.map(row=>({
-     id:row.test_id,title:row.title,description:row.description,short_summary:row.short_summary,
-     status:row.test_status,min_testers:row.min_testers,start_date:row.start_date,end_date:row.end_date,
-     app:{name:row.app_name,icon_url:row.app_icon_url,category:row.app_category}
-    })));
-    if(profile.error||wallet.error||assignments.error||notifications.error||testRows.error)
-     setError("Some information could not be loaded. You can still explore the available tests.");
-    setLoading(false);
-    return;
-   }
-   const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
-    client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
-    client.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
-    client.from("assignments").select("id,status").eq("tester_id",userId),
-    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null),
-    client.from("tests").select("id,title,description,short_summary,status,min_testers,start_date,end_date,app:apps(name,icon_url,category)").in("status",["recruiting","ready"]).order("created_at",{ascending:false}).limit(60)
-   ]);
+   const result = await getDiscoverTestsPageData(userId);
    if(!alive)return;
-   setName(profile.data?.display_name?.trim()||email?.split("@")[0]||"Tester");
-   setAvatar(profile.data?.avatar_url||"");
-   setPoints(Number(wallet.data?.earned_points??0));
-   setCompleted((assignments.data??[]).filter((a:{status:string})=>a.status==="completed").length);
-   setUnread(notifications.count??0);
-   setTests((testRows.data??[]) as unknown as TestRow[]);
-   if(profile.error||wallet.error||assignments.error||notifications.error||testRows.error)
+   setName(result.displayName||email?.split("@")[0]||"Tester");
+   setAvatar(result.avatarUrl);
+   setPoints(result.points);
+   setCompleted(result.completed);
+   setUnread(result.unread);
+   setTests(result.tests as TestRow[]);
+   if(result.hasError)
     setError("Some information could not be loaded. You can still explore the available tests.");
    setLoading(false);
   };
