@@ -236,6 +236,62 @@ export function transitionDeveloperTestCohort(cohortId: string, status: "ready" 
   });
 }
 
+export interface DeveloperTestBuild {
+  id: string;
+  test_id: string;
+  version_label: string;
+  original_filename: string;
+  size_bytes: number;
+  status: "pending" | "uploaded";
+  uploaded_at: string | null;
+  created_at: string;
+}
+
+export function listDeveloperTestBuilds(developerId: string) {
+  return dataClient().from("test_builds")
+    .select("id,test_id,version_label,original_filename,size_bytes,status,uploaded_at,created_at")
+    .eq("developer_id", developerId)
+    .order("created_at", { ascending: false });
+}
+
+/** Register metadata first, upload to the private bucket, then verify the stored object server-side. */
+export async function uploadDeveloperTestBuild(input: {
+  userId: string;
+  testId: string;
+  file: File;
+  versionLabel: string;
+}) {
+  const mime = "application/vnd.android.package-archive";
+  if (!input.file.name.toLowerCase().endsWith(".apk") || input.file.type !== mime) {
+    return { error: new Error("APK_FILE_TYPE_INVALID"), stage: "validation" as const };
+  }
+  if (input.file.size < 1 || input.file.size > 52428800) {
+    return { error: new Error("APK_FILE_SIZE_INVALID"), stage: "validation" as const };
+  }
+  const fileId = crypto.randomUUID();
+  const { data: path, error: registerError } = await dataClient().rpc("register_test_build", {
+    p_test_id: input.testId,
+    p_file_id: fileId,
+    p_version_label: input.versionLabel,
+    p_original_filename: input.file.name,
+    p_size_bytes: input.file.size,
+    p_sha256: null,
+  });
+  if (registerError || !path) return { error: registerError ?? new Error("APK_REGISTRATION_FAILED"), stage: "registration" as const };
+  const upload = await dataClient().storage.from("test-builds").upload(path, input.file, {
+    upsert: false,
+    contentType: mime,
+    cacheControl: "3600",
+  });
+  if (upload.error) return { error: upload.error, stage: "upload" as const };
+  const { data: build, error: lookupError } = await dataClient().from("test_builds")
+    .select("id").eq("test_id", input.testId).eq("developer_id", input.userId).eq("storage_path", path).single();
+  if (lookupError || !build) return { error: lookupError ?? new Error("APK_BUILD_LOOKUP_FAILED"), stage: "verification" as const };
+  const { error: finalizeError } = await dataClient().rpc("finalize_test_build", { p_build_id: build.id });
+  if (finalizeError) return { error: finalizeError, stage: "verification" as const };
+  return { error: null, stage: "complete" as const };
+}
+
 export function submitAppForReview(appId: string) {
   return dataClient().rpc("submit_app_for_review", { p_app_id: appId });
 }
