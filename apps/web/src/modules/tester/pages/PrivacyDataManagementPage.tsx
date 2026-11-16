@@ -76,7 +76,7 @@ export default function PrivacyDataManagementPage() {
     const metadata = user.user_metadata || {};
     const saved = metadata.testdz_privacy_preferences as Partial<PrivacyPreferences> | undefined;
     const history = metadata.testdz_privacy_export_requests as ExportRequest[] | undefined;
-    getPrivacyAccountProfile(user.id).then((profile) => {
+    getPrivacyAccountProfile(user.id).then((profile: any) => {
       if (!alive) return;
       if (profile.error) throw profile.error;
       setName(profile.data?.display_name || user.email?.split("@")[0] || "Tester");
@@ -129,9 +129,9 @@ export default function PrivacyDataManagementPage() {
       checkIns: checkins.data,
       feedback: feedback.data,
       notifications: notifications.data,
-      ...(v2 ? { wallet: wallet.data, walletLedger: ledger.data } : { pointsLedger: ledger.data }),
-      workflowVersion: v2 ? "rebuild_v2" : "legacy",
-      exportScope: ["account profile", "tester assignments", "check-ins", "tester feedback", "notifications", "wallet ledger", ...(v2 ? ["wallet summary"] : [])]
+      ...(isTesterWorkflowV2Enabled ? { wallet: wallet.data, walletLedger: ledger.data } : { pointsLedger: ledger.data }),
+      workflowVersion: isTesterWorkflowV2Enabled ? "rebuild_v2" : "legacy",
+      exportScope: ["account profile", "tester assignments", "check-ins", "tester feedback", "notifications", "wallet ledger", ...(isTesterWorkflowV2Enabled ? ["wallet summary"] : [])]
     };
     downloadFile("testdz-account-data.json", JSON.stringify(payload, null, 2), "application/json");
     await recordRequest("Full Account Data", "Completed");
@@ -148,10 +148,10 @@ export default function PrivacyDataManagementPage() {
     }
     const lines = [
       ["Record Type","Record ID","Related ID","Status / Category","Date","Details"].map(csvCell).join(","),
-      ...(assignments.data || []).map(row => ["Assignment",row.id,row.test_id,row.status,("assigned_at" in row ? row.assigned_at : row.created_at),("started_at" in row ? row.started_at : row.start_date)].map(csvCell).join(",")),
-      ...(checkins.data || []).map(row => ["Check-in",row.id,row.assignment_id,"Recorded",row.created_at,row.note].map(csvCell).join(",")),
-      ...(feedback.data || []).map(row => ["Feedback",row.id,row.assignment_id,("quality_status" in row ? row.quality_status : "Not provided"),row.created_at,row.category].map(csvCell).join(",")),
-      ...(ledger.data || []).map(row => ["Ledger",row.id,("reference_id" in row ? row.reference_id : ""),("entry_type" in row ? row.entry_type : row.wallet_type),row.created_at, (row.reason || "") + " (" + row.amount + ")"].map(csvCell).join(","))
+      ...(assignments.data || []).map((row: any) => ["Assignment",row.id,row.test_id,row.status,("assigned_at" in row ? row.assigned_at : row.created_at),("started_at" in row ? row.started_at : row.start_date)].map(csvCell).join(",")),
+      ...(checkins.data || []).map((row: any) => ["Check-in",row.id,row.assignment_id,"Recorded",row.created_at,row.note].map(csvCell).join(",")),
+      ...(feedback.data || []).map((row: any) => ["Feedback",row.id,row.assignment_id,("quality_status" in row ? row.quality_status : "Not provided"),row.created_at,row.category].map(csvCell).join(",")),
+      ...(ledger.data || []).map((row: any) => ["Ledger",row.id,("reference_id" in row ? row.reference_id : ""),("entry_type" in row ? row.entry_type : row.wallet_type),row.created_at, (row.reason || "") + " (" + row.amount + ")"].map(csvCell).join(","))
     ];
     downloadFile("testdz-activity-history.csv", lines.join("\n"), "text/csv;charset=utf-8");
     await recordRequest("Activity History (CSV)", "Completed");
