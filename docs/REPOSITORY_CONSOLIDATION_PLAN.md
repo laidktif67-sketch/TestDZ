@@ -249,7 +249,7 @@ A separate catalog audit of all 96 V2 functions found 64 `SECURITY DEFINER` func
 
 The non-empty paths are not currently user-writable: `anon`, `authenticated`, and `service_role` have no `CREATE` privilege on any of those schemas. In particular, `authenticated` has `USAGE` but not `CREATE` on the two V2 schemas, which is required for invoker-wrapper execution but does not permit object shadowing. No search-path injection was demonstrated. Preserve these no-CREATE boundaries in future grants and migrations.
 
-A permanent regression contract for these findings is proposed in [PR #46](https://github.com/laidktif67-sketch/TestDZ/pull/46). It asserts the required V2 schema USAGE grants, denies schema CREATE to `anon`, `authenticated`, `service_role`, and `authenticator`, and checks every SECURITY DEFINER function for an explicit allowlisted search_path and `postgres` ownership. Its isolated Rebuild V2 CI run is pending.
+A permanent regression contract for these findings was added in [PR #46](https://github.com/laidktif67-sketch/TestDZ/pull/46), merged as `e98e13d806d574b30ef163ff059dfbc4dd2e9733`. It asserts the required V2 schema USAGE grants, denies schema CREATE to `anon`, `authenticated`, `service_role`, and `authenticator`, and checks every SECURITY DEFINER function for an explicit allowlisted search_path and `postgres` ownership. The contract passed in [PR CI run 43979499705](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43979499705) and post-merge [run 43979708488](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43979708488).
 
 ### Confirmed live FixLab date defect; candidate-source correction merged
 
