@@ -433,3 +433,42 @@ export function reviewDeveloperApp(appId: string, decision: "approved" | "reject
 export function reviewDeveloperTest(testId: string, decision: "approved" | "rejected", reason: string) {
   return dataClient().rpc("review_test", { p_test_id: testId, p_decision: decision, p_reason: reason });
 }
+
+export type AdminReviewApp = {
+  id: string;
+  name: string;
+  package_name: string;
+  description: string | null;
+  category: string;
+  developer_id: string;
+  created_at: string;
+};
+
+export type AdminReviewTest = {
+  id: string;
+  app_id: string;
+  title: string;
+  description: string | null;
+  test_type: string;
+  min_testers: number;
+  developer_id: string;
+  created_at: string;
+};
+
+/** Load the administrator review queue; database permissions remain enforced by RLS. */
+export async function getAdminReviewQueue() {
+  const [apps, tests] = await Promise.all([
+    dataClient()
+      .from("apps")
+      .select("id,name,package_name,description,category,developer_id,created_at")
+      .eq("status", "submitted")
+      .order("created_at", { ascending: true }),
+    dataClient()
+      .from("tests")
+      .select("id,app_id,title,description,test_type,min_testers,developer_id,created_at")
+      .eq("status", "submitted")
+      .order("created_at", { ascending: true }),
+  ]);
+  return { apps, tests };
+}
+
