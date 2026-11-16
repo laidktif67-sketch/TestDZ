@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, CSSProperties, ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { getAssignmentSubmissionPageData } from "../../../features/tester/tester-api";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { getAssignmentSubmissionPageData, getTesterAssignmentSubmission, createTesterAssignmentSubmission, getTesterSubmissionAttachments, registerTesterSubmissionAttachment, finalizeTesterAssignmentSubmission } from "../../../features/tester/tester-api";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -111,7 +111,7 @@ export default function AssignmentSubmissionPage() {
   ];
   const totalSize = useMemo(() => evidence.reduce((sum, item) => sum + item.file.size, 0), [evidence]);
   const handleFinalSubmit = async () => {
-    if (!isTesterWorkflowV2Enabled || !supabaseV2 || !supabase || !session?.user?.id || !assignment) {
+    if (!isTesterWorkflowV2Enabled || !supabase || !session?.user?.id || !assignment) {
       setNotice("Secure final submission is not enabled in this environment yet.");
       return;
     }
@@ -123,8 +123,7 @@ export default function AssignmentSubmissionPage() {
     setSubmitting(true);
     setNotice("");
     try {
-      const existing = await supabaseV2.from("assignment_submissions")
-        .select("id,status").eq("assignment_id", id).maybeSingle();
+      const existing = await getTesterAssignmentSubmission(id);
       if (existing.error) throw existing.error;
       if (existing.data?.status === "submitted") {
         setNotice("This assignment has already been submitted.");
@@ -132,15 +131,11 @@ export default function AssignmentSubmissionPage() {
         return;
       }
 
-      const created = await supabaseV2.rpc("create_assignment_submission", {
-        p_assignment_id: id, p_summary: report.trim(), p_comments: comments.trim() || null
-      });
+      const created = await createTesterAssignmentSubmission(id, report.trim(), comments.trim() || null);
       if (created.error || !created.data) throw created.error || new Error("Could not save the submission draft.");
       const submissionId = created.data as string;
 
-      const prior = await supabaseV2.from("assignment_submission_attachments")
-        .select("file_id,original_filename,mime_type,size_bytes,storage_path")
-        .eq("submission_id", submissionId);
+      const prior = await getTesterSubmissionAttachments(submissionId);
       if (prior.error) throw prior.error;
       const registered = (prior.data || []) as unknown as {
         file_id: string; original_filename: string; mime_type: string; size_bytes: number; storage_path: string;
@@ -157,10 +152,9 @@ export default function AssignmentSubmissionPage() {
           const existingObject = await supabase.storage.from("test-evidence").createSignedUrl(storagePath, 60);
           if (!existingObject.error) continue;
         } else {
-          const registeredFile = await supabaseV2.rpc("register_assignment_submission_attachment", {
-            p_submission_id: submissionId, p_file_id: fileId,
-            p_extension: extension, p_original_filename: file.name,
-            p_mime_type: file.type, p_size_bytes: file.size
+          const registeredFile = await registerTesterSubmissionAttachment({
+            submissionId, fileId, extension, originalFilename: file.name,
+            mimeType: file.type, sizeBytes: file.size
           });
           if (registeredFile.error || !registeredFile.data) throw registeredFile.error || new Error("Could not register an evidence file.");
           storagePath = registeredFile.data as string;
@@ -172,7 +166,7 @@ export default function AssignmentSubmissionPage() {
         if (uploaded.error) throw uploaded.error;
       }
 
-      const finalized = await supabaseV2.rpc("finalize_assignment_submission", { p_submission_id: submissionId });
+      const finalized = await finalizeTesterAssignmentSubmission(submissionId);
       if (finalized.error || !finalized.data) throw finalized.error || new Error("Could not finalize the submission.");
       window.localStorage.removeItem(draftKey);
       evidence.forEach(item => URL.revokeObjectURL(item.url));
