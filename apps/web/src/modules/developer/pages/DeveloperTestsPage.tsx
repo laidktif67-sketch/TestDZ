@@ -48,7 +48,7 @@ export default function DeveloperTestsPage() {
   const [duration,setDuration]=useState(30);
   const [instructions,setInstructions]=useState("");
   const [steps,setSteps]=useState([{title:"",description:"",isRequired:true}]);
-  const [requirements,setRequirements]=useState([{type:"device" as const,title:"",description:"",isMandatory:true}]);
+  const [requirements,setRequirements]=useState<Array<{type:"device"|"android_version"|"account"|"network"|"eligibility"|"other";title:string;description:string;isMandatory:boolean}>>([{type:"device",title:"",description:"",isMandatory:true}]);
   const [cohortFor,setCohortFor]=useState<string|null>(null);
   const [cohortName,setCohortName]=useState("");
   const [cohortCapacity,setCohortCapacity]=useState(12);
