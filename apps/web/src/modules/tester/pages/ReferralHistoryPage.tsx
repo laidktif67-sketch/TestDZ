@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getReferralPageShellData, getReferralHistory } from "../../../features/referrals/referrals-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/referral-history.css";
@@ -13,23 +14,16 @@ export default function ReferralHistoryPage(){
   if(!session?.user?.id||!supabase){setLoading(false);return;}
   let alive=true;
   const id=session.user.id;
-  const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;
-  if(!client){setLoading(false);return;}
   (async()=>{
    try{
-    const [p,n]=await Promise.all([
-     client.from("profiles").select("display_name,avatar_url").eq("id",id).maybeSingle(),
-     client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",id).is("read_at",null)
-    ]);
+    const { profile: p, notifications: n } = await getReferralPageShellData(id);
     if(!alive)return;
     if(p.error||n.error){setReferralUnavailable(true);setLoading(false);return;}
     setName(p.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
     setAvatar(p.data?.avatar_url||"");
     setNotifications(n.count??0);
     if(isTesterWorkflowV2Enabled){
-     const {data,error}=await supabaseV2!.from("referrals")
-      .select("id,referrer_id,referred_user_id,referral_code,status,created_at,qualified_at,rewarded_at")
-      .eq("referrer_id",id).order("created_at",{ascending:false});
+     const {data,error}=await getReferralHistory(id);
      if(!alive)return;
      if(error){setReferralUnavailable(true);}
      else setRecords((data??[]).map(item=>({
