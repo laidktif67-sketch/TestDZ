@@ -8,8 +8,8 @@
 
 - Repository visibility: Public.
 - Default branch: `main`.
-- Remote branches returned by GitHub: 49.
-- Open pull requests returned by GitHub: 28; all are Draft.
+- Remote branches returned by GitHub: 50.
+- Open pull requests returned by GitHub: 29; all are Draft.
 - Branch protection: none of the 47 listed branches is protected.
 - V2 remains the candidate consolidation baseline, not yet the default branch or a production-ready release.
 
@@ -17,6 +17,7 @@
 
 | Source PR / branch | Work found | V2 evidence | Decision |
 |---|---|---|---|
+| #45 `fix/local-postgrest-v2-schema` | Aligns local PostgREST exposure with the V2 frontend schema selector; adds HTTP checks for exposed `rebuild_v2` and hidden `rebuild_v2_private` | `supabase/config.toml` previously exposed only `public` and `graphql_public`; PR #45 adds the V2 schema and a CI probe | Draft; await PostgREST and migration CI before merging |
 | #44 `fix/v2-algeria-business-date` | Fixes Algeria-local calendar dates in tester discovery, join eligibility, assignment scheduling, and daily check-ins; aligns the check-in default and adds midnight-boundary regression checks | Merged into V2 as `6a60e6f04ba05d6af6ee962a306e795c39fa2eb7`; isolated Rebuild V2 CI and legacy migration CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
 | #42 `chore/v2-agent-governance` | Repository-wide agent rules, engineering roles, consolidation plan | Three documentation files on a V2-based branch | Keep as governance PR; review and merge separately |
 | #33 `feat/developer-create-test-six-step` | Six-step developer wizard, test configuration JSON, app distribution metadata/RPC, draft creation | V2 already has `DeveloperTestsPage`, `test_type`, `create_test` / `update_test` API contracts and modular `apps-api`; no `test_config` contract found in V2 API | Reuse UX/product requirements, but redesign wizard against V2 schema/RPCs; do not port its `public.*` migrations |
