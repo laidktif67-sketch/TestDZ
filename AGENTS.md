@@ -39,10 +39,10 @@ Choose the smallest relevant search mode:
 
 Examples for this repository (verify package files before relying on this):
 ```bash
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "SaaS dashboard productivity" --design-system -p "TestDZ"
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "responsive layout overflow" --domain ux
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "component architecture styling" --stack react
-python3 .agents/skills/ui-ux-pro-max/scripts/search.py "dashboard" --domain style --rtl
+python3 .skill-lab/global/ui-ux-pro-max/scripts/search.py "SaaS dashboard productivity" --design-system -p "TestDZ"
+python3 .skill-lab/global/ui-ux-pro-max/scripts/search.py "responsive layout overflow" --domain ux
+python3 .skill-lab/global/ui-ux-pro-max/scripts/search.py "component architecture styling" --stack react
+python3 .skill-lab/global/ui-ux-pro-max/scripts/search.py "dashboard" --domain style --rtl
 ```
 Use the real installed path if it differs. Do not run all example searches mechanically; choose only those relevant to the task.
 
