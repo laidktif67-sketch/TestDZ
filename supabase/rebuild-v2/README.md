@@ -25,7 +25,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 
 ## Apply and test order
 
-This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the validation gates in [the rebuild plan](../../docs/database-rebuild-v2.md) pass.
+This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
 Apply all 18 scripts in numeric order, from `001_schema.sql` through `018_verify_submission_evidence_metadata.sql`.
 
@@ -44,12 +44,38 @@ After all 18 scripts, run:
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 18 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the final-state/workflow contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 18 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the eight post-phase contracts. It never connects to a hosted project.
 
-The developer lifecycle contract validates app submission and admin-only approval, test creation/submission and admin-only approval, test content authoring, cohort lifecycle, minimum tester readiness, private APK registration/upload verification/participant download, tester join, and audit-event creation. The tester workflow contract covers ownership isolation, idempotency, capacity enforcement, schedule-window enforcement, evidence ownership/metadata verification, and rollback cleanup.
+## Validation completed (2026-11-16)
 
-## Current validation boundary
+- GitHub Actions run [#8](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43944382982), commit `665ea461430c958132108c2310d5c11a59469d6c`, completed successfully.
+- CI applied all 18 scripts to a disposable empty local Supabase stack.
+- CI passed all nine contracts: the phase-one security contract plus the eight post-phase contracts.
+- The wallet idempotency contract explicitly returned `rebuild_v2_wallet_idempotency_contract: PASS`.
+- Contract fixtures were rolled back; the final-state contract's cleanup check reported zero remaining app, profile, and auth-user fixtures.
+- The disposable local Supabase stack stopped successfully.
+- Read-only FixLab inventory confirmed 47 candidate tables, RLS and FORCE RLS on all 47, 439 columns, 297 constraints, 157 indexes, 48 candidate policies, 96 candidate functions (39 exposed-schema and 57 private-schema functions), six candidate triggers, seven Storage buckets, and 18 Storage object policies.
+- FixLab's current hosted migration history still contains 21 records. It has not been repaired or reset.
 
-TestDZ-FixLab currently contains the candidate schema with 47 tables and seven Storage buckets. The candidate scripts through 018 have been applied there and the later workflow/media/feedback paths have been exercised with rollback-based contracts. This is not yet proof that all 18 scripts can build a completely empty Supabase project from scratch: clean-stack replay and automated CI coverage are still required.
+## Remaining validation gates
 
-Never use Production as a replay target. Production has not been changed by this candidate work.
+1. **Exact live-to-clean comparison:** compare the complete catalog definitions (columns, constraints, indexes, function bodies/security attributes, policies, grants, triggers, and Storage configuration) between FixLab and a clean replay. The successful CI replay proves the scripts build cleanly and pass contracts; it does not by itself prove byte-for-byte catalog equivalence with the hosted FixLab schema.
+2. **Legacy-schema compatibility decision:** FixLab also contains 24 tables in the `public` schema. The frontend selects the legacy `public` schema when `VITE_TESTER_WORKFLOW_V2_ENABLED` is false or unset, and selects `rebuild_v2` only when enabled. Decide whether the public schema remains part of the supported application baseline or whether all active application paths will be cut over to V2 before excluding it from a new baseline.
+3. **Frontend compatibility:** complete the route/API-to-SQL mapping, including roles, tester rewards, referrals, reports, leaderboard privacy, and admin workflows.
+4. **Security follow-up:** the current FixLab security advisor reports four INFO findings for legacy public tables with RLS enabled but no policies: `public.audit_logs`, `public.fraud_reviews`, `public.platform_config`, and `public.user_roles`. Their effective access must be reviewed before any legacy schema is retained or retired.
+5. **Backup and restore:** verify a restorable Production backup and rehearse restoration before any production migration.
+6. **Data preservation:** approve explicit mappings for existing Auth users, Storage buckets/objects, and any data that must be retained.
+7. **Cutover and rollback:** prepare a tested rollback plan and obtain explicit approval before any Production action.
+
+## Migration-history strategy
+
+The approved direction is to preserve the existing candidate schema and data, archive the old migration files in Git rather than permanently deleting them, and establish a new baseline/history only after clean replay and legacy-schema scope are resolved. The 21 existing FixLab migration-history records must not be removed until the replacement baseline is verified and the exact history operation is reviewed. Do not change Production migration history.
+
+## Safety boundary
+
+- Do not apply candidate scripts to Production.
+- Do not drop or reset the existing FixLab candidate schema or its data as part of this validation.
+- Do not delete Auth users or Storage objects.
+- Do not run `supabase db pull` against FixLab as a shortcut; CLI v3 defaults and hosted migration-history behavior must be considered before any hosted command.
+- Do not change `supabase/config.toml` project targeting or run a hosted CLI command until the target project ref is explicitly verified.
+- No Production cutover is authorized by this document.
