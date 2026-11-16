@@ -174,7 +174,7 @@ BEGIN
       category = p_category,
       icon_url = CASE WHEN p_icon_url IS NULL THEN icon_url ELSE p_icon_url END,
       updated_at = now()
-  WHERE id = p_app_id AND developer_id = v_user_id AND status <> 'archived';
+  WHERE id = p_app_id AND developer_id = v_user_id AND status IN ('draft', 'rejected');
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'APP_NOT_FOUND_OR_NOT_OWNED' USING errcode = 'P0002';
