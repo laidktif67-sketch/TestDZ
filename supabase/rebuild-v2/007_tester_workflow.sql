@@ -17,6 +17,20 @@
 
 BEGIN;
 
+-- All user-facing calendar dates follow Algeria local time, not the database
+-- session timezone (which may be UTC). Keep the instant injectable for
+-- deterministic midnight-boundary regression tests.
+CREATE OR REPLACE FUNCTION rebuild_v2_private.algeria_local_date(
+  p_at timestamptz DEFAULT now()
+)
+RETURNS date
+LANGUAGE sql
+STABLE
+SET search_path TO ''
+AS $function$
+  SELECT (p_at AT TIME ZONE 'Africa/Algiers')::date;
+$function$;
+
 -- ---------------------------------------------------------------------------
 -- 1. Fix the tester participant branch in the cohort SELECT policy.
 -- ---------------------------------------------------------------------------
@@ -192,6 +206,7 @@ SET row_security TO 'off'
 AS $function$
 DECLARE
   v_user_id uuid := (SELECT auth.uid());
+  v_business_date date := rebuild_v2_private.algeria_local_date();
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
@@ -227,8 +242,8 @@ BEGIN
   WHERE t.status IN ('recruiting','ready','running')
     AND app.status = 'published'
     AND c.status IN ('forming','ready','running')
-    AND (t.start_date IS NULL OR t.start_date <= CURRENT_DATE)
-    AND (t.end_date IS NULL OR t.end_date >= CURRENT_DATE)
+    AND (t.start_date IS NULL OR t.start_date <= v_business_date)
+    AND (t.end_date IS NULL OR t.end_date >= v_business_date)
     AND (c.ends_at IS NULL OR c.ends_at > now())
     AND NOT EXISTS (
       SELECT 1 FROM rebuild_v2.assignments mine
@@ -260,6 +275,7 @@ DECLARE
   v_existing rebuild_v2.assignments%ROWTYPE;
   v_used integer;
   v_assignment_id uuid;
+  v_business_date date := rebuild_v2_private.algeria_local_date();
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
@@ -287,8 +303,8 @@ BEGIN
   WHERE t.id = p_test_id
     AND t.status IN ('recruiting','ready','running')
     AND app.status = 'published'
-    AND (t.start_date IS NULL OR t.start_date <= CURRENT_DATE)
-    AND (t.end_date IS NULL OR t.end_date >= CURRENT_DATE);
+    AND (t.start_date IS NULL OR t.start_date <= v_business_date)
+    AND (t.end_date IS NULL OR t.end_date >= v_business_date);
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'TEST_NOT_OPEN' USING errcode = 'P0002';
@@ -414,6 +430,7 @@ DECLARE
   v_user_id uuid := (SELECT auth.uid());
   v_assignment rebuild_v2.assignments%ROWTYPE;
   v_checkin_id uuid;
+  v_checkin_date date := rebuild_v2_private.algeria_local_date();
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
@@ -440,13 +457,13 @@ BEGIN
   SELECT c.id INTO v_checkin_id
   FROM rebuild_v2.checkins c
   WHERE c.assignment_id = p_assignment_id
-    AND c.checkin_date = CURRENT_DATE;
+    AND c.checkin_date = v_checkin_date;
   IF v_checkin_id IS NOT NULL THEN
     RETURN v_checkin_id;
   END IF;
 
   INSERT INTO rebuild_v2.checkins(assignment_id, tester_id, checkin_date, note)
-  VALUES (p_assignment_id, v_user_id, CURRENT_DATE, NULLIF(btrim(p_note), ''))
+  VALUES (p_assignment_id, v_user_id, v_checkin_date, NULLIF(btrim(p_note), ''))
   RETURNING id INTO v_checkin_id;
 
   RETURN v_checkin_id;
@@ -455,7 +472,7 @@ EXCEPTION
     SELECT c.id INTO v_checkin_id
     FROM rebuild_v2.checkins c
     WHERE c.assignment_id = p_assignment_id
-      AND c.checkin_date = CURRENT_DATE;
+      AND c.checkin_date = v_checkin_date;
     IF v_checkin_id IS NOT NULL THEN
       RETURN v_checkin_id;
     END IF;
@@ -942,6 +959,7 @@ AS $function$
 $function$;
 
 -- Private implementations and Storage helpers are not directly callable by clients.
+REVOKE ALL ON FUNCTION rebuild_v2_private.algeria_local_date(timestamptz) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION rebuild_v2_private.get_discoverable_tests_impl() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION rebuild_v2_private.join_test_impl(uuid) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION rebuild_v2_private.start_assignment_impl(uuid) FROM PUBLIC, anon, authenticated;
