@@ -1,6 +1,6 @@
 -- Read-only fingerprint of the final V2 catalog.
 -- Run after candidate scripts 001..018. Excludes the two known live/candidate date-delta functions:
--- algeria_local_date (candidate-only) and the four tester business-date implementations intentionally patched only in candidate.
+-- algeria_local_date (candidate-only), the four tester business-date implementations, and checkins.checkin_date's Algeria-local default intentionally patched only in candidate.
 -- Compare this output with the same query on FixLab before any hosted baseline or patch operation.
 
 WITH
@@ -13,6 +13,7 @@ cols AS (
  JOIN pg_namespace n ON n.oid=c.relnamespace
  LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
  WHERE n.nspname='rebuild_v2' AND c.relkind='r' AND a.attnum>0 AND NOT a.attisdropped
+   AND NOT (c.relname='checkins' AND a.attname='checkin_date')
 ),
 cons AS (
  SELECT c.relname||':'||con.conname||':'||con.contype::text||':'||con.convalidated::text||':'||
