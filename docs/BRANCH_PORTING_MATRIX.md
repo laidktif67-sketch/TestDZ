@@ -129,3 +129,16 @@ The read-only migration-history query returned these 21 entries. The history rec
 | `20261116162951` | `verify_submission_evidence_metadata` |
 
 Do not infer that a migration is reproducible from its name. Each version still needs its original SQL or an independently reviewed catalog reconstruction, plus object-level mapping and clean replay evidence.
+
+
+## Agent skill files and local cleanup
+
+The V2 Git tree contains `.skill-lab/global/` with the shared agent skills (including code-security, code-review, semgrep, find-bugs, security-review, gha-security-review, UI/UX Pro Max, UI styling, design system, banner, brand, design, slides, and free-LLM-APIs). These global skills are already versioned in the V2 baseline.
+
+The last local Termux inventory also found:
+- `.agents/skills/` with seven agent skill directories — this directory is not present in the V2 Git tree.
+- `.skill-lab/project/` with project-specific brand/design/design-system material — this directory is not present in the V2 Git tree.
+- Local Python cache directories and `test-results.txt` — generated artifacts, not reusable skill source.
+- `frontend/` contained only `package-lock.json` and `.env.local` at the inspected depth; it had no `package.json` or source files. Never upload or display `.env.local`.
+
+If the user deletes local worktrees, the already-committed `.skill-lab/global/` remains recoverable from V2. The untracked `.agents/` and `.skill-lab/project/` content would not be recoverable from GitHub unless separately archived or committed. Do not mix these agent-only directories into application source or upload them without a deliberate decision.
