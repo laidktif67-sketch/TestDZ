@@ -37,9 +37,9 @@ The following pages still contain direct database access and/or explicit legacy 
 - `ActiveAssignmentProgressPage.tsx`: V2 and legacy reads; legacy path uses `points_ledger`, `assignments.start_date`, and `checkins.evidence_url`; V2 path has `wallet_ledger`-era semantics but leaderboard data is still loaded from cross-user sources.
 - `AssignmentSubmissionPage.tsx`: V2 submission RPC path exists, but initial reads still branch between V2 and public.
 - `ActivityHistoryPage.tsx`: V2 path uses `wallet_ledger`; legacy path reads `points_ledger`.
-- `CheckInHistoryPage.tsx`: V2 and legacy read branches; legacy reads `points_ledger`.
+- `CheckInHistoryPage.tsx`: page-level data calls are now extracted; schema-specific V2/legacy reads remain centralized in `tester-api.ts`.
 - `DiscoverTestsPage.tsx`: V2 and public read branches; V2 uses `get_discoverable_tests`.
-- `FeedbackHistoryPage.tsx`: V2 and public read branches; points ledger field contract differs.
+- `FeedbackHistoryPage.tsx`: page-level data calls are now extracted; V2 intentionally omits the legacy `points_ledger` read.
 - `MyTestsPage.tsx`: V2 and public read branches for roles, profiles, wallets, assignments, feedback, notifications.
 - `TesterDashboardPage.tsx`: V2 and public read branches for profile, wallet, assignments, tests, notifications.
 - `TesterLeaderboardPage.tsx`: still performs client-side cross-user profile/role/ledger queries in the legacy branch; replace with a privacy-safe aggregate API before enabling.
@@ -66,7 +66,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 ## Next implementation order
 
-1. Extract tester dashboard, discover tests, my tests, and activity history into feature API modules (completed). Next: assignment progress/submission and check-in history.
+1. Extract tester dashboard, discover tests, my tests, activity history, check-in history, and feedback history into feature API modules (completed). Next: assignment progress/submission.
 2. Reconcile the points/date/evidence fields in those APIs against the actual V2 schema and tests.
 3. Extract wallet, notification, and support APIs; remove page-level table/RPC calls.
 4. Replace leaderboard cross-user enumeration with a dedicated privacy-safe aggregate contract.
