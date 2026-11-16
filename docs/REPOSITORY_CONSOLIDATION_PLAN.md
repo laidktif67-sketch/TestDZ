@@ -156,3 +156,33 @@ The workflow files were read from `rebuild/testdz-v2`; recent Actions metadata w
 - The pin was chosen after reviewing the Supabase CLI v3 migration guidance: v3 changes local/remote command defaults and unattended hosted-change confirmation. Pinning avoids a future unreviewed CLI upgrade changing CI behavior. See the [Supabase CLI v3 migration guide](https://supabase.com/docs/guides/local-development/cli/migrating-to-v3) and [Supabase changelog](https://supabase.com/changelog).
 
 These changes are on the governance PR branch. They require the newly triggered V2 isolated database-test workflow to complete before being considered verified.
+
+
+## 13. Workspace and frontend build inventory (2026-11-16)
+
+### Confirmed npm workspace topology
+
+The V2 root manifest declares npm workspaces `apps/web` and `packages/*`. The committed lockfile is lockfileVersion 3 and records exactly these current workspace packages:
+
+| Workspace | Package name | Current role |
+|---|---|---|
+| `apps/web` | `testdz-frontend` | React 18 + TypeScript + Vite application |
+| `packages/types` | `@testdz/types` | Shared TypeScript type exports |
+
+The lockfile records both workspace links (`node_modules/testdz-frontend` → `apps/web`; `node_modules/@testdz/types` → `packages/types`). No other `packages/*` workspace is recorded in the lockfile snapshot inspected.
+
+### Package boundary observations
+
+- The root package is private and owns workspace orchestration scripts: `dev`, `build`, `typecheck`, and `check:data-boundary`.
+- The frontend workspace owns Vite development/preview, TypeScript project typecheck, and production build scripts.
+- The shared types package exports TypeScript source directly from `src/index.ts`; it currently has no separate build script or generated distribution directory.
+- The frontend TypeScript configuration uses project references for its app and Vite config, strict checking, and `noEmit`. The shared types package is consumed through the npm workspace link and package exports.
+- The current lockfile and manifests are internally aligned for the two observed workspaces. Do not add a second package manager, generated package build pipeline, or duplicate scripts without a demonstrated consumer need.
+
+### Verified CI result for governance commit
+
+GitHub Actions run [43972628539](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43972628539), on governance commit `b176965bae8d0219eeb95e8c27627370b0de1b12`, completed with conclusion `success`. Its single `frontend` job reports success for all of: checkout, Node setup, locked dependency installation, tester data-boundary check, TypeScript typecheck, and production build. This is evidence for that exact commit and workflow run only; it does not validate database migrations, authenticated runtime behavior, or Production.
+
+### Consolidation decision
+
+No package manifest, lockfile, source module, or workspace boundary was changed during this inventory. The two-workspace topology is coherent enough to retain. Future modularization should add a workspace only when a genuine reusable boundary exists (for example, a separately tested UI component library or a server-side package); do not split feature folders merely to increase package count.
