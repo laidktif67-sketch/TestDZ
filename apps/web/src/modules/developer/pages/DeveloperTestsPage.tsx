@@ -37,7 +37,8 @@ export default function DeveloperTestsPage() {
   const navigate=useNavigate();
   const [userId,setUserId]=useState<string|null>(null);
   const [apps,setApps]=useState<AppRecord[]>([]);
-  const [tests,setTests]=useState<DeveloperTest[]>([]);\n  const [cohorts,setCohorts]=useState<DeveloperCohort[]>([]);
+  const [tests,setTests]=useState<DeveloperTest[]>([]);
+  const [cohorts,setCohorts]=useState<DeveloperCohort[]>([]);
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
@@ -55,7 +56,12 @@ export default function DeveloperTestsPage() {
   const [requirements,setRequirements]=useState<Array<{type:"device"|"android_version"|"account"|"network"|"eligibility"|"other";title:string;description:string;isMandatory:boolean}>>([{type:"device",title:"",description:"",isMandatory:true}]);
   const [cohortFor,setCohortFor]=useState<string|null>(null);
   const [cohortName,setCohortName]=useState("");
-  const [cohortCapacity,setCohortCapacity]=useState(12);\n  const [editingCohortId,setEditingCohortId]=useState<string|null>(null);\n  const [editCohortName,setEditCohortName]=useState(\"\");\n  const [editCohortCapacity,setEditCohortCapacity]=useState(1);\n  const [editCohortStartsAt,setEditCohortStartsAt]=useState(\"\");\n  const [editCohortEndsAt,setEditCohortEndsAt]=useState(\"\");
+  const [cohortCapacity,setCohortCapacity]=useState(12);
+  const [editingCohortId,setEditingCohortId]=useState<string|null>(null);
+  const [editCohortName,setEditCohortName]=useState(\"\");
+  const [editCohortCapacity,setEditCohortCapacity]=useState(1);
+  const [editCohortStartsAt,setEditCohortStartsAt]=useState(\"\");
+  const [editCohortEndsAt,setEditCohortEndsAt]=useState(\"\");
 
   const load=useCallback(async(id:string)=>{
     setLoading(true);setError("");
