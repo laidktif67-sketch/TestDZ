@@ -161,7 +161,7 @@ BEGIN
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events
   WHERE target_id IN (v_app,v_test,v_cohort)
-    AND action IN ('app.submitted','app.review.approved','test.created','test.content.saved','test.submitted','test.review.approved','cohort.created');
+    AND action IN ('app.submitted','app.review.approved','test.created','test.content.saved','test.submitted','test.review.approved','cohort.created','cohort.updated','cohort.status.cancelled');
   IF v_count<>9 THEN RAISE EXCEPTION 'FAIL: expected audit events missing; got %',v_count; END IF;
 END;
 $test$;
