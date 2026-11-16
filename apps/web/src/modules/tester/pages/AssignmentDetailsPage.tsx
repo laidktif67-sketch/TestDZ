@@ -45,7 +45,7 @@ export default function AssignmentDetailsPage(){
      test:{id:t.data.id,title:t.data.title,description:t.data.description,short_summary:t.data.short_summary,
       start_date:t.data.start_date,end_date:t.data.end_date,app:app.data||null}
     } as AssignmentDetails);
-    if(app.error)setError("Some app information could not be loaded.");
+    if(app.error)setError("Some app information could not be loaded.");\n    if(assetResult.error)setError("Private test materials could not be loaded.");
     setLoading(false);
     return;
    }
