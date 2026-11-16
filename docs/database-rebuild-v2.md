@@ -132,6 +132,7 @@ The product owner explicitly approved the following target architecture:
 - Keep `public` intact through a monitored rollback window. Drop/retire it only after explicit approval and proof that no application, scheduled job, integration, or external client depends on it.
 
 ## Current known compatibility blockers (must be resolved before cutover)
+- **PostgREST exposure is a separate test gate:** the checked-in `supabase/config.toml` currently lists only `public` and `graphql_public` under `[api].schemas`, while the FixLab project was separately configured to expose `rebuild_v2`. The disposable CI workflow applies SQL and runs contracts through direct PostgreSQL connections; it does not prove that PostgREST exposes `rebuild_v2` or that the frontend's `.schema("rebuild_v2")` calls work over the Data API. Add a local API smoke test and reconcile the local config only after replacing the Production project identifier with a safe local identifier and reviewing the current Supabase CLI configuration guidance. Never copy the Production project ref into a command that could mutate a hosted project.
 
 - Core developer app APIs and profile APIs have transitional V2 selection, but the V2 feature flag still permits fallback to `public`.
 - Identity role retrieval has transitional V2 selection; signup/session/Auth operations remain on Supabase Auth as intended.
