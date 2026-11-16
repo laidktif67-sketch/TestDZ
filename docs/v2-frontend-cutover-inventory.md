@@ -16,7 +16,7 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 ## Active assignment progress extraction (2026-11-16)
 
 - Added `getActiveAssignmentProgressPageData(assignmentId, userId)` to `apps/web/src/features/tester/tester-api.ts` for the assignment, test/app, own check-ins, own feedback count, profile, unread notifications, and legacy own-assignment points read.
-- `ActiveAssignmentProgressPage.tsx` now delegates initial page data reads to that API. The V2 `start_assignment` transition remains in the page as a workflow action; daily `submit_checkin` and its follow-up read also remain there pending a separate action-contract extraction.
+- `ActiveAssignmentProgressPage.tsx` now delegates initial page data reads and both V2 workflow actions (`start_assignment`, `submit_checkin` plus its follow-up check-in read) to `tester-api.ts`. The page no longer calls `.from()` or `.rpc()` directly.
 - Removed live legacy leaderboard enumeration from the page/API path: it no longer queries all tester roles, other users' profiles, or their points ledgers. Rankings remain intentionally unavailable until a privacy-safe aggregate endpoint is implemented. The local development preview retains its static mock podium only.
 - V2 check-in reads select only `id,checkin_date`; the legacy evidence URL field remains isolated to the legacy branch. V2 reward totals remain disabled/zero in this page; no reward posting was added.
 - No database writes, schema changes, deployment, or Production changes were performed. Frontend CI for this extraction is pending verification.
@@ -50,7 +50,7 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 The following pages still contain direct database access and/or explicit legacy fallback branches. They are not yet V2-only and must be migrated through feature API modules before removing the fallback:
 
 ### Tester workflow and activity
-- `ActiveAssignmentProgressPage.tsx`: initial reads are centralized in `tester-api.ts`; V2 `start_assignment` and `submit_checkin` workflow actions/follow-up read remain in the page. Live cross-user leaderboard enumeration has been removed; rankings await a privacy-safe aggregate.
+- `ActiveAssignmentProgressPage.tsx`: initial reads and V2 `start_assignment`/`submit_checkin` actions are centralized in `tester-api.ts`; no page-level `.from()`/`.rpc()` calls remain. Live cross-user leaderboard enumeration has been removed; rankings await a privacy-safe aggregate.
 - `AssignmentSubmissionPage.tsx`: initial assignment/check-in/feedback reads are centralized in `tester-api.ts`; final submission RPC and base-client Storage uploads remain in the page pending a dedicated workflow extraction.
 - `ActivityHistoryPage.tsx`: V2 path uses `wallet_ledger`; legacy path reads `points_ledger`.
 - `CheckInHistoryPage.tsx`: page-level data calls are now extracted; schema-specific V2/legacy reads remain centralized in `tester-api.ts`.
@@ -82,7 +82,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 ## Next implementation order
 
-1. Extract tester dashboard, discover tests, my tests, activity history, check-in history, feedback history, and active-assignment initial reads into feature API modules (completed). Assignment submission initial reads are also extracted; submission workflow actions remain pending.
+1. Extract tester dashboard, discover tests, my tests, activity history, check-in history, feedback history, and active-assignment reads/actions into feature API modules (completed). Assignment submission initial reads are extracted; submission workflow actions remain pending.
 2. Reconcile the points/date/evidence fields in those APIs against the actual V2 schema and tests.
 3. Extract wallet, notification, and support APIs; remove page-level table/RPC calls.
 4. Implement a dedicated privacy-safe leaderboard aggregate contract; cross-user client-side enumeration is now removed from the active-assignment page but remains to be checked in `TesterLeaderboardPage.tsx`.
