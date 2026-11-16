@@ -86,6 +86,35 @@ jobs:
             echo "::endgroup::"
           done
 
+          echo "::group::Verify local PostgREST schema exposure"
+          test -n "${API_URL:-}" || { echo "API_URL was not exported by Supabase CLI"; exit 1; }
+          test -n "${ANON_KEY:-}" || { echo "ANON_KEY was not exported by Supabase CLI"; exit 1; }
+          psql "$DB_URL" -X -v ON_ERROR_STOP=1 -c "NOTIFY pgrst, 'reload schema';"
+
+          v2_status="$(curl --silent --show-error --output "$RUNNER_TEMP/rebuild-v2-openapi.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Accept-Profile: rebuild_v2" \
+            --header "Accept: application/openapi+json" \
+            "$API_URL/rest/v1/")"
+          if [[ "$v2_status" != "200" ]]; then
+            cat "$RUNNER_TEMP/rebuild-v2-openapi.json"
+            echo "Expected rebuild_v2 to be exposed through local PostgREST; received HTTP $v2_status"
+            exit 1
+          fi
+
+          private_status="$(curl --silent --show-error --output "$RUNNER_TEMP/rebuild-v2-private-openapi.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Accept-Profile: rebuild_v2_private" \
+            --header "Accept: application/openapi+json" \
+            "$API_URL/rest/v1/")"
+          if [[ "$private_status" != "406" ]]; then
+            cat "$RUNNER_TEMP/rebuild-v2-private-openapi.json"
+            echo "Expected rebuild_v2_private to remain unexposed; received HTTP $private_status"
+            exit 1
+          fi
+          echo "PASS: rebuild_v2 is exposed and rebuild_v2_private remains unexposed."
+          echo "::endgroup::"
+
       - name: Stop disposable local Supabase stack
         if: always()
         run: supabase stop --no-backup
