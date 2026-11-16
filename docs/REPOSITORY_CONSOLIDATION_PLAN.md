@@ -419,3 +419,21 @@ The mapping above is a consolidation map based on the recorded migration names a
 - Do not move the 18 candidate scripts into `supabase/migrations/` while that directory still represents the earlier public/legacy migration lineage.
 - Complete the catalog-level comparison (columns/defaults, constraints, indexes, function bodies and attributes, grants, RLS/Storage policies, triggers, buckets, extensions) before any FixLab baseline/history repair.
 - Any future FixLab-only patch must have a tracked SQL source and an explicit history/version plan; no Production migration or history operation is authorized by this inventory.
+
+
+## 20. Read-only FixLab-to-candidate object-name parity (2026-11-16)
+
+The live FixLab catalog was compared against the 18 ordered candidate scripts by object names. This is stronger than count-only comparison, but it is still not a full definition/hash comparison.
+
+| Object class | FixLab live | Candidate source final set | Name parity |
+|---|---:|---:|---|
+| Base tables in `rebuild_v2` | 47 | 47 | Exact set match; no missing or extra table names |
+| Functions in `rebuild_v2` + `rebuild_v2_private` | 96 | 97 | All 96 live names exist in source; candidate has one additional helper |
+| Policies in `rebuild_v2` + `storage` | 66 | 66 | Exact final set match after applying source DROP POLICY statements |
+| Application triggers in `auth` + `rebuild_v2` | 7 | 7 | Exact set match |
+
+The one candidate-only function is `rebuild_v2_private.algeria_local_date`. Its absence in live FixLab is expected from the confirmed check-in date defect: candidate source now uses the Algeria-local date helper, while live FixLab's `submit_checkin_impl` still uses UTC-sensitive `CURRENT_DATE`. This is the remaining known function-name delta and a live FixLab patch candidate, not a reason to change the candidate baseline.
+
+The 11 triggers in the `storage` schema are Supabase Storage platform lifecycle triggers and are intentionally not recreated by application scripts. The 66 policy comparison includes 48 application-schema policies and 18 Storage object policies; three temporary policies created in an earlier candidate step are dropped by the later privacy script, so they are absent from the final candidate set just as they are in FixLab.
+
+**Still not proven:** column types/defaults/nullability, constraint definitions, index definitions/validity, function bodies and full signatures, grants, bucket configuration, and exact Storage policy expressions. Complete those comparisons before applying a live FixLab patch or rebuilding migration history. No hosted database object was changed during this comparison.
