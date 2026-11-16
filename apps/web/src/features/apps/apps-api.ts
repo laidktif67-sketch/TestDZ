@@ -189,6 +189,53 @@ export function createDeveloperTestCohort(input: {
   });
 }
 
+export interface DeveloperCohort {
+  id: string;
+  test_id: string;
+  name: string;
+  capacity: number;
+  status: "forming" | "ready" | "running" | "completed" | "cancelled";
+  starts_at: string | null;
+  ends_at: string | null;
+}
+
+export async function listDeveloperCohorts(developerId: string) {
+  const result = await dataClient().from("cohort_tests")
+    .select("test_id,cohort_id,cohorts!inner(id,name,capacity,status,starts_at,ends_at,created_by)")
+    .eq("developer_id", developerId);
+  if (result.error) return { data: null, error: result.error };
+  const rows = (result.data ?? []) as unknown as Array<{
+    test_id: string;
+    cohorts: Omit<DeveloperCohort, "test_id"> & { created_by: string };
+  }>;
+  return {
+    data: rows.filter(row => row.cohorts.created_by === developerId)
+      .map(row => ({ ...row.cohorts, test_id: row.test_id })) as DeveloperCohort[],
+    error: null,
+  };
+}
+
+export function updateDeveloperTestCohort(input: {
+  cohortId: string; name: string; capacity: number; startsAt?: string | null; endsAt?: string | null; reason: string;
+}) {
+  return dataClient().rpc("update_test_cohort", {
+    p_cohort_id: input.cohortId,
+    p_name: input.name,
+    p_capacity: input.capacity,
+    p_starts_at: input.startsAt ?? null,
+    p_ends_at: input.endsAt ?? null,
+    p_reason: input.reason,
+  });
+}
+
+export function transitionDeveloperTestCohort(cohortId: string, status: "ready" | "running" | "completed" | "cancelled", reason: string) {
+  return dataClient().rpc("transition_test_cohort", {
+    p_cohort_id: cohortId,
+    p_new_status: status,
+    p_reason: reason,
+  });
+}
+
 export function submitAppForReview(appId: string) {
   return dataClient().rpc("submit_app_for_review", { p_app_id: appId });
 }
