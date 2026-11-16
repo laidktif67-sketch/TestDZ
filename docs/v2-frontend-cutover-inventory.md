@@ -13,6 +13,14 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Work completed in this pass
 
+## Assignment submission read extraction (2026-11-16)
+
+- Added `getAssignmentSubmissionPageData(assignmentId, userId)` to `apps/web/src/features/tester/tester-api.ts`.
+- `AssignmentSubmissionPage.tsx` now delegates its initial assignment, check-in, and feedback-count reads to that API for both the transitional V2 and legacy paths.
+- The page retains the final-submission workflow, V2 RPC calls, and base-client Storage uploads. Those write/Storage operations were deliberately not moved as part of this read-only extraction.
+- No reward posting, withdrawals, database changes, or deployment were performed.
+- TypeScript/build CI for this new commit has not yet been verified.
+
 ## Latest tester history extraction (2026-11-16)
 
 - Added `getCheckInHistoryPageData(userId)` and `getFeedbackHistoryPageData(userId)` to `apps/web/src/features/tester/tester-api.ts`.
@@ -35,7 +43,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 ### Tester workflow and activity
 - `ActiveAssignmentProgressPage.tsx`: V2 and legacy reads; legacy path uses `points_ledger`, `assignments.start_date`, and `checkins.evidence_url`; V2 path has `wallet_ledger`-era semantics but leaderboard data is still loaded from cross-user sources.
-- `AssignmentSubmissionPage.tsx`: V2 submission RPC path exists, but initial reads still branch between V2 and public.
+- `AssignmentSubmissionPage.tsx`: initial assignment/check-in/feedback reads are centralized in `tester-api.ts`; final submission RPC and base-client Storage uploads remain in the page pending a dedicated workflow extraction.
 - `ActivityHistoryPage.tsx`: V2 path uses `wallet_ledger`; legacy path reads `points_ledger`.
 - `CheckInHistoryPage.tsx`: page-level data calls are now extracted; schema-specific V2/legacy reads remain centralized in `tester-api.ts`.
 - `DiscoverTestsPage.tsx`: V2 and public read branches; V2 uses `get_discoverable_tests`.
