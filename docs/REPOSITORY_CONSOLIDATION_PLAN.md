@@ -314,9 +314,15 @@ These results validate that commit and those local CI workflows only. They do no
 
 ### Algeria-local calendar correction in progress
 
-The candidate tester workflow contained seven uses of `CURRENT_DATE` in discovery, join eligibility, and daily check-in logic. Because the database session timezone is UTC while TestDZ's calendar rules are Algeria-local, the first hour after local midnight could use yesterday's date.
+The candidate had timezone-sensitive calendar logic in three places: seven `CURRENT_DATE` uses in tester discovery, joining, and daily check-ins in script 007; two schedule-window checks in script 017; and the default value for `checkins.checkin_date` in script 001. With the database session timezone set to UTC, these could use yesterday's date during 00:00–00:59 in Algeria.
 
-A separate draft fix, [PR #44](https://github.com/laidktif67-sketch/TestDZ/pull/44), now adds a private deterministic `algeria_local_date(timestamptz)` helper and uses it consistently in discovery, join, and check-in lookup/insert/retry paths. Its contract adds fixed UTC-to-Algeria boundary cases. Static readback confirms no `CURRENT_DATE` remains in `007_tester_workflow.sql`. The isolated Rebuild V2 CI run and the legacy migration regression workflow are still pending at the time of this note. No hosted database has been changed; the live FixLab function remains unpatched until a separately reviewed FixLab-only validation step.
+A separate draft fix, [PR #44](https://github.com/laidktif67-sketch/TestDZ/pull/44), now:
+- Adds a private deterministic `algeria_local_date(timestamptz)` helper.
+- Uses that helper for tester discovery, joining, assignment schedule checks, and check-in lookup/insert/retry.
+- Changes the `checkins.checkin_date` default to an explicit `Africa/Algiers` local-date expression.
+- Adds fixed UTC-to-Algeria boundary assertions and a catalog assertion for the column default.
+
+Static readback confirms the affected business-date paths no longer depend on session `CURRENT_DATE`. The isolated Rebuild V2 CI run and legacy migration regression workflow are still pending at the time of this note. No hosted database has been changed; the live FixLab functions and column default remain unpatched until a separately reviewed FixLab-only validation step.
 
 ### Remaining source-of-truth decision
 
