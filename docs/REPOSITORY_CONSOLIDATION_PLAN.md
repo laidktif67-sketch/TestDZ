@@ -243,6 +243,12 @@ Inspected guards include:
 
 Do not revoke the 31 invoker-wrapper or 11 policy-helper grants without redesigning and testing their call paths. Keep the private schema unexposed and add regression tests for both the required invoker/policy permissions and the four explicit grants before any privilege change.
 
+### SECURITY DEFINER search-path verification
+
+A separate catalog audit of all 96 V2 functions found 64 `SECURITY DEFINER` functions. All 64 have an explicit `search_path` setting: 44 use an empty path and 20 use explicit paths composed only of `pg_catalog`, `rebuild_v2`, `rebuild_v2_private`, `auth`, and/or `storage`. No SECURITY DEFINER function is missing a search-path setting, and all are owned by `postgres`.
+
+The non-empty paths are not currently user-writable: `anon`, `authenticated`, and `service_role` have no `CREATE` privilege on any of those schemas. In particular, `authenticated` has `USAGE` but not `CREATE` on the two V2 schemas, which is required for invoker-wrapper execution but does not permit object shadowing. No search-path injection was demonstrated. Preserve these no-CREATE boundaries in future grants and migrations.
+
 ### Confirmed live FixLab date defect; candidate-source correction merged
 
 The current live FixLab definition of `rebuild_v2_private.submit_checkin_impl` still uses `CURRENT_DATE` in its lookup, insert, and unique-violation recovery paths. The FixLab database session timezone is `UTC`; during 00:00–00:59 in Algeria, UTC `CURRENT_DATE` can still represent the previous calendar day. This remains a confirmed defect in the hosted FixLab function until a FixLab-only patch is separately validated.
