@@ -82,6 +82,17 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 - Added `.github/workflows/frontend-ci.yml` to run `npm ci`, `npm run typecheck`, and `npm run build` on frontend/package changes.
 - The first frontend CI run used the immediately preceding commit and exposed a return-type mismatch between SupabaseClient and the schema-scoped PostgREST client. The helper was corrected to return the common client as `any` to match the existing feature API typing. A run against the corrected commit is still required.
 
+## Feature API domain separation (2026-11-16)
+
+The tester feature API is being separated by responsibility rather than accumulating unrelated service operations in one file:
+
+- `features/notifications/notifications-api.ts`: notification center reads and guarded read-state changes.
+- `features/support/support-api.ts`: tester support tickets, conversation messages, and attachment metadata registration.
+- `features/wallet/wallet-api.ts`: tester wallet/reward presentation reads. V2 intentionally returns no wallet balance or ledger while reward operations remain disabled.
+- `features/tester/tester-api.ts`: tester discovery, dashboard, assignment workflow, activity, check-in, feedback, and leaderboard page data only.
+
+The Wallet Rewards, Notifications Center, Support Center, and Support Ticket Details pages now import their domain APIs directly. Transitional re-exports remain in `tester-api.ts` temporarily for compatibility; remove them after confirming no remaining consumers. All modules continue using `getAppDataClient()` and the existing V2/legacy selector. No schema, migration, hosted data, Storage policy, feature flag, or deployment changes are part of this refactor.
+
 ## Confirmed remaining migration inventory
 
 The following pages still contain direct database access and/or explicit legacy fallback branches. They are not yet V2-only and must be migrated through feature API modules before removing the fallback:
@@ -121,7 +132,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 1. Extract tester dashboard, discover tests, my tests, activity history, check-in history, feedback history, and active-assignment reads/actions into feature API modules (completed). Assignment submission initial reads are extracted; submission workflow actions remain pending.
 2. Reconcile the points/date/evidence fields in those APIs against the actual V2 schema and tests.
-3. Extract wallet, notification, and support APIs; remove page-level table/RPC calls.
+3. Extract wallet, notification, and support APIs; page imports are now domain-specific. Continue splitting the remaining tester API by dashboard/activity/assignment responsibilities and remove transitional re-exports after consumer verification.
 4. Implement a dedicated privacy-safe leaderboard aggregate contract; cross-user client-side enumeration is now removed from the active-assignment page but remains to be checked in `TesterLeaderboardPage.tsx`.
 5. Complete profile export and remaining read-only/referral display routes.
 6. Add static source checks preventing direct page-level database access and legacy fallback references.
