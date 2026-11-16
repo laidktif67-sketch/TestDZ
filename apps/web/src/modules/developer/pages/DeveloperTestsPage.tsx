@@ -8,6 +8,8 @@ import {
   createDeveloperTest,
   createDeveloperTestCohort,
   listDeveloperCohorts,
+  listDeveloperTestBuilds,
+  uploadDeveloperTestBuild,
   updateDeveloperTestCohort,
   transitionDeveloperTestCohort,
   saveDeveloperTestContent,
@@ -15,6 +17,7 @@ import {
   listDeveloperTests,
   submitDeveloperTestForReview,
   type DeveloperCohort,
+  type DeveloperTestBuild,
 } from "../../../features/apps/apps-api";
 import { Brand } from "../../../shared/components/Brand";
 
@@ -39,6 +42,9 @@ export default function DeveloperTestsPage() {
   const [apps,setApps]=useState<AppRecord[]>([]);
   const [tests,setTests]=useState<DeveloperTest[]>([]);
   const [cohorts,setCohorts]=useState<DeveloperCohort[]>([]);
+  const [testBuilds,setTestBuilds]=useState<DeveloperTestBuild[]>([]);
+  const [apkFiles,setApkFiles]=useState<Record<string,File|null>>({});
+  const [apkVersions,setApkVersions]=useState<Record<string,string>>({});
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
@@ -67,7 +73,7 @@ export default function DeveloperTestsPage() {
 
   const load=useCallback(async(id:string)=>{
     setLoading(true);setError("");
-    const [appResult,testResult,cohortResult]=await Promise.all([listApps(id),listDeveloperTests(id),listDeveloperCohorts(id)]);
+    const [appResult,testResult,cohortResult,buildResult]=await Promise.all([listApps(id),listDeveloperTests(id),listDeveloperCohorts(id),listDeveloperTestBuilds(id)]);
     if(appResult.error)setError("تعذر تحميل تطبيقاتك.");
     else setApps((appResult.data??[]) as AppRecord[]);
     if(testResult.error)setError("تعذر تحميل الاختبارات.");
@@ -130,6 +136,16 @@ export default function DeveloperTestsPage() {
     setBusy(false);
   }
 
+  async function uploadBuild(testId:string){
+    if(!userId||!apkFiles[testId]){setError("اختر ملف APK أولاً.");return;}
+    const version=(apkVersions[testId]??"").trim();
+    if(!version){setError("أدخل رقم إصدار APK.");return;}
+    setBusy(true);setError("");setNotice("");
+    const result=await uploadDeveloperTestBuild({userId,testId,file:apkFiles[testId] as File,versionLabel:version});
+    if(result.error)setError("تعذر رفع/التحقق من APK ("+result.stage+"): "+result.error.message);
+    else{setNotice("تم رفع APK إلى التخزين الخاص والتحقق منه بنجاح.");setApkFiles(rows=>({...rows,[testId]:null}));await load(userId);}
+    setBusy(false);
+  }
   function beginEditCohort(cohort:DeveloperCohort){
     setEditingCohortId(cohort.id);
     setEditCohortName(cohort.name);
@@ -211,7 +227,7 @@ export default function DeveloperTestsPage() {
         </section>
         <div className="detail-actions"><button className="button button-primary" disabled={busy}>حفظ كمسودة</button><button type="button" className="button button-quiet" onClick={()=>setShowCreate(false)}>إلغاء</button></div>
       </form>}
-      {loading?<div className="loading-screen">جارٍ تحميل الاختبارات...</div>:tests.length===0?<div className="apps-empty"><h2>لا توجد اختبارات بعد</h2><p>بعد نشر تطبيقك، يمكنك إنشاء أول اختبار وإرساله للمراجعة.</p></div>:<div className="apps-grid">{tests.map(test=><article className="app-tile" key={test.id}><div className="app-tile-main"><span className="app-tile-icon app-tile-placeholder">✓</span><span className="app-tile-copy"><strong>{test.title}</strong><small>{test.test_type} · {test.min_testers} مختبراً</small><em className={"app-status status-"+test.status}>{statusLabel[test.status]??test.status}</em></span></div><div className="app-tile-footer"><span>{test.estimated_duration_minutes?test.estimated_duration_minutes+" دقيقة":"المدة غير محددة"}</span>{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<button onClick={()=>void submitTest(test.id)} disabled={busy}>إرسال للمراجعة</button>}{(test.status==="recruiting"||test.status==="ready")&&<button onClick={()=>{setCohortFor(test.id);setCohortName("مجموعة "+test.title);setCohortCapacity(test.min_testers);}}>إنشاء مجموعة</button>}</div>{cohortFor===test.id&&<form className="auth-form" onSubmit={e=>void createCohort(e,test.id)}><label>اسم المجموعة<input required minLength={2} maxLength={120} value={cohortName} onChange={e=>setCohortName(e.target.value)}/></label><label>السعة<input type="number" min={test.min_testers} max={500} value={cohortCapacity} onChange={e=>setCohortCapacity(Number(e.target.value))}/></label><label>موعد البداية<input type="datetime-local" value={cohortStartsAt} onChange={e=>setCohortStartsAt(e.target.value)}/></label><label>موعد النهاية<input type="datetime-local" value={cohortEndsAt} onChange={e=>setCohortEndsAt(e.target.value)}/></label><button className="button button-primary" disabled={busy}>إنشاء وربط المجموعة</button></form>}
+      {loading?<div className="loading-screen">جارٍ تحميل الاختبارات...</div>:tests.length===0?<div className="apps-empty"><h2>لا توجد اختبارات بعد</h2><p>بعد نشر تطبيقك، يمكنك إنشاء أول اختبار وإرساله للمراجعة.</p></div>:<div className="apps-grid">{tests.map(test=><article className="app-tile" key={test.id}><div className="app-tile-main"><span className="app-tile-icon app-tile-placeholder">✓</span><span className="app-tile-copy"><strong>{test.title}</strong><small>{test.test_type} · {test.min_testers} مختبراً</small><em className={"app-status status-"+test.status}>{statusLabel[test.status]??test.status}</em></span></div><div className="app-tile-footer"><span>{test.estimated_duration_minutes?test.estimated_duration_minutes+" دقيقة":"المدة غير محددة"}</span>{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<button onClick={()=>void submitTest(test.id)} disabled={busy}>إرسال للمراجعة</button>}{(test.status==="recruiting"||test.status==="ready")&&<button onClick={()=>{setCohortFor(test.id);setCohortName("مجموعة "+test.title);setCohortCapacity(test.min_testers);}}>إنشاء مجموعة</button>}</div>{test.test_type==="apk_testing"&&<section className="dashboard-card"><h3>ملفات APK الخاصة</h3><p>الملف خاص، ولا يستطيع تنزيله إلا مالك الاختبار والمختبرون المسجلون فيه. الحد الأقصى 50 MB.</p>{testBuilds.filter(build=>build.test_id===test.id).map(build=><p key={build.id}>{build.version_label} · {build.original_filename} · {build.status==="uploaded"?"تم التحقق والرفع":"رفع غير مكتمل"}</p>)}{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<div className="auth-form"><label>رقم الإصدار<input required maxLength={64} value={apkVersions[test.id]??""} onChange={e=>setApkVersions(rows=>({...rows,[test.id]:e.target.value}))}/></label><label>ملف APK<input type="file" accept=".apk,application/vnd.android.package-archive" onChange={e=>setApkFiles(rows=>({...rows,[test.id]:e.target.files?.[0]??null}))}/></label><button type="button" className="button button-primary" disabled={busy||!apkFiles[test.id]} onClick={()=>void uploadBuild(test.id)}>رفع APK والتحقق منه</button></div>}</section>}{cohortFor===test.id&&<form className="auth-form" onSubmit={e=>void createCohort(e,test.id)}><label>اسم المجموعة<input required minLength={2} maxLength={120} value={cohortName} onChange={e=>setCohortName(e.target.value)}/></label><label>السعة<input type="number" min={test.min_testers} max={500} value={cohortCapacity} onChange={e=>setCohortCapacity(Number(e.target.value))}/></label><label>موعد البداية<input type="datetime-local" value={cohortStartsAt} onChange={e=>setCohortStartsAt(e.target.value)}/></label><label>موعد النهاية<input type="datetime-local" value={cohortEndsAt} onChange={e=>setCohortEndsAt(e.target.value)}/></label><button className="button button-primary" disabled={busy}>إنشاء وربط المجموعة</button></form>}
         {cohorts.filter(cohort=>cohort.test_id===test.id).map(cohort=><section className="dashboard-card" key={cohort.id}>
           <div className="apps-heading"><div><h3>{cohort.name}</h3><p>السعة: {cohort.capacity} · الحالة: {({forming:"قيد التكوين",ready:"جاهزة",running:"جارية",completed:"مكتملة",cancelled:"ملغاة"} as Record<string,string>)[cohort.status]}</p><small>{cohort.starts_at?"البداية: "+new Date(cohort.starts_at).toLocaleString():"موعد البداية غير محدد"} · {cohort.ends_at?"النهاية: "+new Date(cohort.ends_at).toLocaleString():"موعد النهاية غير محدد"}</small></div>
           {cohort.status==="forming"&&<button className="button button-outline" type="button" onClick={()=>beginEditCohort(cohort)}>تعديل</button>}</div>
