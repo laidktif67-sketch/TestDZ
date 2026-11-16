@@ -2,8 +2,6 @@
 
 These instructions apply to the entire repository, including `frontend/`.
 
-These instructions apply to the entire repository.
-
 ## Mandatory project governance
 
 Before planning or editing any non-trivial task, read:
