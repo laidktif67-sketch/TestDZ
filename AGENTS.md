@@ -21,7 +21,7 @@ Use the installed UI/UX Pro Max skill whenever a task involves designing, buildi
 
 ### 1. Read the actual skill before planning
 
-- Before making a UI plan or editing code, locate and read the complete local `SKILL.md` under `.agents/skills/` (the expected Codex installation is usually `.agents/skills/ui-ux-pro-max/SKILL.md`; verify rather than assume).
+- Before making a UI plan or editing code, locate and read the complete committed skill at `.skill-lab/global/ui-ux-pro-max/SKILL.md`. This repository vendors the agent skills under `.skill-lab/global/`; do not assume `.agents/skills/` exists.
 - Resolve all `scripts/` and `references/` paths relative to that skill's installation root, not the repository root.
 - Read additional references only when the task calls for them: `references/quick-reference.md` for a UI audit or detailed UX rules; `references/pro-rules.md` only for native/mobile app UI guidance, as its checklist is explicitly scoped to native apps.
 - If the local skill or search scripts are missing, say so. Do not claim to have used the skill. Do not silently substitute memory or generic advice.
