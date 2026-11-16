@@ -13,6 +13,13 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Work completed in this pass
 
+## Assignment submission workflow extraction (2026-11-16)
+
+- Added feature API operations for checking an existing submission, creating the server-managed draft, listing/registering attachment metadata, and finalizing the submission.
+- `AssignmentSubmissionPage.tsx` now calls those operations through `tester-api.ts`; the page retains only binary upload and signed-object existence checks through Supabase Storage.
+- The finalization RPC is still invoked only after the upload loop completes. No business-rule changes, schema changes, or reward posting were introduced.
+- Frontend CI/build for this extraction is pending verification.
+
 ## Active assignment progress extraction (2026-11-16)
 
 - Added `getActiveAssignmentProgressPageData(assignmentId, userId)` to `apps/web/src/features/tester/tester-api.ts` for the assignment, test/app, own check-ins, own feedback count, profile, unread notifications, and legacy own-assignment points read.
