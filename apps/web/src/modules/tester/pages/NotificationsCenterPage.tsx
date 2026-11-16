@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getNotificationsCenterPageData, markTesterNotificationRead, markAllTesterNotificationsRead } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -90,32 +91,12 @@ export default function NotificationsCenterPage() {
     async function load() {
       if (!supabase || !user?.id) { setLoading(false); return; }
       setLoading(true); setError("");
-      const since = new Date(Date.now() - 30 * 86400000).toISOString();
-      if (isTesterWorkflowV2Enabled && supabaseV2) {
-        const [notificationResult, assignmentResult] = await Promise.all([
-          supabaseV2.from("notifications").select("id,type,title,body,data,read_at,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
-          supabaseV2.from("assignments").select("id,test:tests(end_date)").eq("tester_id", user.id)
-        ]);
-        if (!alive) return;
-        if (notificationResult.error) setError("Could not load your notifications. Please refresh and try again.");
-        else setRows((notificationResult.data ?? []) as NotificationRow[]);
-        setRewardPoints(0);
-        if (!assignmentResult.error) {
-          const today = new Date().toISOString().slice(0, 10);
-          setDeadlines((assignmentResult.data ?? []).filter((row: any) => row.test?.end_date && row.test.end_date >= today).length);
-        }
-        setLoading(false);
-        return;
-      }
-      const [notificationResult, rewardsResult, assignmentResult] = await Promise.all([
-        supabase.from("notifications").select("id,type,title,body,data,read_at,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
-        supabase.from("points_ledger").select("amount").eq("user_id", user.id).eq("wallet_type", "earned_points").gt("created_at", since),
-        supabase.from("assignments").select("id,test:tests(end_date)").eq("tester_id", user.id)
-      ]);
+      const result = await getNotificationsCenterPageData(user.id);
       if (!alive) return;
+      const { notificationResult, assignmentResult } = result;
       if (notificationResult.error) setError("Could not load your notifications. Please refresh and try again.");
       else setRows((notificationResult.data ?? []) as NotificationRow[]);
-      if (!rewardsResult.error) setRewardPoints((rewardsResult.data ?? []).reduce((sum, row) => sum + Math.max(0, Number(row.amount) || 0), 0));
+      setRewardPoints(result.rewardPoints);
       if (!assignmentResult.error) {
         const today = new Date().toISOString().slice(0, 10);
         setDeadlines((assignmentResult.data ?? []).filter((row: any) => row.test?.end_date && row.test.end_date >= today).length);
@@ -144,9 +125,7 @@ export default function NotificationsCenterPage() {
     if (row.read_at || !supabase || !user?.id) return;
     setBusyId(row.id); setNotice(""); setError("");
     const readAt = new Date().toISOString();
-    const result = isTesterWorkflowV2Enabled && supabaseV2
-      ? await supabaseV2.rpc("mark_notification_read", { p_notification_id: row.id })
-      : await supabase.from("notifications").update({ read_at: readAt }).eq("id", row.id).eq("user_id", user.id);
+    const result = await markTesterNotificationRead(user.id, row.id, readAt);
     setBusyId("");
     if (result.error) { setError("Could not update this notification. Please try again."); return; }
     setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
@@ -155,9 +134,7 @@ export default function NotificationsCenterPage() {
     if (!supabase || !user?.id || unread === 0) return;
     setSaving(true); setNotice(""); setError("");
     const readAt = new Date().toISOString();
-    const result = isTesterWorkflowV2Enabled && supabaseV2
-      ? await supabaseV2.rpc("mark_all_notifications_read")
-      : await supabase.from("notifications").update({ read_at: readAt }).eq("user_id", user.id).is("read_at", null);
+    const result = await markAllTesterNotificationsRead(user.id, readAt);
     setSaving(false);
     if (result.error) { setError("Could not mark all notifications as read. Please try again."); return; }
     setRows(current => current.map(item => item.read_at ? item : { ...item, read_at: readAt }));
