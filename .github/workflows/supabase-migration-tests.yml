@@ -6,7 +6,10 @@ on:
       - architecture-v1
       - main
     paths:
-      - "supabase/**"
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+      - "supabase/config.toml"
+      - "supabase/seed.sql"
       - ".github/workflows/supabase-migration-tests.yml"
   pull_request:
     branches:
