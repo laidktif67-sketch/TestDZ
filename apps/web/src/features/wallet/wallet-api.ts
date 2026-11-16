@@ -1,5 +1,6 @@
 import { getAppDataClient } from "../../lib/supabase-data";
 import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
+import { profilesApi } from "../profiles/profiles-api";
 
 /** Read wallet presentation data without touching V2 reward balances or ledger while rewards are disabled. */
 export async function getWalletRewardsPageData(userId: string) {
@@ -19,4 +20,14 @@ export async function getWalletRewardsPageData(userId: string) {
       .order("created_at", { ascending: false }).range(0, 999),
   ]);
   return { isV2: false as const, profileRes, walletRes, ledgerRes, noticeRes };
+}
+
+/** Legacy-only withdrawal preview data; the V2 withdrawal flow remains disabled. */
+export async function getLegacyWithdrawalPageData(userId: string) {
+  const client = getAppDataClient();
+  const [profile, wallet] = await Promise.all([
+    profilesApi.getHeaderProfile(userId),
+    client.from("wallets").select("earned_points,purchased_credits").eq("user_id", userId).maybeSingle(),
+  ]);
+  return { profile, wallet };
 }
