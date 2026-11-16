@@ -165,7 +165,7 @@ export default function DeveloperDashboardPage() {
       setApps(sample);setName("John Doe");setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
     }
     const client=supabase;
-    const dataClient=isTesterWorkflowV2Enabled?supabaseV2:client;
+    const dataClient:any=isTesterWorkflowV2Enabled?supabaseV2:client;
     if(!client||!dataClient){setError("Supabase is not configured.");setLoading(false);return;}
     let alive=true;
     const load=async()=>{
