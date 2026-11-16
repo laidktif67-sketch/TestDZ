@@ -3,7 +3,7 @@ import type { AppRecord } from "@testdz/types";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { getAppDataClient } from "../../../lib/supabase-data";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import { getAppLimit, listApps } from "../../../features/apps/apps-api";
@@ -165,7 +165,7 @@ export default function DeveloperDashboardPage() {
       setApps(sample);setName("John Doe");setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
     }
     const client=supabase;
-    const dataClient:any=isTesterWorkflowV2Enabled?supabaseV2:client;
+    const dataClient = client ? getAppDataClient() : null;
     if(!client||!dataClient){setError("Supabase is not configured.");setLoading(false);return;}
     let alive=true;
     const load=async()=>{
