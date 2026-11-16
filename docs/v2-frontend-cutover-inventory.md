@@ -13,6 +13,13 @@ Target: `rebuild_v2` for application Data API; `rebuild_v2_private` for unexpose
 
 ## Work completed in this pass
 
+## Wallet and notifications API extraction (2026-11-16)
+
+- Added `getWalletRewardsPageData` to `tester-api.ts`; `WalletRewardsPage.tsx` no longer queries tables directly. V2 now reads only profile and unread-notification metadata: it does not read `wallets`, `wallet_ledger`, earned points, or purchased credits while reward/payment rules remain disabled. Legacy wallet/points reads remain isolated in the API fallback.
+- Added notification-center read and read-state operations to `tester-api.ts`. `NotificationsCenterPage.tsx` no longer performs page-level table or RPC calls; V2 read-state changes use the guarded RPCs and legacy updates remain isolated in the API module.
+- No wallet posting, purchases, reward redemption, withdrawals, database changes, or deployments were introduced.
+- Frontend CI must pass on the latest commit before these extractions are considered verified.
+
 ## Tester reward-read cleanup (2026-11-16)
 
 - Extended the reward-disabled behavior to the Discover Tests and Activity History APIs: V2 no longer reads `wallets.earned_points` or enumerates `wallet_ledger` for these screens while reward posting remains disabled.
