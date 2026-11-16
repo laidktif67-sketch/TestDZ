@@ -230,3 +230,67 @@ export async function getFeedbackHistoryPageData(userId: string): Promise<any> {
     .eq("user_id", userId).eq("wallet_type", "earned_points");
   return { profileResult, feedbackResult, ledgerResult, isV2: false as const };
 }
+
+
+/** Read-only assignment submission context. Uploads and finalization remain in the workflow page. */
+export async function getAssignmentSubmissionPageData(assignmentId: string, userId: string) {
+  const client = getAppDataClient();
+  if (isTesterWorkflowV2Enabled) {
+    const [assignmentResult, checkinsResult, feedbackResult] = await Promise.all([
+      client.from("assignments")
+        .select("id,status,test_id,assigned_at,started_at,completed_at")
+        .eq("id", assignmentId).eq("tester_id", userId).maybeSingle(),
+      client.from("checkins").select("id,checkin_date")
+        .eq("assignment_id", assignmentId).eq("tester_id", userId)
+        .order("checkin_date", { ascending: true }),
+      client.from("feedback").select("id", { count: "exact", head: true })
+        .eq("assignment_id", assignmentId).eq("tester_id", userId),
+    ]);
+    if (assignmentResult.error || !assignmentResult.data) {
+      return { error: assignmentResult.error?.message || "This assignment could not be found.", assignment: null, checkins: [], feedbackCount: 0 };
+    }
+    const testResult = await client.from("tests")
+      .select("id,title,status,start_date,end_date,app_id")
+      .eq("id", assignmentResult.data.test_id).maybeSingle();
+    if (testResult.error || !testResult.data) {
+      return { error: testResult.error?.message || "The assigned test could not be found.", assignment: null, checkins: [], feedbackCount: 0 };
+    }
+    const appResult = await client.from("apps").select("name,icon_url")
+      .eq("id", testResult.data.app_id).maybeSingle();
+    return {
+      error: appResult.error ? "Some app information could not be loaded." : "",
+      assignment: {
+        id: assignmentResult.data.id,
+        status: assignmentResult.data.status,
+        start_date: assignmentResult.data.started_at || assignmentResult.data.assigned_at,
+        completed_at: assignmentResult.data.completed_at,
+        created_at: assignmentResult.data.assigned_at,
+        points_awarded: null,
+        test: {
+          id: testResult.data.id, title: testResult.data.title, status: testResult.data.status,
+          start_date: testResult.data.start_date, end_date: testResult.data.end_date,
+          app: appResult.data || null,
+        },
+      },
+      checkins: checkinsResult.data || [],
+      feedbackCount: feedbackResult.count || 0,
+    };
+  }
+
+  const [assignmentResult, checkinsResult, feedbackResult] = await Promise.all([
+    client.from("assignments")
+      .select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,start_date,end_date,app:apps(name,icon_url))")
+      .eq("id", assignmentId).eq("tester_id", userId).maybeSingle(),
+    client.from("checkins").select("id,checkin_date")
+      .eq("assignment_id", assignmentId).eq("tester_id", userId)
+      .order("checkin_date", { ascending: true }),
+    client.from("feedback").select("id", { count: "exact", head: true })
+      .eq("assignment_id", assignmentId).eq("tester_id", userId),
+  ]);
+  return {
+    error: assignmentResult.error?.message || (!assignmentResult.data ? "This assignment could not be found." : ""),
+    assignment: assignmentResult.data || null,
+    checkins: checkinsResult.data || [],
+    feedbackCount: feedbackResult.count || 0,
+  };
+}
