@@ -108,7 +108,7 @@ Additional tester-facing operations were moved out of page components:
 - `shared/auth/identity-api.ts`: current user's security activity and active-session RPC reads.
 - `features/tester/feedback-api.ts`: guarded tester feedback submission.
 - `features/tester/test-preview-api.ts`: test preview reads and guarded `join_test` action.
-- `features/tester/assignments-api.ts`: assignment detail reads, in addition to assignment progress/submission workflows.
+- `features/tester/assignments-api.ts`: assignment detail reads, in addition to assignment progress/submission workflows. It also owns the legacy-only completion-summary read path.
 
 Pages updated to consume these APIs include Privacy Data Management, Referral Program/History, Notification Preferences, Settings Security, Login Activity/Security, Active Sessions, Language & Appearance, Submit Feedback, Assignment Details, Test Preview, and the legacy-only Withdrawal Request preview.
 
