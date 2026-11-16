@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS rebuild_v2.test_builds (
     REFERENCES rebuild_v2.tests(id,developer_id) ON DELETE RESTRICT,
   CONSTRAINT test_builds_file_key UNIQUE(test_id,file_id),
   CONSTRAINT test_builds_version_check CHECK(char_length(version_label) BETWEEN 1 AND 64),
-  CONSTRAINT test_builds_filename_check CHECK(char_length(original_filename) BETWEEN 5 AND 255 AND original_filename ~* '\\.apk$'),
+  CONSTRAINT test_builds_filename_check CHECK(char_length(original_filename) BETWEEN 5 AND 255 AND original_filename ~* '[.]apk$'),
   CONSTRAINT test_builds_mime_check CHECK(mime_type='application/vnd.android.package-archive'),
   CONSTRAINT test_builds_size_check CHECK(size_bytes BETWEEN 1 AND 52428800),
   CONSTRAINT test_builds_sha256_check CHECK(sha256 IS NULL OR sha256 ~ '^[0-9a-f]{64}$'),
@@ -66,7 +66,7 @@ AS $function$
 DECLARE v_test_id uuid; v_developer_id uuid; v_file_id uuid;
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL
-     OR p_object_name !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.apk$' THEN
+     OR p_object_name !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]apk$' THEN
     RETURN false;
   END IF;
   v_test_id:=split_part(p_object_name,'/',1)::uuid;
@@ -139,7 +139,7 @@ BEGIN
   IF p_test_id IS NULL OR p_file_id IS NULL
      OR p_version_label IS NULL OR char_length(btrim(p_version_label)) NOT BETWEEN 1 AND 64
      OR p_original_filename IS NULL OR char_length(p_original_filename) NOT BETWEEN 5 AND 255
-     OR p_original_filename !~* '\\.apk$'
+     OR p_original_filename !~* '[.]apk$'
      OR p_size_bytes IS NULL OR p_size_bytes NOT BETWEEN 1 AND 52428800
      OR (p_sha256 IS NOT NULL AND p_sha256 !~ '^[0-9a-f]{64}$') THEN
     RAISE EXCEPTION 'TEST_BUILD_INPUT_INVALID' USING errcode='22023';
