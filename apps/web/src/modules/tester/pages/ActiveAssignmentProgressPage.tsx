@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getActiveAssignmentProgressPageData } from "../../../features/tester/tester-api";
 import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -22,65 +23,51 @@ export default function ActiveAssignmentProgressPage(){
  const [loading,setLoading]=useState(true),[error,setError]=useState(""),[leaderError,setLeaderError]=useState(""),[menuOpen,setMenuOpen]=useState(false);
  const [checkinSubmitting,setCheckinSubmitting]=useState(false),[checkinNotice,setCheckinNotice]=useState("");
  useEffect(()=>{
-  if(preview){setAssignment({id:"preview-assignment",status:"active",start_date:"2026-11-04",medical_extension_days:0,test:{id:"preview-test",title:"Productivity Pro",description:"Help us test this productivity application. Explore its core features, check reliability and share honest feedback throughout the testing period.",short_summary:"A productivity app for organizing tasks and improving focus.",start_date:"2026-11-04",end_date:"2026-11-17",app:{name:"BestDev Team",icon_url:null,category:"Productivity",play_store_url:null}}});setCheckins(Array.from({length:7},(_,i)=>({id:String(i),checkin_date:"2026-11-"+String(4+i).padStart(2,"0"),evidence_url:null})));setFeedbackCount(1);setEarned(120);setLeaders([{id:"p1",name:"Sara Dev",avatar:null,points:1180},{id:"p2",name:"Ahmed Tech",avatar:null,points:1250},{id:"p3",name:"Omar Code",avatar:null,points:1100}]);setName("John Doe");setLoading(false);return;}
+  if(preview){
+   setAssignment({id:"preview-assignment",status:"active",start_date:"2026-11-04",medical_extension_days:0,test:{id:"preview-test",title:"Productivity Pro",description:"Help us test this productivity application. Explore its core features, check reliability and share honest feedback throughout the testing period.",short_summary:"A productivity app for organizing tasks and improving focus.",start_date:"2026-11-04",end_date:"2026-11-17",app:{name:"BestDev Team",icon_url:null,category:"Productivity",play_store_url:null}}});
+   setCheckins(Array.from({length:7},(_,i)=>({id:String(i),checkin_date:"2026-11-"+String(4+i).padStart(2,"0"),evidence_url:null})));
+   setFeedbackCount(1);setEarned(120);
+   setLeaders([{id:"p1",name:"Sara Dev",avatar:null,points:1180},{id:"p2",name:"Ahmed Tech",avatar:null,points:1250},{id:"p3",name:"Omar Code",avatar:null,points:1100}]);
+   setName("John Doe");setLoading(false);return;
+  }
   if(!session?.user?.id||!id||!supabase){setLoading(false);return;}
-  let alive=true;const client=supabase,uid=session.user.id;
+  let alive=true;const uid=session.user.id;
   (async()=>{
-   if(isTesterWorkflowV2Enabled&&supabaseV2){
-    const [profile,notice,a,c,f]=await Promise.all([
-     supabaseV2.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
-     supabaseV2.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
-     supabaseV2.from("assignments").select("id,status,test_id,assigned_at,started_at,medical_extension_days").eq("id",id).eq("tester_id",uid).maybeSingle(),
-     supabaseV2.from("checkins").select("id,checkin_date").eq("assignment_id",id).eq("tester_id",uid).order("checkin_date"),
-     supabaseV2.from("feedback").select("id",{count:"exact",head:true}).eq("assignment_id",id).eq("tester_id",uid)
-    ]);
-    if(!alive)return;
-    setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
-    setAvatar(profile.data?.avatar_url||"");setUnread(notice.count??0);
-    if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
-    let startedAt=a.data.started_at as string|null;
-    let assignmentStatus=a.data.status as string;
-    if(assignmentStatus==="pending"){
-     const started=await supabaseV2.rpc("start_assignment",{p_assignment_id:id});
-     if(!alive)return;
-     if(started.error){setError("This test is not ready to start yet. Please try again when its cohort is ready.");setLoading(false);return;}
-     startedAt=started.data as string;assignmentStatus="active";
-    }
-    const t=await supabaseV2.from("tests").select("id,title,description,short_summary,status,start_date,end_date,app_id").eq("id",a.data.test_id).maybeSingle();
-    if(!alive)return;
-    if(t.error||!t.data){setError(t.error?.message||"The assigned test could not be found.");setLoading(false);return;}
-    const app=await supabaseV2.from("apps").select("name,icon_url,category,play_store_url").eq("id",t.data.app_id).maybeSingle();
-    if(!alive)return;
-    setAssignment({
-     id:a.data.id,status:assignmentStatus,start_date:startedAt||a.data.assigned_at,
-     medical_extension_days:a.data.medical_extension_days||0,
-     test:{id:t.data.id,title:t.data.title,description:t.data.description,short_summary:t.data.short_summary,
-      start_date:t.data.start_date,end_date:t.data.end_date,
-      app:app.data||null}
-    } as Assignment);
-    setCheckins((c.data??[]).map((row:{id:string;checkin_date:string})=>({...row,evidence_url:null})));
-    setFeedbackCount(f.count??0);setEarned(0);setLeaders([]);
-    setLeaderError("Verified rankings will appear when the secure leaderboard service is available.");
-    if(app.error)setError("Some app information could not be loaded.");
-    setLoading(false);return;
+   const data=await getActiveAssignmentProgressPageData(id,uid);
+   if(!alive)return;
+   setName(data.profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");
+   setAvatar(data.profile.data?.avatar_url||"");setUnread(data.notice.count??0);
+   if(data.error||!data.assignment){
+    setError(data.error||"This assignment could not be found.");setLoading(false);return;
    }
-   const [profile,notice,a,c,f,l,roleRows]=await Promise.all([
-    client.from("profiles").select("display_name,avatar_url").eq("id",uid).maybeSingle(),
-    client.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",uid).is("read_at",null),
-    client.from("assignments").select("id,status,start_date,medical_extension_days,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category,play_store_url))").eq("id",id).eq("tester_id",uid).maybeSingle(),
-    client.from("checkins").select("id,checkin_date,evidence_url").eq("assignment_id",id).eq("tester_id",uid).order("checkin_date"),
-    client.from("feedback").select("id",{count:"exact",head:true}).eq("assignment_id",id).eq("tester_id",uid),
-    client.from("points_ledger").select("amount").eq("user_id",uid).eq("wallet_type","earned_points").eq("reference_id",id),
-    client.from("user_roles").select("user_id").eq("role","tester").limit(5000)
-   ]);
-   if(!alive)return;setName(profile.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(profile.data?.avatar_url||"");setUnread(notice.count??0);
-   if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
-   setAssignment(a.data as unknown as Assignment);setCheckins((c.data??[]) as Checkin[]);setFeedbackCount(f.count??0);setEarned((l.data??[]).reduce((sum,x)=>sum+Number(x.amount||0),0));
-   const ids=(roleRows.data??[]).map(x=>x.user_id);
-   if(ids.length){const [profiles,ledger]=await Promise.all([client.from("profiles").select("id,display_name,avatar_url").in("id",ids),client.from("points_ledger").select("user_id,amount").eq("wallet_type","earned_points").in("user_id",ids).limit(20000)]);
-    if(!alive)return;if(profiles.error||ledger.error)setLeaderError("Leaderboard rankings are temporarily unavailable.");else{const map=new Map<string,Leader>();for(const p of profiles.data??[])map.set(p.id,{id:p.id,name:p.display_name?.trim()||"TestDZ Tester",avatar:p.avatar_url||null,points:0});for(const x of ledger.data??[]){const row=map.get(x.user_id);if(row)row.points+=Number(x.amount||0);}setLeaders([...map.values()].sort((x,y)=>y.points-x.points).slice(0,3));}}
+   let currentAssignment=data.assignment as Assignment;
+   if(isTesterWorkflowV2Enabled&&currentAssignment.status==="pending"){
+    if(!supabaseV2){
+     setError("The assignment service is unavailable. Please try again later.");setLoading(false);return;
+    }
+    const started=await supabaseV2.rpc("start_assignment",{p_assignment_id:id});
+    if(!alive)return;
+    if(started.error){
+     setError("This test is not ready to start yet. Please try again when its cohort is ready.");setLoading(false);return;
+    }
+    currentAssignment={...currentAssignment,status:"active",start_date:(started.data as string)||currentAssignment.start_date};
+   }
+   setAssignment(currentAssignment);
+   setCheckins((data.checkins.data??[]).map((row:{id:string;checkin_date:string;evidence_url?:string|null})=>({
+    id:row.id,checkin_date:row.checkin_date,evidence_url:row.evidence_url??null
+   })));
+   setFeedbackCount(data.feedback.count??0);setEarned(data.earned);
+   setLeaders([]);
+   setLeaderError("Rankings are temporarily hidden until a privacy-safe leaderboard service is available.");
+   if(data.profile.error||data.notice.error||data.checkins.error||data.feedback.error){
+    setError("Some assignment information could not be loaded.");
+   }else if(data.error){
+    setError(data.error);
+   }
    setLoading(false);
-  })().catch(()=>{if(alive){setError("Unable to load assignment progress.");setLoading(false);}});
+  })().catch(()=>{
+   if(alive){setError("Unable to load assignment progress.");setLoading(false);}
+  });
   return()=>{alive=false;};
  },[id,session?.user?.id,preview]);
  if(!preview&&!session)return <Navigate to="/auth" replace/>;
