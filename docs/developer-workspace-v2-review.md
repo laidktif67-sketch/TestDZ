@@ -43,7 +43,15 @@ Before this change, `apps-api.ts` called the default `public` schema for app rea
 5. Developer feedback/review screens and role-aware profile presentation still need separate work before claiming the developer workspace is V2-complete.
 6. V2 remains opt-in and off by default. Do not enable it in Production until the full acceptance gates pass.
 7. Test steps and requirements are now authored through `save_test_content`, which locks the owned test row and only permits draft/failed/cancelled states. It replaces both ordered collections atomically, validates each item and caps each collection at 50. The tester preview reads these collections under the existing participant SELECT policies. The contract also verified that an enrolled tester can read the steps and requirements through RLS.
-8. APK/test-media upload and private artifact access are still not implemented; do not publish APKs in the public `app-icons` bucket. Cohort editing and safe lifecycle transitions are now implemented; manual assignment distribution remains intentionally unavailable.
+8. Private APK build upload is implemented through the `test-builds` bucket (50 MB cap, APK MIME only). The developer registers metadata first, uploads to a server-authorized path, and finalizes only after Storage metadata is verified. APK tests cannot be submitted for review until a verified build exists. Testers receive short-lived signed download URLs only after they have an assignment. Do not put APKs in public `app-icons`. Other test media (images/video/documents) remains pending. Cohort editing and safe lifecycle transitions are implemented; manual assignment distribution remains intentionally unavailable.
+
+## Latest private APK build update
+
+- Added `013_private_test_builds.sql` and `014_harden_test_build_storage_helper.sql`; both were applied to FixLab only. The new `test-builds` bucket is private and capped at 50 MB with APK MIME restriction.
+- `test_builds` stores version/file metadata and a server-generated storage path. Developers can register only their own editable `apk_testing` test builds. Storage upload policy accepts only the exact pending path. Finalization verifies the stored object's size and MIME before marking it uploaded.
+- APK tests are blocked from submission until a verified build exists. Testers can read build metadata and Storage objects only when assigned to that test; the tester preview creates five-minute signed URLs for those participants. No public URL is generated.
+- The developer lifecycle contract passed on FixLab, including owner upload authorization, non-owner denial, hiding pending build metadata from testers, verified finalization, submission gate, admin approval, tester enrollment, private object read, and rollback cleanup (zero build rows and zero Storage objects remain).
+- Frontend now supports developer APK upload and participant-only download links. Browser/device acceptance and live binary upload through the UI are still pending.
 
 ## Latest cohort management update
 
