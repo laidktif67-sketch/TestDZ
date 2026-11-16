@@ -3,7 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { Link, Navigate } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
-import { getDiscoverTestsPageData } from "../../../features/tester/tester-api";
+import { getDiscoverTestsPageData } from "../../../features/tester/dashboard-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
