@@ -142,3 +142,14 @@ The product owner explicitly approved the following target architecture:
 - Admin/staff UI and API coverage is incomplete. V2 schema presence alone does not make those workflows operational.
 
 This decision establishes the target architecture. It does not certify application cutover readiness and does not authorize a hosted database change or deployment.
+
+
+## Frontend V2 cutover progress — 2026-11-16
+
+- Added `apps/web/src/lib/supabase-data.ts` as the central application Data API selector. Auth and Storage continue using the base Supabase client; application table/RPC access is being consolidated behind the selector.
+- Routed `features/apps/apps-api.ts`, `features/profiles/profiles-api.ts`, `shared/auth/identity-api.ts`, and the developer dashboard profile read through the central selector.
+- The selector intentionally retains the transitional feature-flag fallback. It is not yet safe to remove because the frontend inventory still finds V2/public branching in tester activity, assignment, wallet, support, notifications, privacy export, referral, and withdrawal-display pages.
+- Added `docs/v2-frontend-cutover-inventory.md` with the confirmed remaining page-level migration inventory and implementation order.
+- Added `.github/workflows/frontend-ci.yml`. Run `43946437297` passed on code commit `589fa2a8d2f69e4f2a208493fe4eb7fb7362d75e`: `npm ci`, `npm run typecheck`, and `npm run build` all succeeded. The existing TestDZ CI run `43946437375` also passed on the same code commit.
+- The earlier frontend run `43946352807` failed on a helper return-type mismatch; the type was corrected and the later run passed. The earlier failure is retained here for provenance, not treated as current.
+- No Supabase project, database schema, migration history, Storage object, Auth user, Vercel setting, deployment, or PR #18 was changed in this work.
