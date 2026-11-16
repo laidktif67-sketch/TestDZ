@@ -1,6 +1,6 @@
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../lib/supabase-v2";
+import { getAppDataClient } from "../../lib/supabase-data";
 
 const APP_SELECT = "id,developer_id,name,package_name,description,category,icon_url,status,created_at";
 
@@ -10,9 +10,7 @@ function client() {
 }
 
 function dataClient(): any {
-  const selected = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
-  if (!selected) throw new Error("SUPABASE_NOT_CONFIGURED");
-  return selected;
+  return getAppDataClient();
 }
 
 /** Read the current user's applications using the existing RLS policies. */
