@@ -21,7 +21,7 @@ export default function TestCompletionSummaryPage(){
  if(!session?.user?.id||!id){setLoading(false);return;}let alive=true;(async()=>{if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}
  const {assignment:a,checkins:c,feedback:f,ledger:l,profile:p}=await getLegacyTesterCompletionSummaryPageData(id,session.user.id);
   if(!alive)return;if(a.error||!a.data)setError("This assignment could not be found.");else setAssignment(a.data as unknown as Assignment);
- setCheckins((c.data??[]).map(x=>x.checkin_date));setFeedback(f.data as Feedback|null);setLedger((l.data??[]) as Ledger[]);
+ setCheckins((c.data??[]).map((x: { checkin_date: string })=>x.checkin_date));setFeedback(f.data as Feedback|null);setLedger((l.data??[]) as Ledger[]);
  setName(p.data?.display_name?.trim()||session.user.email?.split("@")[0]||"Tester");setAvatar(p.data?.avatar_url||"");setLoading(false);
  })();return()=>{alive=false;};},[id,session?.user?.id,preview]);
  if(!preview&&!session)return <Navigate to="/auth" replace/>;if(isTesterWorkflowV2Enabled)return <Navigate to="/wallet-rewards" replace/>;if(!preview&&!roles.includes("tester")&&!loading)return <Navigate to="/dashboard" replace/>;
