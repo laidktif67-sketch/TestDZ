@@ -124,3 +124,25 @@ The local-only commit `94a27dfa` on `fix/secure-test-creation-ownership` was sub
 ## 11. Feature porting matrix
 
 The detailed PR/branch decisions, V2 feature evidence, migration provenance blocker, security cautions, and implementation order are maintained in [`BRANCH_PORTING_MATRIX.md`](./BRANCH_PORTING_MATRIX.md). The matrix was added after inspecting the current 47-branch / 27-open-PR GitHub inventory and scanning all 31 committed V2 migration files.
+
+
+## 12. CI and migration-workflow audit (2026-11-16)
+
+### Duplicate frontend CI
+
+The V2 branch currently has two workflows that both install dependencies, run TypeScript typecheck, and build the web workspace on the same V2 push / pull-request path filters:
+
+- `.github/workflows/ci.yml` (TestDZ CI): uses `npm install`, runs typecheck/build, and does not run the tester data-boundary check.
+- `.github/workflows/frontend-ci.yml` (Frontend typecheck and build): uses `npm ci`, runs `npm run check:data-boundary`, typecheck, and build; it also has concurrency cancellation and a timeout.
+
+Both workflows were observed running for the same V2 commits. On commit `c5b12ee3f699b1361db0436e64ee2744a82dafb6`, run `43963908283` (TestDZ CI) and run `43963908250` (Frontend typecheck and build) both completed successfully. This confirms duplicate execution, not a failing build. Recommended target: retain one canonical frontend CI workflow with the stricter locked install, boundary check, timeout, and concurrency behavior. Before removing or narrowing the older workflow, inspect all branch and PR consumers (including `main` and `architecture-v1`) and preserve any distinct validation they still require. No workflow was changed in this audit.
+
+### Manual migration workflow target mismatch — HIGH RISK
+
+The file `.github/workflows/apply-migration.yml` describes its target as a development project/environment, but its precondition explicitly requires `SUPABASE_PROJECT_REF=naqjjykcglxiobkmdllj`, which is the recorded Production project ref. The job then links Supabase CLI to that ref and runs `supabase db push --remote --yes`. Its branch guard limits execution to `feat/week-4-design-system`, but does not make the target a development project. This is a dangerous naming/configuration mismatch and must be treated as a Production-capable workflow.
+
+Do not dispatch this workflow. Do not change its secrets, environment, branch guard, or target in this documentation-only task. Before any future use, an owner-approved separate change must either remove/quarantine the workflow or establish a verified non-production project ref, dedicated credentials/environment, explicit migration allowlist, and a dry-run/read-back gate. The current V2 consolidation must not use this workflow.
+
+### Validation limits
+
+The workflow files were read from `rebuild/testdz-v2`; recent Actions metadata was inspected read-only. No workflow was dispatched, rerun, edited, or deleted. No migration was applied and no Supabase project was changed.
