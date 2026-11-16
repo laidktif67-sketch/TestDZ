@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, CSSProperties, ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { getAssignmentSubmissionPageData, getTesterAssignmentSubmission, createTesterAssignmentSubmission, getTesterSubmissionAttachments, registerTesterSubmissionAttachment, finalizeTesterAssignmentSubmission } from "../../../features/tester/tester-api";
+import { getAssignmentSubmissionPageData, getTesterAssignmentSubmission, createTesterAssignmentSubmission, getTesterSubmissionAttachments, registerTesterSubmissionAttachment, finalizeTesterAssignmentSubmission } from "../../../features/tester/assignments-api";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
