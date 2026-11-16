@@ -26,7 +26,7 @@ export default function ReferralHistoryPage(){
      const {data,error}=await getReferralHistory(id);
      if(!alive)return;
      if(error){setReferralUnavailable(true);}
-     else setRecords((data??[]).map(item=>({
+     else setRecords((data??[]).map((item: any)=>({
       id:item.id,
       invited_email:"Referred tester "+String(item.referred_user_id).slice(0,8),
       status:item.status,
