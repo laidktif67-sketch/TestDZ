@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { getTesterAssignmentDetailsPageData } from "../../../features/tester/assignments-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -23,38 +24,20 @@ export default function AssignmentDetailsPage(){
   if(!storageClient){setError("Database connection is unavailable.");setLoading(false);return;}
   let alive=true;
   (async()=>{
-   if(isTesterWorkflowV2Enabled&&supabaseV2){
-    const a=await supabaseV2.from("assignments").select("id,status,test_id,assigned_at,started_at,completed_at").eq("id",id).eq("tester_id",session.user.id).maybeSingle();
-    if(!alive)return;
-    if(a.error||!a.data){setError(a.error?.message||"This assignment could not be found.");setLoading(false);return;}
-    const t=await supabaseV2.from("tests").select("id,title,description,short_summary,start_date,end_date,app_id").eq("id",a.data.test_id).maybeSingle();
-    if(!alive)return;
-    if(t.error||!t.data){setError(t.error?.message||"The assigned test could not be found.");setLoading(false);return;}
-    const [app,assetResult]=await Promise.all([
-     supabaseV2.from("apps").select("name,icon_url,category").eq("id",t.data.app_id).maybeSingle(),
-     supabaseV2.from("test_assets").select("id,title,original_filename,mime_type,size_bytes,storage_path").eq("test_id",t.data.id).eq("status","uploaded").order("created_at",{ascending:false})
-    ]);
-    if(!alive)return;
-    const signedAssets=await Promise.all((assetResult.data??[]).map(async asset=>{
-     const {data:signed,error:signedError}=await storageClient.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
-     return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
-    }));
-    setAssets(signedAssets.filter((asset):asset is NonNullable<typeof asset>=>!!asset));
-    setData({
-     id:a.data.id,status:a.data.status,start_date:a.data.started_at||a.data.assigned_at,points_awarded:null,
-     test:{id:t.data.id,title:t.data.title,description:t.data.description,short_summary:t.data.short_summary,
-      start_date:t.data.start_date,end_date:t.data.end_date,app:app.data||null}
-    } as AssignmentDetails);
-    if(app.error)setError("Some app information could not be loaded.");
-    if(assetResult.error)setError("Private test materials could not be loaded.");
+   const result=await getTesterAssignmentDetailsPageData(id,session.user.id);
+   if(!alive)return;
+   if(!result.data){
+    setError(result.error?.message||"This assignment could not be found.");
     setLoading(false);
     return;
    }
-   if(!supabase){setError("Database connection is unavailable.");setLoading(false);return;}
-   const a=await supabase.from("assignments").select("id,status,start_date,points_awarded,test:tests(id,title,description,short_summary,start_date,end_date,app:apps(name,icon_url,category))").eq("id",id).eq("tester_id",session.user.id).maybeSingle();
-   if(!alive)return;
-   if(a.error||!a.data)setError(a.error?.message||"This assignment could not be found.");
-   else setData(a.data as unknown as AssignmentDetails);
+   const signedAssets=await Promise.all((result.assets??[]).map(async asset=>{
+    const {data:signed,error:signedError}=await storageClient.storage.from("test-assets").createSignedUrl(asset.storage_path,300);
+    return signedError||!signed?.signedUrl?null:{id:asset.id,title:asset.title,original_filename:asset.original_filename,mime_type:asset.mime_type,size_bytes:asset.size_bytes,download_url:signed.signedUrl};
+   }));
+   setAssets(signedAssets.filter((asset):asset is NonNullable<typeof asset>=>!!asset));
+   setData(result.data as AssignmentDetails);
+   if(result.error)setError("Some assignment information or private test materials could not be loaded.");
    setLoading(false);
   })().catch(()=>{if(alive){setError("Unable to load assignment details.");setLoading(false);}});
   return()=>{alive=false;};
