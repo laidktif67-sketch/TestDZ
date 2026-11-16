@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, CSSProperties, ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { getAssignmentSubmissionPageData } from "../../../features/tester/tester-api";
 import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -79,47 +80,14 @@ export default function AssignmentSubmissionPage() {
     (async () => {
       const client = supabase;
       if (!client) { if (alive) { setLoadError("The database connection is unavailable."); setLoading(false); } return; }
-      if (isTesterWorkflowV2Enabled && supabaseV2) {
-        const [a, c, f] = await Promise.all([
-          supabaseV2.from("assignments").select("id,status,test_id,assigned_at,started_at,completed_at").eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
-          supabaseV2.from("checkins").select("id,checkin_date").eq("assignment_id", id).eq("tester_id", session.user.id).order("checkin_date", { ascending: true }),
-          supabaseV2.from("feedback").select("id", { count: "exact", head: true }).eq("assignment_id", id).eq("tester_id", session.user.id)
-        ]);
-        if (!alive) return;
-        if (a.error || !a.data) {
-          setLoadError(a.error?.message || "This assignment could not be found.");
-          setLoading(false);
-          return;
-        }
-        const t = await supabaseV2.from("tests").select("id,title,status,start_date,end_date,app_id").eq("id", a.data.test_id).maybeSingle();
-        if (!alive) return;
-        if (t.error || !t.data) {
-          setLoadError(t.error?.message || "The assigned test could not be found.");
-          setLoading(false);
-          return;
-        }
-        const app = await supabaseV2.from("apps").select("name,icon_url").eq("id", t.data.app_id).maybeSingle();
-        if (!alive) return;
-        setAssignment({
-          id: a.data.id, status: a.data.status, start_date: a.data.started_at || a.data.assigned_at,
-          completed_at: a.data.completed_at, created_at: a.data.assigned_at, points_awarded: null,
-          test: { id: t.data.id, title: t.data.title, status: t.data.status, start_date: t.data.start_date, end_date: t.data.end_date, app: app.data || null }
-        } as AssignmentRow);
-        setCheckins((c.data || []).map((row: { id: string; checkin_date: string }) => ({ ...row })));
-        setFeedbackCount(f.count || 0);
-        if (app.error) setLoadError("Some app information could not be loaded.");
-        setLoading(false);
-        return;
-      }
-      const [a, c, f] = await Promise.all([
-        client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,start_date,end_date,app:apps(name,icon_url))").eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
-        client.from("checkins").select("id,checkin_date").eq("assignment_id", id).eq("tester_id", session.user.id).order("checkin_date", { ascending: true }),
-        client.from("feedback").select("id", { count: "exact", head: true }).eq("assignment_id", id).eq("tester_id", session.user.id)
-      ]);
+      const result = await getAssignmentSubmissionPageData(id, session.user.id);
       if (!alive) return;
-      if (a.error || !a.data) setLoadError(a.error?.message || "This assignment could not be found.");
-      else setAssignment(a.data as unknown as AssignmentRow);
-      setCheckins(c.data || []); setFeedbackCount(f.count || 0); setLoading(false);
+      if (result.error && !result.assignment) setLoadError(result.error);
+      else if (result.assignment) setAssignment(result.assignment as AssignmentRow);
+      setCheckins(result.checkins || []);
+      setFeedbackCount(result.feedbackCount || 0);
+      if (result.error) setLoadError(result.error);
+      setLoading(false);
     })().catch(() => {
       if (alive) { setLoadError("Unable to load assignment details."); setLoading(false); }
     });
