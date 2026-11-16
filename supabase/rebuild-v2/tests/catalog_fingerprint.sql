@@ -69,4 +69,4 @@ SELECT jsonb_pretty(jsonb_build_object(
  'policies',jsonb_build_object('count',(select count(*) from pol),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from pol),''))),
  'application_triggers',jsonb_build_object('count',(select count(*) from trig),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from trig),''))),
  'storage_buckets',jsonb_build_object('count',(select count(*) from buck),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from buck),''))
-)) AS catalog_fingerprint);
+)) AS catalog_fingerprint;
