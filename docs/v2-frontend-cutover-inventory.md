@@ -56,7 +56,7 @@ The following pages still contain direct database access and/or explicit legacy 
 
 ## Next implementation order
 
-1. Extract tester dashboard, discover tests, and my tests into feature API modules (completed). Next: assignment progress/submission, check-in history, and activity history.
+1. Extract tester dashboard, discover tests, my tests, and activity history into feature API modules (completed). Next: assignment progress/submission and check-in history.
 2. Reconcile the points/date/evidence fields in those APIs against the actual V2 schema and tests.
 3. Extract wallet, notification, and support APIs; remove page-level table/RPC calls.
 4. Replace leaderboard cross-user enumeration with a dedicated privacy-safe aggregate contract.
