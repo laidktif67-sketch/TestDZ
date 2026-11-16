@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { gsap } from "gsap";
 import { supabase } from "../../../lib/supabase";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
-import { getTesterDashboardData } from "../../../features/tester/tester-api";
+import { getTesterDashboardData } from "../../../features/tester/dashboard-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { RoleAccessNotice } from "../../../shared/guards/RoleGuard";
 import "../styles/tester-dashboard.css";
