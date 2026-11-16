@@ -195,9 +195,10 @@ A fresh read-only check was performed against the isolated `TestDZ-FixLab` proje
 - Hosted migration history still contains 21 entries, spanning `20261115095605` through `20261116162951`.
 - The V2 repository branch still contains 31 committed migration files, with the previously recorded last file `20261112000100_support_ticket_conversations.sql`.
 - Seven exact candidate migration paths corresponding to later FixLab versions were checked directly on `rebuild/testdz-v2` (including the V2 namespace, developer lifecycle, content authoring, cohort management, private test-build, private feedback, and final evidence-metadata migrations). All seven returned GitHub 404 / not found on that branch.
+- Clarification from a subsequent full-tree inspection: those seven timestamped paths are absent specifically from `supabase/migrations/`. The V2 branch separately contains 18 ordered candidate SQL scripts under `supabase/rebuild-v2/`, including the namespace, developer lifecycle, content authoring, cohort management, private build/media/feedback, assignment-schedule, and evidence-metadata work. These candidate scripts provide a clean-replay source, but they are not a one-to-one filename mirror of FixLab's 21 hosted migration-history rows.
 - The FixLab table inventory returned 47 tables in `rebuild_v2`, alongside legacy `public` tables. RLS was reported enabled on all returned tables. The private schema has no tables in this inventory; it contains internal routines, not application tables.
 
-This confirms the migration reproducibility blocker remains open. The hosted migration history is not represented by matching checked-in SQL files, and the seven missing paths cannot be reconstructed from version/name metadata alone. Do not create placeholder migrations, mark these versions as applied in Git, run `db reset`, run `db push`, or change either hosted project to make the histories appear aligned.
+The exact hosted migration-history mapping remains unresolved, but the candidate SQL source is not wholly absent: `supabase/rebuild-v2/001_schema.sql` through `018_verify_submission_evidence_metadata.sql` form a separately tested rebuild sequence. The remaining blocker is proving exact live-to-clean catalog equivalence and documenting how the 21 FixLab history rows relate to the 18 candidate scripts; the two sequences must not be treated as interchangeable or one-to-one. Do not create placeholder migrations, mark versions as applied in Git, run `db reset`, run `db push`, or change either hosted project merely to make the histories appear aligned.
 
 ### Safe recovery work still required
 
@@ -282,3 +283,46 @@ The 18 non-internal triggers consist of:
 ### Migration reconstruction implication
 
 The candidate migration source must preserve the exact policy command distribution, each policy's USING/WITH CHECK expressions, bucket privacy/size/MIME configuration, application-owned triggers, and dependency ordering. Do not infer these from table names or regenerate generic owner policies. No policies, buckets, triggers, or database data were changed.
+
+
+## 17. Rebuild V2 candidate-source and CI revalidation (2026-11-16)
+
+A cross-directory source review found that the 18 numbered scripts in `supabase/rebuild-v2/` are the maintained clean-replay candidate, intentionally separate from the historical `supabase/migrations/` directory. The candidate README defines their order and explicitly prohibits moving them into the active migration path or applying them to Production before the remaining gates pass.
+
+### Candidate database inventory
+
+Read-only FixLab catalog checks and the candidate README agree on the following final-state shape:
+
+- 47 tables in `rebuild_v2`; all 47 have both RLS enabled and FORCE RLS enabled.
+- 439 columns, 297 constraints (47 primary keys, 87 foreign keys, 32 unique constraints, 131 check constraints), and 157 indexes.
+- 39 functions in `rebuild_v2` and 57 in `rebuild_v2_private` (96 total).
+- 48 application RLS policies; seven Storage buckets and 18 Storage object policies.
+- Six application-owned V2 triggers; platform-managed Storage lifecycle triggers are separate.
+- One sequence; no views/materialized views or enum types in the candidate schema.
+- Six installed extensions: `pg_stat_statements` 1.11, `pgcrypto` 1.3, `pgtap` 1.3.3, `plpgsql` 1.0, `supabase_vault` 0.3.2, and `uuid-ossp` 1.1.
+
+The hosted FixLab migration history remains 21 records. Its history is not a direct manifest of the 18 candidate files; initial fixture/setup entries and later feature changes were recorded at a different granularity. Keep the history intact until a reviewed baseline/reconciliation procedure exists.
+
+### Latest CI evidence
+
+On governance commit `06feb4e711f9286af39f44d228782d9411b7802e`, both relevant GitHub Actions runs completed successfully:
+
+- Rebuild V2 isolated database tests: [run 43973675098](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43973675098), all 18 candidate scripts applied to a disposable local Supabase stack, followed by the phase-one security contract and eight post-phase contracts.
+- Frontend typecheck and build: [run 43973675024](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43973675024), including the tester data-boundary check, TypeScript typecheck, and production build.
+
+These results validate that commit and those local CI workflows only. They do not prove exact equivalence with hosted FixLab, legacy public-schema compatibility, or Production readiness.
+
+### Algeria-local calendar correction in progress
+
+The candidate tester workflow contained seven uses of `CURRENT_DATE` in discovery, join eligibility, and daily check-in logic. Because the database session timezone is UTC while TestDZ's calendar rules are Algeria-local, the first hour after local midnight could use yesterday's date.
+
+A separate draft fix, [PR #44](https://github.com/laidktif67-sketch/TestDZ/pull/44), now adds a private deterministic `algeria_local_date(timestamptz)` helper and uses it consistently in discovery, join, and check-in lookup/insert/retry paths. Its contract adds fixed UTC-to-Algeria boundary cases. Static readback confirms no `CURRENT_DATE` remains in `007_tester_workflow.sql`. The isolated Rebuild V2 CI run and the legacy migration regression workflow are still pending at the time of this note. No hosted database has been changed; the live FixLab function remains unpatched until a separately reviewed FixLab-only validation step.
+
+### Remaining source-of-truth decision
+
+Treat `supabase/rebuild-v2/` as the current candidate replay source, not as an approved production migration sequence. Before any schema cutover:
+1. Replay the 18 scripts from an empty disposable database.
+2. Export and compare complete catalogs against FixLab: columns/defaults, constraints, indexes, functions and security attributes, grants, policies, triggers, extensions, buckets, and Storage policies.
+3. Resolve the 24 legacy `public` tables and the frontend feature-flag compatibility path.
+4. Only then propose a canonical migration-history baseline, backup/restore rehearsal, and explicit cutover/rollback plan.
+5. Keep Production, Auth users, Storage objects, and hosted migration history untouched until separate approval.
