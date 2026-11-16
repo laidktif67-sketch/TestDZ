@@ -47,18 +47,19 @@ pol AS (
         coalesce(pg_get_expr(pol.polqual,pol.polrelid),'')||':'||
         coalesce(pg_get_expr(pol.polwithcheck,pol.polrelid),'') AS item
  FROM pg_policy pol JOIN pg_class c ON c.oid=pol.polrelid
- JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('rebuild_v2','storage')
+ JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='rebuild_v2' OR (n.nspname='storage' AND c.relname='objects')
 ),
 trig AS (
  SELECT n.nspname||'.'||c.relname||':'||t.tgname||':'||pg_get_triggerdef(t.oid)||':'||
         t.tgenabled::text||':'||t.tgisinternal::text AS item
  FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
  JOIN pg_namespace n ON n.oid=c.relnamespace
- WHERE NOT t.tgisinternal AND n.nspname IN ('auth','rebuild_v2')
+ WHERE NOT t.tgisinternal
+   AND (n.nspname='rebuild_v2' OR (n.nspname='auth' AND c.relname='users' AND t.tgname='rebuild_v2_on_auth_user_created'))
 ),
 buck AS (
  SELECT id||':'||name||':'||public::text||':'||coalesce(file_size_limit::text,'')||':'||
-        coalesce(array_to_string(allowed_mime_types,','),'') AS item
+        coalesce((SELECT string_agg(mime,',' ORDER BY mime) FROM unnest(allowed_mime_types) AS mime),'') AS item
  FROM storage.buckets
 )
 SELECT jsonb_pretty(jsonb_build_object(
