@@ -39,6 +39,14 @@ const statusLabel: Record<string,string> = {
   completed:"مكتمل", failed:"مرفوض", cancelled:"ملغى",
 };
 
+function toDateTimeLocalValue(value:string|null){
+  if(!value)return "";
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return "";
+  const pad=(part:number)=>String(part).padStart(2,"0");
+  return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())+"T"+pad(date.getHours())+":"+pad(date.getMinutes());
+}
+
 export default function DeveloperTestsPage() {
   const navigate=useNavigate();
   const [userId,setUserId]=useState<string|null>(null);
@@ -183,8 +191,8 @@ export default function DeveloperTestsPage() {
     setEditingCohortId(cohort.id);
     setEditCohortName(cohort.name);
     setEditCohortCapacity(cohort.capacity);
-    setEditCohortStartsAt(cohort.starts_at?new Date(cohort.starts_at).toISOString().slice(0,16):"");
-    setEditCohortEndsAt(cohort.ends_at?new Date(cohort.ends_at).toISOString().slice(0,16):"");
+    setEditCohortStartsAt(toDateTimeLocalValue(cohort.starts_at));
+    setEditCohortEndsAt(toDateTimeLocalValue(cohort.ends_at));
   }
 
   async function saveCohort(event:FormEvent<HTMLFormElement>,cohort:DeveloperCohort){
