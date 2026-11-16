@@ -1,6 +1,6 @@
 -- Read-only fingerprint of the final V2 catalog.
 -- Run after candidate scripts 001..018. Excludes the two known live/candidate date-delta functions:
--- algeria_local_date (candidate-only) and submit_checkin_impl (intentionally patched only in candidate).
+-- algeria_local_date (candidate-only) and the four tester business-date implementations intentionally patched only in candidate.
 -- Compare this output with the same query on FixLab before any hosted baseline or patch operation.
 
 WITH
@@ -36,7 +36,7 @@ funcs AS (
  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
  JOIN pg_language l ON l.oid=p.prolang
  WHERE n.nspname IN ('rebuild_v2','rebuild_v2_private')
-   AND p.proname NOT IN ('algeria_local_date','submit_checkin_impl')
+   AND p.proname NOT IN ('algeria_local_date','get_discoverable_tests_impl','join_test_impl','start_assignment_impl','submit_checkin_impl')
 ),
 pol AS (
  SELECT n.nspname||'.'||c.relname||':'||pol.polname||':'||pol.polcmd::text||':'||
