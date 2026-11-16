@@ -170,7 +170,13 @@ BEGIN
   END;
   v_apk_file:='50000000-0000-4000-8000-000000000004';
   v_apk_path:=rebuild_v2.register_test_build(v_apk_test,v_apk_file,'1.0.0','lifecycle.apk',2048,repeat('a',64));
+  IF rebuild_v2.register_test_build(v_apk_test,v_apk_file,'1.0.0','lifecycle.apk',2048,repeat('a',64)) IS DISTINCT FROM v_apk_path THEN
+    RAISE EXCEPTION 'FAIL: retry registration did not return the original APK path';
+  END IF;
   SELECT id INTO v_apk_build FROM rebuild_v2.test_builds WHERE test_id=v_apk_test AND file_id=v_apk_file;
+  IF (SELECT count(*) FROM rebuild_v2.test_builds WHERE test_id=v_apk_test AND file_id=v_apk_file)<>1 THEN
+    RAISE EXCEPTION 'FAIL: retry registration duplicated APK metadata';
+  END IF;
   IF NOT rebuild_v2_private.can_upload_test_build(v_apk_path) THEN
     RAISE EXCEPTION 'FAIL: owner cannot upload registered APK build';
   END IF;
