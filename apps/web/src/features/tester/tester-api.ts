@@ -371,3 +371,21 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
     assignment: assignmentResult.data,
   };
 }
+
+
+/** Start an assigned V2 test through its guarded workflow RPC. */
+export async function startTesterAssignment(assignmentId: string) {
+  return getAppDataClient().rpc("start_assignment", { p_assignment_id: assignmentId });
+}
+
+/** Record today's V2 check-in and return the server-created check-in row. */
+export async function submitTesterDailyCheckin(assignmentId: string) {
+  const client = getAppDataClient();
+  const result = await client.rpc("submit_checkin", { p_assignment_id: assignmentId, p_note: null });
+  if (result.error || !result.data) {
+    return { error: result.error, checkin: null, recorded: false };
+  }
+  const checkin = await client.from("checkins").select("id,checkin_date")
+    .eq("id", result.data).maybeSingle();
+  return { error: checkin.error, checkin: checkin.data || null, recorded: true };
+}
