@@ -78,6 +78,10 @@ export default function DeveloperTestsPage() {
     else setApps((appResult.data??[]) as AppRecord[]);
     if(testResult.error)setError("تعذر تحميل الاختبارات.");
     else setTests((testResult.data??[]) as DeveloperTest[]);
+    if(cohortResult.error)setError("تعذر تحميل مجموعات المختبرين.");
+    else setCohorts(cohortResult.data??[]);
+    if(buildResult.error)setError("تعذر تحميل إصدارات APK.");
+    else setTestBuilds((buildResult.data??[]) as DeveloperTestBuild[]);
     setLoading(false);
   },[]);
 
