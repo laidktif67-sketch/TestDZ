@@ -22,7 +22,7 @@ SELECT set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001'
 SELECT set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
 DO $test$
-DECLARE v_app uuid; v_test uuid; v_cohort uuid; v_assignment uuid; v_apk_test uuid; v_apk_path text; v_apk_build uuid; v_count integer;
+DECLARE v_app uuid; v_test uuid; v_cohort uuid; v_assignment uuid; v_apk_test uuid; v_apk_path text; v_apk_build uuid; v_apk_file uuid; v_count integer;
 BEGIN
   v_app:=rebuild_v2.create_app('Lifecycle Demo App','dz.testdz.lifecycle','A synthetic application used only for a rolled-back developer lifecycle contract.','tools');
   PERFORM rebuild_v2.submit_app_for_review(v_app);
@@ -166,8 +166,9 @@ BEGIN
     RAISE EXCEPTION 'FAIL: APK test submitted without verified build';
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
-  v_apk_build:='50000000-0000-4000-8000-000000000004';
-  v_apk_path:=rebuild_v2.register_test_build(v_apk_test,v_apk_build,'1.0.0','lifecycle.apk',2048,repeat('a',64));
+  v_apk_file:='50000000-0000-4000-8000-000000000004';
+  v_apk_path:=rebuild_v2.register_test_build(v_apk_test,v_apk_file,'1.0.0','lifecycle.apk',2048,repeat('a',64));
+  SELECT id INTO v_apk_build FROM rebuild_v2.test_builds WHERE test_id=v_apk_test AND file_id=v_apk_file;
   IF NOT rebuild_v2_private.can_upload_test_build(v_apk_path) THEN
     RAISE EXCEPTION 'FAIL: owner cannot upload registered APK build';
   END IF;
