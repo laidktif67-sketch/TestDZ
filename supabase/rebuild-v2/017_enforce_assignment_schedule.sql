@@ -17,6 +17,7 @@ DECLARE
   v_cohort_ends_at timestamptz;
   v_test_start_date date;
   v_test_end_date date;
+  v_business_date date := rebuild_v2_private.algeria_local_date();
   v_started_at timestamptz;
 BEGIN
   IF v_user_id IS NULL THEN
@@ -58,8 +59,8 @@ BEGIN
 
   IF (v_cohort_starts_at IS NOT NULL AND v_cohort_starts_at > now())
      OR (v_cohort_ends_at IS NOT NULL AND v_cohort_ends_at <= now())
-     OR (v_test_start_date IS NOT NULL AND v_test_start_date > CURRENT_DATE)
-     OR (v_test_end_date IS NOT NULL AND v_test_end_date < CURRENT_DATE) THEN
+     OR (v_test_start_date IS NOT NULL AND v_test_start_date > v_business_date)
+     OR (v_test_end_date IS NOT NULL AND v_test_end_date < v_business_date) THEN
     RAISE EXCEPTION 'ASSIGNMENT_OUTSIDE_TEST_WINDOW' USING errcode = '55000';
   END IF;
 
