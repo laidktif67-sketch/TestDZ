@@ -55,7 +55,39 @@ BEGIN
   END;
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
   v_test:=rebuild_v2.create_test(v_app,'Lifecycle Test','A synthetic test description that is long enough to satisfy the V2 contract validation.','Lifecycle contract','usability',3,NULL,NULL,30,'Complete the synthetic test steps carefully.');
+  -- Only the owning developer can author steps and requirements while the test is editable.
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  BEGIN
+    PERFORM rebuild_v2.save_test_content(v_test,'[{"title":"Forged step","description":"A non-owner must not add this step."}]'::jsonb,'[]'::jsonb);
+    RAISE EXCEPTION 'FAIL: non-owner edited test content';
+  EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
+  END;
+
+  PERFORM set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  PERFORM rebuild_v2.save_test_content(
+    v_test,
+    '[{"title":"Install the app","description":"Install the supplied build and open it once.","isRequired":true},{"title":"Explore settings","description":"Review the settings screen and record any usability issue.","isRequired":false}]'::jsonb,
+    '[{"type":"device","title":"Android device","description":"Use a physical Android device for this test.","isMandatory":true}]'::jsonb
+  );
+  SELECT count(*) INTO v_count FROM rebuild_v2.test_steps WHERE test_id=v_test;
+  IF v_count<>2 THEN RAISE EXCEPTION 'FAIL: expected two saved test steps, got %',v_count; END IF;
+  SELECT count(*) INTO v_count FROM rebuild_v2.test_requirements WHERE test_id=v_test;
+  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: expected one saved test requirement, got %',v_count; END IF;
+
+  BEGIN
+    PERFORM rebuild_v2.save_test_content(v_test,'[{"title":"x","description":"bad"}]'::jsonb,'[]'::jsonb);
+    RAISE EXCEPTION 'FAIL: malformed test content accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
+  END;
+
   PERFORM rebuild_v2.submit_test_for_review(v_test);
+  BEGIN
+    PERFORM rebuild_v2.save_test_content(v_test,'[]'::jsonb,'[]'::jsonb);
+    RAISE EXCEPTION 'FAIL: submitted test content remained editable';
+  EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
+  END;
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND status='submitted') THEN RAISE EXCEPTION 'FAIL: test submission'; END IF;
 
   BEGIN
@@ -92,8 +124,8 @@ BEGIN
   PERFORM set_config('request.jwt.claims','{"sub":"50000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events
   WHERE target_id IN (v_app,v_test,v_cohort)
-    AND action IN ('app.submitted','app.review.approved','test.created','test.submitted','test.review.approved','cohort.created');
-  IF v_count<>6 THEN RAISE EXCEPTION 'FAIL: expected audit events missing; got %',v_count; END IF;
+    AND action IN ('app.submitted','app.review.approved','test.created','test.content.saved','test.submitted','test.review.approved','cohort.created');
+  IF v_count<>7 THEN RAISE EXCEPTION 'FAIL: expected audit events missing; got %',v_count; END IF;
 END;
 $test$;
 
@@ -105,6 +137,8 @@ SELECT jsonb_build_object(
  'profiles_after_rollback',(SELECT count(*) FROM rebuild_v2.profiles WHERE id IN ('50000000-0000-4000-8000-000000000001','50000000-0000-4000-8000-000000000002','50000000-0000-4000-8000-000000000003')),
  'apps_after_rollback',(SELECT count(*) FROM rebuild_v2.apps WHERE package_name='dz.testdz.lifecycle'),
  'tests_after_rollback',(SELECT count(*) FROM rebuild_v2.tests WHERE title='Lifecycle Test'),
+ 'test_steps_after_rollback',(SELECT count(*) FROM rebuild_v2.test_steps WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
+ 'test_requirements_after_rollback',(SELECT count(*) FROM rebuild_v2.test_requirements WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Lifecycle Test')),
  'cohorts_after_rollback',(SELECT count(*) FROM rebuild_v2.cohorts WHERE name='Lifecycle Cohort'),
  'assignments_after_rollback',(SELECT count(*) FROM rebuild_v2.assignments WHERE tester_id='50000000-0000-4000-8000-000000000003')
 ) AS rollback_cleanup_check;
