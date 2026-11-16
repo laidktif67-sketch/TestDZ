@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { getActiveAssignmentProgressPageData } from "../../../features/tester/tester-api";
+import { getActiveAssignmentProgressPageData, startTesterAssignment, submitTesterDailyCheckin } from "../../../features/tester/tester-api";
 import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -45,7 +45,7 @@ export default function ActiveAssignmentProgressPage(){
     if(!supabaseV2){
      setError("The assignment service is unavailable. Please try again later.");setLoading(false);return;
     }
-    const started=await supabaseV2.rpc("start_assignment",{p_assignment_id:id});
+    const started=await startTesterAssignment(id);
     if(!alive)return;
     if(started.error){
      setError("This test is not ready to start yet. Please try again when its cohort is ready.");setLoading(false);return;
@@ -80,13 +80,12 @@ export default function ActiveAssignmentProgressPage(){
  const handleCheckin=async()=>{
   if(!isTesterWorkflowV2Enabled||!supabaseV2||!assignment||checkinSubmitting)return;
   setCheckinSubmitting(true);setCheckinNotice("");
-  const result=await supabaseV2.rpc("submit_checkin",{p_assignment_id:id,p_note:null});
-  if(result.error||!result.data){
+  const result=await submitTesterDailyCheckin(id);
+  if(!result.recorded){
    setCheckinNotice("Today's check-in could not be recorded. Please try again.");
    setCheckinSubmitting(false);return;
   }
-  const saved=await supabaseV2.from("checkins").select("id,checkin_date").eq("id",result.data).maybeSingle();
-  const savedCheckin=saved.data;
+  const savedCheckin=result.checkin;
   if(savedCheckin){
    setCheckins(current=>[...current.filter(row=>row.id!==savedCheckin.id),{id:savedCheckin.id,checkin_date:savedCheckin.checkin_date,evidence_url:null}].sort((a,b)=>a.checkin_date.localeCompare(b.checkin_date)));
    setCheckinNotice("Your daily check-in has been recorded.");
