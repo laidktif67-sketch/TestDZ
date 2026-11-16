@@ -154,7 +154,9 @@ export default function DeveloperTestsPage() {
     if(!version){setError("أدخل رقم إصدار APK.");return;}
     setBusy(true);setError("");setNotice("");
     try{
-      const result=await uploadDeveloperTestBuild({userId,testId,file:apkFiles[testId] as File,versionLabel:version});
+      const selectedFile=apkFiles[testId] as File;
+      const pendingBuild=testBuilds.find(build=>build.test_id===testId&&build.status==="pending"&&build.version_label===version&&build.original_filename===selectedFile.name&&build.size_bytes===selectedFile.size);
+      const result=await uploadDeveloperTestBuild({userId,testId,file:selectedFile,versionLabel:version,fileId:pendingBuild?.file_id??crypto.randomUUID()});
       if(result.error)setError("تعذر رفع/التحقق من APK ("+result.stage+"): "+result.error.message);
       else{setNotice("تم رفع APK إلى التخزين الخاص والتحقق منه بنجاح.");setApkFiles(rows=>({...rows,[testId]:null}));await load(userId);}
     }catch(uploadError){
@@ -168,7 +170,8 @@ export default function DeveloperTestsPage() {
     if(!title){setError("أدخل عنواناً واضحاً للمرفق.");return;}
     setBusy(true);setError("");setNotice("");
     try{
-      const result=await uploadDeveloperTestAsset({userId,testId,file,title});
+      const pendingAsset=testAssets.find(asset=>asset.test_id===testId&&asset.status==="pending"&&asset.title===title&&asset.original_filename===file.name&&asset.mime_type===file.type&&asset.size_bytes===file.size);
+      const result=await uploadDeveloperTestAsset({userId,testId,file,title,fileId:pendingAsset?.file_id??crypto.randomUUID()});
       if(result.error)setError("تعذر رفع/التحقق من المرفق ("+result.stage+"): "+result.error.message);
       else{setNotice("تم رفع مرفق الاختبار إلى التخزين الخاص والتحقق منه.");setAssetFiles(rows=>({...rows,[testId]:null}));setAssetTitles(rows=>({...rows,[testId]:""}));await load(userId);}
     }catch(uploadError){
