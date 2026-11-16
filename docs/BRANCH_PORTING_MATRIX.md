@@ -1,15 +1,15 @@
 # TestDZ Branch and Feature Porting Matrix
 
 **Reviewed:** 2026-11-16  
-**Candidate baseline:** `rebuild/testdz-v2` — `54c36b5a9d9fcaae5bdc118921b7b5eb142ba9bc`  
+**Candidate baseline:** `rebuild/testdz-v2` — `6a60e6f04ba05d6af6ee962a306e795c39fa2eb7`  
 **Purpose:** Identify useful work in open PRs and side branches without merging incompatible histories.
 
 ## Current GitHub inventory
 
 - Repository visibility: Public.
 - Default branch: `main`.
-- Remote branches returned by GitHub: 47.
-- Open pull requests returned by GitHub: 27; all are Draft.
+- Remote branches returned by GitHub: 49.
+- Open pull requests returned by GitHub: 28; all are Draft.
 - Branch protection: none of the 47 listed branches is protected.
 - V2 remains the candidate consolidation baseline, not yet the default branch or a production-ready release.
 
@@ -17,6 +17,7 @@
 
 | Source PR / branch | Work found | V2 evidence | Decision |
 |---|---|---|---|
+| #44 `fix/v2-algeria-business-date` | Fixes Algeria-local calendar dates in tester discovery, join eligibility, assignment scheduling, and daily check-ins; aligns the check-in default and adds midnight-boundary regression checks | Merged into V2 as `6a60e6f04ba05d6af6ee962a306e795c39fa2eb7`; isolated Rebuild V2 CI and legacy migration CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
 | #42 `chore/v2-agent-governance` | Repository-wide agent rules, engineering roles, consolidation plan | Three documentation files on a V2-based branch | Keep as governance PR; review and merge separately |
 | #33 `feat/developer-create-test-six-step` | Six-step developer wizard, test configuration JSON, app distribution metadata/RPC, draft creation | V2 already has `DeveloperTestsPage`, `test_type`, `create_test` / `update_test` API contracts and modular `apps-api`; no `test_config` contract found in V2 API | Reuse UX/product requirements, but redesign wizard against V2 schema/RPCs; do not port its `public.*` migrations |
 | #32 `feat/admin-dashboard-overview` | Large admin workspace: users, apps, tests, assignments, financial ledger, support, medical exceptions, audit trail, withdrawals | V2 `modules/admin/README.md` is a placeholder stating admin pages are reserved; `App.tsx` only routes `/admin` to generic `TesterSectionPage` and `/admin/developer-reviews` to `DeveloperReviewQueuePage`; no admin feature pages exist | Major V2 feature gap. Inventory route and permission requirements, then implement V2-native admin module in small slices; do not copy the 74-file legacy implementation wholesale |
@@ -69,7 +70,7 @@ The scan covered all 31 committed V2 SQL migration files at the baseline SHA. Th
 
 ## Explicitly not done
 
-- No PR merged, closed, retargeted, or force-pushed.
+- PR #44 was squash-merged into `rebuild/testdz-v2` after isolated database CI passed. No other PR was merged, closed, or retargeted; no branch was force-pushed.
 - No branch deleted.
 - No Production or FixLab database changed by this audit.
 - No migration applied or generated.
