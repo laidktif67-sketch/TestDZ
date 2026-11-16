@@ -358,6 +358,8 @@ A local-runtime compatibility gap was found after the V2 date correction:
 
 The legacy migration workflow is now scoped to PRs targeting `main` or `architecture-v1` and to legacy migration/test/config paths. It starts PostgreSQL only because it runs SQL tests, not API tests. The Rebuild V2 workflow also watches `supabase/seed.sql` and `supabase/config.toml` so future bootstrap/config changes cannot bypass validation.
 
-The existing `project_id` in `supabase/config.toml` remains unchanged and still identifies Production. The seed is local initialization, not a migration, and no remote CLI command, hosted API setting, database schema, data, Auth user, Storage object, or deployment has been changed. PR #45's local Rebuild V2 workflow is pending at the time of this note.
+PR #45 was squash-merged into `rebuild/testdz-v2` as `e8cb30e6494f56af9ecc42be72ba31073d9a49e3`. Both the PR validation [run 43978239147](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43978239147) and the post-merge push validation [run 43978743410](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43978743410) passed. The local seed ran before PostgREST startup; authenticated access to `rebuild_v2.profiles` succeeded and the private schema probe was rejected.
+
+The existing `project_id` in `supabase/config.toml` remains unchanged and still identifies Production. The seed is local initialization, not a migration. No remote CLI command, hosted API setting, database schema, data, Auth user, Storage object, or deployment was changed.
 
 Do not add `rebuild_v2_private` to PostgREST's exposed schema list. The private schema is an internal implementation boundary, not a browser-facing API.
