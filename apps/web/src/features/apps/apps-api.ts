@@ -147,6 +147,32 @@ export function updateDeveloperTest(testId: string, input: Omit<DeveloperTestInp
   });
 }
 
+export interface DeveloperTestStepInput {
+  title: string;
+  description: string;
+  isRequired: boolean;
+}
+
+export interface DeveloperTestRequirementInput {
+  type: "device" | "android_version" | "account" | "network" | "eligibility" | "other";
+  title: string;
+  description: string;
+  isMandatory: boolean;
+}
+
+/** Replace a draft test's ordered steps and requirements atomically through an owner-checked RPC. */
+export function saveDeveloperTestContent(
+  testId: string,
+  steps: DeveloperTestStepInput[],
+  requirements: DeveloperTestRequirementInput[],
+) {
+  return dataClient().rpc("save_test_content", {
+    p_test_id: testId,
+    p_steps: steps,
+    p_requirements: requirements,
+  });
+}
+
 export function submitDeveloperTestForReview(testId: string) {
   return dataClient().rpc("submit_test_for_review", { p_test_id: testId });
 }
