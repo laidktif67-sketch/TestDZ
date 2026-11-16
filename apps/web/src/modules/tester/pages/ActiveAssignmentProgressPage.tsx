@@ -99,8 +99,9 @@ export default function ActiveAssignmentProgressPage(){
    setCheckinSubmitting(false);return;
   }
   const saved=await supabaseV2.from("checkins").select("id,checkin_date").eq("id",result.data).maybeSingle();
-  if(saved.data){
-   setCheckins(current=>[...current.filter(row=>row.id!==saved.data.id),{id:saved.data!.id,checkin_date:saved.data!.checkin_date,evidence_url:null}].sort((a,b)=>a.checkin_date.localeCompare(b.checkin_date)));
+  const savedCheckin=saved.data;
+  if(savedCheckin){
+   setCheckins(current=>[...current.filter(row=>row.id!==savedCheckin.id),{id:savedCheckin.id,checkin_date:savedCheckin.checkin_date,evidence_url:null}].sort((a,b)=>a.checkin_date.localeCompare(b.checkin_date)));
    setCheckinNotice("Your daily check-in has been recorded.");
   }else{
    setCheckinNotice("Check-in was recorded. Refresh to update your history.");
