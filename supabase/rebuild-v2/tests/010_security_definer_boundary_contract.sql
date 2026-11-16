@@ -29,7 +29,7 @@ BEGIN
   WHERE n.nspname IN (
     'pg_catalog', 'rebuild_v2', 'rebuild_v2_private', 'auth', 'storage'
   )
-    AND has_schema_privilege(roles.role_name, n.oid, 'CREATE');
+    AND has_schema_privilege(roles.role_name::name, n.nspname::name, 'CREATE');
 
   IF v_writable_path_schemas <> 0 THEN
     RAISE EXCEPTION 'untrusted roles must not have CREATE on SECURITY DEFINER search-path schemas; found % grants',
