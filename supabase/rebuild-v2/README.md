@@ -63,6 +63,7 @@ The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.
 ## Read-only FixLab parity snapshot (2026-11-16)
 
 - The 47 live `rebuild_v2` table names match the 47 tables created by the 18 candidate scripts.
+- All 439 live column names match the candidate source exactly, table by table; no missing or extra column names were found.
 - All 96 live function names are present in candidate source; candidate source has one additional helper, `rebuild_v2_private.algeria_local_date`, which is the intended fix for the still-unpatched live FixLab check-in date defect.
 - The final 66 policy names across `rebuild_v2` and `storage` match exactly after candidate DROP POLICY statements are applied.
 - All seven application trigger names across `auth` and `rebuild_v2` match exactly. Eleven Storage schema triggers are Supabase-managed and are not application-owned.
