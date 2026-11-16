@@ -40,8 +40,8 @@ for (const directory of pageDirectories) await visit(directory);
 
 if (violations.length) {
   console.error("Page data-boundary violations: UI pages must call feature APIs, not Supabase table/RPC methods.");
-  for (const item of violations) console.error(\`- \${item.file}:\${item.line}: \${item.text}\`);
+  for (const item of violations) console.error("- " + item.file + ":" + item.line + ": " + item.text);
   process.exitCode = 1;
 } else {
-  console.log(\`Page data-boundary check passed: scanned \${pageDirectories.length} page directories; no direct Supabase table/RPC calls found.\`);
+  console.log("Page data-boundary check passed: scanned " + pageDirectories.length + " page directories; no direct Supabase table/RPC calls found.");
 }
