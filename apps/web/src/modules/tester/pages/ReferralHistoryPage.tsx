@@ -28,7 +28,7 @@ export default function ReferralHistoryPage(){
      if(error){setReferralUnavailable(true);}
      else setRecords((data??[]).map((item: any)=>({
       id:item.id,
-      invited_email:"Referred tester "+String(item.referred_user_id).slice(0,8),
+      invited_email:"Referred tester",
       status:item.status,
       created_at:item.created_at,
       detail:"Referral code: "+item.referral_code
