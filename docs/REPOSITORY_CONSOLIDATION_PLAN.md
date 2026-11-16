@@ -207,3 +207,43 @@ This confirms the migration reproducibility blocker remains open. The hosted mig
 4. Build and replay the canonical sequence in a disposable local database; compare the resulting schema and privileges before proposing any hosted reconciliation.
 
 The Supabase CLI v3 changelog was rechecked before this work. CLI v3 defaults database commands to the local stack and requires explicit `--remote` for hosted operations; unattended hosted changes require `--yes`. The existing repository guardrail against linked/remote CLI use remains in force. No SQL was executed, no migration was applied, and no database state was changed during this recheck.
+
+## 15. FixLab function-source and privilege recheck (read-only, 2026-11-16)
+
+A read-only catalog inspection recovered live function definitions from FixLab and checked effective privileges. No function, grant, schema, or data was changed.
+
+### Function and policy inventory
+
+- `rebuild_v2`: 39 functions.
+- `rebuild_v2_private`: 57 functions.
+- `rebuild_v2`: 48 RLS policies.
+- `storage`: 18 policies.
+- Non-internal triggers: 1 in `auth`, 6 in `rebuild_v2`, and 11 in `storage`.
+- Of the 57 private functions, 56 are `SECURITY DEFINER`.
+- Effective privilege check for role `authenticated`: schema `USAGE` on `rebuild_v2_private` is true; 46/57 private functions are executable; 11/57 are not.
+- Effective privilege check for `anon`: zero of the 57 private functions are executable.
+
+### Security interpretation — least-privilege gap, not yet a proven API exploit
+
+The private schema was previously confirmed absent from the PostgREST exposed-schema list. That prevents treating these functions as ordinary exposed RPC endpoints through the configured REST schema list. However, the current database grants still allow `authenticated` to use the schema and directly execute 46 private routines, 46 of which are SECURITY DEFINER. This is broader than the intended "private implementation" boundary and should be treated as a confirmed least-privilege gap.
+
+A direct exploit through the application's current PostgREST route has **not** been demonstrated. Several inspected implementations independently enforce authorization:
+- `grant_role` checks the caller has the admin role and records an audit event.
+- `post_wallet_entry` checks admin/financial role, validates the operation, locks the wallet, enforces idempotency, and records an audit event.
+- `create_test_impl` checks the developer role and ownership of a published app.
+- `review_test_impl` checks admin role and pending-review state.
+- `submit_checkin_impl` checks authenticated identity, assignment ownership, and active status.
+
+These guards reduce the impact of direct invocation for the inspected routines, but do not justify granting broad EXECUTE on private SECURITY DEFINER helpers. Before any grant change, enumerate every caller/dependency and prove wrappers execute as an owner that retains required privileges. Then test that authenticated users cannot invoke private functions directly while public wrapper RPCs continue to work. Do not apply blanket REVOKE statements based only on this inventory.
+
+### Confirmed check-in date defect remains in live FixLab definition
+
+The current live definition of `rebuild_v2_private.submit_checkin_impl` still uses `CURRENT_DATE` in its lookup, insert, and unique-violation recovery paths. The FixLab database session timezone is `UTC`; the inspected timestamp was `2026-11-16 22:48:54+00`, which is `23:48:54` in `Africa/Algiers`. Therefore, during the first hour after midnight in Algeria (00:00–00:59), UTC `CURRENT_DATE` can still represent the previous calendar day. This is a confirmed timezone-dependent defect in the live function definition, although the current read-only sample was not itself inside the rollover hour.
+
+Proposed correction remains to calculate one explicit `v_checkin_date := (now() AT TIME ZONE 'Africa/Algiers')::date` and use it consistently for lookup, insert, and unique-violation recovery. Required tests must simulate UTC 23:xx / Algeria 00:xx, duplicate submissions, and concurrent submissions. No fix was applied.
+
+### Source-recovery boundary
+
+This inspection recovered live definitions for selected high-impact routines and catalog metadata, but not a complete portable schema source. Function definitions alone do not reconstruct table DDL, constraints, indexes, policies, grants, triggers, Storage buckets/object policies, extensions, or migration ordering. Do not create migration files from partial function excerpts. Continue recovering those object classes and their dependencies before generating canonical migrations.
+
+Supabase CLI v3 changelog and migration guidance were checked before this inspection. No CLI command, DDL, DML, grant change, migration, or hosted mutation was performed.
