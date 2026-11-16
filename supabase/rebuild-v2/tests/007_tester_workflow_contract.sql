@@ -161,11 +161,39 @@ BEGIN
     RAISE EXCEPTION 'FAIL: upload policy helper';
   END IF;
 
-  -- Simulate the uploaded private object; this is rolled back with the test.
+  -- Exercise the real Storage INSERT RLS policy as authenticated, not only its helper.
+  PERFORM set_config('role','authenticated',true);
   INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
   VALUES (
     'test-evidence',v_path,v_tester,v_tester::text,
     jsonb_build_object('mimetype','application/pdf','size',1024)
+  );
+
+  -- An unrelated authenticated user must be rejected by the actual INSERT policy.
+  PERFORM set_config('request.jwt.claim.sub',v_other::text,true);
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_other,'role','authenticated')::text,true
+  );
+  BEGIN
+    INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+    VALUES (
+      'test-evidence',
+      replace(v_path,'/' || v_tester::text || '/','/' || v_other::text || '/'),
+      v_other,v_other::text,
+      jsonb_build_object('mimetype','application/pdf','size',1024)
+    );
+    RAISE EXCEPTION 'FAIL: unrelated user passed Storage INSERT RLS policy';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  -- Restore the test harness role for controlled metadata assertions below.
+  PERFORM set_config('role','postgres',true);
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true
   );
 
   -- An object at the right path is not enough: owner, size and MIME must match metadata.
