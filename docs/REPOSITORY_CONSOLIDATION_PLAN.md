@@ -135,7 +135,7 @@ The V2 branch currently has two workflows that both install dependencies, run Ty
 - `.github/workflows/ci.yml` (TestDZ CI): uses `npm install`, runs typecheck/build, and does not run the tester data-boundary check.
 - `.github/workflows/frontend-ci.yml` (Frontend typecheck and build): uses `npm ci`, runs `npm run check:data-boundary`, typecheck, and build; it also has concurrency cancellation and a timeout.
 
-Both workflows were observed running for the same V2 commits. On commit `c5b12ee3f699b1361db0436e64ee2744a82dafb6`, run `43963908283` (TestDZ CI) and run `43963908250` (Frontend typecheck and build) both completed successfully. This confirms duplicate execution, not a failing build. Recommended target: retain one canonical frontend CI workflow with the stricter locked install, boundary check, timeout, and concurrency behavior. Before removing or narrowing the older workflow, inspect all branch and PR consumers (including `main` and `architecture-v1`) and preserve any distinct validation they still require. No workflow was changed in this audit.
+Both workflows were observed running for the same V2 commits. On commit `c5b12ee3f699b1361db0436e64ee2744a82dafb6`, run `43963908283` (TestDZ CI) and run `43963908250` (Frontend typecheck and build) both completed successfully. This confirms duplicate execution, not a failing build. Implemented on this governance branch: `ci.yml` now runs only for pushes and PRs targeting `main` or `architecture-v1`; `frontend-ci.yml` now runs only for pushes and PRs targeting `rebuild/testdz-v2`. This preserves legacy-branch checks while making the V2 workflow the sole frontend CI path for V2 PRs. The V2 workflow retains `npm ci`, the data-boundary check, typecheck, build, timeout, and concurrency cancellation. The older workflow remains in the repository for the legacy branches.
 
 ### Manual migration workflow target mismatch — HIGH RISK
 
@@ -145,4 +145,4 @@ Do not dispatch this workflow. Do not change its secrets, environment, branch gu
 
 ### Validation limits
 
-The workflow files were read from `rebuild/testdz-v2`; recent Actions metadata was inspected read-only. No workflow was dispatched, rerun, edited, or deleted. No migration was applied and no Supabase project was changed.
+The workflow files were read from `rebuild/testdz-v2`; recent Actions metadata was inspected read-only. The two workflow trigger files were edited on this governance branch and read back to verify their branch filters. No workflow was manually dispatched or rerun. No migration was applied and no Supabase project was changed.
