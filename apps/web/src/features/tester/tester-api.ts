@@ -34,7 +34,8 @@ export async function getDiscoverTestsPageData(userId: string) {
   const [profile, wallet, assignments, notifications, testRows] = isTesterWorkflowV2Enabled
     ? await Promise.all([
         client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
-        client.from("wallets").select("earned_points").eq("user_id", userId).maybeSingle(),
+        // Reward posting is disabled in V2; preserve the result shape without reading wallet balances.
+        Promise.resolve({ data: null, error: null }),
         client.from("assignments").select("id,status").eq("tester_id", userId),
         client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
         client.rpc("get_discoverable_tests"),
@@ -152,7 +153,7 @@ export async function getActivityHistoryPageData(userId: string) {
       : client.from("assignments").select("id,status,start_date,completed_at,created_at,test:tests(id,title,status,app:apps(name,icon_url)),checkins(id,checkin_date,created_at)").eq("tester_id", userId).order("created_at", { ascending: false }),
     client.from("feedback").select("id,assignment_id,rating,quality_status,created_at").eq("tester_id", userId).order("created_at", { ascending: false }),
     isTesterWorkflowV2Enabled
-      ? client.from("wallet_ledger").select("amount,reference_id,wallet_type").eq("user_id", userId).eq("wallet_type", "earned_points")
+      ? Promise.resolve({ data: [], error: null })
       : client.from("points_ledger").select("amount,reference_id,wallet_type").eq("user_id", userId).eq("wallet_type", "earned_points"),
     client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
   ]);
