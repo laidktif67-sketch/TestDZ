@@ -44,7 +44,8 @@ export default function SupportTicketDetailsPage(){
  async function sendReply(event:FormEvent<HTMLFormElement>){
   event.preventDefault();const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;if(!client||!user||!ticket||!reply.trim())return;
   setSending(true);setError("");setNotice("");
-  if(!supabase){setSending(false);setError("Storage is unavailable.");return;}\n   if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
+  if(!supabase){setSending(false);setError("Storage is unavailable.");return;}
+   if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
    setSending(false);setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
   }
   const {data:messageData,error:insertError}=isTesterWorkflowV2Enabled ? await client.rpc("send_support_message",{p_ticket_id:ticket.id,p_body:reply.trim()}) : await client.from("support_ticket_messages").insert({ticket_id:ticket.id,sender_id:user.id,body:reply.trim()}).select("id").single();
@@ -63,7 +64,8 @@ export default function SupportTicketDetailsPage(){
  async function openAttachment(item:Attachment){
   const client:any=isTesterWorkflowV2Enabled?supabaseV2:supabase;
   if(!client){return;}setError("");
-  if(!supabase)return;\n   const {data,error:storageError}=await supabase.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
+  if(!supabase)return;
+   const {data,error:storageError}=await supabase.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
   if(storageError||!data?.signedUrl){setError("This attachment is not available or you do not have permission to access it.");return;}
   window.open(data.signedUrl,"_blank","noopener,noreferrer");
  }
