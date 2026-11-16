@@ -70,8 +70,18 @@ BEGIN
     v_test,'60000000-0000-4000-8000-000000000005',
     'Getting started','getting-started.pdf','application/pdf',4096
   );
+  IF rebuild_v2.register_test_asset(
+    v_test,'60000000-0000-4000-8000-000000000005',
+    'Getting started','getting-started.pdf','application/pdf',4096
+  ) IS DISTINCT FROM v_path THEN
+    RAISE EXCEPTION 'FAIL: retry registration did not return the original media path';
+  END IF;
   SELECT id INTO v_asset FROM rebuild_v2.test_assets
   WHERE test_id=v_test AND file_id='60000000-0000-4000-8000-000000000005';
+  IF (SELECT count(*) FROM rebuild_v2.test_assets
+      WHERE test_id=v_test AND file_id='60000000-0000-4000-8000-000000000005')<>1 THEN
+    RAISE EXCEPTION 'FAIL: retry registration duplicated media metadata';
+  END IF;
 
   IF NOT rebuild_v2_private.can_upload_test_asset(v_path) THEN
     RAISE EXCEPTION 'FAIL: owner cannot upload registered media asset';
