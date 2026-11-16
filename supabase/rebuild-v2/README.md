@@ -43,6 +43,8 @@ After all 18 scripts, run:
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 18 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the final-state/workflow contracts. It never connects to a hosted project.
+
 The developer lifecycle contract validates app submission and admin-only approval, test creation/submission and admin-only approval, test content authoring, cohort lifecycle, minimum tester readiness, private APK registration/upload verification/participant download, tester join, and audit-event creation. The tester workflow contract covers ownership isolation, idempotency, capacity enforcement, schedule-window enforcement, evidence ownership/metadata verification, and rollback cleanup.
 
 ## Current validation boundary

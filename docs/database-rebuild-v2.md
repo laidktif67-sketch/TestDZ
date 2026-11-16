@@ -40,7 +40,7 @@ The model covers identity and authorization, developer apps and tests, tester as
 1. **Clean replay:** apply all 18 scripts in numeric order to a disposable empty Supabase local stack and confirm the final 47-table/seven-bucket contract passes.
 2. **Contract suite:** run the phase-one security contract after 001–006, then run the final-state and workflow contracts after 001–018.
 3. **Frontend compatibility:** complete the route/API-to-SQL mapping, including roles, tester rewards, referrals, reports, leaderboard privacy, and admin workflows.
-4. **CI:** add an isolated workflow that applies the candidate scripts themselves; the existing migration workflow only tests `supabase/migrations` and does not validate this candidate directory.
+4. **CI:** the new `.github/workflows/rebuild-v2-tests.yml` applies the 18 candidate scripts to a disposable local Supabase stack and runs the phase-one and final contract suites. Its first GitHub Actions run must pass before this gate is considered complete.
 5. **Backup and restore:** verify a restorable Production backup and rehearse restoration before any production migration.
 6. **Data preservation:** approve explicit mappings for existing Auth users, Storage buckets/objects, and any data that must be retained.
 7. **Cutover and rollback:** prepare a tested rollback plan and obtain explicit approval before any Production action.
