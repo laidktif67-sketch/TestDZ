@@ -66,7 +66,7 @@ export default function NotificationPreferencesPage() {
   useEffect(() => {
     if (!user || !supabase) return;
     let alive = true;
-    const client = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
+    const client: any = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
     if (!client) {
       setError("V2 profile settings are unavailable because the V2 client is not initialized.");
       return;
