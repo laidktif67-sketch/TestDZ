@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { getFeedbackHistoryPageData } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../components/TesterSidebar";
 import { Icon } from "../components/TesterSidebar";
@@ -72,59 +72,28 @@ export default function FeedbackHistoryPage() {
     async function load() {
       setLoading(true);
       setError("");
-      const client = supabase!;
-      if (isTesterWorkflowV2Enabled && supabaseV2) {
-        const [profileResult, feedbackResult] = await Promise.all([
-          supabaseV2.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
-          supabaseV2.from("feedback")
-            .select("id,assignment_id,rating,body,category,quality_status,reviewed_at,created_at,assignment:assignments(id,test:tests(id,title,app:apps(name,icon_url)))")
-            .eq("tester_id", session!.user.id)
-            .order("created_at", { ascending: false })
-        ]);
-        if (!alive) return;
-        if (profileResult.data) {
-          setName(profileResult.data.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
-          setAvatar(profileResult.data.avatar_url || "");
-        } else {
-          setName(session!.user.email?.split("@")[0] || "Tester");
-        }
-        if (feedbackResult.error) {
-          setError("We couldn't load your feedback history. Please try again.");
-          setRows([]);
-        } else {
-          setRows((feedbackResult.data ?? []) as unknown as FeedbackRow[]);
-        }
-        setLedger([]);
-        if (profileResult.error) setError("Some profile information could not be loaded.");
-        setLoading(false);
-        return;
-      }
-      const [profileResult, feedbackResult, ledgerResult] = await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
-        client.from("feedback")
-          .select("id,assignment_id,rating,body,category,quality_status,reviewed_at,created_at,assignment:assignments(id,test:tests(id,title,app:apps(name,icon_url)))")
-          .eq("tester_id", session!.user.id)
-          .order("created_at", { ascending: false }),
-        client.from("points_ledger").select("amount,reference_id,reference_type")
-          .eq("user_id", session!.user.id).eq("wallet_type", "earned_points")
-      ]);
+      const result = await getFeedbackHistoryPageData(session!.user.id);
       if (!alive) return;
-      if (profileResult.data) {
-        setName(profileResult.data.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
-        setAvatar(profileResult.data.avatar_url || "");
+      if (result.profileResult.data) {
+        setName(result.profileResult.data.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
+        setAvatar(result.profileResult.data.avatar_url || "");
       } else {
         setName(session!.user.email?.split("@")[0] || "Tester");
       }
-      if (feedbackResult.error) {
+      if (result.feedbackResult.error) {
         setError("We couldn't load your feedback history. Please try again.");
         setRows([]);
       } else {
-        setRows((feedbackResult.data ?? []) as unknown as FeedbackRow[]);
+        setRows((result.feedbackResult.data ?? []) as unknown as FeedbackRow[]);
       }
-      if (!ledgerResult.error) setLedger((ledgerResult.data ?? []) as LedgerRow[]);
+      if (result.ledgerResult && !result.ledgerResult.error) setLedger((result.ledgerResult.data ?? []) as LedgerRow[]);
+      else setLedger([]);
+      if (result.profileResult.error) setError("Some profile information could not be loaded.");
       setLoading(false);
     }
-    void load();
+    void load().catch(() => {
+      if (alive) { setError("Something went wrong while loading feedback history."); setLoading(false); }
+    });
     return () => { alive = false; };
   }, [session?.user?.id]);
 
