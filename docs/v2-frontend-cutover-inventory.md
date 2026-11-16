@@ -67,5 +67,5 @@ The following pages still contain direct database access and/or explicit legacy 
 ## Verification status
 
 - The existing isolated SQL CI run remains successful for 18 scripts and 9 SQL contracts.
-- The new frontend CI workflow has been added. Its initial run failed at typecheck on the helper return type before the follow-up correction; do not mark frontend typecheck/build as passing until a subsequent run confirms it.
+- The new frontend CI workflow passed on commit `589fa2a8d2f69e4f2a208493fe4eb7fb7362d75e`: `npm ci`, TypeScript typecheck, and production build all succeeded. Workflow run: `43946437297`.
 - No database writes, hosted schema changes, Vercel environment changes, deployments, PR #18 edits, or Production changes were made in this pass.
