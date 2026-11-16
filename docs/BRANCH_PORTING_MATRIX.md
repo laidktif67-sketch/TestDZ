@@ -173,3 +173,5 @@ The earlier seven-function gap refers to **missing committed migration definitio
 | `finalize_assignment_submission` | `p_submission_id uuid` | `boolean` | Yes |
 
 Each exposed wrapper had `authenticated` EXECUTE and `anon` EXECUTE false in the FixLab catalog snapshot. The submission wrappers delegate to private implementation functions. This catalog inventory is not a replacement for extracting the full function bodies, grants, dependent tables, triggers, indexes, RLS policies, and Storage policies into reviewed migration files.
+
+A read-only boundary calculation was verified against FixLab: UTC `2026-11-15 23:30` converts to Algeria local hour `00` and business date `2026-11-16`, while its UTC date remains `2026-11-15`. This confirms the proposed date expression crosses the intended calendar boundary in the live database runtime.
