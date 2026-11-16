@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { getTesterSupportTicketDetails, sendTesterSupportMessage, addTesterSupportAttachment } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
