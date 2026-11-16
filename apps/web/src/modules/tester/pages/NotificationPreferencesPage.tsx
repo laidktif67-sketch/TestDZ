@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { profilesApi } from "../../../features/profiles/profiles-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -66,13 +66,8 @@ export default function NotificationPreferencesPage() {
   useEffect(() => {
     if (!user || !supabase) return;
     let alive = true;
-    const client: any = isTesterWorkflowV2Enabled ? supabaseV2 : supabase;
-    if (!client) {
-      setError("V2 profile settings are unavailable because the V2 client is not initialized.");
-      return;
-    }
     Promise.all([
-      client.from("profiles").select("display_name,avatar_url").eq("id", user.id).maybeSingle(),
+      profilesApi.getHeaderProfile(user.id),
       Promise.resolve(user.user_metadata?.testdz_notification_center_preferences as Partial<Preferences> | undefined)
     ]).then(([profile, saved]) => {
       if (!alive) return;
