@@ -162,3 +162,7 @@ This decision establishes the target architecture. It does not certify applicati
 - The API module preserves the current legacy/V2 query differences without changing DB contracts or turning on rewards. In V2, discovery continues through `get_discoverable_tests`; assignment timestamps are mapped from `started_at/assigned_at`; reward balances remain display-only and reward posting stays disabled.
 - Verification on commit `74749b107773367afe88f9ad9e58ef2b6dbe254f`: frontend CI run `43947071159` passed (`npm ci`, TypeScript, production build); TestDZ CI run `43947070976` passed.
 - Remaining page-level database access is still present in assignment progress/submission, check-in/activity/feedback history, leaderboard, wallet, support, notification, privacy export, referrals, and withdrawal-display routes. The feature flag and legacy fallback remain required until those routes are migrated and the isolated PostgREST smoke test is complete.
+
+
+- Follow-up: moved `ActivityHistoryPage.tsx` database reads into `getActivityHistoryPageData()` in the same tester feature API module. The page now retains only Auth/session access; V2 uses `wallet_ledger` and the legacy path continues to use `points_ledger` inside the API boundary.
+- Verification on commit `9ffa3907b24cb796c9aec5f68d8068699a462ba2`: frontend CI run `43947466076` passed and TestDZ CI run `43947466077` passed, including TypeScript and production build.
