@@ -61,6 +61,14 @@ BEGIN
  PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000003',true);
  PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
  v_assignment:=rebuild_v2.join_test(v_test);
+ PERFORM set_config('testdz.cohort_id',v_cohort::text,true);
+ PERFORM set_config('testdz.assignment_id',v_assignment::text,true);
+ PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000001',true);
+ PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+ PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Minimum tester count reached');
+ PERFORM rebuild_v2.transition_test_cohort(v_cohort,'running','Begin feedback privacy contract');
+ PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000003',true);
+ PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
  PERFORM rebuild_v2.start_assignment(v_assignment);
  v_feedback:=rebuild_v2.submit_tester_feedback(
   v_assignment,'usability',
