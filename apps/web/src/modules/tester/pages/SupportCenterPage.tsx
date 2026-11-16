@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getTesterSupportTickets, createTesterSupportTicket } from "../../../features/tester/tester-api";
+import { getTesterSupportTickets, createTesterSupportTicket } from "../../../features/support/support-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
