@@ -5,6 +5,42 @@
 
 BEGIN;
 
+-- Regression: UTC 23:30 is already the next calendar day in Algeria (UTC+1).
+-- A UTC session CURRENT_DATE would incorrectly remain on the previous date.
+DO $date_boundary$
+DECLARE
+  v_checkin_default text;
+BEGIN
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:30:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must roll over at UTC 23:00';
+  END IF;
+  IF rebuild_v2_private.algeria_local_date('2026-11-16 00:30:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must remain on the new local day';
+  END IF;
+  IF rebuild_v2_private.algeria_local_date('2026-11-16 22:30:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must remain on the current local day';
+  END IF;
+
+  SELECT pg_get_expr(d.adbin, d.adrelid)
+  INTO v_checkin_default
+  FROM pg_attrdef d
+  JOIN pg_attribute a
+    ON a.attrelid = d.adrelid
+   AND a.attnum = d.adnum
+  WHERE d.adrelid = 'rebuild_v2.checkins'::regclass
+    AND a.attname = 'checkin_date';
+
+  IF v_checkin_default IS NULL
+     OR position('Africa/Algiers' IN v_checkin_default) = 0 THEN
+    RAISE EXCEPTION 'FAIL: check-in date default must use Algeria local time; got %',
+      v_checkin_default;
+  END IF;
+END;
+$date_boundary$;
+
 INSERT INTO auth.users
   (id,aud,role,email,encrypted_password,email_confirmed_at,
    raw_app_meta_data,raw_user_meta_data,created_at,updated_at)

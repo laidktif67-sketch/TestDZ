@@ -247,7 +247,7 @@ CREATE TABLE rebuild_v2.checkins (
 id uuid DEFAULT gen_random_uuid() NOT NULL,
   assignment_id uuid NOT NULL,
   tester_id uuid NOT NULL,
-  checkin_date date DEFAULT CURRENT_DATE NOT NULL,
+  checkin_date date DEFAULT ((now() AT TIME ZONE 'Africa/Algiers'::text))::date NOT NULL,
   note text,
   evidence_path text,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
