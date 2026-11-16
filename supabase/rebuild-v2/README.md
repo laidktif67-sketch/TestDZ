@@ -60,6 +60,14 @@ The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.
 - Read-only FixLab inventory confirmed 47 candidate tables, RLS and FORCE RLS on all 47, 439 columns, 297 constraints, 157 indexes, 48 candidate policies, 96 candidate functions (39 exposed-schema and 57 private-schema functions), six candidate triggers, seven Storage buckets, and 18 Storage object policies.
 - FixLab's current hosted migration history still contains 21 records. It has not been repaired or reset.
 
+## Read-only FixLab parity snapshot (2026-11-16)
+
+- The 47 live `rebuild_v2` table names match the 47 tables created by the 18 candidate scripts.
+- All 96 live function names are present in candidate source; candidate source has one additional helper, `rebuild_v2_private.algeria_local_date`, which is the intended fix for the still-unpatched live FixLab check-in date defect.
+- The final 66 policy names across `rebuild_v2` and `storage` match exactly after candidate DROP POLICY statements are applied.
+- All seven application trigger names across `auth` and `rebuild_v2` match exactly. Eleven Storage schema triggers are Supabase-managed and are not application-owned.
+- This is object-name parity only. Column/default, constraint, index, function-body/signature, grant, bucket, and policy-expression parity remains a required gate.
+
 ## Remaining validation gates
 
 1. **Exact live-to-clean comparison:** compare the complete catalog definitions (columns, constraints, indexes, function bodies/security attributes, policies, grants, triggers, and Storage configuration) between FixLab and a clean replay. The successful CI replay proves the scripts build cleanly and pass contracts; it does not by itself prove byte-for-byte catalog equivalence with the hosted FixLab schema.
