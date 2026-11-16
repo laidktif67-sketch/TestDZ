@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
-import { isTesterWorkflowV2Enabled, supabaseV2 } from "../../../lib/supabase-v2";
+import { getCheckInHistoryPageData } from "../../../features/tester/tester-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -80,71 +80,29 @@ export default function CheckInHistoryPage() {
   useEffect(() => {
     if (!session?.user?.id || !supabase) { setLoading(false); return; }
     let alive = true;
-    const client = supabase;
     async function load() {
       setLoading(true);
       setRefreshing(true);
       setError("");
-      if (isTesterWorkflowV2Enabled && supabaseV2) {
-        const [profile, checkins, notice] = await Promise.all([
-          supabaseV2.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
-          supabaseV2.from("checkins")
-            .select("id,assignment_id,checkin_date,created_at,note,evidence_path,assignment:assignments(id,status,test:tests(id,title,status,app:apps(name,icon_url)))")
-            .eq("tester_id", session!.user.id)
-            .order("checkin_date", { ascending: false }),
-          supabaseV2.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", session!.user.id).is("read_at", null)
-        ]);
-        if (!alive) return;
-        setName(profile.data?.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
-        setAvatar(profile.data?.avatar_url || "");
-        if (checkins.error) {
-          setError("We couldn't load your check-in history. Please refresh and try again.");
-          setRows([]);
-        } else {
-          const source = (checkins.data ?? []) as unknown as Omit<CheckinRow, "points">[];
-          setRows(source.map(row => ({ ...row, evidence_url: null, points: 0 })));
-        }
-        setNotifications(notice.count ?? 0);
-        if (profile.error || notice.error) setError("Some check-in information could not be loaded.");
-        setLoading(false);
-        setRefreshing(false);
-        return;
-      }
-      const [profile, checkins, notice] = await Promise.all([
-        client.from("profiles").select("display_name,avatar_url").eq("id", session!.user.id).maybeSingle(),
-        client.from("checkins")
-          .select("id,assignment_id,checkin_date,created_at,note,evidence_url,assignment:assignments(id,status,test:tests(id,title,status,app:apps(name,icon_url)))")
-          .eq("tester_id", session!.user.id)
-          .order("checkin_date", { ascending: false }),
-        client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", session!.user.id).is("read_at", null)
-      ]);
+      const result = await getCheckInHistoryPageData(session!.user.id);
       if (!alive) return;
-      setName(profile.data?.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
-      setAvatar(profile.data?.avatar_url || "");
-      if (checkins.error) {
+      setName(result.profile.data?.display_name?.trim() || session!.user.email?.split("@")[0] || "Tester");
+      setAvatar(result.profile.data?.avatar_url || "");
+      if (result.checkins.error) {
         setError("We couldn't load your check-in history. Please refresh and try again.");
         setRows([]);
       } else {
-        const source = (checkins.data ?? []) as unknown as Omit<CheckinRow, "points">[];
-        const ids = source.map(row => row.id);
-        let pointTotals: Record<string, number> = {};
-        if (ids.length) {
-          const ledger = await client.from("points_ledger")
-            .select("amount,reference_id")
-            .eq("user_id", session!.user.id)
-            .eq("wallet_type", "earned_points")
-            .in("reference_id", ids);
-          if (ledger.data) {
-            pointTotals = ledger.data.reduce((acc, item) => {
-              if (item.reference_id) acc[item.reference_id] = (acc[item.reference_id] || 0) + Number(item.amount || 0);
-              return acc;
-            }, {} as Record<string, number>);
-          }
+        const source = (result.checkins.data ?? []) as unknown as Omit<CheckinRow, "points">[];
+        const pointTotals: Record<string, number> = {};
+        if (result.ledger?.data) {
+          result.ledger.data.forEach((item: { reference_id: string | null; amount: number | string | null }) => {
+            if (item.reference_id) pointTotals[item.reference_id] = (pointTotals[item.reference_id] || 0) + Number(item.amount || 0);
+          });
         }
-        if (!alive) return;
-        setRows(source.map(row => ({ ...row, points: pointTotals[row.id] || 0 })));
+        setRows(source.map(row => ({ ...row, evidence_url: result.isV2 ? null : row.evidence_url, points: pointTotals[row.id] || 0 })));
       }
-      setNotifications(notice.count ?? 0);
+      setNotifications(result.notice.count ?? 0);
+      if (result.profile.error || result.notice.error) setError("Some check-in information could not be loaded.");
       setLoading(false);
       setRefreshing(false);
     }
