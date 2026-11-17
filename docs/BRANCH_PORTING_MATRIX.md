@@ -8,9 +8,9 @@
 
 - Repository visibility: Public.
 - Default branch: `main`.
-- Remote branches returned by GitHub: 51.
-- Open pull requests returned by GitHub: 28; all are Draft.
-- Branch protection: none of the 47 listed branches is protected.
+- Remote branches returned by GitHub: 53.
+- Open pull requests returned by GitHub: 29; all are Draft.
+- Branch-protection inventory from the previous review is stale; refresh it before any branch deletion or consolidation.
 - V2 remains the candidate consolidation baseline, not yet the default branch or a production-ready release.
 
 ## Feature porting decisions
@@ -19,8 +19,11 @@
 |---|---|---|---|
 | #46 `test/v2-security-definer-boundaries` | Adds a final-state SQL contract for SECURITY DEFINER search_path, owner, schema USAGE, and no-CREATE boundaries | Merged into V2 as `e98e13d806d574b30ef163ff059dfbc4dd2e9733`; PR and post-merge Rebuild V2 CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
 | #45 `fix/local-postgrest-v2-schema` | Aligns local PostgREST exposure with the V2 frontend schema selector; adds a local schema bootstrap and HTTP checks for exposed `rebuild_v2` and hidden `rebuild_v2_private` | Merged into V2 as `e8cb30e6494f56af9ecc42be72ba31073d9a49e3`; PR and post-merge Rebuild V2 CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
-| #44 `fix/v2-algeria-business-date` | Fixes Algeria-local calendar dates in tester discovery, join eligibility, assignment scheduling, and daily check-ins; aligns the check-in default and adds midnight-boundary regression checks | Merged into V2 as `6a60e6f04ba05d6af6ee962a306e795c39fa2eb7`; isolated Rebuild V2 CI and legacy migration CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
-| #42 `chore/v2-agent-governance` | Repository-wide agent rules, engineering roles, consolidation plan | Three documentation files on a V2-based branch | Keep as governance PR; review and merge separately |
+| #47 `fix/v2-restrict-private-rpc-exec` | Revokes authenticated EXECUTE from three unwrapped role-management implementations while preserving wallet posting and policy-helper grants | Merged into V2 as `baa6e7e5f168353dc71ede1ad692730dfec4821f`; isolated Rebuild V2 CI run `43982190131` passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
+| #44 `fix/v2-algeria-business-date` | Fixes Algeria-local calendar dates in tester discovery, join eligibility, assignment scheduling, and daily check-ins; aligns the check-in default and adds midnight-boundary regression checks | Merged into V2; isolated Rebuild V2 CI and legacy migration CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
+| #48 `audit/v2-catalog-fingerprint` | Adds read-only catalog fingerprint and drill-down contracts to compare V2 candidate with FixLab | Candidate and FixLab hashes match for comparable columns, constraints (excluding two parenthesis-only CHECK deltas), indexes, functions, V2 policies, application triggers, and six buckets; run `44111066461` passed | Keep Draft; the 12 legacy Storage policies and `app-icons` bucket conflict remain separately documented; no cutover/merge yet |
+| #43 `chore/v2-repository-hygiene` | Adds root `.gitignore` rules for generated artifacts and local environments | One-file hygiene-only Draft PR | Keep Draft; review before merging with governance |
+| #42 `chore/v2-agent-governance` | Repository-wide agent rules, engineering roles, consolidation plan, FixLab catalog parity, migration provenance, and Production legacy Storage review | Documentation branch; latest commit `057844fef90aaf50b2451f876dfeb8802277b897`; CI is pending | Keep Draft; review and merge separately |
 | #33 `feat/developer-create-test-six-step` | Six-step developer wizard, test configuration JSON, app distribution metadata/RPC, draft creation | V2 already has `DeveloperTestsPage`, `test_type`, `create_test` / `update_test` API contracts and modular `apps-api`; no `test_config` contract found in V2 API | Reuse UX/product requirements, but redesign wizard against V2 schema/RPCs; do not port its `public.*` migrations |
 | #32 `feat/admin-dashboard-overview` | Large admin workspace: users, apps, tests, assignments, financial ledger, support, medical exceptions, audit trail, withdrawals | V2 `modules/admin/README.md` is a placeholder stating admin pages are reserved; `App.tsx` only routes `/admin` to generic `TesterSectionPage` and `/admin/developer-reviews` to `DeveloperReviewQueuePage`; no admin feature pages exist | Major V2 feature gap. Inventory route and permission requirements, then implement V2-native admin module in small slices; do not copy the 74-file legacy implementation wholesale |
 | #31 `feat/developer-report-review` | Developer review of tester reports | V2 has `DeveloperReviewQueuePage` and feature APIs; exact parity of review detail/actions not yet proven | Compare workflows and contracts; port only missing states/actions after checking V2 RPC authorization |
@@ -72,7 +75,7 @@ The scan covered all 31 committed V2 SQL migration files at the baseline SHA. Th
 
 ## Explicitly not done
 
-- PR #44, PR #45, and PR #46 were squash-merged into `rebuild/testdz-v2` after their isolated Rebuild V2 CI checks passed. No other PR was merged, closed, or retargeted; no branch was force-pushed.
+- PR #44, PR #45, PR #46, and PR #47 were squash-merged into `rebuild/testdz-v2` after their isolated Rebuild V2 CI checks passed. PR #42, #43, and #48 remain Draft. PR #18 remains open and dirty; do not merge or delete it. No other PR was merged, closed, or retargeted; no branch was force-pushed.
 - No branch deleted.
 - No Production or FixLab database changed by this audit.
 - No migration applied or generated.
