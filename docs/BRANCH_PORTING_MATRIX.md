@@ -241,3 +241,14 @@ The live wrapper/implementation privilege shape also differs by workflow, as exp
 The live catalog review also confirmed the relevant workflow tables have both RLS and FORCE RLS enabled, authenticated SELECT only, and no direct authenticated INSERT/UPDATE/DELETE privileges. The `test-evidence` bucket is private with a 10 MiB object limit. Storage policies use dedicated upload/read helper functions. These facts support the intended server-mediated workflow but do not replace replay tests.
 
 **Next gate:** build a per-object parity ledger comparing each candidate definition with the hosted wrapper and implementation (definition hash + reviewed semantic diff), then capture helper dependencies, grants, policies, indexes, constraints, and Storage metadata assumptions. Do not generate or apply migrations until this ledger and clean isolated replay tests are complete. No hosted SQL, data, or migration history was changed during this review.
+
+
+### FixLab advisor snapshot and effective access check (read-only, 2026-11-17)
+
+Supabase advisors were refreshed after the function/catalog inspection:
+- **Security:** one INFO lint, `rls_enabled_no_policy`, count 4: legacy `public.audit_logs`, `public.fraud_reviews`, `public.platform_config`, and `public.user_roles`.
+- A direct privilege check confirmed all four tables have RLS enabled and grant neither SELECT nor INSERT/UPDATE/DELETE to `anon` or `authenticated`. Their no-policy state is therefore default-deny for those API roles in the inspected catalog; this is not evidence of an anonymous data leak. Keep the tables restricted and decide whether trusted backend access needs an explicit, narrowly scoped path.
+- **Performance:** `unindexed_foreign_keys` count 33 and `unused_index` count 20 across the project. The unindexed-FK findings include V2 submission/attachment identity foreign keys and several legacy `public` relations. The unused-index findings include V2 indexes such as `assignment_submissions_tester_created_idx`, `assignment_submission_attachments_assignment_idx`, and `events_dispatch_v2`.
+- Do not bulk-create indexes from the advisor output or delete indexes labeled unused. Review actual query plans, workload, and FK update/delete patterns first; the unused-index sample may reflect a lightly exercised FixLab database.
+
+This is an advisor snapshot, not a migration or remediation. No grants, policies, indexes, or table data were changed.
