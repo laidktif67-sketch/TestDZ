@@ -709,3 +709,33 @@ FixLab's 21 history entries include sandbox bootstrap, pgtap setup, V2 sandbox n
 - Preserve the current Production and FixLab ledgers unchanged until a separately approved, tested migration-baseline strategy exists.
 
 No hosted schema, migration ledger, data, Storage, or deployment was changed during this comparison.
+
+
+## 25. Private RPC execute privilege matrix (read-only FixLab, 2026-11-17)
+
+A fresh read-only catalog check on FixLab returned:
+
+| Check | Result |
+|---|---:|
+| Functions in `rebuild_v2_private` | 57 |
+| `authenticated` has schema USAGE | Yes |
+| `anon` has schema USAGE | No |
+| Private functions executable by `authenticated` | 46 / 57 |
+| Private functions executable by `anon` | 0 / 57 |
+| PostgREST exposed schemas | `public,storage,rebuild_v2` |
+| `rebuild_v2_private` exposed through PostgREST | No |
+
+The 46 grants must not be blanket-revoked. Many private implementations are called by `SECURITY INVOKER` wrappers, and Storage policy predicates need EXECUTE on their helper functions. The private schema is not PostgREST-exposed in FixLab, so the observed grants do not by themselves demonstrate a callable REST endpoint.
+
+### Confirmed candidate hardening
+
+Merged V2 PR #47 adds explicit authenticated EXECUTE revokes for the unwrapped role-management implementations `grant_role`, `request_developer_role`, and `review_role_request`, and the candidate contract `010_security_definer_boundary_contract.sql` asserts those direct grants are absent. The FixLab hosted project has not received that patch; its current live ACLs still show those three functions executable by `authenticated`.
+
+`post_wallet_entry` remains an explicit exception in the candidate because the wallet idempotency contract invokes it under an authenticated financial context. It has no exposed V2 wrapper, is guarded by an admin/financial role check and idempotency validation, and the private schema is not exposed through PostgREST. This exception should remain isolated until a deliberate wallet RPC/backend contract is approved; do not add a broad private-schema exposure to make it callable.
+
+### Decision
+
+- Keep the current narrow per-function grants; do not use blanket `REVOKE EXECUTE ON ALL FUNCTIONS`.
+- Preserve the candidate contract that blocks direct calls to unwrapped role-management internals.
+- Before a FixLab patch, enumerate wrapper, trigger, policy, and function-body dependencies and test every intended wrapper/Storage path after the ACL change.
+- No FixLab or Production grants, schema settings, functions, or data were changed by this review.
