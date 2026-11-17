@@ -1,6 +1,6 @@
 -- Read-only fingerprint of the final V2 catalog.
 -- Run after candidate scripts 001..018. Excludes the two known live/candidate date-delta functions:
--- algeria_local_date (candidate-only), the four tester business-date implementations, and checkins.checkin_date's Algeria-local default intentionally patched only in candidate.
+-- Known date deltas: candidate-only algeria_local_date, four tester business-date implementations, and checkins.checkin_date's Algeria-local default. Also excludes legacy Storage policies inherited from supabase/migrations (only *_v2 policies are part of this V2 fingerprint) and app-icons runtime metadata because the legacy migration pre-seeds 500000 bytes while V2 source/FixLab specify 524288.
 -- Compare this output with the same query on FixLab before any hosted baseline or patch operation.
 
 WITH
@@ -48,7 +48,7 @@ pol AS (
         coalesce(pg_get_expr(pol.polqual,pol.polrelid),'')||':'||
         coalesce(pg_get_expr(pol.polwithcheck,pol.polrelid),'') AS item
  FROM pg_policy pol JOIN pg_class c ON c.oid=pol.polrelid
- JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='rebuild_v2' OR (n.nspname='storage' AND c.relname='objects')
+ JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='rebuild_v2' OR (n.nspname='storage' AND c.relname='objects' AND right(pol.polname,3)='_v2')
 ),
 trig AS (
  SELECT n.nspname||'.'||c.relname||':'||t.tgname||':'||pg_get_triggerdef(t.oid)||':'||
@@ -62,13 +62,14 @@ buck AS (
  SELECT id||':'||name||':'||public::text||':'||coalesce(file_size_limit::text,'')||':'||
         coalesce((SELECT string_agg(mime,',' ORDER BY mime) FROM unnest(allowed_mime_types) AS mime),'') AS item
  FROM storage.buckets
+ WHERE id <> 'app-icons'
 )
 SELECT jsonb_pretty(jsonb_build_object(
  'columns',jsonb_build_object('count',(select count(*) from cols),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from cols),''))),
  'constraints',jsonb_build_object('count',(select count(*) from cons),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from cons),''))),
  'indexes',jsonb_build_object('count',(select count(*) from idx),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from idx),''))),
  'functions_excluding_known_date_delta',jsonb_build_object('count',(select count(*) from funcs),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from funcs),''))),
- 'policies',jsonb_build_object('count',(select count(*) from pol),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from pol),''))),
+ 'v2_policies',jsonb_build_object('count',(select count(*) from pol),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from pol),''))),
  'application_triggers',jsonb_build_object('count',(select count(*) from trig),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from trig),''))),
- 'storage_buckets',jsonb_build_object('count',(select count(*) from buck),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from buck),''))
+ 'storage_buckets_excluding_legacy_app_icons',jsonb_build_object('count',(select count(*) from buck),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from buck),''))
 ))) AS catalog_fingerprint;
