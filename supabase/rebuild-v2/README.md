@@ -22,12 +22,13 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `016_private_developer_feedback.sql`: owner-scoped developer feedback RPCs, sanitized tester labels, and removal of developer access to raw assignments, check-ins and feedback.
 - `017_enforce_assignment_schedule.sql`: enforces test/cohort schedule windows when starting an assignment while preserving safe idempotent retries.
 - `018_verify_submission_evidence_metadata.sql`: verifies evidence object ownership, MIME type, and size before final submission completion.
+- `019_notification_recipient_roles.sql`: restores tester/developer notification feed separation, role-aware reads, and role-scoped read-state RPCs.
 
 ## Apply and test order
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 18 scripts in numeric order, from `001_schema.sql` through `018_verify_submission_evidence_metadata.sql`.
+Apply all 19 scripts in numeric order, from `001_schema.sql` through `019_notification_recipient_roles.sql`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
@@ -42,9 +43,9 @@ After all 18 scripts, run:
 - `tests/008_developer_feedback_privacy_contract.sql`
 - `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
 
-The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. All contract tests use rolled-back transactions; the final-state contract is read-only.
+The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 18 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the eight post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 19 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the eight post-phase contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
