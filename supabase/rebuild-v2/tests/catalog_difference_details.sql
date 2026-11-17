@@ -30,6 +30,8 @@ groups AS (
 )
 SELECT jsonb_pretty(jsonb_build_object(
  'objects',(SELECT jsonb_agg(jsonb_build_object('kind',kind,'object',object_name,'count',item_count,'md5',fingerprint) ORDER BY kind,object_name) FROM groups),
+ 'constraint_items',(SELECT jsonb_agg(item ORDER BY item) FROM cons WHERE object_name IN ('apps','report_attachments')),
+ 'storage_policy_names',(SELECT jsonb_agg(pol.polname ORDER BY pol.polname) FROM pg_policy pol JOIN pg_class c ON c.oid=pol.polrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='storage' AND c.relname='objects'),
  'buckets',(SELECT jsonb_agg(id||':'||name||':'||public::text||':'||coalesce(file_size_limit::text,'')||':'||
         coalesce((SELECT string_agg(mime,',' ORDER BY mime) FROM unnest(allowed_mime_types) AS mime),'') ORDER BY id)
         FROM storage.buckets)
