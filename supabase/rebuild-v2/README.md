@@ -57,9 +57,34 @@ The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.
 - Read-only FixLab inventory confirmed 47 candidate tables, RLS and FORCE RLS on all 47, 439 columns, 297 constraints, 157 indexes, 48 candidate policies, 96 candidate functions (39 exposed-schema and 57 private-schema functions), six candidate triggers, seven Storage buckets, and 18 Storage object policies.
 - FixLab's current hosted migration history still contains 21 records. It has not been repaired or reset.
 
+## Catalog parity checkpoint (2026-11-17)
+
+PR #48 added deterministic catalog fingerprints and a read-only detail report. The latest candidate replay run [44111066461](https://github.com/laidktif67-sketch/TestDZ/actions/runs/44111066461) passed all 18 scripts, all database contracts, local PostgREST exposure checks, and disposable-stack cleanup.
+
+The comparable candidate catalog fingerprints match the live FixLab catalog for:
+
+| Catalog class | Comparable count | Fingerprint |
+|---|---:|---|
+| Columns (excluding the known Algeria-local `checkins.checkin_date` default delta) | 438 | `55223a31fba39a5de98db3f24ae449aa` |
+| Constraints (excluding two CHECK definitions with only redundant parenthesis grouping) | 295 | `d475c6dce3da750c31109b241a36765c` |
+| Indexes | 157 | `786a77cadcbb7f11f9cd5ca23d3d0641` |
+| Functions (excluding the candidate-only Algeria date helper and four intentionally patched tester date functions) | 92 | `e067f3b2adde6b98818e3c2ac9b9c44c` |
+| V2 RLS + Storage object policies (excluding inherited legacy policies) | 66 | `2773b5f980046e8b208337e6f1362a89` |
+| Application triggers | 7 | `fae73e6683552c9c4117a908b79fe2e4` |
+| Storage buckets (excluding `app-icons`, whose local CI value is inherited from the legacy migration chain) | 6 | `59db82fde5855dc8389e75915430f3f2` |
+
+### Known non-parity details
+
+- `apps_distribution_url_check` and `report_attachments_original_filename_check` have equivalent CHECK semantics but different redundant parenthesis grouping. Their full definitions are emitted by the detail contract.
+- Local CI starts from the legacy migration chain before applying V2. Its existing `app-icons` bucket is 512,000 bytes; the V2 script declares 524,288 bytes but uses `ON CONFLICT DO NOTHING`, so it does not overwrite the inherited legacy configuration. FixLab is 524,288 bytes. Production currently remains at 512,000 bytes. No bucket was changed.
+- The local stack has 12 inherited legacy Storage policies in addition to the 18 V2 policies. Production has 14 legacy Storage policies and no V2 schema/policies today. These are not part of the V2 fingerprint; permissive policies can OR-bypass stricter policies during coexistence and require a separate cutover transition plan.
+- The fingerprint does **not** yet establish parity for effective grants/ACLs, role membership, data, Auth users/sessions, Storage objects, extensions, or the legacy `public` schema.
+
+This is strong structural parity for the listed comparable classes, not Production readiness and not authorization to deploy or change hosted state.
+
 ## Remaining validation gates
 
-1. **Exact live-to-clean comparison:** compare the complete catalog definitions (columns, constraints, indexes, function bodies/security attributes, policies, grants, triggers, and Storage configuration) between FixLab and a clean replay. The successful CI replay proves the scripts build cleanly and pass contracts; it does not by itself prove byte-for-byte catalog equivalence with the hosted FixLab schema.
+1. **Remaining catalog/security parity:** complete effective privilege and role-membership comparison, review function ownership/ACLs, and reconcile the inherited Storage policy/bucket differences described above. The listed comparable catalog fingerprints now match FixLab; they do not cover grants, data, Auth, extensions, or the legacy public schema.
 2. **Legacy-schema compatibility decision:** FixLab also contains 24 tables in the `public` schema. The frontend selects the legacy `public` schema when `VITE_TESTER_WORKFLOW_V2_ENABLED` is false or unset, and selects `rebuild_v2` only when enabled. Decide whether the public schema remains part of the supported application baseline or whether all active application paths will be cut over to V2 before excluding it from a new baseline.
 3. **Frontend compatibility:** complete the route/API-to-SQL mapping, including roles, tester rewards, referrals, reports, leaderboard privacy, and admin workflows.
 4. **Security follow-up:** the current FixLab security advisor reports four INFO findings for legacy public tables with RLS enabled but no policies: `public.audit_logs`, `public.fraud_reviews`, `public.platform_config`, and `public.user_roles`. Their effective access must be reviewed before any legacy schema is retained or retired.
