@@ -539,6 +539,23 @@ A read-only inventory of `bxjqwqidmxxnsgnpyzxv.supabase_migrations.schema_migrat
 
 The V2 clean-replay source remains the ordered 18-file sequence in `supabase/rebuild-v2/001_schema.sql` through `018_verify_submission_evidence_metadata.sql`. The FixLab history names and SQL prefixes show that the later V2 history rows correspond primarily to candidate follow-up scripts 008–018. The two content-authoring history entries `20261116145646` and `20261116145833` are successive revisions; the latter has the same 4,684-character length as current candidate script 011, while the earlier one is 4,652 characters. The history has no individual records for candidate baseline scripts 001–007; the 20261115193304 comment says its patch was applied after 001–007, confirming those baseline scripts had already been executed without individual migration-history entries.
 
+| Candidate script | FixLab history version | History name | SQL length comparison |
+|---|---|---|---|
+| `008_developer_lifecycle.sql` | `20261115193304` | `fixlab_v2_developer_lifecycle_candidate` | 16,080 = 16,080 |
+| `009_lock_app_edits_during_review.sql` | `20261115193600` | `fixlab_lock_app_edits_during_review` | 2,116 = 2,116 |
+| `010_guard_test_cohort_capacity.sql` | `20261115193720` | `fixlab_guard_test_cohort_capacity` | 2,461 = 2,461 |
+| `011_test_content_authoring.sql` | `20261116145833` | `fixlab_v2_test_content_authoring_validation` | 4,684 = 4,684 |
+| `011_test_content_authoring.sql` (superseded revision) | `20261116145646` | `fixlab_v2_test_content_authoring` | 4,652 vs 4,684 |
+| `012_cohort_management.sql` | `20261116150813` | `fixlab_v2_cohort_management` | 8,765 = 8,765 |
+| `013_private_test_builds.sql` | `20261116151440` | `fixlab_v2_private_test_builds` | 12,399 = 12,399 |
+| `014_harden_test_build_storage_helper.sql` | `20261116151830` | `fixlab_v2_harden_test_build_storage_helper` | 866 = 866 |
+| `015_private_test_media_assets.sql` | `20261116153736` | `fixlab_v2_private_test_media_assets` | 12,208 = 12,208 |
+| `016_private_developer_feedback.sql` | `20261116154657` | `fixlab_v2_private_developer_feedback` | 11,498 = 11,498 |
+| `017_enforce_assignment_schedule.sql` | `20261116162502` | `enforce_assignment_schedule` | 2,591 vs 2,664; candidate includes later Algeria-date correction |
+| `018_verify_submission_evidence_metadata.sql` | `20261116162951` | `verify_submission_evidence_metadata` | 2,154 = 2,154 |
+
+Length matches are corroborating provenance, not cryptographic proof of byte-for-byte identity. The 18-file clean replay remains the authoritative candidate sequence; the FixLab ledger records only these later patch applications and does not record baseline scripts 001–007.
+
 This is a **provenance gap**, not evidence that the schema objects are absent: the catalog fingerprint and isolated replay tests establish that the candidate scripts create the objects. It does mean the hosted migration ledger is not a reproducible record of the exact 18-file V2 replay.
 
 ### Safe reconciliation decision
