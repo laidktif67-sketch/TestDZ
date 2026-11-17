@@ -603,7 +603,7 @@ A read-only catalog and aggregate-data inspection was completed against Producti
 - The legacy `public.support_tickets`, `public.support_ticket_messages`, and `public.support_ticket_attachments` tables each have zero rows.
 - Legacy `public.feedback` and `public.report_attachments` each have zero rows.
 - Five legacy Storage buckets exist: `app-icons`, `avatars`, `developer-feedback-attachments`, `support-attachments`, and `test-evidence`.
-- Twelve legacy policies remain on `storage.objects`; all twelve are permissive. There are no V2-suffixed Storage policies in Production.
+- Fourteen legacy policies remain on `storage.objects`; all fourteen are permissive. There are no V2-suffixed Storage policies in Production. The exact names are `app_icons_owner_delete`, `app_icons_owner_insert`, `app_icons_owner_update`, `app_icons_public_read`, `avatars_owner_delete`, `avatars_owner_insert`, `avatars_owner_select`, `avatars_owner_update`, `developer_feedback_storage_insert_participants`, `developer_feedback_storage_select_participants`, `report_evidence_insert_active_assignment`, `report_evidence_select_authorized_participants`, `support_attachments_insert_participants`, and `support_attachments_select_participants.
 
 ### Confirmed policy difference
 
@@ -617,7 +617,7 @@ This is a confirmed authorization-model difference, not a demonstrated current d
 2. Before enabling V2, inventory actual legacy ticket/attachment rows and Storage objects again; the zero-row snapshot is time-specific.
 3. If legacy support data exists at cutover time, preserve it and either migrate attachment metadata/object paths into the V2 model or retain a deliberately isolated legacy read path with explicit expiry.
 4. Verify every legacy object path against its registered attachment row and ticket/message relationship; do not assume the existing policy provides this binding.
-5. Only after legacy clients and data are retired should the twelve legacy policies be removed. PostgreSQL permissive policies combine with OR, so adding stricter V2 policies alone does not neutralize a permissive legacy policy.
+5. Only after legacy clients and data are retired should the fourteen legacy policies be removed. PostgreSQL permissive policies combine with OR, so adding stricter V2 policies alone does not neutralize a permissive legacy policy.
 6. Re-run Storage access tests for owner, other authenticated user, support, admin, anonymous user, missing metadata row, internal note, and cross-ticket path before any policy cleanup.
 
 No Production schema, data, Storage objects, bucket configuration, policies, migration history, or deployment was changed during this review.
