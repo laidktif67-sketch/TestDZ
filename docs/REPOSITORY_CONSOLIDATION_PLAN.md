@@ -590,3 +590,34 @@ A read-only catalog inspection was performed on Production project `naqjjykcglxi
 Do not drop the 12 legacy policies now: Production is still using the legacy public schema, and removing them could break existing avatar, app-icon, report-evidence, or support-attachment flows. Before V2 cutover, add an explicit transition that either migrates object keys and records, or removes/replaces legacy policies only after proving the old clients and data no longer depend on them. Add a regression test proving a ticket owner cannot read an unregistered or internal-note V2 attachment when legacy policies are absent.
 
 Only schema/catalog metadata and policy definitions were inspected in Production. No user rows, support messages, Storage object contents, or file bytes were read. No policy, bucket, data, migration history, or Production object was changed.
+
+
+## 23. Production Storage coexistence review (read-only, 2026-11-17)
+
+A read-only catalog and aggregate-data inspection was completed against Production `naqjjykcglxiobkmdllj`. No SQL writes, object reads/downloads, or policy changes were performed.
+
+### Confirmed Production state
+
+- Neither `rebuild_v2` nor `rebuild_v2_private` exists in Production.
+- `storage.objects` has no rows in any bucket at the time of inspection.
+- The legacy `public.support_tickets`, `public.support_ticket_messages`, and `public.support_ticket_attachments` tables each have zero rows.
+- Legacy `public.feedback` and `public.report_attachments` each have zero rows.
+- Five legacy Storage buckets exist: `app-icons`, `avatars`, `developer-feedback-attachments`, `support-attachments`, and `test-evidence`.
+- Twelve legacy policies remain on `storage.objects`; all twelve are permissive. There are no V2-suffixed Storage policies in Production.
+
+### Confirmed policy difference
+
+The legacy `support_attachments_select_participants` policy authorizes reads by ticket ownership/requester role or support staff after matching the first path segment to a ticket ID. It does not require a matching row in `public.support_ticket_attachments` and does not bind the object path to a registered attachment record. The V2 `can_read_support_attachment` helper instead joins the attachment row, message, and ticket, and excludes internal-note attachments from requester access.
+
+This is a confirmed authorization-model difference, not a demonstrated current data exposure: the inspected Production support tables and all Storage object rows were empty. The policy remains a cutover hazard if legacy and V2 records or object paths later coexist.
+
+### Safe transition plan (not executed)
+
+1. Keep the V2 feature flag disabled in Production until the V2 schema, RPCs, grants, RLS, and Storage policies are installed and separately verified.
+2. Before enabling V2, inventory actual legacy ticket/attachment rows and Storage objects again; the zero-row snapshot is time-specific.
+3. If legacy support data exists at cutover time, preserve it and either migrate attachment metadata/object paths into the V2 model or retain a deliberately isolated legacy read path with explicit expiry.
+4. Verify every legacy object path against its registered attachment row and ticket/message relationship; do not assume the existing policy provides this binding.
+5. Only after legacy clients and data are retired should the twelve legacy policies be removed. PostgreSQL permissive policies combine with OR, so adding stricter V2 policies alone does not neutralize a permissive legacy policy.
+6. Re-run Storage access tests for owner, other authenticated user, support, admin, anonymous user, missing metadata row, internal note, and cross-ticket path before any policy cleanup.
+
+No Production schema, data, Storage objects, bucket configuration, policies, migration history, or deployment was changed during this review.
