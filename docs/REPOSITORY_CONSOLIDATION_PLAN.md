@@ -739,3 +739,29 @@ Merged V2 PR #47 adds explicit authenticated EXECUTE revokes for the unwrapped r
 - Preserve the candidate contract that blocks direct calls to unwrapped role-management internals.
 - Before a FixLab patch, enumerate wrapper, trigger, policy, and function-body dependencies and test every intended wrapper/Storage path after the ACL change.
 - No FixLab or Production grants, schema settings, functions, or data were changed by this review.
+
+
+## 26. Notification recipient-role parity gap (confirmed, 2026-11-17)
+
+The Production migration `separate_notification_recipient_roles` (preserved in PR #23) added `public.notifications.recipient_role`, backfilled historical rows to `tester` or `developer`, made it NOT NULL, added a two-value CHECK constraint, and changed SELECT/UPDATE RLS so users only see notifications for a role they currently hold (developer notifications also allow admins).
+
+The V2 candidate currently does not preserve this distinction:
+
+- `rebuild_v2.notifications` has no `recipient_role` column.
+- `notifications_select_owner_v2` filters only `user_id = auth.uid()`.
+- `mark_notification_read_impl` and `mark_all_notifications_read_impl` scope by user ID, not current workspace role.
+- `apps/web/src/features/notifications/notifications-api.ts` reads and counts notifications by `user_id` only and does not select/filter `recipient_role`.
+- `NotificationsCenterPage.tsx` uses the shared tester notifications page and does not pass an active role to the API.
+
+This is a confirmed **role-feed behavior regression for multi-role accounts**, not a cross-user data exposure: a user can see their own notifications, but tester and developer feeds are not separated as they are in the legacy schema. The Production `public.notifications` table had zero rows at the time of inspection, so no notification history needs migration in the current snapshot; re-check before cutover.
+
+### Required resolution before cutover
+
+1. Decide whether V2 will retain separate tester/developer notification feeds or intentionally replace them with one unified feed.
+2. If retaining separation, add a constrained `recipient_role` field to the V2 schema and define role-aware SELECT/UPDATE policy semantics (tester role for tester feed; developer or admin for developer feed).
+3. Update read-one/read-all RPCs and unread counts to accept or derive the active feed role; ensure a tester cannot mark developer notifications read through the tester view.
+4. Update the UI/API contract to request the active workspace role and select the recipient role.
+5. Add contract tests for users with tester only, developer only, both roles, admin, and a user lacking the recipient role. Test read-one and read-all isolation.
+6. If legacy notifications exist at cutover, preserve their `recipient_role` values; do not infer role from current roles again because historical users may have changed roles.
+
+This gap is documented for implementation; no schema or frontend change was made in this audit step.
