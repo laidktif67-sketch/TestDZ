@@ -200,3 +200,17 @@ The earlier seven-function gap refers to **missing committed migration definitio
 Each exposed wrapper had `authenticated` EXECUTE and `anon` EXECUTE false in the FixLab catalog snapshot. The submission wrappers delegate to private implementation functions. This catalog inventory is not a replacement for extracting the full function bodies, grants, dependent tables, triggers, indexes, RLS policies, and Storage policies into reviewed migration files.
 
 A read-only boundary calculation was verified against FixLab: UTC `2026-11-15 23:30` converts to Algeria local hour `00` and business date `2026-11-16`, while its UTC date remains `2026-11-15`. This confirms the proposed date expression crosses the intended calendar boundary in the live database runtime.
+
+### Read-only recovery checkpoint: seven missing V2 implementation bodies (2026-11-17)
+
+A fresh read-only FixLab catalog query successfully extracted the seven `rebuild_v2_private` implementation definitions corresponding to the frontend RPCs listed above, alongside their seven exposed `rebuild_v2` wrappers. This confirms the runtime definitions can be recovered from the current FixLab catalog; it does not make them part of committed migration history, and no SQL was applied or written back to the database.
+
+The recovered implementation set is:
+- `create_test_impl` and `update_test_impl`: developer/admin role checks, input validation, ownership/status checks, and audit events.
+- `save_test_content_impl`: validates structured steps/requirements and atomically replaces child rows for owned editable tests.
+- `submit_checkin_impl`: tester ownership/active-assignment checks and duplicate handling.
+- `create_assignment_submission_impl`, `register_assignment_submission_attachment_impl`, and `finalize_assignment_submission_impl`: draft submission, attachment metadata registration, Storage metadata verification, and finalization.
+
+**Important live-state confirmation:** the currently hosted FixLab `submit_checkin_impl` still uses `CURRENT_DATE` in its lookup, insert, and unique-violation recovery paths. The Algeria-local correction recorded for the V2 candidate has not been applied to FixLab. This remains a confirmed hosted FixLab timezone defect; do not infer that merging a candidate branch patches the hosted project.
+
+Before these recovered bodies can become reproducible migrations, still capture and review the complete object dependencies and privileges: wrapper and implementation owners, SECURITY DEFINER/INVOKER attributes, function ACLs, referenced helper definitions, table grants/RLS policies, triggers/indexes/constraints, and Storage policy assumptions. Then produce a reviewed clean-replay migration sequence and run the isolated contract suite. No hosted migration history, schema, or data was changed during this checkpoint.
