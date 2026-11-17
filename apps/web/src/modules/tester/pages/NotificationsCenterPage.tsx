@@ -10,7 +10,7 @@ import "../styles/notifications-center.css";
 
 type NotificationRow = {
   id: string;
-  recipient_role: "tester" | "developer";
+  recipient_role?: "tester" | "developer";
   type: string;
   title: string;
   body: string;
