@@ -92,8 +92,8 @@ export default function NotificationPreferencesPage() {
   useEffect(() => {
     if (!user?.id || !supabase) { setUnreadCount(0); return; }
     let alive = true;
-    void getUnreadNotificationCount(user.id).then(({ count, error: countError }) => {
-      if (alive && !countError) setUnreadCount(count ?? 0);
+    void getUnreadNotificationCount(user.id).then((result: { count: number | null; error: unknown }) => {
+      if (alive && !result.error) setUnreadCount(result.count ?? 0);
     }).catch(() => { if (alive) setUnreadCount(0); });
     return () => { alive = false; };
   }, [user?.id]);
