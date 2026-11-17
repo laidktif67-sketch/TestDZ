@@ -549,3 +549,27 @@ This is a **provenance gap**, not evidence that the schema objects are absent: t
 - Before any cutover, prepare a reviewed baseline/transition plan that states which old public-schema records remain historical, how the V2 schema baseline is represented, and how rollback and data preservation work.
 
 All history and catalog queries in this review were SELECT-only. No hosted migration rows or schema objects were changed.
+
+## 24. Production legacy Storage policy review (2026-11-17)
+
+A read-only catalog inspection was performed on Production project `naqjjykcglxiobkmdllj`. It returned the 12 legacy Storage policies listed in section 22 and no `*_v2` Storage policies. Production currently has no `rebuild_v2` schema or V2 support-ticket tables; the legacy `public.support_tickets` and `public.support_ticket_attachments` tables exist. The `support-attachments` bucket is private, limited to 10 MiB, and allows PNG/JPEG/WebP, text, PDF, and ZIP.
+
+### Potential coexistence risk: support attachment SELECT
+
+- Legacy policy source: `supabase/migrations/20261112000100_support_ticket_conversations.sql:230-241`. It checks the bucket, a ticket UUID in the first path folder, and whether the caller owns the legacy ticket or is Support/Admin. It does not require a matching row in `public.support_ticket_attachments`.
+- V2 policy source: `supabase/rebuild-v2/006_storage_policies.sql:77-118,306-311`. Its helper requires a registered V2 attachment joined to its message and ticket; for the requester it also requires `internal_note=false`.
+- Both policies are permissive by default. If a future coexistence/migration keeps the legacy policy while V2 tickets reuse the same ticket UUIDs and object paths, the legacy policy could authorize reads that the V2 helper would deny, including unregistered objects and potentially internal-note attachments.
+
+**Current-production conclusion:** this is not evidence of a current V2 internal-note leak. Production has no V2 schema/tables today, and the legacy public message table from the migration does not define the V2 `internal_note` field. The finding is a confirmed policy-design mismatch and a cutover risk if legacy and V2 records/paths are ever shared.
+
+### Other legacy policies
+
+- Avatar owner policies constrain the first folder to `auth.uid()`, consistent with the V2 owner-folder rules.
+- Legacy app-icon write policies constrain the first folder to the caller's UID, while V2 additionally validates that the second folder identifies an app owned by that developer. The legacy rule is broader for orphan/unregistered paths, though it does not let a user write inside another user's UID folder.
+- Legacy report-evidence policies call `private.can_upload_report_evidence` / `private.can_read_report_evidence` against legacy public reports and assignments. V2 uses separate `rebuild_v2_private` helpers and registered attachment rows. These are separate data-model paths and must be reconciled before sharing/migrating object keys.
+
+### Safe action
+
+Do not drop the 12 legacy policies now: Production is still using the legacy public schema, and removing them could break existing avatar, app-icon, report-evidence, or support-attachment flows. Before V2 cutover, add an explicit transition that either migrates object keys and records, or removes/replaces legacy policies only after proving the old clients and data no longer depend on them. Add a regression test proving a ticket owner cannot read an unregistered or internal-note V2 attachment when legacy policies are absent.
+
+Only schema/catalog metadata and policy definitions were inspected in Production. No user rows, support messages, Storage object contents, or file bytes were read. No policy, bucket, data, migration history, or Production object was changed.
