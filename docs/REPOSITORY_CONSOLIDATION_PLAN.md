@@ -672,6 +672,29 @@ Production's recorded `version` is not always the same as the original timestamp
   - `onboarding_profile_row_guard`
   - `support_tickets`
 
+### Where the absent active-branch sources still exist
+
+Read-only GitHub tree/PR-file inspection found several of these sources preserved on older, still-open PR branches. They are not lost, but they are not part of the active V2 migration directory:
+
+| Production-applied name absent from V2 branch | Preserved source location | Mapping confidence |
+|---|---|---|
+| `test_details_and_medical_exceptions` | PR #16, `feat/test-details-medical-exceptions` | Exact filename |
+| `developer_feedback_reviews` | PR #23, `feature/developer-my-tests-dashboard` | Exact filename |
+| `developer_notification_archive` | PR #23 | Exact filename |
+| `separate_notification_recipient_roles` | PR #23 | Exact filename |
+| `separate_support_ticket_requester_roles` | PR #23 has `support_ticket_requester_role` and `support_ticket_requester_role_policy` | Related source; exact applied-file mapping needs diff review |
+| `support_ticket_priority_activity` | PR #25, `fix/pr23-support-ticket-migration-history`, includes `support_ticket_priority_audit_forward` | Related forward migration; exact mapping needs diff review |
+| `audit_support_ticket_priority_changes` | PR #23/#25 support-ticket migration chain | Related source; exact mapping needs diff review |
+| `developer_feedback_conversation_and_priority` | PR #23 feedback priority/conversation migration chain | Related source; exact mapping needs diff review |
+| `developer_feedback_details_conversations_attachments_events` | PR #23 feedback conversation/attachment/audit migration chain | Related source; exact mapping needs diff review |
+| `app_distribution_schema_and_rpc` | PR #33, `feat/developer-create-test-six-step` | Exact filename |
+| `align_app_distribution_method` | PR #33 | Exact filename |
+| `test_type_and_config` | PR #33 | Exact filename |
+| `allow_test_drafts` | PR #33 | Exact filename |
+| `reconcile_assignments_cohort_foreign_keys` | PR #36, `fix/week-5-fk-reconciliation` | Exact filename |
+
+PRs #16, #23, #25, #33, and #36 are still open in the repository snapshot. Their branches must be preserved until the missing migrations are either ported with content-level review or explicitly superseded by V2 definitions. Do not merge those branches wholesale into V2: they were built on different bases and contain unrelated frontend, schema, and workflow changes.
+
 This is a real source/ledger lineage gap, but it does not prove that the corresponding schema objects are missing: some definitions may have been folded into later migrations, applied under different names, or retained on other development branches. Each item needs a content/object-level provenance check before any port, repair, or archival decision.
 
 ### FixLab is a separate sandbox lineage
