@@ -42,16 +42,18 @@ After all 19 scripts, run:
 - `tests/007_tester_workflow_contract.sql`
 - `tests/008_developer_feedback_privacy_contract.sql`
 - `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
+- `tests/010_security_definer_boundary_contract.sql` — verifies the V2 schema exposure boundary, restricted schema creation, and SECURITY DEFINER ownership/search-path requirements.
+- `tests/011_notification_recipient_roles_contract.sql` — verifies tester/developer feed isolation and role-scoped read-one/read-all operations.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 19 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the eight post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 19 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the ten post-phase contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
 - GitHub Actions run [#8](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43944382982), commit `665ea461430c958132108c2310d5c11a59469d6c`, completed successfully.
-- CI applied all 18 scripts to a disposable empty local Supabase stack.
-- CI passed all nine contracts: the phase-one security contract plus the eight post-phase contracts.
+- Historical run #8 applied the then-current 18-script candidate to a disposable empty local Supabase stack.
+- The current PR #49 validation run [#44138645785](https://github.com/laidktif67-sketch/TestDZ/actions/runs/44138645785), commit `f86f6de87155d1a576b572263cc76e2fdd95ced0`, passed the 19-script replay and all 11 contracts (phase-one security plus ten post-phase contracts).
 - The wallet idempotency contract explicitly returned `rebuild_v2_wallet_idempotency_contract: PASS`.
 - Contract fixtures were rolled back; the final-state contract's cleanup check reported zero remaining app, profile, and auth-user fixtures.
 - The disposable local Supabase stack stopped successfully.
