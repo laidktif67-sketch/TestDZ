@@ -92,7 +92,7 @@ id uuid DEFAULT gen_random_uuid() NOT NULL,
   CONSTRAINT apps_category_check CHECK (category = ANY (ARRAY['games'::text, 'tools'::text, 'education'::text, 'social'::text, 'health'::text, 'other'::text])),
   CONSTRAINT apps_developer_id_fkey FOREIGN KEY (developer_id) REFERENCES rebuild_v2.profiles(id) ON DELETE RESTRICT,
   CONSTRAINT apps_distribution_method_check CHECK (distribution_method = ANY (ARRAY['none'::text, 'play_store'::text, 'external_link'::text, 'apk_upload'::text])),
-  CONSTRAINT apps_distribution_url_check CHECK (distribution_url IS NULL OR (char_length(distribution_url) >= 8 AND char_length(distribution_url) <= 2048) AND distribution_url ~* '^https?://[^[:space:]]+
+  CONSTRAINT apps_distribution_url_check CHECK (distribution_url IS NULL OR (char_length(distribution_url) >= 8 AND char_length(distribution_url) <= 2048) AND distribution_url ~* $regex$^https?://[^[:space:]]+$regex$),
   CONSTRAINT apps_id_developer_id_key UNIQUE (id, developer_id),
   CONSTRAINT apps_name_check CHECK (char_length(name) >= 2 AND char_length(name) <= 120),
   CONSTRAINT apps_package_name_check CHECK (char_length(package_name) >= 3 AND char_length(package_name) <= 255),
