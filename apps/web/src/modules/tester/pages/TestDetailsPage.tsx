@@ -42,6 +42,10 @@ export default function TestDetailsPage() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
+    setError("");
+    setTest(null);
+
     const client = supabase;
     if (!client || !id) {
       setError("This test could not be loaded.");
