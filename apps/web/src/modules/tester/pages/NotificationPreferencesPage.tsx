@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { profilesApi } from "../../../features/profiles/profiles-api";
+import { getUnreadNotificationCount } from "../../../features/notifications/notifications-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
@@ -41,6 +42,7 @@ export default function NotificationPreferencesPage() {
   const { user, roles = [] } = useIdentity();
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
   const [prefs, setPrefs] = useState<Preferences>(defaults);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -87,6 +89,14 @@ export default function NotificationPreferencesPage() {
     }).catch(() => { if (alive) setError("Could not load your notification preferences."); });
     return () => { alive = false; };
   }, [user?.id]);
+  useEffect(() => {
+    if (!user?.id || !supabase) { setUnreadCount(0); return; }
+    let alive = true;
+    void getUnreadNotificationCount(user.id).then(({ count, error: countError }) => {
+      if (alive && !countError) setUnreadCount(count ?? 0);
+    }).catch(() => { if (alive) setUnreadCount(0); });
+    return () => { alive = false; };
+  }, [user?.id]);
   const updateType = (key: NoticeKey, value: boolean) => setPrefs(current => ({ ...current, types: { ...current.types, [key]: value } }));
   const updateDelivery = (key: NoticeKey, value: Channel) => setPrefs(current => ({ ...current, delivery: { ...current.delivery, [key]: value } }));
   const save = async () => {
@@ -108,7 +118,7 @@ export default function NotificationPreferencesPage() {
     <main className="td-main np-main">
       <header className="np-topbar">
         <label className="np-search"><Icon name="search" size={21}/><input placeholder="Search in TestDZ..." aria-label="Search in TestDZ" /></label>
-        <div className="np-user"><Link to="/notifications" aria-label="Open notifications"><Icon name="bell" size={25}/><i>3</i></Link><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt="" /> : firstName.slice(0, 2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div>
+        <div className="np-user"><Link to="/notifications" aria-label="Open notifications"><Icon name="bell" size={25}/>{unreadCount > 0 && <i>{unreadCount > 9 ? "9+" : unreadCount}</i>}</Link><span/><Link to="/profile"><b>{avatar ? <img src={avatar} alt="" /> : firstName.slice(0, 2).toUpperCase()}</b>{name || firstName}<Icon name="chevron" size={16}/></Link></div>
       </header>
       <div className="np-content">
         <Link to="/settings" className="np-back"><Icon name="arrow" size={17}/>Back to Settings</Link>
