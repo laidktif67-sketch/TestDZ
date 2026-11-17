@@ -1,7 +1,7 @@
 -- Read-only fingerprint of the final V2 catalog.
 -- Run after candidate scripts 001..018. Excludes the two known live/candidate date-delta functions:
 -- Known date deltas: candidate-only algeria_local_date, four tester business-date implementations, and checkins.checkin_date's Algeria-local default. Also excludes legacy Storage policies inherited from supabase/migrations (only *_v2 policies are part of this V2 fingerprint) and app-icons runtime metadata because the legacy migration pre-seeds 500000 bytes while V2 source/FixLab specify 524288.
--- Compare this output with the same query on FixLab before any hosted baseline or patch operation.
+-- Also excludes two CHECK constraints whose AND expressions differ only in redundant parenthesis grouping; their full definitions are emitted by catalog_difference_details.sql. Compare this output with the same query on FixLab before any hosted baseline or patch operation.
 
 WITH
 cols AS (
@@ -19,7 +19,10 @@ cons AS (
  SELECT c.relname||':'||con.conname||':'||con.contype::text||':'||con.convalidated::text||':'||
         con.condeferrable::text||':'||con.condeferred::text||':'||pg_get_constraintdef(con.oid) AS item
  FROM pg_constraint con JOIN pg_class c ON c.oid=con.conrelid
- JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='rebuild_v2'
+ JOIN pg_namespace n ON n.oid=c.relnamespace
+ WHERE n.nspname='rebuild_v2'
+   AND NOT (c.relname='apps' AND con.conname='apps_distribution_url_check')
+   AND NOT (c.relname='report_attachments' AND con.conname='report_attachments_original_filename_check')
 ),
 idx AS (
  SELECT tbl.relname||':'||ix.relname||':'||pg_get_indexdef(ix.oid)||':'||
@@ -66,7 +69,7 @@ buck AS (
 )
 SELECT jsonb_pretty(jsonb_build_object(
  'columns',jsonb_build_object('count',(select count(*) from cols),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from cols),''))),
- 'constraints',jsonb_build_object('count',(select count(*) from cons),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from cons),''))),
+ 'constraints_excluding_equivalent_grouping_deltas',jsonb_build_object('count',(select count(*) from cons),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from cons),''))),
  'indexes',jsonb_build_object('count',(select count(*) from idx),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from idx),''))),
  'functions_excluding_known_date_delta',jsonb_build_object('count',(select count(*) from funcs),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from funcs),''))),
  'v2_policies',jsonb_build_object('count',(select count(*) from pol),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from pol),''))),
