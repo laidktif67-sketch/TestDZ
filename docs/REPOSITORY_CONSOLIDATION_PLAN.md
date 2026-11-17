@@ -493,13 +493,13 @@ The wallet posting implementation, `post_wallet_entry(...)`, also has no applica
 - No hosted database grants, functions, data, migration history, or Production settings were changed during this audit.
 
 
-## 22. Deterministic FixLab catalog fingerprint baseline (2026-11-16)
+## 22. Deterministic FixLab catalog fingerprint baseline (2026-11-17)
 
-A read-only SQL fingerprint query was executed against FixLab to go beyond name/count parity. It hashes sorted canonical catalog definitions for columns (including types, nullability, defaults, identity/generated flags), constraints (including validation/deferrability and definitions), indexes (including definitions and validity flags), comparable function definitions/security attributes/owners, RLS and Storage policies (roles normalized to role names), application triggers, and Storage bucket metadata.
+A read-only SQL fingerprint query compares canonical catalog definitions rather than only object names and counts. It covers columns (types, nullability, defaults, identity/generated flags), constraints (validation/deferrability and definitions), indexes (definitions and validity), comparable function definitions/security attributes/owners, RLS and Storage policies (roles normalized to role names), application triggers, and Storage bucket metadata.
 
-The five already documented date-delta functions are excluded from the comparable function fingerprint: `algeria_local_date` exists only in the candidate, while `get_discoverable_tests_impl`, `join_test_impl`, `start_assignment_impl`, and `submit_checkin_impl` intentionally differ until FixLab receives a reviewed patch. The `checkins.checkin_date` column is also excluded from the column fingerprint because its default is intentionally changed to Algeria-local date in candidate. Supabase-managed Storage policies and triggers are excluded from the application-only policy/trigger scope; policy roles are normalized to role names and MIME allowlists are sorted for stable comparison.
+Known date deltas are excluded: candidate-only `algeria_local_date`; `get_discoverable_tests_impl`, `join_test_impl`, `start_assignment_impl`, and `submit_checkin_impl`; and the `checkins.checkin_date` default changed to Algeria-local date in candidate.
 
-### FixLab live baseline
+### FixLab comparable baseline
 
 | Catalog class | Count | MD5 fingerprint |
 |---|---:|---|
@@ -507,12 +507,20 @@ The five already documented date-delta functions are excluded from the comparabl
 | Constraints | 297 | `59b3c93fe0464ae76e0f40f4d4d69d50` |
 | Indexes | 157 | `786a77cadcbb7f11f9cd5ca23d3d0641` |
 | Comparable functions | 92 | `e067f3b2adde6b98818e3c2ac9b9c44c` |
-| RLS + Storage policies | 66 | `2773b5f980046e8b208337e6f1362a89` |
+| V2 RLS + Storage object policies | 66 | `2773b5f980046e8b208337e6f1362a89` |
 | Application triggers | 7 | `fae73e6683552c9c4117a908b79fe2e4` |
-| Storage buckets | 7 | `db8856a0085f654d3c8ca42948c1c3a6` |
+| Storage buckets excluding legacy app-icons | 6 | `59db82fde5855dc8389e75915430f3f2` |
 
-[PR #48](https://github.com/laidktif67-sketch/TestDZ/pull/48) adds the same read-only fingerprint query to the isolated V2 CI workflow so it emits candidate-side hashes after replaying all 18 scripts. The query itself has been executed successfully against FixLab. Candidate-side CI is running after the scope normalization; no hash parity claim is made yet.
+### Differences found in the first candidate replay
 
-If the candidate hashes match these FixLab values, that will establish a strong parity result for these catalog classes after excluding the two known date deltas. It will not prove data parity, object contents, grants, or Production readiness. If a hash differs, compare the sorted catalog entries for that class and explain each difference before any FixLab migration or baseline repair.
+The first detailed candidate run passed all 18 SQL scripts and contracts, but its raw shared-Storage catalog differed from FixLab for explainable reasons:
 
-No hosted database state was changed by this fingerprint query.
+- **12 inherited legacy Storage policies:** the local CI stack applies the old `supabase/migrations` chain before replaying V2. It therefore contains four old avatar policies, four old app-icon policies, two old report-evidence policies, and two old support-attachment policies in addition to the 18 V2 policies. These are legacy artifacts, not extra V2 policies. The fingerprint now compares only `storage.objects` policies whose names end in `_v2`; the detail output still reports the inherited legacy names separately. They must remain in the cutover review because PostgreSQL permissive policies are OR-combined.
+- **app-icons bucket:** the legacy migration `20261106175505_apps_crud_storage_and_plan_limits.sql` configures `512000` bytes. V2 `006_storage_policies.sql` declares `524288` bytes but uses `ON CONFLICT DO NOTHING`, so the local replay preserves the pre-existing legacy value. FixLab reports `524288` bytes. The comparable bucket hash excludes this one known inherited bucket; the detail output retains all seven live/local values. No bucket configuration was overwritten.
+- **Two constraint fingerprints:** only `apps_distribution_url_check` and `report_attachments_original_filename_check` differed, and only by redundant boolean-parenthesis grouping. Candidate definitions were adjusted to match FixLab's canonical expressions; no validation rule was intentionally changed.
+
+[PR #48](https://github.com/laidktif67-sketch/TestDZ/pull/48) adds the read-only fingerprint and drill-down contracts to isolated V2 CI. The normalized candidate-side run is validating the updated comparison now. No final parity claim is made until that run passes and its hashes are read back.
+
+A matching fingerprint is strong catalog evidence, not proof of data parity, Storage object parity, complete grants parity, or Production readiness. Any inherited legacy Storage policies remain a separate cutover/security review item.
+
+No hosted database state was changed by these read-only comparisons.
