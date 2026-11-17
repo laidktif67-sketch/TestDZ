@@ -524,3 +524,28 @@ The first detailed candidate run passed all 18 SQL scripts and contracts, but it
 A matching fingerprint is strong catalog evidence, not proof of data parity, Storage object parity, complete grants parity, or Production readiness. Any inherited legacy Storage policies remain a separate cutover/security review item.
 
 No hosted database state was changed by these read-only comparisons.
+
+## 23. FixLab migration-history provenance (2026-11-17)
+
+A read-only inventory of `bxjqwqidmxxnsgnpyzxv.supabase_migrations.schema_migrations` returned 21 rows, all with one stored SQL statement. The active V2 branch's `supabase/migrations/` directory contains 31 timestamped files from 2026-11-06 through 2026-11-12; none of the 21 FixLab history versions (2026-11-15 through 2026-11-16) is present there. The 21 FixLab records therefore must not be copied into the active migration directory as empty placeholders or marked applied merely to make counts match.
+
+### FixLab history groups
+
+- **8 pre-V2/public-schema fixture changes:** versions `20261115095605` through `20261115102836`. These include the initial FixLab schema fixture, Test Details candidate, pgTAP enablement, owner-policy and developer-ownership fixes, test-detail grants, Android package validation, and lifecycle-column grant restrictions. They belong to the older public-schema/Test Details work, not to the V2 replay baseline.
+- **1 V2 namespace marker:** `20261115160318` stores only `CREATE SCHEMA rebuild_v2` plus schema revokes. It does not represent the full V2 schema/security baseline.
+- **12 V2 follow-up records:** versions `20261115193304` through `20261116162951`. These cover the developer lifecycle candidate, app-edit lock, cohort-capacity guard, test-content authoring (two successive revisions), cohort management, private APK builds, APK helper hardening, private media assets, developer feedback, assignment scheduling, and submission evidence metadata.
+
+### Candidate-script relationship
+
+The V2 clean-replay source remains the ordered 18-file sequence in `supabase/rebuild-v2/001_schema.sql` through `018_verify_submission_evidence_metadata.sql`. The FixLab history names and SQL prefixes show that the later V2 history rows correspond primarily to candidate follow-up scripts 008–018. The two content-authoring history entries `20261116145646` and `20261116145833` are successive revisions; the latter has the same 4,684-character length as current candidate script 011, while the earlier one is 4,652 characters. The history has no individual records for candidate baseline scripts 001–007; the 20261115193304 comment says its patch was applied after 001–007, confirming those baseline scripts had already been executed without individual migration-history entries.
+
+This is a **provenance gap**, not evidence that the schema objects are absent: the catalog fingerprint and isolated replay tests establish that the candidate scripts create the objects. It does mean the hosted migration ledger is not a reproducible record of the exact 18-file V2 replay.
+
+### Safe reconciliation decision
+
+- Keep `supabase/rebuild-v2/001..018` as the candidate clean-replay source for now.
+- Keep the 31 older active migration files untouched until the branch-porting matrix and cutover plan establish their dependencies.
+- Do not add placeholder timestamp files, rewrite hosted migration history, use `db pull` to paper over drift, or run `db push` against FixLab/Production to align counts.
+- Before any cutover, prepare a reviewed baseline/transition plan that states which old public-schema records remain historical, how the V2 schema baseline is represented, and how rollback and data preservation work.
+
+All history and catalog queries in this review were SELECT-only. No hosted migration rows or schema objects were changed.
