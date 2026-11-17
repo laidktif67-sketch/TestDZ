@@ -633,3 +633,56 @@ All 14 Production policies are permissive. PostgreSQL combines permissive polici
 6. Re-run Storage access tests for owner, other authenticated user, support, admin, anonymous user, missing metadata row, internal note, and cross-ticket path before any policy cleanup.
 
 No Production schema, data, Storage objects, bucket configuration, policies, migration history, or deployment was changed during this review.
+
+
+## 24. Production migration lineage reconciliation (read-only, 2026-11-17)
+
+The Production and FixLab migration ledgers were queried independently, then compared to the active V2 branch's `supabase/migrations/` file inventory. This is a lineage comparison only; it is not a request to replay, repair, or rewrite either hosted migration ledger.
+
+### Counts
+
+| Source | Recorded / committed entries | First | Last |
+|---|---:|---|---|
+| Production `supabase_migrations.schema_migrations` | 43 applied | `20261106172737` | `20261115092608` |
+| FixLab `supabase_migrations.schema_migrations` | 21 applied | `20261115095605` | `20261116162951` |
+| V2 branch `supabase/migrations/` | 31 SQL files | `20261106172737` | `20261112000100` |
+| V2 clean replay candidate `supabase/rebuild-v2/` | 18 ordered SQL scripts | `001` | `018` |
+
+Production's recorded `version` is not always the same as the original timestamp embedded in its `name`. Therefore, the logical comparison normalizes the leading 14-digit timestamp and compares the migration name, rather than treating version equality as file identity.
+
+### Logical name comparison: Production vs active V2 migration files
+
+- 29 of the 43 Production migration names have a corresponding logical name in the V2 branch's 31 migration files.
+- 14 Production-applied names have no corresponding file in the active V2 branch:
+  - `test_details_and_medical_exceptions`
+  - `developer_feedback_reviews`
+  - `developer_notification_archive`
+  - `separate_notification_recipient_roles`
+  - `support_ticket_requester_roles`
+  - `support_ticket_priority_activity`
+  - `audit_support_ticket_priority_changes`
+  - `developer_feedback_conversation_and_priority`
+  - `developer_feedback_details_conversations_attachments_events`
+  - `app_distribution_schema_and_rpc`
+  - `align_app_distribution_method`
+  - `test_type_and_config`
+  - `allow_test_drafts`
+  - `reconcile_assignments_cohort_foreign_keys`
+- Two V2 branch migration files have no corresponding Production ledger name:
+  - `onboarding_profile_row_guard`
+  - `support_tickets`
+
+This is a real source/ledger lineage gap, but it does not prove that the corresponding schema objects are missing: some definitions may have been folded into later migrations, applied under different names, or retained on other development branches. Each item needs a content/object-level provenance check before any port, repair, or archival decision.
+
+### FixLab is a separate sandbox lineage
+
+FixLab's 21 history entries include sandbox bootstrap, pgtap setup, V2 sandbox namespace, and iterative FixLab-only candidate patches. They are not Production history and must not be copied into Production or used to repair its ledger.
+
+### Decision
+
+- Keep the 18-script `supabase/rebuild-v2/` clean replay path separate from the active migration ledger.
+- Do not create placeholder migrations, mark versions applied, run `db push`, or rewrite history to make the counts match.
+- Before any cutover, produce a reviewed mapping from every Production-applied migration to its retained SQL source or a documented superseding V2 definition, including data transformations and side effects.
+- Preserve the current Production and FixLab ledgers unchanged until a separately approved, tested migration-baseline strategy exists.
+
+No hosted schema, migration ledger, data, Storage, or deployment was changed during this comparison.
