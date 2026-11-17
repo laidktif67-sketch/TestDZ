@@ -56,6 +56,27 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema='rebuild_v2'
+      AND table_name='notifications'
+      AND column_name='recipient_role'
+      AND is_nullable='NO'
+  ) OR NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid='rebuild_v2.notifications'::regclass
+      AND conname='notifications_recipient_role_check'
+  ) THEN
+    RAISE EXCEPTION 'role-separated notification recipient contract is missing';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2.mark_notification_read(uuid,text)') IS NULL
+     OR to_regprocedure('rebuild_v2.mark_all_notifications_read(text)') IS NULL THEN
+    RAISE EXCEPTION 'role-scoped notification read RPCs are missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
     FROM pg_constraint
     WHERE conrelid = 'rebuild_v2.user_roles'::regclass
       AND conname = 'user_roles_role_check'
