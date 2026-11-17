@@ -214,3 +214,30 @@ The recovered implementation set is:
 **Important live-state confirmation:** the currently hosted FixLab `submit_checkin_impl` still uses `CURRENT_DATE` in its lookup, insert, and unique-violation recovery paths. The Algeria-local correction recorded for the V2 candidate has not been applied to FixLab. This remains a confirmed hosted FixLab timezone defect; do not infer that merging a candidate branch patches the hosted project.
 
 Before these recovered bodies can become reproducible migrations, still capture and review the complete object dependencies and privileges: wrapper and implementation owners, SECURITY DEFINER/INVOKER attributes, function ACLs, referenced helper definitions, table grants/RLS policies, triggers/indexes/constraints, and Storage policy assumptions. Then produce a reviewed clean-replay migration sequence and run the isolated contract suite. No hosted migration history, schema, or data was changed during this checkpoint.
+
+
+### Candidate SQL recovery and hosted parity cross-check (read-only, 2026-11-17)
+
+A complete filename-by-filename scan of the 18 SQL files under `supabase/rebuild-v2/` on the current V2 base found that **all seven recovered implementation bodies already exist in the candidate SQL sequence**. This corrects a possible ambiguity in the earlier migration-provenance wording: the seven routines are absent from the 31 committed files in `supabase/migrations/`, but they are not absent from the separate candidate rebuild sequence.
+
+| Runtime implementation | Candidate source | Candidate sequence evidence |
+|---|---|---|
+| `create_test_impl` | `008_developer_lifecycle.sql` | Definition, exposed wrapper, role checks, and execute grants |
+| `update_test_impl` | `008_developer_lifecycle.sql` | Definition, exposed wrapper, role checks, and execute grants |
+| `save_test_content_impl` | `011_test_content_authoring.sql` | Definition, exposed wrapper, and execute grants |
+| `submit_checkin_impl` | `007_tester_workflow.sql` | Definition and wrapper; uses the candidate Algeria-local date helper |
+| `create_assignment_submission_impl` | `007_tester_workflow.sql` | Definition and wrapper; private implementation EXECUTE revoked from authenticated |
+| `register_assignment_submission_attachment_impl` | `007_tester_workflow.sql` | Definition and wrapper; private implementation EXECUTE revoked from authenticated |
+| `finalize_assignment_submission_impl` | `007_tester_workflow.sql`, subsequently hardened in `018_verify_submission_evidence_metadata.sql` | Final candidate version verifies Storage object owner, size, and MIME metadata before finalization |
+
+The candidate check-in implementation in `007_tester_workflow.sql` computes one `v_checkin_date := rebuild_v2_private.algeria_local_date()` and uses it consistently for lookup, insert, and unique-violation recovery. The live FixLab implementation inspected on 2026-11-17 still uses `CURRENT_DATE` in all three locations, and the corresponding `rebuild_v2_private.algeria_local_date()` helper was not found in the hosted catalog. This is a concrete **candidate-vs-hosted parity drift**, not evidence that the candidate fix is already deployed.
+
+The live wrapper/implementation privilege shape also differs by workflow, as expected from the candidate design:
+- `create_test`, `update_test`, and `save_test_content` are SECURITY INVOKER wrappers; their private implementations currently grant EXECUTE to `authenticated` so the invoker can call them. Their bodies independently validate `auth.uid()`, role, ownership, and editable status.
+- The four tester workflow wrappers are SECURITY DEFINER; their private implementation ACLs currently grant EXECUTE only to `postgres`, while the exposed wrappers grant EXECUTE to `authenticated`.
+- The `has_role` helper is SECURITY DEFINER and checks that its supplied user ID equals `auth.uid()` before reading role rows.
+- Authenticated has schema USAGE on both `rebuild_v2` and `rebuild_v2_private`; anon does not have private-schema USAGE. The SQL session did not expose the PostgREST schema allowlist setting, so actual hosted API exposure of the private schema was not inferred from SQL alone.
+
+The live catalog review also confirmed the relevant workflow tables have both RLS and FORCE RLS enabled, authenticated SELECT only, and no direct authenticated INSERT/UPDATE/DELETE privileges. The `test-evidence` bucket is private with a 10 MiB object limit. Storage policies use dedicated upload/read helper functions. These facts support the intended server-mediated workflow but do not replace replay tests.
+
+**Next gate:** build a per-object parity ledger comparing each candidate definition with the hosted wrapper and implementation (definition hash + reviewed semantic diff), then capture helper dependencies, grants, policies, indexes, constraints, and Storage metadata assumptions. Do not generate or apply migrations until this ledger and clean isolated replay tests are complete. No hosted SQL, data, or migration history was changed during this review.
