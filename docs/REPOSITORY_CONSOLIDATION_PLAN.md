@@ -658,7 +658,7 @@ Production's recorded `version` is not always the same as the original timestamp
   - `developer_feedback_reviews`
   - `developer_notification_archive`
   - `separate_notification_recipient_roles`
-  - `support_ticket_requester_roles`
+  - `separate_support_ticket_requester_roles`
   - `support_ticket_priority_activity`
   - `audit_support_ticket_priority_changes`
   - `developer_feedback_conversation_and_priority`
