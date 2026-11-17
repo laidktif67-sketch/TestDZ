@@ -504,7 +504,7 @@ Known date deltas are excluded: candidate-only `algeria_local_date`; `get_discov
 | Catalog class | Count | MD5 fingerprint |
 |---|---:|---|
 | Columns (excluding known check-in default delta) | 438 | `55223a31fba39a5de98db3f24ae449aa` |
-| Constraints | 297 | `59b3c93fe0464ae76e0f40f4d4d69d50` |
+| Constraints (excluding two equivalent parenthesis-only CHECK deltas) | 295 | `d475c6dce3da750c31109b241a36765c` |
 | Indexes | 157 | `786a77cadcbb7f11f9cd5ca23d3d0641` |
 | Comparable functions | 92 | `e067f3b2adde6b98818e3c2ac9b9c44c` |
 | V2 RLS + Storage object policies | 66 | `2773b5f980046e8b208337e6f1362a89` |
