@@ -611,6 +611,18 @@ The legacy `support_attachments_select_participants` policy authorizes reads by 
 
 This is a confirmed authorization-model difference, not a demonstrated current data exposure: the inspected Production support tables and all Storage object rows were empty. The policy remains a cutover hazard if legacy and V2 records or object paths later coexist.
 
+### Legacy policy comparison
+
+| Legacy policy group | Confirmed legacy behavior | V2 comparison / cutover note |
+|---|---|---|
+| `app_icons_owner_*` (insert/update/delete) | Checks only that the first object-path folder equals `auth.uid()`; it does not verify that the second folder identifies an app owned by that user. | V2 calls `can_manage_app_icon`, which validates the two-folder path and actual app ownership. The legacy permissive policy can OR-bypass this stricter V2 check for same-user paths. |
+| `avatars_owner_*` | Owner-folder scoped for authenticated users. | Same broad ownership model in V2; retain only if the legacy and V2 path contracts remain identical. |
+| `developer_feedback_storage_*` | Upload checks a legacy feedback row and participant; SELECT checks legacy feedback/assignment/test participation but not a registered attachment row. | V2 SELECT additionally requires the registered developer-feedback attachment row. |
+| `report_evidence_*` | Legacy helpers check legacy report/assignment/test ownership and state, but do not require a registered `report_attachments` row. | V2 read helper joins `report_attachments`, `reports`, `assignments`, and `tests`; the metadata row is required. |
+| `support_attachments_*` | Insert checks legacy ticket ownership/requester role or support staff; SELECT checks ticket ownership/requester role or support staff but does not require a registered attachment row. | V2 read helper joins the attachment, message, and ticket records and excludes internal-note attachments from requester access. |
+
+All 14 Production policies are permissive. PostgreSQL combines permissive policies with OR, so a stricter V2 policy does not override a more permissive legacy policy for the same command/table. The current empty-data snapshot reduces immediate exposure but does not make coexistence safe after new records or objects are created.
+
 ### Safe transition plan (not executed)
 
 1. Keep the V2 feature flag disabled in Production until the V2 schema, RPCs, grants, RLS, and Storage policies are installed and separately verified.
