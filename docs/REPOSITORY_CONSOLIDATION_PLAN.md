@@ -558,7 +558,7 @@ A read-only catalog inspection was performed on Production project `naqjjykcglxi
 
 - Legacy policy source: `supabase/migrations/20261112000100_support_ticket_conversations.sql:230-241`. It checks the bucket, a ticket UUID in the first path folder, and whether the caller owns the legacy ticket or is Support/Admin. It does not require a matching row in `public.support_ticket_attachments`.
 - V2 policy source: `supabase/rebuild-v2/006_storage_policies.sql:77-118,306-311`. Its helper requires a registered V2 attachment joined to its message and ticket; for the requester it also requires `internal_note=false`.
-- Both policies are permissive by default. If a future coexistence/migration keeps the legacy policy while V2 tickets reuse the same ticket UUIDs and object paths, the legacy policy could authorize reads that the V2 helper would deny, including unregistered objects and potentially internal-note attachments.
+- Production catalog confirms both legacy support-attachment policies have `permissive=PERMISSIVE`. If a future coexistence/migration keeps the legacy SELECT policy while V2 tickets reuse the same ticket UUIDs and object paths, the legacy policy could authorize reads that the V2 helper would deny, including unregistered objects and potentially internal-note attachments.
 
 **Current-production conclusion:** this is not evidence of a current V2 internal-note leak. Production has no V2 schema/tables today, and the legacy public message table from the migration does not define the V2 `internal_note` field. The finding is a confirmed policy-design mismatch and a cutover risk if legacy and V2 records/paths are ever shared.
 
