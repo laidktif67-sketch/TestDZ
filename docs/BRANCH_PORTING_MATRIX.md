@@ -1,15 +1,15 @@
 # TestDZ Branch and Feature Porting Matrix
 
 **Reviewed:** 2026-11-17  
-**Candidate baseline:** `rebuild/testdz-v2` — `e98e13d806d574b30ef163ff059dfbc4dd2e9733`  
+**Candidate baseline:** `rebuild/testdz-v2` — `c446bedfa637e348d5d093ea8310ff270d24b8e5`  
 **Purpose:** Identify useful work in open PRs and side branches without merging incompatible histories.
 
 ## Current GitHub inventory
 
 - Repository visibility: Public.
 - Default branch: `main`.
-- Remote branches returned by GitHub: 53.
-- Open pull requests returned by GitHub: 29; all are Draft.
+- Remote branches returned by GitHub: 54.
+- Open pull requests returned by GitHub: 29; Draft status varies and must be checked per PR.
 - Branch-protection inventory from the previous review is stale; refresh it before any branch deletion or consolidation.
 - V2 remains the candidate consolidation baseline, not yet the default branch or a production-ready release.
 
@@ -21,10 +21,10 @@
 | #45 `fix/local-postgrest-v2-schema` | Aligns local PostgREST exposure with the V2 frontend schema selector; adds a local schema bootstrap and HTTP checks for exposed `rebuild_v2` and hidden `rebuild_v2_private` | Merged into V2 as `e8cb30e6494f56af9ecc42be72ba31073d9a49e3`; PR and post-merge Rebuild V2 CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
 | #47 `fix/v2-restrict-private-rpc-exec` | Revokes authenticated EXECUTE from three unwrapped role-management implementations while preserving wallet posting and policy-helper grants | Merged into V2 as `baa6e7e5f168353dc71ede1ad692730dfec4821f`; isolated Rebuild V2 CI run `43982190131` passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
 | #44 `fix/v2-algeria-business-date` | Fixes Algeria-local calendar dates in tester discovery, join eligibility, assignment scheduling, and daily check-ins; aligns the check-in default and adds midnight-boundary regression checks | Merged into V2; isolated Rebuild V2 CI and legacy migration CI passed | Integrated via squash merge; retain source branch as an audit reference until branch consolidation is reviewed |
-| #49 `fix/v2-notification-recipient-roles` | Separates tester/developer notification feeds, recipient-aware read RPCs, RLS, and unread counters | Updated head `421af58`; DB and frontend checks passed, but full notification producer audit found no V2 notification INSERT producer or Edge Function in the branch tree | Keep Draft; map/implement trusted notification producers and developer UI before treating notifications as end-to-end complete |
+| #49 `fix/v2-notification-recipient-roles` | Separates tester/developer notification feeds, recipient-aware read RPCs, RLS, and unread counters | Head `421af58`; DB and frontend checks passed. Audit of all 591 tracked paths found no Supabase Edge Function or notification INSERT producer in the candidate branch. Notification preferences page also shows a hard-coded unread badge (`3`) rather than live data | Keep Draft; design trusted event producers, role-aware delivery, and developer notification UI before claiming end-to-end completion |
 | #48 `audit/v2-catalog-fingerprint` | Adds read-only catalog fingerprint and drill-down contracts to compare V2 candidate with FixLab | Updated head `3a28ffd`; isolated database validation run `44142397776` passed. Fingerprint deliberately excludes known date-function/check-in-date deltas, legacy Storage policies, `app-icons` bucket metadata, and two CHECK constraints with redundant-parenthesis differences | Keep Draft; inspect every excluded difference and legacy Storage policy before claiming full parity or planning cutover |
 | #43 `chore/v2-repository-hygiene` | Adds root `.gitignore` rules for generated artifacts and local environments | Its sole `.gitignore` content matched the V2 file; GitHub now reports the PR merged at `c446bed` | No separate feature work remains; do not delete the source branch until dependent references are checked |
-| #42 `chore/v2-agent-governance` | Repository-wide agent rules, engineering roles, consolidation plan, FixLab catalog parity, migration provenance, and Production legacy Storage review | Documentation branch; latest commit `057844fef90aaf50b2451f876dfeb8802277b897`; CI is pending | Keep Draft; review and merge separately |
+| #42 `chore/v2-agent-governance` | Repository-wide agent rules, engineering roles, consolidation plan, FixLab catalog parity, migration provenance, and Production legacy Storage review | Head `9b97f9e`; now records 54 branches/29 open PRs and current V2 baseline. It remains five commits behind V2; PR compare reports mergeable true, but workflow triggers and docs require a final review | Keep Draft; validate updated documentation and workflow behavior before merge |
 | #33 `feat/developer-create-test-six-step` | Six-step developer wizard, test configuration JSON, app distribution metadata/RPC, draft creation | V2 already has `DeveloperTestsPage`, `test_type`, `create_test` / `update_test` API contracts and modular `apps-api`; no `test_config` contract found in V2 API | Reuse UX/product requirements, but redesign wizard against V2 schema/RPCs; do not port its `public.*` migrations |
 | #32 `feat/admin-dashboard-overview` | Large admin workspace: users, apps, tests, assignments, financial ledger, support, medical exceptions, audit trail, withdrawals | V2 `modules/admin/README.md` is a placeholder stating admin pages are reserved; `App.tsx` only routes `/admin` to generic `TesterSectionPage` and `/admin/developer-reviews` to `DeveloperReviewQueuePage`; no admin feature pages exist | Major V2 feature gap. Inventory route and permission requirements, then implement V2-native admin module in small slices; do not copy the 74-file legacy implementation wholesale |
 | #31 `feat/developer-report-review` | Developer review of tester reports | V2 has `DeveloperReviewQueuePage` and feature APIs; exact parity of review detail/actions not yet proven | Compare workflows and contracts; port only missing states/actions after checking V2 RPC authorization |
