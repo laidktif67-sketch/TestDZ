@@ -1,8 +1,8 @@
 # TestDZ Repository Consolidation Plan
 
-**Snapshot date:** 2026-11-16  
+**Snapshot date:** 2026-11-17  
 **Repository:** `laidktif67-sketch/TestDZ`  
-**Working baseline:** `rebuild/testdz-v2` at `54c36b5a9d9fcaae5bdc118921b7b5eb142ba9bc`  
+**Working baseline:** `rebuild/testdz-v2` at `c446bedfa637e348d5d093ea8310ff270d24b8e5`  
 **Status:** Active consolidation; no branch, PR, migration, or database cleanup has been performed.
 
 ## 1. Canonical working direction
@@ -16,10 +16,10 @@
 ## 2. Repository inventory
 
 The current GitHub snapshot reports:
-- 47 remote branches.
-- 27 open pull requests; all 27 are Draft.
+- 54 remote branches (fresh GitHub listing on 2026-11-17).
+- 29 open pull requests (fresh GitHub search on 2026-11-17); Draft status varies and must be checked per PR.
 - Multiple PRs form dependent chains, especially tester, developer, medical-exception, support-ticket, and Week 5 database work.
-- No branch in the fetched branch list is protected.
+- Branch-protection status has not been refreshed in this snapshot; do not infer that branches are unprotected.
 - The repository is currently **Public**, although the V2 README says **Private**. Repository visibility is an owner-level decision and has not been changed.
 
 Do not bulk-merge or bulk-delete branches/PRs. Build a dependency map first, compare each branch with the V2 baseline, and classify its unique work as: already included, useful and not included, obsolete, conflicting, or unsafe/unverified.
@@ -29,7 +29,7 @@ Do not bulk-merge or bulk-delete branches/PRs. Build a dependency map first, com
 - V2 currently tracks 31 files under `supabase/migrations/`, ending at `20261112000100_support_ticket_conversations.sql`.
 - The FixLab project has a separate hosted migration history of 21 entries. The recorded versions do not match the 31 checked-in migration filenames.
 - The V2 candidate schema in FixLab has been inspected separately from Production. The candidate includes `rebuild_v2` and private internal routines in `rebuild_v2_private`; do not expose the private schema through PostgREST.
-- Existing V2 documentation records 47 candidate tables, RLS and FORCE RLS coverage, and 18 candidate SQL scripts used in a disposable local replay. Those scripts are not currently represented as a reproducible committed migration sequence in this branch.
+- Existing FixLab documentation records 47 candidate tables, RLS and FORCE RLS coverage, and an 18-script candidate sequence on the governance branch. Later notification work exists on a separate PR branch; do not combine script/test counts across branches without comparing exact commits. Those scripts are not currently represented as a reproducible committed migration sequence in this branch.
 - The 21 FixLab migration-history records are not a one-to-one substitute for the 31 legacy repository migrations. Their SQL bodies have not been proven archived.
 - Therefore, no migration history rewrite, remote reset, schema pull, or database reset is authorized by this plan.
 
@@ -97,9 +97,9 @@ Do not delete local repositories/worktrees until all local-only Git commits are 
 This plan is based on GitHub metadata, committed files, and previously recorded FixLab inspection results. It does not claim a fresh live database comparison, authenticated runtime smoke test, complete branch-by-branch code review, or Production validation. Those checks remain explicit gates.
 
 
-## 10. Branch comparison evidence (2026-11-16)
+## 10. Branch comparison evidence (historical snapshot: 2026-11-16)
 
-The following GitHub compare results are history comparisons against `rebuild/testdz-v2`; ahead/behind counts are commit ancestry counts, **not counts of missing features**:
+The following GitHub compare results are historical comparisons against an earlier `rebuild/testdz-v2` snapshot; ahead/behind counts are commit ancestry counts, **not counts of missing features**. Refresh before making branch decisions:
 
 | Branch | Ahead of V2 | Behind V2 | Changed paths reported |
 |---|---:|---:|---:|
