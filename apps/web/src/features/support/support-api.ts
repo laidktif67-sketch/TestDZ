@@ -172,7 +172,7 @@ export async function getSupportTicketDetails(ticketId: string) {
       .eq("ticket_id", ticketId).order("created_at", { ascending: true }),
   ]);
   if (messageResult.error) return { ticketResult, messageResult, eventResult, attachmentResult: null };
-  const publicMessageIds = (messageResult.data ?? []).map(message => message.id);
+  const publicMessageIds = (messageResult.data ?? []).map((message: { id: string }) => message.id);
   const attachmentResult = publicMessageIds.length
     ? await client.from("support_ticket_attachments")
         .select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at")
