@@ -179,7 +179,7 @@ END;
 $audit_assertions$;
 
 -- Invalid reason and no-op changes must not create new audit rows.
-SET LOCAL ROLE authenticated;
+RESET ROLE;
 DO $invalid_changes$
 DECLARE v_before integer; v_after integer;
 BEGIN
