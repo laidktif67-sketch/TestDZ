@@ -222,6 +222,21 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub','91700000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"91700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
+  IF rebuild_v2_private.can_read_support_attachment_metadata(
+    '91700000-0000-4000-8000-000000000101',
+    (SELECT id FROM rebuild_v2.support_ticket_messages
+     WHERE ticket_id='91700000-0000-4000-8000-000000000101' AND internal_note=true)
+  ) THEN
+    RAISE EXCEPTION 'FAIL: Support metadata helper allows internal-note attachment';
+  END IF;
+  IF NOT rebuild_v2_private.can_read_support_attachment_metadata(
+    '91700000-0000-4000-8000-000000000101',
+    (SELECT id FROM rebuild_v2.support_ticket_messages
+     WHERE ticket_id='91700000-0000-4000-8000-000000000101' AND internal_note=false)
+  ) THEN
+    RAISE EXCEPTION 'FAIL: Support metadata helper denies public-message attachment';
+  END IF;
+
   SELECT count(*) INTO v_count
   FROM rebuild_v2.support_ticket_attachments
   WHERE ticket_id='91700000-0000-4000-8000-000000000101';
