@@ -9,7 +9,8 @@ VALUES
 ('53000000-0000-4000-8000-000000000002','authenticated','authenticated','monitor-other-dev@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
 ('53000000-0000-4000-8000-000000000003','authenticated','authenticated','monitor-tester-one@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
 ('53000000-0000-4000-8000-000000000004','authenticated','authenticated','monitor-tester-two@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
-('53000000-0000-4000-8000-000000000005','authenticated','authenticated','monitor-tester-three@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
+('53000000-0000-4000-8000-000000000005','authenticated','authenticated','monitor-tester-three@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
+('53000000-0000-4000-8000-000000000006','authenticated','authenticated','monitor-admin@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
 INSERT INTO rebuild_v2.user_roles(user_id,role) VALUES
 ('53000000-0000-4000-8000-000000000001','developer'),
 ('53000000-0000-4000-8000-000000000002','developer'),
