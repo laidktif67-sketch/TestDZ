@@ -41,6 +41,7 @@ import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
 import AdminUsersPage from "./modules/admin/pages/AdminUsersPage";
 import AdminAuditLogPage from "./modules/admin/pages/AdminAuditLogPage";
 import AdminFraudReviewsPage from "./modules/admin/pages/AdminFraudReviewsPage";
+import CaseQueuesPage from "./modules/admin/pages/CaseQueuesPage";
 import FinancialOperationsPage from "./modules/admin/pages/FinancialOperationsPage";
 import SupportQueuePage from "./modules/support/pages/SupportQueuePage";
 import SupportTicketDetailPage from "./modules/support/pages/SupportTicketDetailPage";
@@ -111,9 +112,11 @@ export default function App() {
           <Route path="/notifications" element={<NotificationsCenterPage />} />
           <Route element={<RoleGuard requiredRole="financial" />}>
             <Route path="/financial-operations" element={<FinancialOperationsPage />} />
+            <Route path="/financial-operations/disputes" element={<CaseQueuesPage view="disputes" />} />
           </Route>
           <Route element={<RoleGuard requiredRole="support" />}>
             <Route path="/support-workspace" element={<SupportQueuePage />} />
+            <Route path="/support-workspace/reports" element={<CaseQueuesPage view="reports" />} />
             <Route path="/support-workspace/:id" element={<SupportTicketDetailPage />} />
           </Route>
           <Route element={<RoleGuard requiredRole="admin" />}>
@@ -122,6 +125,7 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/audit-log" element={<AdminAuditLogPage />} />
             <Route path="/admin/fraud-reviews" element={<AdminFraudReviewsPage />} />
+            <Route path="/admin/cases" element={<CaseQueuesPage view="all" />} />
             <Route path="/admin/developer-reviews" element={<DeveloperReviewQueuePage />} />
           </Route>
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
