@@ -1,6 +1,6 @@
 # Developer tester invitations — V2 security design
 
-**Status:** design only. This document does not enable invitation code, schema, provider, or hosted configuration.
+**Status:** candidate implementation in progress. SQL/RPC and a JWT-verified Edge Function now exist on this Draft branch; local CI verification and UI integration remain pending. Nothing has been applied to hosted Supabase.
 
 ## Verified current baseline
 - The six-step wizard stores validated V2 test configuration and explicitly rejects raw tester email lists and Google Group addresses.
@@ -8,7 +8,7 @@
 - Enrollment uses the existing secure `rebuild_v2.join_test(test_id)` path. It checks the Tester role, banned status, test and app state, date window, cohort capacity, and duplicate assignment.
 - The notification outbox creates in-app notifications only. `dispatch-notifications` is not an email sender.
 - `supabase/config.toml` uses local Mailpit SMTP. This is not a hosted provider configuration.
-- No invitation table, invitation RPC, token redemption flow, or verified outbound email provider exists in the inspected candidate branch.
+- The candidate branch now contains `032_developer_test_invitations.sql`, `028_developer_test_invitations_contract.sql`, and `supabase/functions/developer-invitations/index.ts`. These are unverified candidate changes until the isolated workflow passes.
 
 ## Required lifecycle
 1. **Create.** An authenticated Developer uses a server-side Edge Function. Verify the session with Supabase Auth, check Developer role and test ownership, normalize the recipient email, generate a cryptographically random one-time token, and hash it with Web Crypto SHA-256.
@@ -36,6 +36,16 @@
 - Do not reveal whether a recipient already has an account. Wrong-email redemption must fail without consuming the intended recipient's token.
 - Token, full email, and message body must never appear in logs, analytics, browser storage, audit metadata, or notification payloads.
 - Redemption cannot grant Tester, Developer, Admin, Support, or Financial roles. It only enrolls a user who already has Tester role.
+
+## Candidate implementation added (not yet validated)
+- `rebuild_v2.test_invitations` stores only a 32-byte SHA-256 token hash, normalized recipient email, test/developer ownership, status, expiry, idempotency key, and acceptance/revocation audit fields.
+- Table RLS is enabled and forced; direct client table privileges are revoked. The four public RPC wrappers are authenticated-only; their private implementations enforce Developer ownership, Tester role, confirmed Auth email, and existing join eligibility.
+- Creation is limited to 50 pending invitations per test and expiry between 1 hour and 30 days. The current Edge Function uses a 7-day expiry and creates a cryptographically random 256-bit token.
+- Redemption locks the invitation row, compares the confirmed Auth email, and calls `rebuild_v2_private.join_test_impl` in the same database transaction before marking the invitation accepted. Revoke and redeem therefore serialize on the same row.
+- The Edge Function verifies the bearer token with `supabase.auth.getUser`, hashes tokens with Web Crypto SHA-256, and returns the raw token only in the one-time create response. It does not send email. Its status is `Link ready — not emailed`.
+- The isolated SQL workflow now includes candidate script 032 and contract 028, and Deno type-checks the invitation function. Results must be checked against the latest commit before describing this feature as passing.
+- Idempotency is strict: reusing a key with a different generated token hash is rejected rather than returning an unusable prior link. The client must retain the same create request/token lifecycle or issue a new idempotency key after an ambiguous failed response; this behavior needs explicit UI handling.
+- Not implemented yet: Developer invitation UI, copy-link flow, token redemption page/route, end-to-end Auth tests, email provider, provider webhooks, and manual mobile/desktop/RTL QA.
 
 ## Provider readiness gate
 Before outbound email is enabled, choose and approve a provider; verify sender domain and SPF/DKIM/DMARC; store its API key only as an Edge Function secret; review retention/terms; design signed webhook verification and replay protection; handle bounces, complaints, suppression and idempotent retries; and provide a sandbox recipient mode.
