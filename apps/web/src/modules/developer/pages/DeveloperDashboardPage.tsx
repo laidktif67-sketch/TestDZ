@@ -216,6 +216,7 @@ export default function DeveloperDashboardPage() {
         <Link to="/apps" className="dd-nav-link"><Icon name="apps"/><span>{t.apps}</span><b>{counts.total}</b></Link>
         <Link to="/apps/new" className="dd-nav-link"><Icon name="plus"/><span>{t.create}</span></Link>
         <Link to="/developer-tests" className="dd-nav-link"><Icon name="tests"/><span>{t.tests}</span></Link>
+        <Link to="/developer/tests/new" className="dd-nav-link"><Icon name="plus"/><span>Create Test</span></Link>
         <Link to="/developer-feedback" className="dd-nav-link"><Icon name="file"/><span>{t.feedback}</span></Link>
         <Link to="/developer-notifications" className="dd-nav-link"><Icon name="bell"/><span>{t.notifications}</span></Link>
         <span className="dd-nav-link dd-disabled"><Icon name="chart"/><span>{t.analytics}</span><em>{t.soon}</em></span>
