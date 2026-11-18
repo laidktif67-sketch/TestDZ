@@ -22,7 +22,7 @@ export default function SupportQueuePage() {
   const isAdmin = roles.includes("admin");
   const isDeveloper = roles.includes("developer");
   const name = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Support";
-  const firstName = name.split(/[\\s._-]+/)[0] || "Support";
+  const firstName = name.split(/[\s._-]+/)[0] || "Support";
 
   const load = useCallback(async () => {
     if (!isTesterWorkflowV2Enabled) { setLoading(false); return; }
