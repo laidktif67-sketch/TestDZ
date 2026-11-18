@@ -46,7 +46,7 @@ Apply all 24 scripts in numeric order, from `001_schema.sql` through `024_audite
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 23 scripts, run:
+After all 24 scripts, run:
 - `tests/catalog_fingerprint.sql` — read-only catalog fingerprint for columns, constraints, indexes, function definitions, effective table/schema/function grants, RLS enabled/forced flags, policies, triggers, and Storage buckets; compare its output on the clean replay and FixLab.
 - `tests/catalog_difference_details.sql` — read-only drill-down of constraint, policy, and Storage bucket differences, including legacy Storage policy names. Neither diagnostic automatically proves parity; review all output and documented exclusions manually.
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
