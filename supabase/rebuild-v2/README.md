@@ -33,6 +33,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `027_enforce_report_attachment_metadata_integrity.sql`: requires a non-null canonical V2 Storage path, an allowlisted extension, and a bounded/control-character-free original filename on every report attachment metadata row.
 - `028_restrict_support_attachment_reads_to_public_messages.sql`: restricts support attachment metadata and private Storage reads to public ticket messages; internal-note attachments remain inaccessible.
 - `029_six_step_test_config.sql`: adds an atomic V2 test-creation RPC for the six-step wizard; validates an explicit configuration allowlist and rejects raw tester email lists or Google Group addresses.
+- `030_developer_test_monitoring_summary.sql`: adds an owner-checked aggregate-only monitoring RPC; it exposes counts and low-volume-suppressed daily activity, never tester IDs, assignment IDs, check-in notes/evidence paths, or feedback bodies.
 
 
 
@@ -46,7 +47,7 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 28 scripts in numeric order, from `001_schema.sql` through `028_restrict_support_attachment_reads_to_public_messages.sql`.
+Apply all 30 scripts in numeric order, from `001_schema.sql` through `030_developer_test_monitoring_summary.sql`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
@@ -77,10 +78,12 @@ After all 28 scripts, run:
 - `tests/022_reports_disputes_fail_closed_contract.sql` — verifies reporter/opener ownership, Support/Admin report visibility, Support/Financial/Admin dispute visibility, and denial of direct client writes to reports, disputes, and report attachments.
 - `tests/023_refunds_fail_closed_contract.sql` — verifies refund visibility is limited to the owner, Financial, and Admin; Support and unrelated users cannot read refunds, and direct client writes are denied.
 - `tests/024_report_evidence_metadata_contract.sql` — verifies incident-report evidence upload is denied before trusted metadata registration and allowed only when file ID, extension, report, assignment, tester, and exact Storage path match; malformed metadata with mismatched paths, unsupported extensions, or NULL paths is rejected; Support can read evidence for review, while Financial and unrelated users cannot.
+- `tests/025_six_step_test_config_contract.sql` — verifies atomic six-step test creation, validated configuration persistence, audit attribution, Developer ownership, and exclusion of raw tester emails.
+- `tests/026_developer_test_monitoring_privacy_contract.sql` — verifies the owner-only monitoring summary, aggregate counts, low-volume daily suppression, no raw tester/assignment/content leakage, and denial to other developers and testers while direct raw-table reads remain blocked.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 28 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty-five post-phase SQL diagnostics/contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies all 30 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the post-phase SQL diagnostics/contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
