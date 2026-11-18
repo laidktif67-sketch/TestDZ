@@ -30,7 +30,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `024_audited_support_ticket_workflow.sql`: records all ticket replies in the immutable event stream; adds reason-required Support/Admin status and priority transitions, Admin-only reopening of resolved/closed tickets, and Admin-visible audit records for staff actions.
 - `025_require_report_attachment_metadata.sql`: requires a pre-registered, exact report-attachment metadata row before incident-report evidence can be uploaded; preserves the V2 assignment-submission evidence path.
 - `026_align_report_evidence_read_access.sql`: aligns report evidence reads with report-row visibility (reporter and Support/Admin only); preserves assignment-submission participant reads.
-- `027_enforce_report_attachment_metadata_integrity.sql`: requires a non-null canonical V2 Storage path and an allowlisted extension on every report attachment metadata row.
+- `027_enforce_report_attachment_metadata_integrity.sql`: requires a non-null canonical V2 Storage path, an allowlisted extension, and a bounded/control-character-free original filename on every report attachment metadata row.
 
 
 
