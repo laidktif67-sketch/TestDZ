@@ -119,6 +119,19 @@ BEGIN
     RAISE EXCEPTION 'FAIL: join idempotency';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.events e
+    WHERE e.event_type='notification.requested'
+      AND e.aggregate_type='assignment'
+      AND e.aggregate_id=v_assignment
+      AND e.payload->>'user_id'='10000000-0000-4000-8000-000000000001'
+      AND e.payload->>'recipient_role'='developer'
+      AND e.payload->>'type'='assignment.joined'
+      AND e.payload->'data'->>'test_id'=v_test::text
+  ) THEN
+    RAISE EXCEPTION 'FAIL: joining a test must enqueue one developer notification event';
+  END IF;
+
   UPDATE rebuild_v2.tests SET status='ready' WHERE id=v_test;
   UPDATE rebuild_v2.cohorts SET status='ready' WHERE name='V2 Synthetic Cohort';
 
@@ -288,6 +301,19 @@ BEGIN
   END IF;
   IF NOT rebuild_v2.finalize_assignment_submission(v_submission) THEN
     RAISE EXCEPTION 'FAIL: finalization idempotency';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.events e
+    WHERE e.event_type='notification.requested'
+      AND e.aggregate_type='assignment_submission'
+      AND e.aggregate_id=v_submission
+      AND e.payload->>'user_id'='10000000-0000-4000-8000-000000000001'
+      AND e.payload->>'recipient_role'='developer'
+      AND e.payload->>'type'='assignment.submitted'
+      AND e.payload->'data'->>'assignment_id'=v_assignment::text
+  ) THEN
+    RAISE EXCEPTION 'FAIL: final submission must enqueue one developer notification event';
   END IF;
   IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'completed' THEN
     RAISE EXCEPTION 'FAIL: assignment completion transition';
