@@ -10,7 +10,6 @@ import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { Brand } from "../../../shared/components/Brand";
 import "../styles/developer-analytics-v2.css";
 
-type Range = "7" | "30" | "90";
 type Summary = DeveloperTestMonitoringSummary;
 
 const dateKey = (date: Date) => [
@@ -26,7 +25,6 @@ export default function DeveloperAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [range, setRange] = useState<Range>("30");
 
   async function load(refresh = false) {
     if (refresh) setRefreshing(true);
@@ -79,7 +77,7 @@ export default function DeveloperAnalyticsPage() {
   }), { tests: 0, assignments: 0, completed: 0, active: 0, pending: 0, feedback: 0, ratingCount: 0, ratingPoints: 0 }), [rows]);
 
   const chart = useMemo(() => {
-    const days = Number(range);
+    const days = 7;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const start = new Date(today);
@@ -98,7 +96,7 @@ export default function DeveloperAnalyticsPage() {
       const key = dateKey(day);
       return { key, label: day.toLocaleDateString("en", { month: "short", day: "numeric" }), count: counts.get(key) ?? 0 };
     });
-  }, [rows, range]);
+  }, [rows]);
 
   const apps = useMemo(() => {
     const grouped = new Map<string, { name: string; tests: number; assignments: number; completed: number }>();
@@ -146,9 +144,7 @@ export default function DeveloperAnalyticsPage() {
           <article><small>متوسط التقييم</small><strong>{totals.ratingCount ? averageRating.toFixed(2) + "/5" : "—"}</strong><span>{number(totals.feedback)} ملاحظات مستلمة</span></article>
         </section>
         <section className="dan2-panel">
-          <div className="dan2-panel-head"><div><h2>نشاط المختبرين</h2><p>عدد المشاركات اليومية التي اجتازت حد الخصوصية.</p></div>
-            <div className="dan2-ranges">{(["7", "30", "90"] as Range[]).map(value => <button key={value} className={range === value ? "active" : ""} onClick={() => setRange(value)}>{value} يوم</button>)}</div>
-          </div>
+          <div className="dan2-panel-head"><div><h2>نشاط المختبرين · آخر 7 أيام</h2><p>عدد المشاركات اليومية التي اجتازت حد الخصوصية.</p></div></div>
           <div className="dan2-chart" role="img" aria-label="مخطط النشاط اليومي">
             {chart.map(item => <div className="dan2-bar" key={item.key} title={item.label + ": " + item.count}>
               <span>{item.count || ""}</span><i style={{ height: (item.count / maxActivity * 100) + "%" }} /><small>{item.label}</small>
