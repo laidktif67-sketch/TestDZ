@@ -35,11 +35,15 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND status='draft' AND test_config=v_config) THEN
     RAISE EXCEPTION 'FAIL: six-step configuration was not saved with draft';
   END IF;
+  -- Audit events are intentionally Admin-readable only. Leave the authenticated
+  -- Developer context before the trusted contract assertion; otherwise RLS hides
+  -- the correctly written event and makes this test report a false failure.
+  RESET ROLE;
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events WHERE target_id=v_test AND actor_id='51000000-0000-4000-8000-000000000001' AND action='test.six_step_config.saved' AND metadata->>'config_version'='1';
   IF v_count<>1 THEN
-    RAISE EXCEPTION 'FAIL: validated six-step config audit event missing; test_id=%; matching_count=%; audit_rows=%', v_test, v_count,
-      coalesce((SELECT jsonb_agg(jsonb_build_object('actor_id',actor_id,'action',action,'target_type',target_type,'target_id',target_id,'metadata',metadata))::text FROM rebuild_v2.audit_events),'[]');
+    RAISE EXCEPTION 'FAIL: validated six-step config audit event missing; test_id=%; matching_count=%', v_test, v_count;
   END IF;
+  SET LOCAL ROLE authenticated;
 
   BEGIN
     PERFORM rebuild_v2.create_test_with_config(v_app,'Mismatched Target Test','A complete description for a mismatched target validation.','Mismatch','custom',24,NULL,NULL,30,'Follow the supplied test instructions.',
