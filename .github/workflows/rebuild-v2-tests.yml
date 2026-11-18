@@ -84,6 +84,7 @@ jobs:
             supabase/rebuild-v2/tests/008_developer_feedback_privacy_contract.sql
             supabase/rebuild-v2/tests/009_wallet_idempotency_contract.sql
             supabase/rebuild-v2/tests/011_notification_recipient_roles_contract.sql
+            supabase/rebuild-v2/tests/012_notification_outbox_retry_contract.sql
           )
 
           for contract in "${contracts[@]}"; do
