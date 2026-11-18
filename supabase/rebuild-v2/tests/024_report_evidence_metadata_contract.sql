@@ -121,6 +121,61 @@ VALUES (
   '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000301.pdf'
 );
 
+-- Metadata registration must be structurally complete and canonical.
+-- The privileged fixture path above is valid; malformed records must fail closed.
+DO $metadata_integrity$
+DECLARE
+  v_test uuid := (SELECT id FROM rebuild_v2.tests WHERE title='Report Evidence Contract Test');
+BEGIN
+  BEGIN
+    INSERT INTO rebuild_v2.report_attachments
+      (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+    VALUES (
+      '92400000-0000-4000-8000-000000000201',
+      '92400000-0000-4000-8000-000000000101',
+      v_test,'92400000-0000-4000-8000-000000000002',
+      '92400000-0000-4000-8000-000000000302',
+      'pdf','wrong-path.pdf',
+      'v2/' || v_test::text || '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000303.pdf'
+    );
+    RAISE EXCEPTION 'FAIL: metadata accepted a Storage path with a different file UUID';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
+
+  BEGIN
+    INSERT INTO rebuild_v2.report_attachments
+      (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+    VALUES (
+      '92400000-0000-4000-8000-000000000201',
+      '92400000-0000-4000-8000-000000000101',
+      v_test,'92400000-0000-4000-8000-000000000002',
+      '92400000-0000-4000-8000-000000000303',
+      'exe','not-allowed.exe',
+      'v2/' || v_test::text || '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000303.exe'
+    );
+    RAISE EXCEPTION 'FAIL: metadata accepted a non-allowlisted file extension';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
+
+  BEGIN
+    INSERT INTO rebuild_v2.report_attachments
+      (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+    VALUES (
+      '92400000-0000-4000-8000-000000000201',
+      '92400000-0000-4000-8000-000000000101',
+      v_test,'92400000-0000-4000-8000-000000000002',
+      '92400000-0000-4000-8000-000000000304',
+      'pdf','missing-path.pdf',NULL
+    );
+    RAISE EXCEPTION 'FAIL: metadata accepted a NULL Storage path';
+  EXCEPTION WHEN not_null_violation THEN
+    NULL;
+  END;
+END;
+$metadata_integrity$;
+
 SET LOCAL ROLE authenticated;
 DO $after_registration$
 DECLARE
