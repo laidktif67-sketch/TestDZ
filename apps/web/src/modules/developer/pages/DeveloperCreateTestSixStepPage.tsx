@@ -4,6 +4,7 @@ import type { AppRecord } from "@testdz/types";
 import { listApps } from "../../../features/apps/apps-api";
 import { identityApi } from "../../../shared/auth/identity-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
+import { Brand } from "../../../shared/components/Brand";
 import { createDeveloperTestWithConfig as createSixStepDraft } from "../../../features/apps/apps-api";
 import type { DeveloperSixStepTestConfig } from "../../../features/apps/apps-api";
 type TestType = "google_play_closed" | "apk_testing" | "bug_discovery" | "usability" | "compatibility" | "custom";
@@ -70,7 +71,7 @@ export default function DeveloperCreateTestSixStepPage() {
   const [testType, setTestType] = useState<TestType | "">("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [testingObjective, setTestingObjective] = useState("stability_bugs");
+  const [testingObjective, setTestingObjective] = useState<DeveloperSixStepTestConfig["details"]["testingObjective"]>("stability_bugs");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("high");
   const [testingScope, setTestingScope] = useState<Array<"core_flows" | "performance" | "compatibility" | "accessibility">>(["core_flows", "performance", "compatibility"]);
   const [successCriteria, setSuccessCriteria] = useState("No critical bugs; core flows pass");
@@ -329,7 +330,7 @@ export default function DeveloperCreateTestSixStepPage() {
     <section className="dct-details-section">
       <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="scope" size={24}/></span><div><h3>Testing Scope</h3><p>What should testers focus on?</p></div></div>
       <div className="dct-scope-grid">
-        {[{id:"core_flows",title:"Core user flows",desc:"Main journeys and key actions"},{id:"performance",title:"Performance",desc:"Speed, responsiveness, stability"},{id:"compatibility",title:"Compatibility",desc:"Devices and Android versions"},{id:"accessibility",title:"Accessibility",desc:"Readability and inclusive use"}].map(item=><label key={item.id} className={"dct-scope-option "+(testingScope.includes(item.id)?"selected":"")}><input type="checkbox" checked={testingScope.includes(item.id)} onChange={e=>setTestingScope(current=>e.target.checked?[...current,item.id as "core_flows" | "performance" | "compatibility" | "accessibility"]:current.filter(value=>value!==item.id))}/><span className="dct-scope-check">{testingScope.includes(item.id)?"✓":""}</span><span><strong>{item.title}</strong><small>{item.desc}</small></span></label>)}
+        {[{id:"core_flows",title:"Core user flows",desc:"Main journeys and key actions"},{id:"performance",title:"Performance",desc:"Speed, responsiveness, stability"},{id:"compatibility",title:"Compatibility",desc:"Devices and Android versions"},{id:"accessibility",title:"Accessibility",desc:"Readability and inclusive use"}].map(item=><label key={item.id} className={"dct-scope-option "+(testingScope.includes(item.id as DeveloperSixStepTestConfig["details"]["testingScope"][number])?"selected":"")}><input type="checkbox" checked={testingScope.includes(item.id as DeveloperSixStepTestConfig["details"]["testingScope"][number])} onChange={e=>setTestingScope(current=>e.target.checked?[...current,item.id as DeveloperSixStepTestConfig["details"]["testingScope"][number]]:current.filter(value=>value!==item.id as DeveloperSixStepTestConfig["details"]["testingScope"][number]))}/><span className="dct-scope-check">{testingScope.includes(item.id as DeveloperSixStepTestConfig["details"]["testingScope"][number])?"✓":""}</span><span><strong>{item.title}</strong><small>{item.desc}</small></span></label>)}
       </div>
     </section>
     <section className="dct-details-section">
