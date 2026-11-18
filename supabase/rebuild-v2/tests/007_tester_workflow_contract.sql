@@ -278,6 +278,13 @@ BEGIN
     v_submission,v_file,'pdf','synthetic-proof.pdf','application/pdf',1024
   );
 
+  IF split_part(v_path,'/',1) <> 'v2' THEN
+    RAISE EXCEPTION 'FAIL: V2 submission evidence path must use the v2 namespace';
+  END IF;
+  IF rebuild_v2_private.can_upload_test_evidence(substr(v_path,4)) THEN
+    RAISE EXCEPTION 'FAIL: V2 evidence helper accepted the legacy unprefixed path';
+  END IF;
+
   IF NOT rebuild_v2_private.can_upload_test_evidence(v_path) THEN
     RAISE EXCEPTION 'FAIL: upload policy helper';
   END IF;

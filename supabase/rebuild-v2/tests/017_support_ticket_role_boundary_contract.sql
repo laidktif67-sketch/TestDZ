@@ -9,7 +9,9 @@ VALUES
   ('91700000-0000-4000-8000-000000000003','authenticated','authenticated','v2-support-boundary-other@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other User"}'::jsonb,now(),now());
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
-VALUES ('91700000-0000-4000-8000-000000000001','support');
+VALUES
+  ('91700000-0000-4000-8000-000000000001','support'),
+  ('91700000-0000-4000-8000-000000000002','tester');
 
 INSERT INTO rebuild_v2.support_tickets
   (id,user_id,requester_role,subject,category,priority,description,status)
@@ -82,6 +84,87 @@ BEGIN
   IF v_count <> 0 THEN RAISE EXCEPTION 'FAIL: Support can read another user wallet ledger'; END IF;
 END;
 $test$;
+
+DO $attachment_boundary$
+DECLARE
+  v_message_id uuid;
+  v_path text;
+  v_count integer;
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub','91700000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"91700000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+
+  SELECT id INTO v_message_id
+  FROM rebuild_v2.support_ticket_messages
+  WHERE ticket_id='91700000-0000-4000-8000-000000000101'
+    AND sender_id='91700000-0000-4000-8000-000000000002'
+    AND internal_note=false
+  ORDER BY created_at
+  LIMIT 1;
+  IF v_message_id IS NULL THEN
+    RAISE EXCEPTION 'FAIL: support attachment fixture message missing';
+  END IF;
+
+  v_path:='v2/91700000-0000-4000-8000-000000000101/91700000-0000-4000-8000-000000000002/91700000-0000-4000-8000-000000000301-proof.pdf';
+  IF NOT rebuild_v2_private.can_upload_support_attachment(v_path) THEN
+    RAISE EXCEPTION 'FAIL: ticket owner rejected for V2-prefixed support attachment';
+  END IF;
+  IF rebuild_v2_private.can_upload_support_attachment(
+    '91700000-0000-4000-8000-000000000101/91700000-0000-4000-8000-000000000002/91700000-0000-4000-8000-000000000301-proof.pdf'
+  ) THEN
+    RAISE EXCEPTION 'FAIL: V2 support helper accepted the legacy unprefixed path';
+  END IF;
+
+  INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+  VALUES(
+    'support-attachments',v_path,
+    '91700000-0000-4000-8000-000000000002'::uuid,
+    '91700000-0000-4000-8000-000000000002',
+    jsonb_build_object('mimetype','application/pdf','size',1024)
+  );
+  PERFORM rebuild_v2.add_support_attachment(
+    '91700000-0000-4000-8000-000000000101',v_message_id,v_path,
+    'proof.pdf','application/pdf',1024
+  );
+
+  SELECT count(*) INTO v_count
+  FROM storage.objects
+  WHERE bucket_id='support-attachments' AND name=v_path;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'FAIL: ticket owner cannot read the registered V2 attachment';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','91700000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"91700000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  IF rebuild_v2_private.can_read_support_attachment(v_path)
+     OR rebuild_v2_private.can_upload_support_attachment(v_path) THEN
+    RAISE EXCEPTION 'FAIL: unrelated user passed V2 support attachment helpers';
+  END IF;
+
+  BEGIN
+    INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+    VALUES(
+      'support-attachments',v_path,
+      '91700000-0000-4000-8000-000000000003'::uuid,
+      '91700000-0000-4000-8000-000000000003',
+      jsonb_build_object('mimetype','application/pdf','size',1024)
+    );
+    RAISE EXCEPTION 'FAIL: unrelated user inserted a V2 support attachment';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  PERFORM set_config('role','postgres',true);
+  SELECT count(*) INTO v_count
+  FROM storage.objects
+  WHERE bucket_id='support-attachments' AND name=v_path
+    AND owner_id='91700000-0000-4000-8000-000000000002';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'FAIL: denied outsider upload changed the owner's V2 support attachment';
+  END IF;
+  PERFORM set_config('role','authenticated',true);
+END;
+$attachment_boundary$;
 
 RESET ROLE;
 ROLLBACK;
