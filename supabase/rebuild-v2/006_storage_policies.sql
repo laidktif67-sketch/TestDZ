@@ -63,10 +63,12 @@ BEGIN
   RETURN EXISTS (
     SELECT 1 FROM rebuild_v2.support_tickets st
     WHERE st.id=v_ticket_id AND st.status<>'closed'
-      AND st.user_id=(SELECT auth.uid())
-      AND EXISTS (
-        SELECT 1 FROM rebuild_v2.user_roles ur
-        WHERE ur.user_id=(SELECT auth.uid()) AND ur.role=st.requester_role
+      AND (
+        (st.user_id=(SELECT auth.uid()) AND EXISTS (
+          SELECT 1 FROM rebuild_v2.user_roles ur
+          WHERE ur.user_id=(SELECT auth.uid()) AND ur.role=st.requester_role
+        ))
+        OR rebuild_v2_private.has_role((SELECT auth.uid()),ARRAY['support','admin'])
       )
   );
 EXCEPTION WHEN invalid_text_representation THEN
