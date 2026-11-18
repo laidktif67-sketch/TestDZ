@@ -26,6 +26,7 @@ export default function DeveloperTestersPage() {
   const [error,setError]=useState("");
   const [query,setQuery]=useState("");
   const [status,setStatus]=useState("all");
+  const [shareNotice,setShareNotice]=useState("");
 
   async function load(isRefresh=false) {
     if(isRefresh)setRefreshing(true);else setLoading(true);
@@ -85,6 +86,17 @@ export default function DeveloperTestersPage() {
   }),{campaigns:0,assignments:0,participants:0,active:0,completed:0,pending:0}),[rows]);
   const completion=totals.assignments?Math.round(totals.completed/totals.assignments*100):0;
 
+  async function copyRecruitmentLink(testId:string){
+    const link=new URL("/tests/"+encodeURIComponent(testId),window.location.origin).toString();
+    try{
+      if(!navigator.clipboard?.writeText)throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(link);
+      setShareNotice("تم نسخ رابط الاختبار. يمكن للمختبر تسجيل الدخول ثم الانضمام إذا كان الاختبار يستقبل مشاركات.");
+    }catch{
+      setShareNotice("تعذر النسخ تلقائياً. انسخ الرابط التالي يدوياً: "+link);
+    }
+  }
+
   function exportCsv(){
     const lines=[
       ["الاختبار","التطبيق","حالة الاختبار","عدد المشاركين في الاختبار","إجمالي المشاركات","نشط","بانتظار البدء","مكتمل","نسبة الإكمال"],
@@ -120,6 +132,7 @@ export default function DeveloperTestersPage() {
           <Stat label="المشاركات النشطة" value={totals.active} detail={totals.pending+" بانتظار البدء"} symbol="◷"/>
           <Stat label="نسبة الإكمال" value={completion+"%"} detail={totals.completed+" مشاركة مكتملة"} symbol="✓"/>
         </section>
+        {shareNotice&&<p className="dtv2-share-notice" role="status">{shareNotice}</p>}
         <section className="dtv2-toolbar">
           <label className="dtv2-search"><span aria-hidden="true">⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث باسم الاختبار أو التطبيق…" aria-label="البحث"/></label>
           <select value={status} onChange={e=>setStatus(e.target.value)} aria-label="تصفية حالة الاختبار">
@@ -135,7 +148,7 @@ export default function DeveloperTestersPage() {
               <td>{row.metrics.uniqueTesters}</td><td>{row.metrics.totalAssignments}</td><td>{row.metrics.active}</td><td>{row.metrics.completed}</td>
               <td><div className="dtv2-progress"><i style={{width:row.metrics.completionRate+"%"}}/></div><small>{row.metrics.completionRate}%</small></td>
               <td><span className={"dtv2-status status-"+row.test.status}>{statusLabels[row.test.status]??row.test.status}</span></td>
-              <td><Link to={"/developer/tests/"+row.test.id+"/monitoring"}>التفاصيل ←</Link></td>
+              <td className="dtv2-row-actions">{row.test.status==="recruiting"&&<button type="button" onClick={()=>void copyRecruitmentLink(row.test.id)} aria-label={"نسخ رابط اختبار "+row.test.title}>نسخ رابط الانضمام</button>}<Link to={"/developer/tests/"+row.test.id+"/monitoring"}>التفاصيل ←</Link></td>
             </tr>)}
           </tbody></table></section>
         }

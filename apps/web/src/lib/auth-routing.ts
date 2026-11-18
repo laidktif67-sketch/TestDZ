@@ -15,3 +15,9 @@ export async function getPostAuthRoute(userId: string): Promise<"/tester-dashboa
   if (error) throw error;
   return profile?.onboarding_completed_at ? "/tester-dashboard" : "/onboarding";
 }
+
+/** Allow only same-app tester test-preview destinations after authentication. */
+export function getSafeAuthRedirect(value: string | null | undefined): string | null {
+  if (!value || !/^\/tests\/[A-Za-z0-9-]+$/.test(value)) return null;
+  return value;
+}
