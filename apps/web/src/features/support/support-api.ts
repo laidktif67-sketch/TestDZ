@@ -72,3 +72,26 @@ export async function addTesterSupportAttachment(input: {
     mime_type: input.mimeType, size_bytes: input.sizeBytes,
   });
 }
+
+
+export type SupportQueueTicket = {
+  id: string;
+  ticket_number: number;
+  user_id: string;
+  requester_role: "tester" | "developer";
+  subject: string;
+  category: string;
+  priority: "normal" | "high" | "urgent";
+  status: "open" | "in_progress" | "waiting_for_user" | "resolved" | "closed";
+  assigned_to: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Read-only staff queue. Selects ticket metadata only; no description, message body or attachment data. */
+export function listSupportQueueTickets() {
+  return getAppDataClient().from("support_tickets")
+    .select("id,ticket_number,user_id,requester_role,subject,category,priority,status,assigned_to,created_at,updated_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+}
