@@ -130,7 +130,7 @@ export type DeveloperTestMonitoringSummary = {
     totalAssignments: number; uniqueTesters: number; pending: number; active: number;
     completed: number; failed: number; withdrawn: number; rejected: number;
     completionRate: number; checkins: number; feedbackCount: number;
-    averageRating: number | null; feedbackPending: number; feedbackAccepted: number; feedbackRejected: number;
+    averageRating: number | null; ratingCount: number; feedbackPending: number; feedbackAccepted: number; feedbackRejected: number;
   };
   dailyActivity: Array<{ date: string; count: number }>;
 };
