@@ -90,7 +90,7 @@ BEGIN
        WHERE bucket_id='app-icons' AND name=v_path
          AND owner_id='91900000-0000-4000-8000-000000000001'
      ) THEN
-    RAISE EXCEPTION 'FAIL: outsider changed or removed the owner's V2 app icon';
+    RAISE EXCEPTION 'FAIL: outsider changed or removed the owner V2 app icon';
   END IF;
 END;
 $outsider$;
