@@ -78,7 +78,8 @@ BEGIN
      OR v_payload->'metrics'->>'completed'<>'1'
      OR v_payload->'metrics'->>'checkins'<>'3'
      OR v_payload->'metrics'->>'feedbackCount'<>'1'
-     OR v_payload->'metrics'->>'averageRating'<>'5.00' THEN
+     OR v_payload->'metrics'->>'averageRating'<>'5.00'
+     OR v_payload->'metrics'->>'ratingCount'<>'1' THEN
     RAISE EXCEPTION 'FAIL: aggregate monitoring metrics incorrect: %',v_payload->'metrics';
   END IF;
   IF jsonb_array_length(v_payload->'dailyActivity')<>1
