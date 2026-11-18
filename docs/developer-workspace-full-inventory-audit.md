@@ -113,6 +113,10 @@ V2 already provides a stronger foundation for important parts of the workspace:
 7. Keep test CSV email parsing as local draft configuration only unless a separate, consented invitation workflow is designed. Parsing a CSV must not silently invite or disclose tester email addresses.
 8. Keep the six-step UI's useful form sections, validation, localization and navigation, but map each persisted field to the current V2 `tests`/test-content/cohort/build/asset model. Do not silently discard fields that have no V2 destination; document them as product/schema decisions.
 
+### Six-step form data preservation gate
+
+The legacy six-step creator parses a CSV locally and explicitly labels those email addresses as draft-only; it does not send invitations. Preserve that privacy boundary. The core fields that map cleanly to V2 are selected app, test type, title, description, target tester count, start/end dates, duration and tester instructions. The remaining configuration fields listed above need a documented V2 representation, validation limits, ownership checks and contract tests. A JSONB column existing in the schema is not by itself permission to accept arbitrary client JSON.
+
 ## 4. Recommended V2 port sequence
 
 1. **Developer shell and route completeness:** add a V2 developer navigation map and restore safe routes for app creation, test detail/monitoring, testers, results, analytics, feedback details, settings, subscription, help and support. Each route must be guarded by the persisted Developer role; app and test resources must still be owner-scoped in the backend.
