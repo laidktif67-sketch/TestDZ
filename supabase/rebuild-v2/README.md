@@ -33,7 +33,8 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `027_enforce_report_attachment_metadata_integrity.sql`: requires a non-null canonical V2 Storage path, an allowlisted extension, and a bounded/control-character-free original filename on every report attachment metadata row.
 - `028_restrict_support_attachment_reads_to_public_messages.sql`: restricts support attachment metadata and private Storage reads to public ticket messages; internal-note attachments remain inaccessible.
 - `029_six_step_test_config.sql`: adds an atomic V2 test-creation RPC for the six-step wizard; validates an explicit configuration allowlist and rejects raw tester email lists or Google Group addresses.
-- `030_developer_test_monitoring_summary.sql`: adds an owner-checked aggregate-only monitoring RPC; it exposes owner-scoped counts and daily activity suppressed unless at least three distinct testers contributed, never tester IDs, assignment IDs, check-in notes/evidence paths, or feedback bodies. The daily threshold is based on distinct tester IDs rather than event count, so repeated events from one or two testers cannot make a low-volume day visible.\n- `031_role_explicit_support_ticket_creation.sql`: adds a role-explicit support ticket creation RPC so accounts holding both Tester and Developer roles can create a ticket under the workspace they are using; the requested role is checked against `user_roles` server-side and the `created` event is inserted atomically.
+- `030_developer_test_monitoring_summary.sql`: adds an owner-checked aggregate-only monitoring RPC; it exposes owner-scoped counts and daily activity suppressed unless at least three distinct testers contributed, never tester IDs, assignment IDs, check-in notes/evidence paths, or feedback bodies. The daily threshold is based on distinct tester IDs rather than event count, so repeated events from one or two testers cannot make a low-volume day visible.
+- `031_role_explicit_support_ticket_creation.sql`: adds a role-explicit support ticket creation RPC so accounts holding both Tester and Developer roles can create a ticket under the workspace they are using; the requested role is checked against `user_roles` server-side and the `created` event is inserted atomically.
 
 
 
@@ -52,7 +53,7 @@ Apply all 31 scripts in numeric order, from `001_schema.sql` through `031_role_e
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 30 scripts, run:
+After all 31 scripts, run:
 - `tests/catalog_fingerprint.sql` — read-only catalog fingerprint for columns, constraints, indexes, function definitions, effective table/schema/function grants, RLS enabled/forced flags, policies, triggers, and Storage buckets; compare its output on the clean replay and FixLab.
 - `tests/catalog_difference_details.sql` — read-only drill-down of constraint, policy, and Storage bucket differences, including legacy Storage policy names. Neither diagnostic automatically proves parity; review all output and documented exclusions manually.
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
