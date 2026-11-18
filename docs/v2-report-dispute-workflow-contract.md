@@ -53,6 +53,18 @@ The current placeholder UI must not be enabled by simply wiring its form to an R
 
 The form remains intentionally non-submitting and does not upload files. Before enabling it, product decisions must map or remove unsupported title/priority fields, map UI categories to canonical report types, determine which report types require assignment/reported-user references, and enforce one consistent evidence policy at both the UI and server boundaries.
 
+## 2.2 Legacy staged migration is not the V2 evidence contract
+
+The separate staged migration `supabase/migrations/20261109203933_add_private_report_evidence.sql` is explicitly marked staging-only and must not be applied as a substitute for the V2 candidate scripts or treated as proof of hosted Production state.
+
+It has materially different behavior from the current V2 candidate contract:
+
+- It grants authenticated users `INSERT` on `public.report_attachments` and registers metadata after an object already exists. The V2 candidate contract denies direct client metadata writes and requires a trusted metadata row before the Storage upload.
+- Its report-evidence read helper permits the reporter, the tested app's Developer, and Admin, while excluding Support. The V2 candidate contract follows report visibility: reporter and Support/Admin; a related Developer does not gain access solely through test ownership.
+- It uses the legacy unprefixed object path, whereas V2 evidence uses the explicit `v2/` namespace and exact registered object path.
+
+Do not apply, cherry-pick, or use this staged migration to configure a hosted project. If legacy report evidence is ever required, it needs a separately reviewed legacy contract and migration plan. Keep legacy and V2 bucket paths, registration order, and role visibility explicitly separated.
+
 ## 3. Gaps that must be resolved before implementation
 
 ### Report intake
