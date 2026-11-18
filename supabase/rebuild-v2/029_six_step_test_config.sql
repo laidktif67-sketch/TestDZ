@@ -24,6 +24,7 @@ BEGIN
   IF NOT (p_config->'cohort' ?& ARRAY['targetTesters','notes'])
      OR (p_config->'cohort' - ARRAY['targetTesters','notes']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'cohort'->'targetTesters') IS DISTINCT FROM 'number'
+     OR (p_config->'cohort'->>'targetTesters')::numeric <> trunc((p_config->'cohort'->>'targetTesters')::numeric)
      OR (p_config->'cohort'->>'targetTesters')::integer NOT BETWEEN 1 AND 500
      OR (p_config->'cohort' ? 'notes' AND jsonb_typeof(p_config->'cohort'->'notes') NOT IN ('string','null'))
      OR char_length(coalesce(p_config->'cohort'->>'notes','')) > 2000 THEN
@@ -108,6 +109,10 @@ BEGIN
     RAISE EXCEPTION 'DEVELOPER_ROLE_REQUIRED' USING errcode='42501';
   END IF;
   PERFORM rebuild_v2_private.validate_six_step_test_config(p_test_config);
+  IF (p_test_config->'cohort'->>'targetTesters')::integer <> p_min_testers
+     OR NULLIF(btrim(p_test_config->'rules'->>'instructions'),'') IS DISTINCT FROM NULLIF(btrim(p_instructions),'') THEN
+    RAISE EXCEPTION 'SIX_STEP_CONFIG_MISMATCH' USING errcode='22023';
+  END IF;
   v_test_id := rebuild_v2_private.create_test_impl(
     p_app_id,p_title,p_description,p_short_summary,p_test_type,p_min_testers,
     p_start_date,p_end_date,p_duration,p_instructions
