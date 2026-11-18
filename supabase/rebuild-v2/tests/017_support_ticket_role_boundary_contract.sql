@@ -217,6 +217,10 @@ BEGIN
     RAISE EXCEPTION 'FAIL: denied outsider upload changed the existing V2 support attachment';
   END IF;
 
+  -- Restore the authenticated role after the trusted fixture inspection above.
+  -- Otherwise the subsequent RLS assertions execute as postgres and bypass policies.
+  PERFORM set_config('role','authenticated',true);
+
   -- Staff may read public-message attachment metadata and bytes, but internal-note
   -- attachments are denied even when the staff member can read the conversation.
   PERFORM set_config('request.jwt.claim.sub','91700000-0000-4000-8000-000000000001',true);
