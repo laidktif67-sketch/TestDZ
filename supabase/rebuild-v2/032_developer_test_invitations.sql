@@ -62,7 +62,7 @@ CREATE INDEX IF NOT EXISTS test_invitations_expiry_idx
 
 ALTER TABLE rebuild_v2.test_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rebuild_v2.test_invitations FORCE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE rebuild_v2.test_invitations FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON TABLE rebuild_v2.test_invitations FROM PUBLIC, anon, authenticated, service_role;
 
 -- Create: authenticated Developer, owned recruiting test, bounded expiry,
 -- per-test active-invitation cap, and an idempotency key. No direct table writes.
