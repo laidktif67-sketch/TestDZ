@@ -28,7 +28,7 @@ DECLARE
     "rules":{"androidVersion":"Any supported version","instructions":"Install and test core flows"},
     "details":{"testingObjective":"stability_bugs","priority":"high","testingScope":["core_flows","performance"],"successCriteria":"No critical bugs","minimumCompletionRate":80},
     "schedule":{"durationDays":14,"allowMoreTesters":true,"joiningMethod":"google_play_link","collectFeedback":true,"enableBugReports":false},
-    "googlePlay":{"track":"internal","testerMethod":"join_link","appVersion":"latest_available","releaseMode":"immediately"}
+    "googlePlay":{"track":"internal","testerMethod":"join_link","appVersion":"latest_available","releaseMode":"immediately","releaseAt":null}
   }'::jsonb;
   v_saved jsonb;
 BEGIN
@@ -37,7 +37,7 @@ BEGIN
 
   v_test := rebuild_v2.create_test_with_config(
     v_app,'Six-step contract test','Synthetic description long enough for the V2 test creation contract.',
-    NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,20160,
+    NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,NULL,
     'Install, test, and report reproducible issues.',v_config
   );
 
