@@ -1,7 +1,7 @@
 -- TestDZ V2: transactional notification outbox producer contract.
 -- Candidate only; apply after 019_notification_recipient_roles.sql.
--- This script does not deliver notifications. A trusted worker must consume
--- notification.requested events and insert role-scoped notification rows.
+-- Adds transactional event producers plus a service-role-only batch dispatcher.
+-- The Edge Function source lives at supabase/functions/dispatch-notifications.
 
 BEGIN;
 
