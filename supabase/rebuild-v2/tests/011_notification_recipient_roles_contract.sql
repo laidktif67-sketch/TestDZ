@@ -3,6 +3,34 @@
 
 BEGIN;
 
+-- Notification/event rows are server-owned: clients may read their permitted
+-- notification feed and use scoped read-state RPCs, but cannot write either
+-- table directly. The events outbox is reserved for trusted producers/workers.
+DO $privileges$
+BEGIN
+  IF has_table_privilege('authenticated','rebuild_v2.events','INSERT')
+     OR has_table_privilege('authenticated','rebuild_v2.events','UPDATE')
+     OR has_table_privilege('authenticated','rebuild_v2.events','DELETE') THEN
+    RAISE EXCEPTION 'authenticated role must not write the events outbox directly';
+  END IF;
+  IF has_table_privilege('anon','rebuild_v2.events','INSERT')
+     OR has_table_privilege('anon','rebuild_v2.events','UPDATE')
+     OR has_table_privilege('anon','rebuild_v2.events','DELETE') THEN
+    RAISE EXCEPTION 'anon role must not write the events outbox';
+  END IF;
+  IF has_table_privilege('authenticated','rebuild_v2.notifications','INSERT')
+     OR has_table_privilege('authenticated','rebuild_v2.notifications','UPDATE')
+     OR has_table_privilege('authenticated','rebuild_v2.notifications','DELETE') THEN
+    RAISE EXCEPTION 'authenticated role must not write notification rows directly';
+  END IF;
+  IF has_table_privilege('anon','rebuild_v2.notifications','INSERT')
+     OR has_table_privilege('anon','rebuild_v2.notifications','UPDATE')
+     OR has_table_privilege('anon','rebuild_v2.notifications','DELETE') THEN
+    RAISE EXCEPTION 'anon role must not write notification rows';
+  END IF;
+END;
+$privileges$;
+
 INSERT INTO auth.users
   (id,aud,role,email,encrypted_password,email_confirmed_at,
    raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
