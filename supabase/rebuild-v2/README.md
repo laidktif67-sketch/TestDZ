@@ -32,6 +32,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `026_align_report_evidence_read_access.sql`: aligns report evidence reads with report-row visibility (reporter and Support/Admin only); preserves assignment-submission participant reads.
 - `027_enforce_report_attachment_metadata_integrity.sql`: requires a non-null canonical V2 Storage path, an allowlisted extension, and a bounded/control-character-free original filename on every report attachment metadata row.
 - `028_restrict_support_attachment_reads_to_public_messages.sql`: restricts support attachment metadata and private Storage reads to public ticket messages; internal-note attachments remain inaccessible.
+- `029_six_step_test_config.sql`: adds an atomic V2 test-creation RPC for the six-step wizard; validates an explicit configuration allowlist and rejects raw tester email lists or Google Group addresses.
 
 
 
