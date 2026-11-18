@@ -18,6 +18,7 @@ import MyTestsPage from "./modules/tester/pages/MyTestsPage";
 import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
 import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
+import DeveloperAddAppPage from "./modules/developer/pages/DeveloperAddAppPage";
 import DeveloperTestsPage from "./modules/developer/pages/DeveloperTestsPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
@@ -149,6 +150,7 @@ export default function App() {
             <Route path="/developer-tests" element={<DeveloperTestsPage />} />
             <Route path="/developer-feedback" element={<DeveloperFeedbackPage />} />
             <Route path="/apps" element={<AppsPage />} />
+            <Route path="/apps/new" element={<DeveloperAddAppPage />} />
             <Route path="/apps/:id" element={<AppDetailPage />} />
           </Route>
         </Route>
