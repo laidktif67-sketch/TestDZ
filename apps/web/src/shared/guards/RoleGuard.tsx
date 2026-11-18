@@ -6,7 +6,7 @@ import "./route-guards.css";
 type WorkspaceRole = "tester" | "developer" | "admin" | "financial" | "support";
 
 export function getHomePath(roles: AccountRole[]): string {
-  if (roles.includes("admin")) return "/tester-dashboard";
+  if (roles.includes("admin")) return "/admin";
   if (roles.includes("financial")) return "/financial-operations";
   if (roles.includes("support")) return "/support-workspace";
   if (roles.includes("tester")) return "/tester-dashboard";
