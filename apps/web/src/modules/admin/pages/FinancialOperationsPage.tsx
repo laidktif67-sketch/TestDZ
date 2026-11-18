@@ -52,6 +52,7 @@ export default function FinancialOperationsPage() {
   const pendingRefunds = refunds.filter(row => row.status === "requested").length;
   const nav = [
     { label: "Financial Operations", icon: "wallet", href: "/financial-operations", active: true },
+    { label: "Disputes", icon: "file", href: "/financial-operations/disputes" },
     ...(isAdmin ? [{ label: "Admin Workspace", icon: "shield", href: "/admin" }] : []),
     { label: "Profile", icon: "user", href: "/profile" },
     { label: "Settings", icon: "settings", href: "/settings" },

@@ -44,6 +44,7 @@ export default function AdminAuditLogPage() {
     { label: "User Directory", icon: "users", href: "/admin/users" },
     { label: "Role Requests", icon: "users", href: "/admin/role-requests" },
     { label: "Audit Log", icon: "file-text", href: "/admin/audit-log", active: true },
+    { label: "Case Queues", icon: "folder", href: "/admin/cases" },
     { label: "Financial Operations", icon: "wallet", href: "/financial-operations" },
     { label: "Profile", icon: "user", href: "/profile" },
   ];

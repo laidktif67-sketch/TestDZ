@@ -69,3 +69,43 @@ export function listAdminFraudReviews() {
     .order("created_at", { ascending: false })
     .limit(100);
 }
+
+
+export type AdminCaseReport = {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string | null;
+  assignment_id: string | null;
+  report_type: string;
+  status: "open" | "under_review" | "resolved" | "rejected";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+};
+
+/** Support/Admin report queue. RLS is the authorization boundary; content and attachments are not selected. */
+export function listCaseReports() {
+  return dataClient().from("reports")
+    .select("id,reporter_id,reported_user_id,assignment_id,report_type,status,reviewed_by,reviewed_at,created_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+}
+
+export type AdminCaseDispute = {
+  id: string;
+  opened_by: string;
+  payment_id: string | null;
+  report_id: string | null;
+  status: "opened" | "under_review" | "resolved_accepted" | "resolved_rejected" | "escalated";
+  resolved_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Financial/Admin dispute queue. No payment amounts, report descriptions or resolution text are selected. */
+export function listCaseDisputes() {
+  return dataClient().from("disputes")
+    .select("id,opened_by,payment_id,report_id,status,resolved_by,created_at,updated_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+}

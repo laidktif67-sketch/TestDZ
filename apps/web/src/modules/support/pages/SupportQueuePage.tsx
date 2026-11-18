@@ -52,6 +52,7 @@ export default function SupportQueuePage() {
 
   const nav = [
     { label: "Support Queue", icon: "headset", href: "/support-workspace", active: true },
+    { label: "Reports", icon: "alert", href: "/support-workspace/reports" },
     ...(isAdmin ? [{ label: "Admin Workspace", icon: "shield", href: "/admin" }] : []),
     { label: "Support Center", icon: "life-buoy", href: "/support" },
     { label: "Profile", icon: "user", href: "/profile" },
