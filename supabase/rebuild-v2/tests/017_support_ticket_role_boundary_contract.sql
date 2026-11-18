@@ -25,6 +25,29 @@ VALUES
   ('91700000-0000-4000-8000-000000000101','91700000-0000-4000-8000-000000000001','Internal handling note for authorized support.',true),
   ('91700000-0000-4000-8000-000000000102','91700000-0000-4000-8000-000000000003','Message from a user without the ticket requester role.',false);
 
+-- Seed an internal-note attachment as trusted fixture data. Support may read the
+-- conversation row under the current staff policy, but must not read this file
+-- or its metadata through either the database or Storage API.
+INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+VALUES (
+  'support-attachments',
+  'v2/91700000-0000-4000-8000-000000000101/91700000-0000-4000-8000-000000000001/91700000-0000-4000-8000-000000000303-internal.pdf',
+  '91700000-0000-4000-8000-000000000001'::uuid,
+  '91700000-0000-4000-8000-000000000001',
+  jsonb_build_object('mimetype','application/pdf','size',1024)
+);
+INSERT INTO rebuild_v2.support_ticket_attachments
+  (ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes)
+SELECT
+  '91700000-0000-4000-8000-000000000101',m.id,
+  '91700000-0000-4000-8000-000000000001',
+  'v2/91700000-0000-4000-8000-000000000101/91700000-0000-4000-8000-000000000001/91700000-0000-4000-8000-000000000303-internal.pdf',
+  'internal.pdf','application/pdf',1024
+FROM rebuild_v2.support_ticket_messages m
+WHERE m.ticket_id='91700000-0000-4000-8000-000000000101'
+  AND m.internal_note=true
+  AND m.body='Internal handling note for authorized support.';
+
 -- Pre-existing object fixture models an object that could pass a legacy OR-combined
 -- Storage policy; the metadata RPC must independently enforce the requester role.
 INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
@@ -101,6 +124,7 @@ DO $attachment_boundary$
 DECLARE
   v_message_id uuid;
   v_path text;
+  v_internal_path text := 'v2/91700000-0000-4000-8000-000000000101/91700000-0000-4000-8000-000000000001/91700000-0000-4000-8000-000000000303-internal.pdf';
   v_count integer;
 BEGIN
   PERFORM set_config('request.jwt.claim.sub','91700000-0000-4000-8000-000000000002',true);
@@ -191,6 +215,33 @@ BEGIN
     AND owner_id='91700000-0000-4000-8000-000000000002';
   IF v_count <> 1 THEN
     RAISE EXCEPTION 'FAIL: denied outsider upload changed the existing V2 support attachment';
+  END IF;
+
+  -- Staff may read public-message attachment metadata and bytes, but internal-note
+  -- attachments are denied even when the staff member can read the conversation.
+  PERFORM set_config('request.jwt.claim.sub','91700000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"91700000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
+  SELECT count(*) INTO v_count
+  FROM rebuild_v2.support_ticket_attachments
+  WHERE ticket_id='91700000-0000-4000-8000-000000000101';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'FAIL: Support can read internal-note attachment metadata; visible count %',v_count;
+  END IF;
+
+  IF rebuild_v2_private.can_read_support_attachment(v_internal_path) THEN
+    RAISE EXCEPTION 'FAIL: Storage helper allows Support to read an internal-note attachment';
+  END IF;
+  IF NOT rebuild_v2_private.can_read_support_attachment(v_path) THEN
+    RAISE EXCEPTION 'FAIL: Storage helper denies Support access to a public-message attachment';
+  END IF;
+
+  SELECT count(*) INTO v_count
+  FROM storage.objects
+  WHERE bucket_id='support-attachments'
+    AND name IN (v_path,v_internal_path);
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'FAIL: Storage RLS exposed an internal-note attachment or hid the public attachment; visible count %',v_count;
   END IF;
   PERFORM set_config('role','authenticated',true);
 END;
