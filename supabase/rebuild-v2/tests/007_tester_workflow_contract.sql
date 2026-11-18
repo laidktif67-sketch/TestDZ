@@ -1,5 +1,5 @@
 -- Tester workflow V2 contract smoke test.
--- Run only against an isolated disposable database after all candidate scripts through 018. The checks below exercise behavior introduced by scripts 017 and 018.
+-- Run only against an isolated disposable database after the complete candidate replay through 021. The checks below cover tester workflow, evidence protection, and role-scoped notification producers/dispatch.
 -- All synthetic Auth users, rows, and Storage metadata are created inside one
 -- transaction and rolled back at the end. Never run against Production.
 
