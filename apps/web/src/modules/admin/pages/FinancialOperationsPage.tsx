@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { getFinancialOperationsPageData, type FinancialLedgerEntry, type FinancialPayment, type FinancialRefund } from "../../../features/admin/admin-api";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";

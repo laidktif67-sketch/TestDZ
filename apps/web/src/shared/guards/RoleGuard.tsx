@@ -3,10 +3,12 @@ import type { AccountRole } from "@testdz/types";
 import { useIdentity } from "../auth/hooks/useIdentity";
 import "./route-guards.css";
 
-type WorkspaceRole = Extract<AccountRole, "tester" | "developer" | "admin">;
+type WorkspaceRole = "tester" | "developer" | "admin" | "financial";
 
 export function getHomePath(roles: AccountRole[]): string {
-  if (roles.includes("admin") || roles.includes("tester")) return "/tester-dashboard";
+  if (roles.includes("admin")) return "/tester-dashboard";
+  if (roles.includes("financial")) return "/financial-operations";
+  if (roles.includes("tester")) return "/tester-dashboard";
   if (roles.includes("developer")) return "/developer-dashboard";
   return "/profile";
 }
@@ -41,11 +43,13 @@ export default function RoleGuard({ requiredRole }: { requiredRole: WorkspaceRol
 
   if (roles.includes(requiredRole) || roles.includes("admin")) return <Outlet />;
 
-  const fallback = requiredRole === "tester" && roles.includes("developer")
-    ? "/developer-dashboard"
-    : requiredRole === "developer" && roles.includes("tester")
-      ? "/tester-dashboard"
-      : "/profile";
+  const fallback = requiredRole === "financial" && roles.includes("tester")
+    ? "/tester-dashboard"
+    : requiredRole === "tester" && roles.includes("developer")
+      ? "/developer-dashboard"
+      : requiredRole === "developer" && roles.includes("tester")
+        ? "/tester-dashboard"
+        : "/profile";
 
   return (
     <Navigate
