@@ -21,7 +21,8 @@ BEGIN
     END IF;
   END LOOP;
 
-  IF (p_config->'cohort' - ARRAY['targetTesters','notes']) <> '{}'::jsonb
+  IF NOT (p_config->'cohort' ?& ARRAY['targetTesters','notes'])
+     OR (p_config->'cohort' - ARRAY['targetTesters','notes']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'cohort'->'targetTesters') <> 'number'
      OR (p_config->'cohort'->>'targetTesters')::integer NOT BETWEEN 1 AND 500
      OR (p_config->'cohort' ? 'notes' AND jsonb_typeof(p_config->'cohort'->'notes') NOT IN ('string','null'))
@@ -29,7 +30,8 @@ BEGIN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
 
-  IF (p_config->'rules' - ARRAY['androidVersion','instructions']) <> '{}'::jsonb
+  IF NOT (p_config->'rules' ?& ARRAY['androidVersion','instructions'])
+     OR (p_config->'rules' - ARRAY['androidVersion','instructions']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'rules'->'androidVersion') <> 'string'
      OR char_length(p_config->'rules'->>'androidVersion') NOT BETWEEN 1 AND 80
      OR (p_config->'rules' ? 'instructions' AND jsonb_typeof(p_config->'rules'->'instructions') NOT IN ('string','null'))
@@ -37,7 +39,9 @@ BEGIN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
 
-  IF (p_config->'details' - ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate']) <> '{}'::jsonb
+  IF NOT (p_config->'details' ?& ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate'])
+     OR (p_config->'details' - ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate']) <> '{}'::jsonb
+     OR p_config->'details'->>'testingObjective' NOT IN ('stability_bugs','usability','compatibility','performance','release_readiness','custom')
      OR jsonb_typeof(p_config->'details'->'testingObjective') <> 'string'
      OR p_config->'details'->>'priority' NOT IN ('low','medium','high')
      OR jsonb_typeof(p_config->'details'->'testingScope') <> 'array'
@@ -53,7 +57,8 @@ BEGIN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
 
-  IF (p_config->'schedule' - ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports']) <> '{}'::jsonb
+  IF NOT (p_config->'schedule' ?& ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports'])
+     OR (p_config->'schedule' - ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'schedule'->'allowMoreTesters') <> 'boolean'
      OR jsonb_typeof(p_config->'schedule'->'collectFeedback') <> 'boolean'
      OR jsonb_typeof(p_config->'schedule'->'enableBugReports') <> 'boolean'
@@ -64,13 +69,16 @@ BEGIN
   END IF;
 
   -- Deliberately no googleGroup/testerEmails fields: invitation identifiers and raw CSV addresses stay local.
-  IF (p_config->'googlePlay' - ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt']) <> '{}'::jsonb
+  IF NOT (p_config->'googlePlay' ?& ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt'])
+     OR (p_config->'googlePlay' - ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt']) <> '{}'::jsonb
      OR p_config->'googlePlay'->>'track' NOT IN ('internal','closed','open')
      OR p_config->'googlePlay'->>'testerMethod' NOT IN ('join_link','google_groups','upload_list')
      OR p_config->'googlePlay'->>'appVersion' NOT IN ('latest_available','to_be_uploaded')
      OR p_config->'googlePlay'->>'releaseMode' NOT IN ('immediately','scheduled')
      OR (p_config->'googlePlay' ? 'releaseAt' AND jsonb_typeof(p_config->'googlePlay'->'releaseAt') NOT IN ('string','null'))
-     OR char_length(coalesce(p_config->'googlePlay'->>'releaseAt','')) > 40 THEN
+     OR char_length(coalesce(p_config->'googlePlay'->>'releaseAt','')) > 40
+     OR (p_config->'googlePlay'->>'releaseMode'='scheduled' AND nullif(btrim(p_config->'googlePlay'->>'releaseAt'),'') IS NULL)
+     OR (p_config->'googlePlay'->>'releaseMode'='immediately' AND p_config->'googlePlay'->'releaseAt' <> 'null'::jsonb) THEN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
 END;
