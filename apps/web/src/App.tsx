@@ -159,6 +159,7 @@ export default function App() {
             <Route path="/developer/testers" element={<DeveloperTestersPage />} />
             <Route path="/developer-test-results" element={<DeveloperTestResultsPage />} />
             <Route path="/developer-help" element={<DeveloperHelpPage />} />
+            <Route path="/developer-support" element={<SupportCenterPage workspaceRole="developer" />} />
             <Route path="/developer-settings" element={<DeveloperWorkspaceSettingsPage />} />
             <Route path="/developer-feedback" element={<DeveloperFeedbackPage />} />
             <Route path="/apps" element={<AppsPage />} />
