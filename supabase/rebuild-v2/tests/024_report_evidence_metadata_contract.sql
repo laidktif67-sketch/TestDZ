@@ -10,8 +10,8 @@ VALUES
   ('92400000-0000-4000-8000-000000000002','authenticated','authenticated','v2-report-evidence-tester@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Tester"}'::jsonb,now(),now()),
   ('92400000-0000-4000-8000-000000000003','authenticated','authenticated','v2-report-evidence-outsider@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Outsider"}'::jsonb,now(),now()),
   ('92400000-0000-4000-8000-000000000004','authenticated','authenticated','v2-report-evidence-support@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Support"}'::jsonb,now(),now()),
-  ('92400000-0000-4000-8000-000000000005','authenticated','authenticated','v2-report-evidence-financial@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Financial"}'::jsonb,now(),now());
-  ,('92400000-0000-4000-8000-000000000006','authenticated','authenticated','v2-report-evidence-admin@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Admin"}'::jsonb,now(),now());
+  ('92400000-0000-4000-8000-000000000005','authenticated','authenticated','v2-report-evidence-financial@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Financial"}'::jsonb,now(),now()),
+  ('92400000-0000-4000-8000-000000000006','authenticated','authenticated','v2-report-evidence-admin@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Admin"}'::jsonb,now(),now());
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
