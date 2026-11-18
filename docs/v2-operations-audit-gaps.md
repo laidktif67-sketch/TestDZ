@@ -1,6 +1,6 @@
 # V2 Operations Audit: Remaining Event and Workflow Gaps
 
-**Audit baseline:** candidate SQL files `supabase/rebuild-v2/001_schema.sql` through `024_audited_support_ticket_workflow.sql` proposed on PR #76, based on PR #73 head `9e8f0223b1c1760f229c8fb7f791e8c3ee8fc854`. PR #76 remains Draft pending exact-head isolated replay and visual QA.
+**Audit baseline:** candidate SQL files `supabase/rebuild-v2/001_schema.sql` through `024_audited_support_ticket_workflow.sql` proposed on PR #76, based on PR #73 head `9e8f0223b1c1760f229c8fb7f791e8c3ee8fc854`. PR #76 remains Draft; exact-head isolated replay and all 21 post-phase contracts passed, while manual visual QA remains outstanding.
 
 **Scope:** read-only source review. This document does not authorize or perform hosted database changes, Production writes, Edge Function deployment, secrets changes, cron creation, or migration cutover.
 
@@ -29,7 +29,7 @@
 - New `update_support_ticket` RPC locks the ticket, validates Support/Admin roles and legal state transitions, requires a 10–1000 character reason, and atomically updates status/priority with actor-attributed ticket events and an immutable audit record.
 - Support cannot reopen resolved or closed tickets; only Admin can reopen them. Closed tickets remain terminal for Support.
 - The Support detail workspace displays ticket metadata, public messages, and event history; internal notes and attachment contents are excluded.
-- Contract `tests/020_support_ticket_audited_workflow_contract.sql` covers role boundaries, status transitions, audit attribution, no-op/invalid reason rejection, reply events, and append-only history. The exact-head isolated replay is pending.
+- Contract `tests/020_support_ticket_audited_workflow_contract.sql` covers role boundaries, status transitions, audit attribution, no-op/invalid reason rejection, reply events, and append-only history. The exact-head isolated replay of all 24 candidate scripts and 21 post-phase contracts passed on PR #76 head `214a67fbeaef044962b4476079cfe9d5b08f01b7` (run #44309843867).
 
 **Remaining Support work:** assignment management, an explicit internal-note workflow with separate visibility rules, staff attachment review/download with audited access, and notification integration are not part of PR #76 and must be designed separately. Do not expose internal notes or attachment contents through the current detail page.
 
@@ -44,7 +44,7 @@
 ## Implementation order
 
 1. Keep the current financial page read-only and preserve all trace fields.
-2. Complete PR #76 exact-head SQL replay and perform mobile/desktop/RTL visual QA; keep assignment, internal notes, attachment review, and notifications as separate scoped work.
+2. Perform PR #76 mobile/desktop/RTL visual QA; keep assignment, internal notes, attachment review, and notifications as separate scoped work.
 3. Define trusted fraud signal ingestion and Admin review lifecycle contracts.
 4. Validate provider and refund policy before designing payment/refund mutations.
 5. Keep all candidate changes isolated until compatibility, backup, rollback, and cutover gates are approved.
