@@ -1,13 +1,14 @@
 import { useCallback,useEffect,useState } from "react";
-import { isTesterWorkflowV2Enabled,supabaseV2 } from "../../../lib/supabase-v2";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { listPendingDeveloperRoleRequests, reviewDeveloperRoleRequest } from "../../../features/admin/admin-api";
 import "./admin-role-requests.css";
 type RoleRequest={request_id:string;user_id:string;requested_role:string;request_reason:string|null;created_at:string;display_name:string|null};
 export default function AdminRoleRequestsPage(){
  const [items,setItems]=useState<RoleRequest[]>([]),[reasons,setReasons]=useState<Record<string,string>>({});
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState<string|null>(null),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState<string|null>(null);
- const load=useCallback(async()=>{if(!isTesterWorkflowV2Enabled||!supabaseV2){setLoading(false);return;}setLoading(true);setError(null);const {data,error:e}=await supabaseV2.rpc("admin_list_pending_role_requests");if(e){setError(e.message);setItems([]);}else setItems((data??[]) as RoleRequest[]);setLoading(false);},[]);
+ const load=useCallback(async()=>{if(!isTesterWorkflowV2Enabled){setLoading(false);return;}setLoading(true);setError(null);const {data,error:e}=await listPendingDeveloperRoleRequests();if(e){setError(e.message);setItems([]);}else setItems((data??[]) as RoleRequest[]);setLoading(false);},[]);
  useEffect(()=>{void load();},[load]);
- const decide=async(id:string,decision:"approved"|"rejected")=>{const reason=(reasons[id]??"").trim();if(reason.length<10||reason.length>1000){setError("Enter a decision reason between 10 and 1000 characters.");return;}if(!supabaseV2)return;setBusy(id);setError(null);setNotice(null);const {error:e}=await supabaseV2.rpc("admin_review_role_request",{p_request_id:id,p_decision:decision,p_review_note:reason});if(e)setError(e.message);else{setNotice(decision==="approved"?"Developer access approved.":"Request rejected.");setReasons(s=>({...s,[id]:""}));await load();}setBusy(null);};
+ const decide=async(id:string,decision:"approved"|"rejected")=>{const reason=(reasons[id]??"").trim();if(reason.length<10||reason.length>1000){setError("Enter a decision reason between 10 and 1000 characters.");return;}setBusy(id);setError(null);setNotice(null);const {error:e}=await reviewDeveloperRoleRequest(id,decision,reason);if(e)setError(e.message);else{setNotice(decision==="approved"?"Developer access approved.":"Request rejected.");setReasons(s=>({...s,[id]:""}));await load();}setBusy(null);};
  if(!isTesterWorkflowV2Enabled)return <main className="admin-role-requests"><h1>Developer access requests</h1><p>V2 is not enabled in this environment. No V2 request data was loaded.</p></main>;
  return <main className="admin-role-requests"><header className="admin-role-requests__header"><div><p className="admin-role-requests__eyebrow">ADMINISTRATION</p><h1>Developer access requests</h1><p>Review requests. Each decision requires a reason and is written to the audit log.</p></div><button type="button" onClick={()=>void load()} disabled={loading}>Refresh</button></header>
  {error&&<p className="admin-role-requests__alert" role="alert">{error}</p>}{notice&&<p className="admin-role-requests__notice" role="status">{notice}</p>}
