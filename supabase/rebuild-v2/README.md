@@ -82,6 +82,17 @@ The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.
 - Read-only FixLab inventory confirmed 47 candidate tables, RLS and FORCE RLS on all 47, 439 columns, 297 constraints, 157 indexes, 48 candidate policies, 96 candidate functions (39 exposed-schema and 57 private-schema functions), six candidate triggers, seven Storage buckets, and 18 Storage object policies.
 - FixLab's current hosted migration history still contains 21 records. It has not been repaired or reset.
 
+## Current clean replay snapshot (2026-11-18)
+
+GitHub Actions run [#44293133432](https://github.com/laidktif67-sketch/TestDZ/actions/runs/44293133432) on the current 23-script candidate completed successfully. The read-only local fingerprint reported:
+
+- 440 columns, 297 constraints, 159 indexes, 97 functions (excluding the documented date-delta functions), 66 V2 policies, 47 RLS/ FORCE RLS table flags, 863 effective table/schema/function grants, and 7 application triggers.
+- Six buckets in the fingerprint (excluding the legacy `app-icons` bucket); the detailed report lists all seven buckets.
+- The local replay retains `app-icons` at 512000 bytes from the earlier migration because candidate script 006 requests 524288 bytes but uses `ON CONFLICT DO NOTHING`. This is an explicit configuration delta to verify against FixLab, not a reason to overwrite an existing bucket automatically.
+- Twelve legacy Storage object policies coexist with V2 policies in the local replay: `app_icons_owner_delete`, `app_icons_owner_insert`, `app_icons_owner_update`, `app_icons_public_read`, `avatars_owner_delete`, `avatars_owner_insert`, `avatars_owner_select`, `avatars_owner_update`, `report_evidence_insert_active_assignment`, `report_evidence_select_authorized_participants`, `support_attachments_insert_participants`, and `support_attachments_select_participants`.
+
+**Storage compatibility note:** permissive Storage policies combine with OR semantics. The V2 app-icon path is now isolated as `v2/{user_id}/{app_id}/...`; the V2 helper validates both the authenticated owner and the app row, while the legacy first-folder-equals-user policies do not match the `v2/` prefix. Contract 019 verifies owner upload and rejects another developer. Legacy unprefixed paths remain available for the legacy workflow; do not remove the legacy policies until that workflow is formally retired. The legacy report-evidence and support-attachment policies still consult legacy `public` records; retain them while legacy paths remain supported and verify combined policy behavior before cutover. No hosted or Production policy was changed.
+
 ## Remaining validation gates
 
 1. **Exact live-to-clean comparison:** compare the complete catalog definitions (columns, constraints, indexes, function bodies/security attributes, policies, grants, triggers, and Storage configuration) between FixLab and a clean replay. The successful CI replay proves the scripts build cleanly and pass contracts; it does not by itself prove byte-for-byte catalog equivalence with the hosted FixLab schema.
