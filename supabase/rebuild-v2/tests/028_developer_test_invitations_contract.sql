@@ -34,17 +34,17 @@ $schema_boundary$;
 INSERT INTO auth.users
   (id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 VALUES
-  ('93200000-0000-4000-8000-000000000001','authenticated','authenticated','invite-tester@example.invalid','',now(),
+  ('d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62','authenticated','authenticated','invite-tester@example.invalid','',now(),
    '{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Invitation Tester"}'::jsonb,now(),now());
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
-VALUES ('93200000-0000-4000-8000-000000000001','tester');
+VALUES ('d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62','tester');
 
 SET LOCAL ROLE authenticated;
 DO $tester_cannot_create$
 BEGIN
-  PERFORM set_config('request.jwt.claim.sub','93200000-0000-4000-8000-000000000001',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"93200000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  PERFORM set_config('request.jwt.claim.sub','d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62","role":"authenticated"}',true);
   BEGIN
     PERFORM rebuild_v2.create_test_invitation(
       '93200000-0000-4000-8000-000000000099',
