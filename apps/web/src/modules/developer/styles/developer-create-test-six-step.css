@@ -261,3 +261,8 @@
 .dct-details-tip p{margin:5px 0 0;font-size:10px;line-height:1.5;color:#2d4477}
 @media(max-width:1160px){.dct-workspace-step-4 .dct-details-layout{grid-template-columns:minmax(0,1fr)}.dct-details-summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}.dct-details-summary-head{grid-column:1/-1}.dct-details-app{align-items:flex-start}.dct-details-summary-list{padding:8px 13px}.dct-details-tip{align-self:start}}
 @media(max-width:760px){.dct-workspace-step-4 .dct-details-layout{gap:10px}.dct-details-main{padding:12px 10px}.dct-details-heading{gap:9px}.dct-details-icon{width:36px;height:36px;border-radius:10px}.dct-details-heading h3{font-size:13px}.dct-details-heading p{font-size:10px}.dct-details-two-col,.dct-scope-grid{grid-template-columns:minmax(0,1fr);gap:7px}.dct-details-field input,.dct-details-field textarea,.dct-details-field select{font-size:12px}.dct-details-summary{display:flex}.dct-details-app{padding:12px}.dct-details-summary-list{padding:4px 12px}.dct-details-summary-list>div{padding:10px 0}}
+
+/* Wizard is mounted inside the V2 developer shell, without the legacy fixed sidebar. */
+.dct-shell{display:block!important;grid-template-columns:minmax(0,1fr)!important}
+.dct-v2-topbar{position:relative;z-index:2}
+.dct-content{width:100%;min-width:0}
