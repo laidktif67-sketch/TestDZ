@@ -226,7 +226,7 @@ export default function DeveloperTestsPage() {
 
   const publishedApps=apps.filter(app=>app.status==="published");
   return <main className="dashboard-shell">
-    <header className="site-header container"><Brand/><nav className="header-actions"><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/apps">تطبيقاتي</Link></nav></header>
+    <header className="site-header container"><Brand/><nav className="header-actions"><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/developer/testers">مجتمع المختبرين</Link><Link to="/apps">تطبيقاتي</Link></nav></header>
     <section className="dashboard-welcome container">
       <div className="apps-heading"><div><span className="eyebrow">مساحة المطوّر · V2</span><h1>إدارة الاختبارات</h1><p>أنشئ اختباراً لتطبيق منشور، أرسله للمراجعة، ثم جهّز مجموعة المختبرين بعد اعتماده.</p></div><button className="button button-primary" onClick={()=>setShowCreate(v=>!v)} disabled={!publishedApps.length}>＋ إنشاء اختبار</button><Link className="button button-outline" to="/developer/tests/new">فتح معالج إنشاء الاختبار · 6 خطوات</Link></div>
       {!publishedApps.length&&<div className="notice">يلزم نشر تطبيق واحد على الأقل قبل إنشاء اختبار. يمكنك إرسال مسودة التطبيق للمراجعة من صفحة تفاصيله.</div>}
