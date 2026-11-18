@@ -6,8 +6,14 @@ import { profilesApi } from "../profiles/profiles-api";
 export async function getWalletRewardsPageData(userId: string) {
   const client = getAppDataClient();
   const profileRes = await client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
-  const noticeRes = await client.from("notifications").select("id", { count: "exact", head: true })
-    .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null);
+  let noticeQuery = client.from("notifications").select("id", { count: "exact", head: true })
+    .eq("user_id", userId).is("read_at", null);
+  // The legacy public.notifications table has no recipient_role column.
+  // Scope by role only after the V2 schema is selected.
+  if (isTesterWorkflowV2Enabled) {
+    noticeQuery = noticeQuery.eq("recipient_role", "tester");
+  }
+  const noticeRes = await noticeQuery;
   if (isTesterWorkflowV2Enabled) {
     return {
       isV2: true as const, profileRes, walletRes: null, ledgerRes: null, noticeRes,
