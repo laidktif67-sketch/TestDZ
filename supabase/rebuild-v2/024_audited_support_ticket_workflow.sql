@@ -156,8 +156,9 @@ BEGIN
       RAISE EXCEPTION 'invalid ticket status transition' USING errcode = '22023';
     ELSIF v_ticket.status = 'waiting_for_user' AND p_status NOT IN ('in_progress','resolved','closed') THEN
       RAISE EXCEPTION 'invalid ticket status transition' USING errcode = '22023';
-    ELSIF v_ticket.status = 'resolved'
-      AND (NOT v_is_admin OR p_status NOT IN ('open','in_progress')) THEN
+    ELSIF v_ticket.status = 'resolved' AND p_status NOT IN ('closed','open','in_progress') THEN
+      RAISE EXCEPTION 'invalid resolved ticket transition' USING errcode = '22023';
+    ELSIF v_ticket.status = 'resolved' AND p_status IN ('open','in_progress') AND NOT v_is_admin THEN
       RAISE EXCEPTION 'only Admin can reopen a resolved ticket' USING errcode = '42501';
     ELSIF v_ticket.status = 'closed'
       AND (NOT v_is_admin OR p_status <> 'open') THEN
