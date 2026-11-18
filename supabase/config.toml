@@ -47,3 +47,7 @@ sender_name = "TestDZ Local"
 # its own dispatch secret; browser/session JWTs are not accepted.
 [functions.dispatch-notifications]
 verify_jwt = false
+
+# Authenticated Developer/Tester invitation API. The function also verifies the user via Auth.
+[functions.developer-invitations]
+verify_jwt = true
