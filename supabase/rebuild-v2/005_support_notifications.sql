@@ -278,7 +278,7 @@ BEGIN
      OR v_folders[2] <> p_ticket_id::text
      OR v_folders[3] <> v_user_id::text
      OR length(split_part(p_storage_path,'/',4)) NOT BETWEEN 38 AND 256
-     OR substring(split_part(p_storage_path,'/',4) from 37 for 1) <> '-'
+     OR substring(split_part(p_storage_path,'/',4) from 37 for 1) <> '-' THEN
     RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
   END IF;
 
