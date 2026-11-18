@@ -51,8 +51,8 @@ export default function DeveloperTestResultsPage(){
   active:a.active+row.metrics.active,
   pending:a.pending+row.metrics.pending,
   feedback:a.feedback+row.metrics.feedbackCount,
-  ratingPoints:a.ratingPoints+(row.metrics.averageRating??0)*row.metrics.feedbackCount,
-  rated:a.rated+(row.metrics.averageRating===null?0:row.metrics.feedbackCount)
+  ratingPoints:a.ratingPoints+(row.metrics.averageRating??0)*row.metrics.ratingCount,
+  rated:a.rated+row.metrics.ratingCount
  }),{assignments:0,completed:0,failed:0,active:0,pending:0,feedback:0,ratingPoints:0,rated:0}),[rows]);
  const rate=totals.assignments?Math.round(totals.completed/totals.assignments*100):0;
  const average=totals.rated?totals.ratingPoints/totals.rated:0;
