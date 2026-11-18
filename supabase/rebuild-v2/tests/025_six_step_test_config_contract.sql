@@ -9,8 +9,7 @@ VALUES
 ('51000000-0000-4000-8000-000000000003','authenticated','authenticated','six-step-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
 INSERT INTO rebuild_v2.user_roles(user_id,role) VALUES
 ('51000000-0000-4000-8000-000000000001','developer'),
-('51000000-0000-4000-8000-000000000002','admin'),
-;
+('51000000-0000-4000-8000-000000000002','admin');
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','51000000-0000-4000-8000-000000000001',true);
 SELECT set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
