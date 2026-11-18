@@ -288,7 +288,7 @@ export default function DeveloperCreateTestSixStepPage() {
                 </div>
                 <div className="dct-config-row">
                   <span className="dct-config-symbol"><Icon name="apps" size={23} /></span><div className="dct-track-copy"><strong>App Version</strong><small>Select the app version to test</small></div>
-                  <select value={appVersion} onChange={e => setAppVersion(e.target.value)} aria-label="App version"><option value="latest_available">Latest available version (not verified)</option><option value="to_be_uploaded">Version to be added later</option></select><span className="dct-ready-label">Draft configuration</span>
+                  <select value={appVersion} onChange={e => setAppVersion(e.target.value as "latest_available" | "to_be_uploaded")} aria-label="App version"><option value="latest_available">Latest available version (not verified)</option><option value="to_be_uploaded">Version to be added later</option></select><span className="dct-ready-label">Draft configuration</span>
                 </div>
                 <div className="dct-release-block">
                   <div className="dct-config-subtitle"><span className="dct-config-symbol plain">➤</span><div><strong>Release to Track</strong><small>Choose when this campaign is planned to be available</small></div></div>
