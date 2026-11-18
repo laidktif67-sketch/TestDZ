@@ -10,7 +10,7 @@ BEGIN
   RAISE EXCEPTION 'ADMIN_REQUIRED' USING errcode='42501';
  END IF;
  RETURN QUERY SELECT rr.id,rr.user_id,rr.requested_role,rr.reason,rr.created_at,p.display_name
- FROM rebuild_v2.role_requests rr JOIN rebuild_v2.profiles p ON p.id=rr.user_id
+ FROM rebuild_v2.role_requests rr LEFT JOIN rebuild_v2.profiles p ON p.id=rr.user_id
  WHERE rr.status='pending' ORDER BY rr.created_at ASC,rr.id ASC;
 END;
 $function$;
