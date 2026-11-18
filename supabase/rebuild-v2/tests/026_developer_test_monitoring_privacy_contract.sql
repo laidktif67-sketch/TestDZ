@@ -12,7 +12,8 @@ VALUES
 ('53000000-0000-4000-8000-000000000005','authenticated','authenticated','monitor-tester-three@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
 INSERT INTO rebuild_v2.user_roles(user_id,role) VALUES
 ('53000000-0000-4000-8000-000000000001','developer'),
-('53000000-0000-4000-8000-000000000002','developer');
+('53000000-0000-4000-8000-000000000002','developer'),
+('53000000-0000-4000-8000-000000000006','admin');
 
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000001',true);
@@ -22,16 +23,8 @@ DECLARE v_app uuid; v_test uuid;
 BEGIN
   v_app:=rebuild_v2.create_app('Monitoring Contract App','dz.testdz.monitoring','Synthetic app for the privacy-safe monitoring contract.','tools');
   PERFORM rebuild_v2.submit_app_for_review(v_app);
-  PERFORM set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000002',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
-  -- Other developer cannot approve this app; the fixture owner is elevated only for the trusted review fixture.
-  RESET ROLE;
-  INSERT INTO rebuild_v2.user_roles(user_id,role,granted_by)
-  VALUES('53000000-0000-4000-8000-000000000002','admin','53000000-0000-4000-8000-000000000002')
-  ON CONFLICT(user_id,role) DO NOTHING;
-  SET LOCAL ROLE authenticated;
-  PERFORM set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000002',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  PERFORM set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000006',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000006","role":"authenticated"}',true);
   PERFORM rebuild_v2.review_app(v_app,'approved','Approve synthetic monitoring fixture');
   PERFORM set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -82,6 +75,8 @@ BEGIN
   END IF;
   v_text:=v_payload::text;
   IF position('53000000-0000-4000-8000-000000000003' IN v_text)>0
+     OR position('53000000-0000-4000-8000-000000000004' IN v_text)>0
+     OR position('53000000-0000-4000-8000-000000000005' IN v_text)>0
      OR position('monitor-tester-' IN v_text)>0
      OR position('PRIVATE_CHECKIN_NOTE_DO_NOT_EXPOSE' IN v_text)>0
      OR position('private/evidence/' IN v_text)>0
