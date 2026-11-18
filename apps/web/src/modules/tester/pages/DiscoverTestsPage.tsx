@@ -10,15 +10,17 @@ import "../styles/discover-tests.css";
 
 type AppInfo={name:string;icon_url:string|null;category?:string|null};
 type TestRow={id:string;title:string;description:string|null;status:string;min_testers:number;start_date:string|null;end_date:string|null;app?:AppInfo|null};
-type Category="all"|"mobile"|"web"|"desktop"|"other";
+type Category="all"|"games"|"tools"|"education"|"social"|"health"|"other";
 const filters:{id:Category;label:string;symbol:string}[]=[
  {id:"all",label:"All opportunities",symbol:"✦"},
- {id:"mobile",label:"Mobile apps",symbol:"▯"},
- {id:"web",label:"Web apps",symbol:"◎"},
- {id:"desktop",label:"Desktop",symbol:"▣"},
+ {id:"games",label:"Games",symbol:"◈"},
+ {id:"tools",label:"Tools",symbol:"⚙"},
+ {id:"education",label:"Education",symbol:"▤"},
+ {id:"social",label:"Social",symbol:"◎"},
+ {id:"health",label:"Health",symbol:"＋"},
  {id:"other",label:"Other",symbol:"✧"}
 ];
-function categoryOf(value?:string|null):Category{const v=(value||"").toLowerCase();if(/android|ios|mobile|game|health|education/.test(v))return"mobile";if(/web|saas|website/.test(v))return"web";if(/desktop|windows|mac|linux/.test(v))return"desktop";return"other";}
+function categoryOf(value?:string|null):Category{const v=(value||"").toLowerCase();return ["games","tools","education","social","health","other"].includes(v)?v as Category:"other";}
 function initials(value:string){return value.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase()||"T";}
 function daysLeft(value:string|null){if(!value)return null;return Math.max(0,Math.ceil((new Date(value+"T23:59:59").getTime()-Date.now())/86400000));}
 function HeroIllustration(){return <svg viewBox="0 0 520 270" role="img" aria-label="Discover, test and earn illustration"><defs><linearGradient id="dt-screen" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff"/><stop offset="1" stopColor="#dceaff"/></linearGradient><linearGradient id="dt-blue" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#54b7ff"/><stop offset="1" stopColor="#0755d9"/></linearGradient><filter id="dt-shadow"><feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#12468e" floodOpacity=".22"/></filter></defs><circle cx="276" cy="137" r="115" fill="#fff" opacity=".16"/><circle cx="276" cy="137" r="88" fill="none" stroke="#fff" strokeOpacity=".45" strokeWidth="2"/><g filter="url(#dt-shadow)"><path d="m102 55 245 12 9 151-253-12Z" fill="#123e8e"/><path d="m115 67 219 11 7 119-219-11Z" fill="url(#dt-screen)"/><rect x="140" y="91" width="155" height="9" rx="4.5" fill="#b9cdef"/><rect x="140" y="112" width="126" height="7" rx="3.5" fill="#d1def1"/><g fill="#1472ed"><circle cx="151" cy="143" r="10"/><circle cx="151" cy="174" r="10"/></g><g fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m146 143 4 4 7-8m-11 35 4 4 7-8"/></g><rect x="171" y="139" width="128" height="7" rx="3.5" fill="#a9c2e8"/><rect x="171" y="170" width="105" height="7" rx="3.5" fill="#a9c2e8"/><path d="m76 218 286 13-28 18-288-15Z" fill="url(#dt-blue)"/></g><g filter="url(#dt-shadow)"><circle cx="361" cy="145" r="52" fill="#bce7ff" fillOpacity=".7" stroke="#0961d5" strokeWidth="9"/><path d="m398 184 43 48" stroke="#0754bd" strokeWidth="15" strokeLinecap="round"/><path d="m398 184 43 48" stroke="#8bd4ff" strokeWidth="4" strokeLinecap="round"/></g><g transform="translate(399 24) rotate(28)"><path d="M20 0C5 17 3 37 7 54l13 10 13-10C37 37 35 17 20 0Z" fill="#0865e9" stroke="#0643a9" strokeWidth="2"/><circle cx="20" cy="31" r="7" fill="#e9f7ff"/><path d="m8 48-10 15 13-3m21-12 10 15-13-3" fill="#ffad35"/></g><circle cx="75" cy="53" r="8" fill="#fff" opacity=".85"/><path d="m446 100 6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2Z" fill="#fff" opacity=".9"/><rect x="25" y="135" width="78" height="48" rx="12" fill="#fff" opacity=".95"/><text x="64" y="166" fontSize="23" textAnchor="middle" fontWeight="800" fill="#075bd8">&lt;/&gt;</text></svg>;}
