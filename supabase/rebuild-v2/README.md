@@ -45,7 +45,7 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 28 scripts in numeric order, from `001_schema.sql` through `028_restrict_support_attachment_reads_to_public_messages.sql`.
+Apply all 29 scripts in numeric order, from `001_schema.sql` through `029_developer_six_step_test_config.sql`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
