@@ -152,6 +152,58 @@ END;
 $after_registration$;
 RESET ROLE;
 
+-- Metadata rows contain original filenames and Storage paths, so their
+-- direct SELECT policy must follow the report visibility boundary too.
+SET LOCAL ROLE authenticated;
+DO $metadata_read_boundaries$
+DECLARE
+  v_visible integer;
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+  SELECT count(*) INTO v_visible FROM rebuild_v2.report_attachments;
+  IF v_visible <> 0 THEN
+    RAISE EXCEPTION 'FAIL: related Developer can read report attachment metadata';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000005',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000005","role":"authenticated"}',true);
+  SELECT count(*) INTO v_visible FROM rebuild_v2.report_attachments;
+  IF v_visible <> 0 THEN
+    RAISE EXCEPTION 'FAIL: Financial can read Support-only report attachment metadata';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  SELECT count(*) INTO v_visible FROM rebuild_v2.report_attachments;
+  IF v_visible <> 0 THEN
+    RAISE EXCEPTION 'FAIL: unrelated user can read report attachment metadata';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  SELECT count(*) INTO v_visible FROM rebuild_v2.report_attachments;
+  IF v_visible <> 1 THEN
+    RAISE EXCEPTION 'FAIL: reporter cannot read their report attachment metadata';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000004',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000004","role":"authenticated"}',true);
+  SELECT count(*) INTO v_visible FROM rebuild_v2.report_attachments;
+  IF v_visible <> 1 THEN
+    RAISE EXCEPTION 'FAIL: Support cannot read report attachment metadata';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000006',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000006","role":"authenticated"}',true);
+  SELECT count(*) INTO v_visible FROM rebuild_v2.report_attachments;
+  IF v_visible <> 1 THEN
+    RAISE EXCEPTION 'FAIL: Admin cannot read report attachment metadata';
+  END IF;
+END;
+$metadata_read_boundaries$;
+RESET ROLE;
+
 SET LOCAL ROLE authenticated;
 DO $read_role_boundaries$
 DECLARE
