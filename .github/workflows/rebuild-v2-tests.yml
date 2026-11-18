@@ -179,5 +179,5 @@ jobs:
         with:
           deno-version: 2.9.8
 
-      - name: Type-check notification dispatcher
+      - name: Type-check notification and invitation Edge Functions
         run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts
