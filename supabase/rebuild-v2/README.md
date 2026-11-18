@@ -52,10 +52,10 @@ After all 23 scripts, run:
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
 - `tests/005_developer_lifecycle_contract.sql`
-- `tests/006_test_media_assets_contract.sql`
+- `tests/006_test_media_assets_contract.sql` — verifies private media upload/access boundaries and the uploader/target audit event.
 - `tests/007_tester_workflow_contract.sql`
 - `tests/008_developer_feedback_privacy_contract.sql`
-- `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
+- `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry, changed operation/reference/reason/actor are rejected, and one successful wallet posting creates exactly one actor/request-linked audit event.
 - `tests/010_security_definer_boundary_contract.sql` — verifies the V2 schema exposure boundary, restricted schema creation, and SECURITY DEFINER ownership/search-path requirements.
 - `tests/011_notification_recipient_roles_contract.sql` — verifies tester/developer feed isolation and role-scoped read-one/read-all operations.
 - `tests/012_notification_outbox_retry_contract.sql` — verifies authenticated callers cannot drain the outbox, retry attempts record errors and backoff, and the fifth failure moves an undeliverable event to terminal `failed` without creating an inbox row.
