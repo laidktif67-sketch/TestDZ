@@ -46,3 +46,26 @@ export type AdminAuditEvent = { id: string; actor_id: string | null; action: str
 export function listAdminAuditEvents() {
   return dataClient().from("audit_events").select("id,actor_id,action,target_type,target_id,reason,created_at").order("created_at", { ascending: false }).limit(100);
 }
+
+ 
+export type AdminFraudReview = {
+  id: string;
+  user_id: string;
+  score: number;
+  priority: "normal" | "high";
+  status: "queued" | "in_review" | "resolved" | "dismissed";
+  review_due_at: string | null;
+  reviewed_by: string | null;
+  resolution: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Read-only risk-review queue. RLS permits Admin/Support; the route is Admin-only. */
+export function listAdminFraudReviews() {
+  return dataClient()
+    .from("fraud_reviews")
+    .select("id,user_id,score,priority,status,review_due_at,reviewed_by,resolution,created_at,updated_at")
+    .order("created_at", { ascending: false })
+    .limit(100);
+}
