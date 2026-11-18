@@ -93,6 +93,9 @@ DECLARE
   v_submission uuid;
   v_submission_again uuid;
   v_join_event_id uuid;
+  v_feedback_created_event_id uuid;
+  v_feedback_status_event_id uuid;
+  v_feedback_reply_event_id uuid;
   v_submit_event_id uuid;
   v_processed integer;
   v_path text;
@@ -193,6 +196,54 @@ BEGIN
   );
   IF v_feedback IS NULL THEN
     RAISE EXCEPTION 'FAIL: tester feedback';
+  END IF;
+
+  SELECT e.id INTO v_feedback_created_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='feedback'
+    AND e.aggregate_id=v_feedback
+    AND e.payload->>'type'='feedback.created'
+    AND e.payload->>'user_id'='10000000-0000-4000-8000-000000000001'
+    AND e.payload->>'recipient_role'='developer';
+  IF v_feedback_created_event_id IS NULL THEN
+    RAISE EXCEPTION 'FAIL: tester feedback must notify its owning developer';
+  END IF;
+
+  -- The owning developer reviews the feedback and replies; both events target the tester.
+  PERFORM set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub','10000000-0000-4000-8000-000000000001','role','authenticated')::text,true
+  );
+  PERFORM rebuild_v2.update_developer_feedback_review(v_feedback,'under_review','normal',NULL);
+  PERFORM rebuild_v2.send_developer_feedback_message(
+    v_feedback,'Synthetic developer reply for the notification contract.'
+  );
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true
+  );
+
+  SELECT e.id INTO v_feedback_status_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='feedback'
+    AND e.aggregate_id=v_feedback
+    AND e.payload->>'type'='feedback.status_updated'
+    AND e.payload->>'user_id'=v_tester::text
+    AND e.payload->>'recipient_role'='tester';
+  SELECT e.id INTO v_feedback_reply_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='feedback'
+    AND e.aggregate_id=v_feedback
+    AND e.payload->>'type'='feedback.developer_replied'
+    AND e.payload->>'user_id'=v_tester::text
+    AND e.payload->>'recipient_role'='tester';
+  IF v_feedback_status_event_id IS NULL OR v_feedback_reply_event_id IS NULL THEN
+    RAISE EXCEPTION 'FAIL: developer review and reply must notify the tester';
   END IF;
 
   v_submission := rebuild_v2.create_assignment_submission(
@@ -346,20 +397,28 @@ BEGIN
   END IF;
   PERFORM set_config('request.jwt.claims',jsonb_build_object('role','service_role')::text,true);
   v_processed := rebuild_v2.process_notification_outbox(20);
-  IF v_processed <> 2 THEN
-    RAISE EXCEPTION 'FAIL: expected two outbox events delivered, got %',v_processed;
+  IF v_processed <> 5 THEN
+    RAISE EXCEPTION 'FAIL: expected five outbox events delivered, got %',v_processed;
   END IF;
   IF (SELECT count(*) FROM rebuild_v2.notifications n
-      WHERE n.source_event_id IN (v_join_event_id,v_submit_event_id)
+      WHERE n.source_event_id IN (v_join_event_id,v_feedback_created_event_id)
         AND n.user_id='10000000-0000-4000-8000-000000000001'
         AND n.recipient_role='developer') <> 2 THEN
-    RAISE EXCEPTION 'FAIL: dispatcher must create two role-scoped inbox rows';
+    RAISE EXCEPTION 'FAIL: dispatcher must create two developer inbox rows';
+  END IF;
+  IF (SELECT count(*) FROM rebuild_v2.notifications n
+      WHERE n.source_event_id IN (v_feedback_status_event_id,v_feedback_reply_event_id)
+        AND n.user_id=v_tester AND n.recipient_role='tester') <> 2 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher must create two tester inbox rows';
   END IF;
   IF rebuild_v2.process_notification_outbox(20) <> 0 THEN
     RAISE EXCEPTION 'FAIL: dispatcher retry must not redeliver completed events';
   END IF;
   IF (SELECT count(*) FROM rebuild_v2.notifications n
-      WHERE n.source_event_id IN (v_join_event_id,v_submit_event_id)) <> 2 THEN
+      WHERE n.source_event_id IN (
+        v_join_event_id,v_feedback_created_event_id,
+        v_feedback_status_event_id,v_feedback_reply_event_id,v_submit_event_id
+      )) <> 5 THEN
     RAISE EXCEPTION 'FAIL: dispatcher retry created duplicate inbox rows';
   END IF;
   PERFORM set_config(
