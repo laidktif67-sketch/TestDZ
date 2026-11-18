@@ -2,10 +2,12 @@ import { getAppDataClient } from "../../lib/supabase-data";
 import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
 
 /** List the signed-in tester's support tickets. */
-export async function getTesterSupportTickets(userId: string) {
+export async function getTesterSupportTickets(userId: string, requesterRole?: "tester" | "developer") {
   return getAppDataClient().from("support_tickets")
-    .select("id,ticket_number,subject,category,priority,status,created_at")
-    .eq("user_id", userId).order("created_at", { ascending: false }).limit(30);
+    .select("id,ticket_number,subject,category,priority,status,created_at,requester_role")
+    .eq("user_id", userId)
+    .match(requesterRole ? { requester_role: requesterRole } : {})
+    .order("created_at", { ascending: false }).limit(30);
 }
 
 /** Create a support ticket using the guarded V2 workflow or legacy fallback. */
@@ -23,6 +25,21 @@ export async function createTesterSupportTicket(input: {
     user_id: input.userId, subject: input.subject, category: input.category,
     priority: input.priority, description: input.description,
   }).select("id,ticket_number,subject,category,priority,status,created_at").single();
+}
+
+
+/** Create a Developer-workspace ticket through the role-explicit V2 RPC only. */
+export async function createDeveloperSupportTicket(input: {
+  subject: string; category: string; priority: string; description: string;
+}) {
+  if (!isTesterWorkflowV2Enabled) {
+    return { data: null, error: new Error("Developer support intake requires the approved V2 schema.") };
+  }
+  return getAppDataClient().rpc("create_support_ticket_for_role", {
+    p_requester_role: "developer", p_subject: input.subject,
+    p_category: input.category, p_priority: input.priority,
+    p_description: input.description,
+  });
 }
 
 /** Load a ticket and its conversation/attachment metadata under database RLS. */
