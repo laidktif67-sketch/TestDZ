@@ -49,7 +49,6 @@ export type FinancialRefund = {
   status: string;
   refund_method: string;
   created_at: string;
-  updated_at: string;
 };
 
 export type FinancialLedgerEntry = {
