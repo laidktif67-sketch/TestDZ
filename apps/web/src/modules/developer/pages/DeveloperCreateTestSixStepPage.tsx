@@ -15,7 +15,7 @@ const steps = [
   "Configure Test",
   "Test Details",
   "Schedule & Testers",
-  "Review & Publish",
+  "Review & Create Draft",
 ] as const;
 
 const testTypes: { id: TestType; title: string; description: string; icon: string; tint: string; meta: string }[] = [
@@ -283,8 +283,8 @@ export default function DeveloperCreateTestSixStepPage() {
                     <button type="button" className={"dct-method-card " + (testerMethod === "google_groups" ? "selected" : "")} onClick={() => setTesterMethod("google_groups")}><span className="dct-method-radio"/><span className="dct-method-icon mail">✉</span><strong>Google Groups</strong><small>Use a Google group</small></button>
                     <button type="button" className={"dct-method-card " + (testerMethod === "upload_list" ? "selected" : "")} onClick={() => setTesterMethod("upload_list")}><span className="dct-method-radio"/><span className="dct-method-icon list">♟</span><strong>Upload List</strong><small>Add testers via CSV</small></button>
                   </div>
-                  {testerMethod === "google_groups" && <label className="dct-config-field">Google Group email<input value={googleGroup} onChange={e => setGoogleGroup(e.target.value)} type="email" placeholder="testers@googlegroups.com" /></label>}
-                  {testerMethod === "upload_list" && <div className="dct-config-field"><label htmlFor="dct-tester-csv">Tester email CSV</label><input id="dct-tester-csv" type="file" accept=".csv,text/csv" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; setTesterFileName(file.name); const text = await file.text(); const emails = Array.from(new Set((text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) ?? []).map(email => email.toLowerCase()))); setTesterEmails(emails); }} /><small>{testerFileName ? testerEmails.length + " email address(es) read from " + testerFileName + ". Saved as draft configuration only." : "Choose a CSV file. Email addresses are parsed locally and are not invited automatically."}</small></div>}
+                  {testerMethod === "google_groups" && <label className="dct-config-field">Google Group email<input value={googleGroup} onChange={e => setGoogleGroup(e.target.value)} type="email" placeholder="testers@googlegroups.com" /><small>The address stays local in this form; only the selected access method is saved. No invitations are sent.</small></label>}
+                  {testerMethod === "upload_list" && <div className="dct-config-field"><label htmlFor="dct-tester-csv">Tester email CSV</label><input id="dct-tester-csv" type="file" accept=".csv,text/csv" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; setTesterFileName(file.name); const text = await file.text(); const emails = Array.from(new Set((text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) ?? []).map(email => email.toLowerCase()))); setTesterEmails(emails); }} /><small>{testerFileName ? testerEmails.length + " email address(es) parsed locally from " + testerFileName + ". They are not saved or invited." : "Choose a CSV file. Email addresses are parsed locally and are not invited automatically."}</small></div>}
                 </div>
                 <div className="dct-config-row">
                   <span className="dct-config-symbol"><Icon name="apps" size={23} /></span><div className="dct-track-copy"><strong>App Version</strong><small>Select the app version to test</small></div>
