@@ -61,6 +61,16 @@ BEGIN
     RAISE EXCEPTION 'FAIL: direct audit writes or anonymous ticket workflow execution are available';
   END IF;
 
+  -- Support cannot close an active ticket before it is resolved.
+  BEGIN
+    PERFORM 1 FROM rebuild_v2.update_support_ticket(
+      '92000000-0000-4000-8000-000000000101',
+      'closed',NULL,'Attempted premature closure of an active ticket'
+    );
+    RAISE EXCEPTION 'FAIL: Support closed an active ticket';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
   -- A Support agent cannot reopen a resolved ticket.
   BEGIN
     PERFORM 1 FROM rebuild_v2.update_support_ticket(
