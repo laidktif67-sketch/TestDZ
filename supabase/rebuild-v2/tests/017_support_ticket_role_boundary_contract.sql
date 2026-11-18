@@ -22,7 +22,19 @@ VALUES
 INSERT INTO rebuild_v2.support_ticket_messages(ticket_id,sender_id,body,internal_note)
 VALUES
   ('91700000-0000-4000-8000-000000000101','91700000-0000-4000-8000-000000000002','Customer message for support review.',false),
-  ('91700000-0000-4000-8000-000000000101','91700000-0000-4000-8000-000000000001','Internal handling note for authorized support.',true);
+  ('91700000-0000-4000-8000-000000000101','91700000-0000-4000-8000-000000000001','Internal handling note for authorized support.',true),
+  ('91700000-0000-4000-8000-000000000102','91700000-0000-4000-8000-000000000003','Message from a user without the ticket requester role.',false);
+
+-- Pre-existing object fixture models an object that could pass a legacy OR-combined
+-- Storage policy; the metadata RPC must independently enforce the requester role.
+INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+VALUES(
+  'support-attachments',
+  'v2/91700000-0000-4000-8000-000000000102/91700000-0000-4000-8000-000000000003/91700000-0000-4000-8000-000000000302-proof.pdf',
+  '91700000-0000-4000-8000-000000000003'::uuid,
+  '91700000-0000-4000-8000-000000000003',
+  jsonb_build_object('mimetype','application/pdf','size',1024)
+);
 
 INSERT INTO rebuild_v2.payments(id,user_id,amount_dzd,currency,status,idempotency_key)
 VALUES ('91700000-0000-4000-8000-000000000201','91700000-0000-4000-8000-000000000002',1200,'DZD','pending','support-boundary-payment-001');
@@ -140,6 +152,24 @@ BEGIN
      OR rebuild_v2_private.can_upload_support_attachment(v_path) THEN
     RAISE EXCEPTION 'FAIL: unrelated user passed V2 support attachment helpers';
   END IF;
+
+  -- Even if a legacy Storage policy allowed the object upload, the metadata RPC
+  -- must reject a ticket owner who lacks the ticket's declared requester role.
+  BEGIN
+    PERFORM rebuild_v2.add_support_attachment(
+      '91700000-0000-4000-8000-000000000102',
+      (SELECT id FROM rebuild_v2.support_ticket_messages
+       WHERE ticket_id='91700000-0000-4000-8000-000000000102'
+         AND sender_id='91700000-0000-4000-8000-000000000003'
+         AND internal_note=false
+       ORDER BY created_at DESC LIMIT 1),
+      'v2/91700000-0000-4000-8000-000000000102/91700000-0000-4000-8000-000000000003/91700000-0000-4000-8000-000000000302-proof.pdf',
+      'proof.pdf','application/pdf',1024
+    );
+    RAISE EXCEPTION 'FAIL: attachment metadata RPC accepted requester without required role';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
 
   BEGIN
     INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
