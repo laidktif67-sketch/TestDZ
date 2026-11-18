@@ -52,10 +52,12 @@ Apply all 30 scripts in numeric order, from `001_schema.sql` through `030_develo
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 28 scripts, run:
+After all 30 scripts, run:
 - `tests/catalog_fingerprint.sql` — read-only catalog fingerprint for columns, constraints, indexes, function definitions, effective table/schema/function grants, RLS enabled/forced flags, policies, triggers, and Storage buckets; compare its output on the clean replay and FixLab.
 - `tests/catalog_difference_details.sql` — read-only drill-down of constraint, policy, and Storage bucket differences, including legacy Storage policy names. Neither diagnostic automatically proves parity; review all output and documented exclusions manually.
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
+- `tests/catalog_fingerprint.sql` — emits a read-only fingerprint of the final candidate catalog for comparison; it is not proof of hosted FixLab parity.
+- `tests/catalog_difference_details.sql` — emits read-only detail for known catalog deltas that require explicit review.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
 - `tests/005_developer_lifecycle_contract.sql`
@@ -79,7 +81,7 @@ After all 28 scripts, run:
 - `tests/023_refunds_fail_closed_contract.sql` — verifies refund visibility is limited to the owner, Financial, and Admin; Support and unrelated users cannot read refunds, and direct client writes are denied.
 - `tests/024_report_evidence_metadata_contract.sql` — verifies incident-report evidence upload is denied before trusted metadata registration and allowed only when file ID, extension, report, assignment, tester, and exact Storage path match; malformed metadata with mismatched paths, unsupported extensions, or NULL paths is rejected; Support can read evidence for review, while Financial and unrelated users cannot.
 - `tests/025_six_step_test_config_contract.sql` — verifies atomic six-step test creation, validated configuration persistence, audit attribution, Developer ownership, and exclusion of raw tester emails.
-- `tests/026_developer_test_monitoring_privacy_contract.sql` — verifies the owner-only monitoring summary, aggregate counts, low-volume daily suppression, no raw tester/assignment/content leakage, and denial to other developers and testers while direct raw-table reads remain blocked.
+- `tests/026_developer_test_monitoring_privacy_contract.sql` — verifies the owner-only monitoring summary, aggregate counts, daily activity suppression unless at least three distinct testers contributed, rating-count accuracy, no raw tester/assignment/content leakage, and denial to other developers and testers while direct raw-table reads remain blocked.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
