@@ -106,14 +106,19 @@ export default function DeveloperNotificationsPage() {
       }
       setLoading(true);
       setError("");
-      const result = await getNotificationsCenterPageData(user.id, "developer");
-      if (!active) return;
-      if (result.notificationResult.error) {
-        setError(t.errorLoad);
-      } else {
-        setRows((result.notificationResult.data ?? []) as NotificationRow[]);
+      try {
+        const result = await getNotificationsCenterPageData(user.id, "developer");
+        if (!active) return;
+        if (result.notificationResult.error) {
+          setError(t.errorLoad);
+        } else {
+          setRows((result.notificationResult.data ?? []) as NotificationRow[]);
+        }
+      } catch {
+        if (active) setError(t.errorLoad);
+      } finally {
+        if (active) setLoading(false);
       }
-      setLoading(false);
     }
     void load();
     return () => { active = false; };
@@ -127,13 +132,18 @@ export default function DeveloperNotificationsPage() {
     setError("");
     setNotice("");
     const readAt = new Date().toISOString();
-    const result = await markTesterNotificationRead(user.id, row.id, readAt, "developer");
-    setBusyId("");
-    if (result.error) {
+    try {
+      const result = await markTesterNotificationRead(user.id, row.id, readAt, "developer");
+      if (result.error) {
+        setError(t.errorOne);
+        return;
+      }
+      setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
+    } catch {
       setError(t.errorOne);
-      return;
+    } finally {
+      setBusyId("");
     }
-    setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
   }
 
   async function markAllRead() {
@@ -142,14 +152,19 @@ export default function DeveloperNotificationsPage() {
     setError("");
     setNotice("");
     const readAt = new Date().toISOString();
-    const result = await markAllTesterNotificationsRead(user.id, readAt, "developer");
-    setSavingAll(false);
-    if (result.error) {
+    try {
+      const result = await markAllTesterNotificationsRead(user.id, readAt, "developer");
+      if (result.error) {
+        setError(t.errorAll);
+        return;
+      }
+      setRows(current => current.map(row => row.read_at ? row : { ...row, read_at: readAt }));
+      setNotice(t.successAll);
+    } catch {
       setError(t.errorAll);
-      return;
+    } finally {
+      setSavingAll(false);
     }
-    setRows(current => current.map(row => row.read_at ? row : { ...row, read_at: readAt }));
-    setNotice(t.successAll);
   }
 
   if (!isTesterWorkflowV2Enabled) {
@@ -182,7 +197,7 @@ export default function DeveloperNotificationsPage() {
 
     <section className="dn-summary" aria-live="polite">
       <div><strong>{unread}</strong><span>{t.unread}</span></div>
-      <button type="button" onClick={() => void markAllRead()} disabled={!unread || savingAll || loading}>
+      <button type="button" onClick={() => void markAllRead()} disabled={!unread || savingAll || Boolean(busyId) || loading}>
         {savingAll ? t.saving : t.markAll}
       </button>
     </section>
