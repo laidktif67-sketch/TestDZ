@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS rebuild_v2.test_invitations (
     OR (status = 'revoked' AND accepted_by IS NULL AND accepted_at IS NULL
       AND revoked_by IS NOT NULL AND revoked_at IS NOT NULL
       AND revocation_reason IS NOT NULL)
+    OR (status = 'expired' AND accepted_by IS NULL AND accepted_at IS NULL
+      AND revoked_by IS NULL AND revoked_at IS NULL)
   ),
   CONSTRAINT test_invitations_revocation_reason_check CHECK (
     revocation_reason IS NULL OR char_length(revocation_reason) BETWEEN 5 AND 500
@@ -116,6 +118,13 @@ BEGIN
     END IF;
     RETURN v_existing.id;
   END IF;
+
+  -- Retire expired pending rows before inserting a fresh invitation for the
+  -- same test/email; otherwise the partial unique index would block re-invites.
+  UPDATE rebuild_v2.test_invitations
+  SET status = 'expired', updated_at = now()
+  WHERE test_id = p_test_id AND recipient_email = v_email
+    AND status = 'pending' AND expires_at <= now();
 
   IF NOT EXISTS (
     SELECT 1
