@@ -9,65 +9,16 @@ export type AdminDeveloperRoleRequest = {
   display_name: string | null;
 };
 
-function dataClient(): any {
-  return getAppDataClient();
+function dataClient(): any { return getAppDataClient(); }
+
+export function listPendingDeveloperRoleRequests() { return dataClient().rpc("admin_list_pending_role_requests"); }
+export function reviewDeveloperRoleRequest(requestId: string, decision: "approved" | "rejected", reason: string) {
+  return dataClient().rpc("admin_review_role_request", { p_request_id: requestId, p_decision: decision, p_review_note: reason });
 }
 
-export function listPendingDeveloperRoleRequests() {
-  return dataClient().rpc("admin_list_pending_role_requests");
-}
-
-export function reviewDeveloperRoleRequest(
-  requestId: string,
-  decision: "approved" | "rejected",
-  reason: string,
-) {
-  return dataClient().rpc("admin_review_role_request", {
-    p_request_id: requestId,
-    p_decision: decision,
-    p_review_note: reason,
-  });
-}
-
- 
-export type FinancialPayment = {
-  id: string;
-  user_id: string;
-  subscription_id: string | null;
-  amount_dzd: number;
-  currency: string;
-  status: string;
-  provider: string | null;
-  verified_at: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type FinancialRefund = {
-  id: string;
-  payment_id: string;
-  user_id: string;
-  amount_dzd: number;
-  reason: string;
-  status: string;
-  refund_method: string;
-  approved_by: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type FinancialLedgerEntry = {
-  id: string;
-  user_id: string;
-  wallet_type: string;
-  amount: number;
-  entry_type: string;
-  reference_type: string | null;
-  reference_id: string | null;
-  actor_id: string | null;
-  reason: string | null;
-  created_at: string;
-};
+export type FinancialPayment = { id: string; user_id: string; subscription_id: string | null; amount_dzd: number; currency: string; status: string; provider: string | null; verified_at: string | null; created_at: string; updated_at: string; };
+export type FinancialRefund = { id: string; payment_id: string; user_id: string; amount_dzd: number; reason: string; status: string; refund_method: string; approved_by: string | null; created_at: string; updated_at: string; };
+export type FinancialLedgerEntry = { id: string; user_id: string; wallet_type: string; amount: number; entry_type: string; reference_type: string | null; reference_id: string | null; actor_id: string | null; reason: string | null; created_at: string; };
 
 /** Read-only financial data. Database RLS limits this to Admin/Financial roles. */
 export async function getFinancialOperationsPageData() {
@@ -80,33 +31,18 @@ export async function getFinancialOperationsPageData() {
   return { payments, refunds, ledger };
 }
 
-
-export type AdminUserRecord = {
-  id: string;
-  display_name: string | null;
-  locale: string;
-  is_verified: boolean;
-  is_banned: boolean;
-  created_at: string;
-  user_roles: Array<{ role: string }>;
-};
-
+export type AdminUserRecord = { id: string; display_name: string | null; locale: string; is_verified: boolean; is_banned: boolean; created_at: string; user_roles: Array<{ role: string }>; };
 /** Admin-only read. RLS on profiles and user_roles enforces the boundary. */
 export function listAdminUsers() {
-  return dataClient()
-    .from("profiles")
-    .select("id,display_name,locale,is_verified,is_banned,created_at,user_roles(role)")
-    .order("created_at", { ascending: false })
-    .limit(100);
+  return dataClient().from("profiles").select("id,display_name,locale,is_verified,is_banned,created_at,user_roles(role)").order("created_at", { ascending: false }).limit(100);
+}
+export type AdminGrantableRole = "tester" | "developer" | "financial" | "support";
+export function grantAdminUserRole(userId: string, role: AdminGrantableRole, reason: string) {
+  return dataClient().rpc("admin_grant_role", { p_user_id: userId, p_role: role, p_reason: reason });
 }
 
-
-export type AdminGrantableRole = "tester" | "developer" | "financial" | "support";
-
-export function grantAdminUserRole(userId: string, role: AdminGrantableRole, reason: string) {
-  return dataClient().rpc("admin_grant_role", {
-    p_user_id: userId,
-    p_role: role,
-    p_reason: reason,
-  });
+export type AdminAuditEvent = { id: string; actor_id: string | null; action: string; target_type: string; target_id: string | null; reason: string | null; created_at: string; };
+/** Admin-only, read-only audit history. The database policy is the authorization boundary. */
+export function listAdminAuditEvents() {
+  return dataClient().from("audit_events").select("id,actor_id,action,target_type,target_id,reason,created_at").order("created_at", { ascending: false }).limit(100);
 }
