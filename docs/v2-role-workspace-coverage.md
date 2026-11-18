@@ -18,6 +18,13 @@ The onboarding choice `both` is not a persisted role. The UI translates it into 
 
 `guest` is an unauthenticated visitor state, not a row in `user_roles`. It is limited to public landing/legal/authentication routes.
 
+Role provisioning rules:
+- New accounts receive the baseline `tester` role through the trusted Auth-user trigger.
+- Developer access is requested through onboarding and granted only after Admin review; selecting `both` does not bypass that approval.
+- Admin can grant `tester`, `developer`, `financial` or `support` to another account with a mandatory audit reason through the Admin role-grant RPC.
+- The client-facing role-grant RPC explicitly excludes `admin`; Admin must be bootstrapped through a trusted operator/backend process, never public registration or self-grant.
+
+
 No `moderator` role is present in the current V2 SQL role constraint or the shared `AccountRole` union. Do not add it as a label or grantable role until its authority, data scope, escalation path and audit requirements are defined. Search legacy/archived code separately before declaring the entire repository free of historical Moderator references.
 
 ## Route inventory
