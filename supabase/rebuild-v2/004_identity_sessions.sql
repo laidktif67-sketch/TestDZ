@@ -14,8 +14,9 @@ SET row_security TO 'off'
 AS $function$
 DECLARE
   v_user_id uuid := auth.uid();
-  v_role text;
   v_interests jsonb := coalesce(p_interests, '[]'::jsonb);
+  v_developer_request_id uuid;
+  v_actual_roles text[];
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'authentication required' USING errcode = '42501';
@@ -49,14 +50,25 @@ BEGIN
     RAISE EXCEPTION 'invalid interest item' USING errcode = '22023';
   END IF;
 
-  DELETE FROM rebuild_v2.user_roles
-  WHERE user_id = v_user_id AND role IN ('tester', 'developer');
+  -- Onboarding may establish the baseline tester role, but it must never
+  -- grant or revoke privileged roles. Developer access is request-and-review only.
+  INSERT INTO rebuild_v2.user_roles(user_id, role)
+  VALUES (v_user_id, 'tester')
+  ON CONFLICT (user_id, role) DO NOTHING;
 
-  FOREACH v_role IN ARRAY p_roles LOOP
-    INSERT INTO rebuild_v2.user_roles(user_id, role)
-    VALUES (v_user_id, v_role)
-    ON CONFLICT (user_id, role) DO NOTHING;
-  END LOOP;
+  IF 'developer' = ANY(p_roles)
+     AND NOT EXISTS (
+       SELECT 1 FROM rebuild_v2.user_roles
+       WHERE user_id = v_user_id AND role = 'developer'
+     ) THEN
+    v_developer_request_id :=
+      rebuild_v2_private.request_developer_role('Requested during onboarding');
+  END IF;
+
+  SELECT coalesce(array_agg(role ORDER BY role), ARRAY[]::text[])
+  INTO v_actual_roles
+  FROM rebuild_v2.user_roles
+  WHERE user_id = v_user_id;
 
   UPDATE rebuild_v2.profiles
   SET interests = v_interests,
@@ -68,7 +80,16 @@ BEGIN
     RAISE EXCEPTION 'profile not found' USING errcode = 'P0002';
   END IF;
 
-  RETURN jsonb_build_object('status', 'ok', 'roles', to_jsonb(p_roles));
+  RETURN jsonb_build_object(
+    'status', 'ok',
+    'roles', to_jsonb(v_actual_roles),
+    'developer_request_id', v_developer_request_id,
+    'developer_access', CASE
+      WHEN 'developer' = ANY(v_actual_roles) THEN 'approved'
+      WHEN v_developer_request_id IS NOT NULL THEN 'pending'
+      ELSE 'not_requested'
+    END
+  );
 END;
 $function$;
 

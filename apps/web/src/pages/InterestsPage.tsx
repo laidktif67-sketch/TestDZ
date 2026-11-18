@@ -22,7 +22,7 @@ const content = {
     config:"Supabase is not configured.", footer:"Build. Test. Reward.", rights:"© 2026 TestDZ. All rights reserved.",
     about:"About", terms:"Terms", privacy:"Privacy", contact:"Contact", selectedLabel:"Your selection",
     selectedHint:"Your choices help us tailor recommendations.", min:"Pick at least one interest to get better recommendations.",
-    noSelection:"Nothing selected yet", done:"Great choices!", roles:{tester:"Tester",developer:"Developer",both:"Tester & Developer"}
+    noSelection:"Nothing selected yet", done:"Great choices!", roles:{tester:"Tester",developer:"Developer",both:"Tester & Developer"}, developerPending:"Your developer access request is pending admin review. You can use the tester workspace meanwhile."
   },
   fr: {
     language:"Langue", progress:"ÉTAPE 03 / 04", title:"Parlez-nous de vos passions",
@@ -33,7 +33,7 @@ const content = {
     config:"Supabase n’est pas configuré.", footer:"Créer. Tester. Récompenser.", rights:"© 2026 TestDZ. Tous droits réservés.",
     about:"À propos", terms:"Conditions", privacy:"Confidentialité", contact:"Contact", selectedLabel:"Votre sélection",
     selectedHint:"Vos choix nous aident à personnaliser les recommandations.", min:"Choisissez au moins un intérêt pour de meilleures recommandations.",
-    noSelection:"Aucun choix pour le moment", done:"Excellent choix !", roles:{tester:"Testeur",developer:"Développeur",both:"Testeur & développeur"}
+    noSelection:"Aucun choix pour le moment", done:"Excellent choix !", roles:{tester:"Testeur",developer:"Développeur",both:"Testeur & développeur"}, developerPending:"Votre demande d’accès développeur est en attente de validation par l’administration. Vous pouvez utiliser l’espace testeur en attendant."
   },
   ar: {
     language:"اللغة", progress:"الخطوة 03 / 04", title:"أخبرنا بما تحب أن تبدع فيه",
@@ -44,7 +44,7 @@ const content = {
     config:"إعداد Supabase غير مكتمل.", footer:"ابنِ. اختبر. اكسب.", rights:"© 2026 TestDZ. جميع الحقوق محفوظة.",
     about:"من نحن", terms:"الشروط", privacy:"الخصوصية", contact:"اتصل بنا", selectedLabel:"اختياراتك",
     selectedHint:"تساعدنا اختياراتك على تخصيص الاقتراحات لك.", min:"اختر اهتماماً واحداً على الأقل للحصول على اقتراحات أفضل.",
-    noSelection:"لم تختر أي مجال بعد", done:"اختيارات رائعة!", roles:{tester:"مختبِر",developer:"مطوّر",both:"مختبِر ومطوّر"}
+    noSelection:"لم تختر أي مجال بعد", done:"اختيارات رائعة!", roles:{tester:"مختبِر",developer:"مطوّر",both:"مختبِر ومطوّر"}, developerPending:"طلب صلاحية المطوّر قيد مراجعة الإدارة. يمكنك استخدام مساحة المختبِر إلى حين الموافقة."
   }
 } as const;
 
@@ -165,7 +165,10 @@ export default function InterestsPage(){
         await refreshRoles();
         if (isTesterWorkflowV2Enabled) {
           // V2 profile completion is optional and its legacy-only fields are not part of the V2 contract.
-          navigate(role === "developer" ? "/developer-dashboard" : "/tester-dashboard", { replace: true });
+          navigate("/tester-dashboard", {
+            replace: true,
+            state: { accessNotice: role === "tester" ? undefined : t.developerPending },
+          });
         } else {
           navigate("/complete-profile",{replace:true});
         }
