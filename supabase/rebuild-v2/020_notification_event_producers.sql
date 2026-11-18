@@ -44,12 +44,21 @@ BEGIN
     RAISE EXCEPTION 'NOTIFICATION_EVENT_INPUT_INVALID' USING errcode='22023';
   END IF;
 
+  -- This helper is invoked from trusted lifecycle RPCs on behalf of another
+  -- user. Do not call has_role(user_id, ...) here: that helper intentionally
+  -- binds its subject to auth.uid() and is designed for self-authorization.
   IF p_recipient_role = 'developer' THEN
-    IF NOT rebuild_v2_private.has_role(p_recipient_id, ARRAY['developer','admin']) THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM rebuild_v2.user_roles ur
+      WHERE ur.user_id = p_recipient_id AND ur.role IN ('developer','admin')
+    ) THEN
       RETURN NULL;
     END IF;
   ELSIF p_recipient_role = 'tester' THEN
-    IF NOT rebuild_v2_private.has_role(p_recipient_id, ARRAY['tester']) THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM rebuild_v2.user_roles ur
+      WHERE ur.user_id = p_recipient_id AND ur.role = 'tester'
+    ) THEN
       RETURN NULL;
     END IF;
   ELSE
