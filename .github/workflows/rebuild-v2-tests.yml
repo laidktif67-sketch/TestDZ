@@ -97,6 +97,7 @@ jobs:
             supabase/rebuild-v2/tests/020_support_ticket_audited_workflow_contract.sql
             supabase/rebuild-v2/tests/021_fraud_fail_closed_contract.sql
             supabase/rebuild-v2/tests/022_reports_disputes_fail_closed_contract.sql
+            supabase/rebuild-v2/tests/023_refunds_fail_closed_contract.sql
           )
 
           for contract in "${contracts[@]}"; do
