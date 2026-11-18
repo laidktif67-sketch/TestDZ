@@ -84,9 +84,17 @@ export default function DeveloperNotificationsPage() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
+    const previousLanguage = document.documentElement.lang;
+    const previousDirection = document.documentElement.dir;
+
     document.documentElement.lang = language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
     window.localStorage.setItem("testdz-landing-language", language);
+
+    return () => {
+      document.documentElement.lang = previousLanguage;
+      document.documentElement.dir = previousDirection;
+    };
   }, [language]);
 
   useEffect(() => {
