@@ -22,7 +22,7 @@ const articles:{id:string;category:Category;question:string;answer:string}[]=[
  {id:"community",category:"testers",question:"ماذا تعرض صفحة مجتمع المختبرين؟",answer:"تعرض أعداد المشاركين والمشاركات وحالات التقدم لكل اختبار تملكه. قد يشارك الشخص نفسه في أكثر من اختبار، لذلك لا تجمع أعداد المشاركين لكل الاختبارات على أنها عدد أشخاص فريدين."},
  {id:"results-page",category:"results",question:"كيف أفهم نسبة الإكمال ومتوسط التقييم؟",answer:"نسبة الإكمال هي عدد المشاركات المكتملة مقسوماً على إجمالي المشاركات في الاختبار. متوسط التقييم يحسب من التقييمات الرقمية المتاحة، ويُعرض عدد التقييمات الرقمية منفصلاً عن إجمالي الملاحظات."},
  {id:"feedback",category:"feedback",question:"أين أراجع ملاحظات المختبرين؟",answer:"افتح صندوق الملاحظات لمراجعة الملاحظات المرتبطة باختباراتك وإدارة حالة المراجعة والأولوية والردود وفق الصلاحيات الحالية. لا تستخدم الملاحظات بديلاً عن سجلات الدعم أو النزاعات."},
- {id:"support",category:"feedback",question:"هل يمكنني فتح تذكرة دعم من مساحة المطوّر؟",answer:"إرسال تذاكر الدعم من مساحة المطوّر غير مفعّل حالياً في V2. لا توجد تذكرة تُنشأ من هذه الصفحة؛ لن نعرض نموذجاً يوحي بأن الطلب أُرسل قبل اكتمال مسار التسجيل الآمن."},
+ {id:"support",category:"feedback",question:"هل يمكنني فتح تذكرة دعم من مساحة المطوّر؟",answer:"يمكن فتح مركز دعم المطوّر من الرابط أدناه. يعتمد إنشاء التذكرة على RPC يثبت دور Developer من قاعدة البيانات، ولا يُفعّل النموذج حتى يكون مخطط V2 معتمداً ومفعّلاً في بيئة التطبيق."},
  {id:"security",category:"security",question:"كيف أحمي حساب المطوّر؟",answer:"استخدم كلمة مرور فريدة ولا تشارك رموز التحقق. راجع سجل النشاط والجلسات النشطة من أدوات الأمان المتاحة، وسجّل الخروج من الأجهزة التي لم تعد تستخدمها."},
  {id:"billing",category:"security",question:"هل يمكنني شراء خطة أو تغيير الاشتراك من هنا؟",answer:"إجراءات شراء الخطط أو تعديل الاشتراك ليست جزءاً من مسار V2 المفعّل حالياً. لا تُدخل بيانات دفع في صفحات تجريبية ولا تعتبر معلومات الاستخدام عملية فوترة."}
 ];
@@ -33,7 +33,7 @@ export default function DeveloperHelpPage(){
  const [expanded,setExpanded]=useState<string|null>(null);
  const visible=useMemo(()=>{const q=query.trim().toLocaleLowerCase();return articles.filter(item=>(category==="all"||item.category===category)&&(!q||(item.question+" "+item.answer).toLocaleLowerCase().includes(q)));},[query,category]);
  return <main className="dhv2-shell" dir="rtl">
-  <header className="dhv2-header"><Brand/><nav><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/developer-tests">اختباراتي</Link><Link to="/developer/testers">مجتمع المختبرين</Link><Link to="/developer-test-results">النتائج</Link></nav></header>
+  <header className="dhv2-header"><Brand/><nav><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/developer-tests">اختباراتي</Link><Link to="/developer/testers">مجتمع المختبرين</Link><Link to="/developer-test-results">النتائج</Link><Link to="/developer-support">دعم المطوّر</Link></nav></header>
   <section className="dhv2-content">
    <div className="dhv2-hero"><span className="dhv2-hero-mark">?</span><div><span className="dhv2-eyebrow">TESTDZ · موارد المطوّر</span><h1>مركز مساعدة المطوّر</h1><p>إجابات عملية حول التطبيقات والاختبارات والنتائج وحدود الخصوصية في V2.</p></div></div>
    <label className="dhv2-search"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث عن سؤال أو موضوع…" aria-label="البحث في مركز المساعدة"/></label>
@@ -42,8 +42,8 @@ export default function DeveloperHelpPage(){
    <section className="dhv2-faq"><div className="dhv2-section-title"><div><h2>الأسئلة الشائعة</h2><p>معلومات مبنية على الوظائف المفعّلة فعلياً في مساحة V2.</p></div><span>{visible.length} نتيجة</span></div>
     {visible.length?visible.map(item=><article className={expanded===item.id?"open":""} key={item.id}><button type="button" onClick={()=>setExpanded(expanded===item.id?null:item.id)} aria-expanded={expanded===item.id}><span>{item.question}</span><b>{expanded===item.id?"−":"+"}</b></button>{expanded===item.id&&<p>{item.answer}</p>}</article>):<div className="dhv2-empty">لا توجد نتائج مطابقة. جرّب كلمات بحث أخرى.</div>}
    </section>
-   <section className="dhv2-links"><div><strong>روابط سريعة</strong><p>انتقل مباشرة إلى الأدوات المتاحة في مساحة المطوّر.</p></div><Link to="/apps/new">إضافة تطبيق</Link><Link to="/developer/tests/new">إنشاء اختبار</Link><Link to="/developer/testers">مجتمع المختبرين</Link><Link to="/developer-test-results">النتائج</Link></section>
-   <section className="dhv2-notice"><strong>ملاحظة حول الوظائف غير المفعّلة</strong><p>مركز المساعدة لا يفعّل عمليات جديدة. دعوات المختبرين، نشر Google Play، تذاكر الدعم للمطوّر، وشراء الخطط تحتاج مسارات خلفية معتمدة قبل تشغيلها.</p></section>
+   <section className="dhv2-links"><div><strong>روابط سريعة</strong><p>انتقل مباشرة إلى الأدوات المتاحة في مساحة المطوّر.</p></div><Link to="/apps/new">إضافة تطبيق</Link><Link to="/developer/tests/new">إنشاء اختبار</Link><Link to="/developer/testers">مجتمع المختبرين</Link><Link to="/developer-test-results">النتائج</Link><Link to="/developer-support">مركز دعم المطوّر</Link></section>
+   <section className="dhv2-notice"><strong>ملاحظة حول الوظائف غير المفعّلة</strong><p>مركز المساعدة لا يفعّل عمليات جديدة. دعوات المختبرين، نشر Google Play، وشراء الخطط تحتاج مسارات خلفية معتمدة قبل تشغيلها. تذاكر دعم المطوّر تستخدم RPC مخصصاً يتحقق من دور مساحة العمل، ويظل معطلاً حتى اعتماد مخطط V2.</p></section>
    <footer className="dhv2-footer">TestDZ · Build · Test · Improve</footer>
   </section>
  </main>;
