@@ -52,11 +52,11 @@ The notification stack now reaches 21 ordered candidate scripts (`001`–`021`) 
 
 ## Notification pipeline status (read-only review, 2026-11-18)
 
-The notification work is now represented by a four-PR Draft stack (#49 → #52 → #53 → #54). PR #49 provides role-separated feeds and read-state RPCs; PR #52 locks direct client writes to the outbox tables; PR #53 adds trusted assignment/feedback event producers and a service-role-only batch dispatcher; PR #54 adds the protected developer notifications page with EN/FR/AR support.
+The notification work is represented by a four-PR Draft stack (#49 → #52 → #53 → #55). PR #49 provides role-separated feeds and read-state RPCs; PR #52 locks direct client writes to the outbox tables; PR #53 adds trusted assignment/feedback event producers and a service-role-only batch dispatcher; PR #55 re-ports the protected developer notifications page directly onto the latest PR #53 head. PR #54 is the earlier UI integration on the prior PR #53 head; PR #55 supersedes it for integration review.
 
-The current PR #53 head passed an exact 21-script isolated Supabase replay and SQL/PostgREST contracts (run `44267957934`). PR #54's exact head passed Frontend CI, TestDZ CI, and Vercel Preview. No hosted database was changed, no Edge Function was deployed, and no cron job or dispatch secret was configured.
+PR #53 corrected head `9564570e110d5c4698923e4c275a443603eed256` passed the exact 21-script isolated Supabase replay, SQL/PostgREST contracts, and pinned Deno 2.9.8 type-check in workflow run `44272178230`. PR #55 is based directly on that exact head and remains Draft while frontend/TestDZ CI and Vercel Preview run.
 
-Remaining gates: Deno type-check the Edge Function source in CI; review worker timeout/retry/observability behavior and shared-secret rotation; manually inspect the developer page at mobile/desktop sizes and RTL; then rerun the full stack checks after integration. Do not treat a successful SQL replay as proof that the Edge Function runtime is deployable. Keep all four PRs Draft until these gates and broader architecture review are complete.
+No hosted database was changed, no Edge Function was deployed, and no cron job or dispatch secret was configured. Remaining gates: review worker timeout/retry/observability behavior and shared-secret rotation; manually inspect the developer page at mobile/desktop sizes and RTL; then rerun the full stack checks after integration. Do not treat source type-checking as proof of deployed runtime operation. Keep all PRs Draft until these gates and broader architecture review are complete.
 
 ## Confirmed V2 migration provenance blocker
 
