@@ -53,6 +53,17 @@ VALUES
 INSERT INTO rebuild_v2.feedback(assignment_id,tester_id,category,body,rating,created_at)
 VALUES('53200000-0000-4000-8000-000000000001','53000000-0000-4000-8000-000000000003','general','PRIVATE_FEEDBACK_BODY_DO_NOT_EXPOSE',5,now());
 
+-- One tester generates four events yesterday; the daily chart must suppress that day.
+UPDATE rebuild_v2.assignments
+SET assigned_at=now()-interval '1 day',
+    started_at=now()-interval '1 day',
+    completed_at=now()-interval '1 day'
+WHERE id='53200000-0000-4000-8000-000000000001';
+UPDATE rebuild_v2.checkins
+SET checkin_date=(current_date-1),
+    created_at=now()-interval '1 day'
+WHERE assignment_id='53200000-0000-4000-8000-000000000001';
+
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000001',true);
 SELECT set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -71,8 +82,9 @@ BEGIN
     RAISE EXCEPTION 'FAIL: aggregate monitoring metrics incorrect: %',v_payload->'metrics';
   END IF;
   IF jsonb_array_length(v_payload->'dailyActivity')<>1
-     OR (v_payload->'dailyActivity'->0->>'count')::integer<3 THEN
-    RAISE EXCEPTION 'FAIL: daily activity aggregation/low-volume suppression incorrect';
+     OR (v_payload->'dailyActivity'->0->>'count')::integer<3
+     OR v_payload->'dailyActivity'->0->>'date'<>(now() AT TIME ZONE 'Africa/Algiers')::date::text THEN
+    RAISE EXCEPTION 'FAIL: daily activity must include only dates with at least three distinct testers';
   END IF;
   v_text:=v_payload::text;
   IF position('53000000-0000-4000-8000-000000000003' IN v_text)>0
