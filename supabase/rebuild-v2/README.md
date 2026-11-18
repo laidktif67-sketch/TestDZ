@@ -62,10 +62,11 @@ After all 23 scripts, run:
 - `tests/015_admin_role_request_management_contract.sql` — verifies the Admin-only Developer request queue, reason-required decisions, non-Admin denial, and audited approval.
 - `tests/016_admin_role_grant_contract.sql` — verifies Admin-only role grants, no self-grant or Admin-role grant, no direct role-table writes, reason validation, actor attribution, and idempotent duplicate grants.
 - `tests/017_support_ticket_role_boundary_contract.sql` — verifies Support can read the ticket queue and conversation records, cannot directly mutate ticket/conversation/attachment tables, and cannot read another user's payments, refunds, or wallet ledger.
+- `tests/018_audit_event_append_only_contract.sql` — verifies only Admin can read audit events, authenticated clients cannot write them directly, and database triggers reject UPDATE/DELETE even when exercised by the local migration owner.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the sixteen post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the seventeen post-phase contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
