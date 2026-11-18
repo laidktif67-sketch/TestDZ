@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.95.0";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
-  "access-control-allow-headers": "authorization, apikey, content-type",
+  "access-control-allow-headers": "authorization, apikey, content-type, x-client-info",
   "access-control-allow-methods": "POST, OPTIONS",
   "content-type": "application/json; charset=utf-8",
 };
@@ -32,6 +32,18 @@ function fromBase64Url(value: string): Uint8Array | null {
   } catch {
     return null;
   }
+}
+
+async function createDeterministicToken(secret: string, userId: string, idempotencyKey: string): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const message = new TextEncoder().encode(userId + ":" + idempotencyKey);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", key, message));
 }
 
 async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
@@ -98,7 +110,14 @@ Deno.serve(async (request: Request) => {
       return respond(400, { error: "invalid_invitation_input" });
     }
 
-    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const tokenSecret = Deno.env.get("DEVELOPER_INVITATION_TOKEN_SECRET") ?? "";
+    if (tokenSecret.length < 32) {
+      console.error("Developer invitation token secret is not configured.");
+      return respond(503, { error: "invitation_service_not_configured" });
+    }
+    // HMAC makes retries with the same authenticated user + idempotency key
+    // reproduce the same token without ever persisting the raw token.
+    const tokenBytes = await createDeterministicToken(tokenSecret, authData.user.id, idempotencyKey);
     const token = toBase64Url(tokenBytes);
     const tokenHash = bytesToHex(await sha256(tokenBytes));
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
