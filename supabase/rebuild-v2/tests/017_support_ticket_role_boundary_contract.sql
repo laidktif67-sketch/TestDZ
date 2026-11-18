@@ -8,10 +8,10 @@ VALUES
   ('91700000-0000-4000-8000-000000000002','authenticated','authenticated','v2-support-boundary-owner@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Ticket Owner"}'::jsonb,now(),now()),
   ('91700000-0000-4000-8000-000000000003','authenticated','authenticated','v2-support-boundary-other@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other User"}'::jsonb,now(),now());
 
+-- The auth.users insert trigger provisions the baseline Tester role automatically.
+-- Only add the explicit Support role here to avoid duplicating the generated Tester grant.
 INSERT INTO rebuild_v2.user_roles(user_id,role)
-VALUES
-  ('91700000-0000-4000-8000-000000000001','support'),
-  ('91700000-0000-4000-8000-000000000002','tester');
+VALUES ('91700000-0000-4000-8000-000000000001','support');
 
 INSERT INTO rebuild_v2.support_tickets
   (id,user_id,requester_role,subject,category,priority,description,status)
