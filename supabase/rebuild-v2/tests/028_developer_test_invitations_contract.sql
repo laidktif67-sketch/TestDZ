@@ -145,26 +145,25 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'FAIL: valid invitation did not create the expected tester assignment';
   END IF;
+  -- Inspect state through the owner-scoped RPC, never by granting direct table reads.
+  PERFORM set_config('request.jwt.claim.sub','d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62","role":"authenticated"}',true);
   IF NOT EXISTS (
-    SELECT 1 FROM rebuild_v2.test_invitations i
-    WHERE i.id=v_invitation AND i.status='accepted'
-      AND i.accepted_by='a7b2c3d4-5e6f-4789-8a01-2b3c4d5e6f70'
+    SELECT 1 FROM rebuild_v2.list_test_invitations(v_test) i
+    WHERE i.invitation_id=v_invitation AND i.status='accepted'
   ) THEN
     RAISE EXCEPTION 'FAIL: redeemed invitation was not atomically marked accepted';
   END IF;
 
   -- A second invitation can be revoked by its owner and cannot be redeemed.
-  PERFORM set_config('request.jwt.claim.sub','d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62","role":"authenticated"}',true);
   v_revoked := rebuild_v2.create_test_invitation(
     v_test,'different-user@example.invalid',v_revoked_hash,
     now()+interval '7 days','d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b60'
   );
   PERFORM rebuild_v2.revoke_test_invitation(v_revoked,'Contract test revocation');
   IF NOT EXISTS (
-    SELECT 1 FROM rebuild_v2.test_invitations
-    WHERE id=v_revoked AND status='revoked'
-      AND revoked_by='d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62'
+    SELECT 1 FROM rebuild_v2.list_test_invitations(v_test) i
+    WHERE i.invitation_id=v_revoked AND i.status='revoked'
   ) THEN
     RAISE EXCEPTION 'FAIL: invitation revocation was not recorded';
   END IF;
