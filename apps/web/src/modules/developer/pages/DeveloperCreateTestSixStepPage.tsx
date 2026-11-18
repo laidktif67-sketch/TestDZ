@@ -246,10 +246,10 @@ export default function DeveloperCreateTestSixStepPage() {
               <div><h2>{steps[step - 1]}</h2><p>{[
                 "Choose the testing campaign type that matches your goal.",
                 "Select an application already registered in My Apps.",
-                "Add a clear title and explain what the campaign should evaluate.",
-                "Set the target number of testers and add cohort preferences.",
-                "Set the campaign dates and the instructions testers should follow.",
-                "Review the saved configuration. The campaign will be created as a draft.",
+                "Configure platform-specific options and tester access preferences. These settings do not publish or invite testers.",
+                "Describe the campaign, objective, testing scope, success criteria, and instructions.",
+                "Set the test dates, target tester count, joining preference, and feedback options.",
+                "Review the complete configuration. Creating this record saves a TestDZ draft only.",
               ][step - 1]}</p></div>
             </div>
 
