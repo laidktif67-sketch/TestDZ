@@ -190,7 +190,7 @@ BEGIN
   WHERE bucket_id='support-attachments' AND name=v_path
     AND owner_id='91700000-0000-4000-8000-000000000002';
   IF v_count <> 1 THEN
-    RAISE EXCEPTION 'FAIL: denied outsider upload changed the owner's V2 support attachment';
+    RAISE EXCEPTION 'FAIL: denied outsider upload changed the existing V2 support attachment';
   END IF;
   PERFORM set_config('role','authenticated',true);
 END;
