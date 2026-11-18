@@ -26,18 +26,18 @@ export default function AdminDashboardPage() {
   const nav = [
     { label: "Admin overview", icon: "shield", href: "/admin", active: true },
     { label: "User directory", icon: "users", href: "/admin/users" },
-    { label: "Role requests", icon: "key", href: "/admin/role-requests" },
+    { label: "Role requests", icon: "lock", href: "/admin/role-requests" },
     { label: "Developer reviews", icon: "check", href: "/admin/developer-reviews" },
     { label: "Financial operations", icon: "wallet", href: "/financial-operations" },
     { label: "Support workspace", icon: "headset", href: "/support-workspace" },
-    { label: "Audit log", icon: "file-text", href: "/admin/audit-log" },
-    { label: "Fraud reviews", icon: "shield-alert", href: "/admin/fraud-reviews" },
+    { label: "Audit log", icon: "file", href: "/admin/audit-log" },
+    { label: "Fraud reviews", icon: "alert", href: "/admin/fraud-reviews" },
     { label: "Cases", icon: "folder", href: "/admin/cases" },
     { label: "Profile", icon: "user", href: "/profile" },
   ];
 
   return <div className="td-dashboard ad-shell">
-    <TesterSidebar nav={nav} name="TestDZ Administration" firstName="A" avatar="" roles={roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={workspaceMenuOpen} setWorkspaceMenuOpen={setWorkspaceMenuOpen} previewMode={false} />
+    <TesterSidebar nav={nav} name="TestDZ Administration" firstName="A" avatar="" roles={roles} isAdmin={roles.includes("admin")} isDeveloper={roles.includes("developer")} workspaceMenuOpen={workspaceMenuOpen} setWorkspaceMenuOpen={setWorkspaceMenuOpen} previewMode={false} homeHref="/admin" />
     <main className="ad-main">
       <header className="ad-header">
         <div><span className="ad-eyebrow">TESTDZ · CONTROL CENTER</span><h1>Administration workspace</h1><p>Manage access, review operational queues and move between authorized workspaces.</p></div>
