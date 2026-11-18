@@ -70,6 +70,7 @@ BEGIN
         ELSE round((m.completed_count::numeric*100)/m.total_assignments,1) END,
       'checkins',m.checkin_count,
       'feedbackCount',m.feedback_count,
+      'ratingCount',m.rating_count,
       'averageRating',m.average_rating,
       'feedbackPending',m.feedback_pending,
       'feedbackAccepted',m.feedback_accepted,
@@ -128,6 +129,10 @@ BEGIN
        FROM rebuild_v2.feedback f
        JOIN rebuild_v2.assignments fa ON fa.id=f.assignment_id
        WHERE fa.test_id=t.id) AS feedback_count,
+      (SELECT count(*)::integer
+       FROM rebuild_v2.feedback f
+       JOIN rebuild_v2.assignments fa ON fa.id=f.assignment_id
+       WHERE fa.test_id=t.id AND f.rating IS NOT NULL) AS rating_count,
       (SELECT round(avg(f.rating)::numeric,2)
        FROM rebuild_v2.feedback f
        JOIN rebuild_v2.assignments fa ON fa.id=f.assignment_id
