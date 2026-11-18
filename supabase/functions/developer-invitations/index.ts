@@ -35,7 +35,9 @@ function fromBase64Url(value: string): Uint8Array | null {
 }
 
 async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
-  return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  const input = new Uint8Array(bytes.length);
+  input.set(bytes);
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", input.buffer as ArrayBuffer));
 }
 
 function bytesToHex(bytes: Uint8Array): string {
