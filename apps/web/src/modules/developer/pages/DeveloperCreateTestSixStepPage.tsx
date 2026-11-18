@@ -323,7 +323,7 @@ export default function DeveloperCreateTestSixStepPage() {
     <section className="dct-details-section">
       <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="target" size={24}/></span><div><h3>Testing Objective</h3><p>Choose the primary goal and priority for this campaign</p></div></div>
       <div className="dct-details-two-col">
-        <label className="dct-details-field">Testing Objective<select value={testingObjective} onChange={e=>setTestingObjective(e.target.value)}><option value="stability_bugs">Stability & Bug Discovery</option><option value="usability">Usability & User Experience</option><option value="compatibility">Device Compatibility</option><option value="performance">Performance</option><option value="release_readiness">Release Readiness</option><option value="custom">Custom Objective</option></select></label>
+        <label className="dct-details-field">Testing Objective<select value={testingObjective} onChange={e=>setTestingObjective(e.target.value as DeveloperSixStepTestConfig["details"]["testingObjective"])}><option value="stability_bugs">Stability & Bug Discovery</option><option value="usability">Usability & User Experience</option><option value="compatibility">Device Compatibility</option><option value="performance">Performance</option><option value="release_readiness">Release Readiness</option><option value="custom">Custom Objective</option></select></label>
         <label className="dct-details-field">Priority<select value={priority} onChange={e=>setPriority(e.target.value as typeof priority)}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
       </div>
     </section>
