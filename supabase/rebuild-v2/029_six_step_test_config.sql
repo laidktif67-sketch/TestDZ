@@ -23,7 +23,7 @@ BEGIN
 
   IF NOT (p_config->'cohort' ?& ARRAY['targetTesters','notes'])
      OR (p_config->'cohort' - ARRAY['targetTesters','notes']) <> '{}'::jsonb
-     OR jsonb_typeof(p_config->'cohort'->'targetTesters') <> 'number'
+     OR jsonb_typeof(p_config->'cohort'->'targetTesters') IS DISTINCT FROM 'number'
      OR (p_config->'cohort'->>'targetTesters')::integer NOT BETWEEN 1 AND 500
      OR (p_config->'cohort' ? 'notes' AND jsonb_typeof(p_config->'cohort'->'notes') NOT IN ('string','null'))
      OR char_length(coalesce(p_config->'cohort'->>'notes','')) > 2000 THEN
@@ -32,7 +32,7 @@ BEGIN
 
   IF NOT (p_config->'rules' ?& ARRAY['androidVersion','instructions'])
      OR (p_config->'rules' - ARRAY['androidVersion','instructions']) <> '{}'::jsonb
-     OR jsonb_typeof(p_config->'rules'->'androidVersion') <> 'string'
+     OR jsonb_typeof(p_config->'rules'->'androidVersion') IS DISTINCT FROM 'string'
      OR char_length(p_config->'rules'->>'androidVersion') NOT BETWEEN 1 AND 80
      OR (p_config->'rules' ? 'instructions' AND jsonb_typeof(p_config->'rules'->'instructions') NOT IN ('string','null'))
      OR char_length(coalesce(p_config->'rules'->>'instructions','')) > 12000 THEN
@@ -42,26 +42,28 @@ BEGIN
   IF NOT (p_config->'details' ?& ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate'])
      OR (p_config->'details' - ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate']) <> '{}'::jsonb
      OR p_config->'details'->>'testingObjective' NOT IN ('stability_bugs','usability','compatibility','performance','release_readiness','custom')
-     OR jsonb_typeof(p_config->'details'->'testingObjective') <> 'string'
+     OR jsonb_typeof(p_config->'details'->'testingObjective') IS DISTINCT FROM 'string'
+     OR jsonb_typeof(p_config->'details'->'priority') IS DISTINCT FROM 'string'
      OR p_config->'details'->>'priority' NOT IN ('low','medium','high')
-     OR jsonb_typeof(p_config->'details'->'testingScope') <> 'array'
+     OR jsonb_typeof(p_config->'details'->'testingScope') IS DISTINCT FROM 'array'
      OR jsonb_array_length(p_config->'details'->'testingScope') NOT BETWEEN 1 AND 10
-     OR jsonb_typeof(p_config->'details'->'minimumCompletionRate') <> 'number'
+     OR jsonb_typeof(p_config->'details'->'minimumCompletionRate') IS DISTINCT FROM 'number'
      OR (p_config->'details'->>'minimumCompletionRate')::numeric NOT BETWEEN 1 AND 100
      OR (p_config->'details' ? 'successCriteria' AND jsonb_typeof(p_config->'details'->'successCriteria') NOT IN ('string','null'))
      OR char_length(coalesce(p_config->'details'->>'successCriteria','')) > 2000 THEN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
   v_scope := p_config->'details'->'testingScope';
-  IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_scope) AS scope(value) WHERE jsonb_typeof(scope.value) <> 'string' OR char_length(scope.value#>>'{}') NOT BETWEEN 1 AND 60) THEN
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_scope) AS scope(value) WHERE jsonb_typeof(scope.value) IS DISTINCT FROM 'string' OR scope.value#>>'{}' NOT IN ('core_flows','performance','compatibility','accessibility')) THEN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
 
   IF NOT (p_config->'schedule' ?& ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports'])
      OR (p_config->'schedule' - ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports']) <> '{}'::jsonb
-     OR jsonb_typeof(p_config->'schedule'->'allowMoreTesters') <> 'boolean'
-     OR jsonb_typeof(p_config->'schedule'->'collectFeedback') <> 'boolean'
-     OR jsonb_typeof(p_config->'schedule'->'enableBugReports') <> 'boolean'
+     OR jsonb_typeof(p_config->'schedule'->'allowMoreTesters') IS DISTINCT FROM 'boolean'
+     OR jsonb_typeof(p_config->'schedule'->'collectFeedback') IS DISTINCT FROM 'boolean'
+     OR jsonb_typeof(p_config->'schedule'->'enableBugReports') IS DISTINCT FROM 'boolean'
+     OR jsonb_typeof(p_config->'schedule'->'joiningMethod') IS DISTINCT FROM 'string'
      OR p_config->'schedule'->>'joiningMethod' NOT IN ('google_play_link','closed_group','upload_list','open_testing')
      OR (p_config->'schedule'->'durationDays' <> 'null'::jsonb AND
          (jsonb_typeof(p_config->'schedule'->'durationDays') <> 'number' OR (p_config->'schedule'->>'durationDays')::integer NOT BETWEEN 1 AND 365)) THEN
@@ -71,9 +73,13 @@ BEGIN
   -- Deliberately no googleGroup/testerEmails fields: invitation identifiers and raw CSV addresses stay local.
   IF NOT (p_config->'googlePlay' ?& ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt'])
      OR (p_config->'googlePlay' - ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt']) <> '{}'::jsonb
+     OR jsonb_typeof(p_config->'googlePlay'->'track') IS DISTINCT FROM 'string'
      OR p_config->'googlePlay'->>'track' NOT IN ('internal','closed','open')
+     OR jsonb_typeof(p_config->'googlePlay'->'testerMethod') IS DISTINCT FROM 'string'
      OR p_config->'googlePlay'->>'testerMethod' NOT IN ('join_link','google_groups','upload_list')
+     OR jsonb_typeof(p_config->'googlePlay'->'appVersion') IS DISTINCT FROM 'string'
      OR p_config->'googlePlay'->>'appVersion' NOT IN ('latest_available','to_be_uploaded')
+     OR jsonb_typeof(p_config->'googlePlay'->'releaseMode') IS DISTINCT FROM 'string'
      OR p_config->'googlePlay'->>'releaseMode' NOT IN ('immediately','scheduled')
      OR (p_config->'googlePlay' ? 'releaseAt' AND jsonb_typeof(p_config->'googlePlay'->'releaseAt') NOT IN ('string','null'))
      OR char_length(coalesce(p_config->'googlePlay'->>'releaseAt','')) > 40
