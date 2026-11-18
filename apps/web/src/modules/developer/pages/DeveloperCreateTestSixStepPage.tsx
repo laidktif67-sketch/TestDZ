@@ -83,7 +83,7 @@ export default function DeveloperCreateTestSixStepPage() {
   const [googleGroup, setGoogleGroup] = useState("");
   const [testerEmails, setTesterEmails] = useState<string[]>([]);
   const [testerFileName, setTesterFileName] = useState("");
-  const [appVersion, setAppVersion] = useState("latest_available");
+  const [appVersion, setAppVersion] = useState<"latest_available" | "to_be_uploaded">("latest_available");
   const [releaseMode, setReleaseMode] = useState<"immediately" | "scheduled">("immediately");
   const [releaseAt, setReleaseAt] = useState("");
   const [durationDays, setDurationDays] = useState<"7" | "14" | "30" | "custom">("14");
