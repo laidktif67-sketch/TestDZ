@@ -147,3 +147,18 @@ jobs:
       - name: Stop disposable local Supabase stack
         if: always()
         run: supabase stop --no-backup
+
+  notification-edge-function:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: 2.9.8
+
+      - name: Type-check notification dispatcher
+        run: deno check --no-lock supabase/functions/dispatch-notifications/index.ts
