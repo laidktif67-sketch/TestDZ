@@ -49,7 +49,7 @@ BEGIN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
   v_scope := p_config->'details'->'testingScope';
-  IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_scope) x WHERE jsonb_typeof(x) <> 'string' OR char_length(x#>>'{}') NOT BETWEEN 1 AND 60) THEN
+  IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_scope) AS scope(value) WHERE jsonb_typeof(scope.value) <> 'string' OR char_length(scope.value#>>'{}') NOT BETWEEN 1 AND 60) THEN
     RAISE EXCEPTION 'SIX_STEP_CONFIG_INVALID' USING errcode='22023';
   END IF;
 
