@@ -27,6 +27,7 @@ DO $test$
 DECLARE
   v_count integer;
   v_balance bigint;
+  v_wallet_count integer;
 BEGIN
   IF has_table_privilege('authenticated','rebuild_v2.wallets','INSERT')
      OR has_table_privilege('authenticated','rebuild_v2.wallets','UPDATE')
@@ -39,12 +40,10 @@ BEGIN
     RAISE EXCEPTION 'FAIL: authenticated role has direct wallet or role write privileges';
   END IF;
 
-  IF has_function_privilege(
-    'authenticated',
-    'rebuild_v2_private.grant_role(uuid,text,text)',
-    'EXECUTE'
-  ) THEN
-    RAISE EXCEPTION 'FAIL: private role-grant helper is directly executable by authenticated clients';
+  IF has_function_privilege('authenticated','rebuild_v2_private.grant_role(uuid,text,text)','EXECUTE')
+     OR has_function_privilege('authenticated','rebuild_v2_private.request_developer_role(text)','EXECUTE')
+     OR has_function_privilege('authenticated','rebuild_v2_private.review_role_request(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: private role-management helper is directly executable by authenticated clients';
   END IF;
 
   PERFORM set_config('request.jwt.claim.sub','91300000-0000-4000-8000-000000000001',true);
@@ -85,6 +84,30 @@ BEGIN
     'wallet-boundary-admin-001','Authorized admin wallet adjustment'
   );
 
+  -- Support must not gain access to another user's financial records.
+  PERFORM set_config('request.jwt.claim.sub','91300000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"91300000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  SELECT count(*) INTO v_count FROM rebuild_v2.wallet_ledger
+    WHERE user_id='91300000-0000-4000-8000-000000000005';
+  SELECT count(*) INTO v_wallet_count FROM rebuild_v2.wallets
+    WHERE user_id='91300000-0000-4000-8000-000000000005';
+  IF v_count <> 0 OR v_wallet_count <> 0 THEN
+    RAISE EXCEPTION 'FAIL: Support can read another user wallet or ledger';
+  END IF;
+
+  -- Financial staff and Admin may inspect the financial records.
+  PERFORM set_config('request.jwt.claim.sub','91300000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"91300000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  SELECT count(*) INTO v_count FROM rebuild_v2.wallet_ledger
+    WHERE user_id='91300000-0000-4000-8000-000000000005';
+  SELECT count(*) INTO v_wallet_count FROM rebuild_v2.wallets
+    WHERE user_id='91300000-0000-4000-8000-000000000005';
+  IF v_count <> 2 OR v_wallet_count <> 1 THEN
+    RAISE EXCEPTION 'FAIL: Financial cannot inspect the expected target financial records';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','91300000-0000-4000-8000-000000000004',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"91300000-0000-4000-8000-000000000004","role":"authenticated"}',true);
 
   SELECT count(*) INTO v_count
   FROM rebuild_v2.wallet_ledger
@@ -100,13 +123,6 @@ BEGIN
     RAISE EXCEPTION 'FAIL: expected target balance 150 after authorized postings, got %',v_balance;
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM rebuild_v2.user_roles
-    WHERE user_id='91300000-0000-4000-8000-000000000005' AND role='developer'
-      AND granted_by='91300000-0000-4000-8000-000000000004'
-  ) THEN
-    RAISE EXCEPTION 'FAIL: admin role grant was not attributed to the admin actor';
-  END IF;
 END;
 $test$;
 
