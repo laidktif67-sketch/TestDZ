@@ -72,7 +72,7 @@ export default function DeveloperCreateTestSixStepPage() {
   const [description, setDescription] = useState("");
   const [testingObjective, setTestingObjective] = useState("stability_bugs");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("high");
-  const [testingScope, setTestingScope] = useState<string[]>(["core_flows", "performance", "compatibility"]);
+  const [testingScope, setTestingScope] = useState<Array<"core_flows" | "performance" | "compatibility" | "accessibility">>(["core_flows", "performance", "compatibility"]);
   const [successCriteria, setSuccessCriteria] = useState("No critical bugs; core flows pass");
   const [minimumCompletionRate, setMinimumCompletionRate] = useState(80);
   const [targetTesters, setTargetTesters] = useState(12);
@@ -329,7 +329,7 @@ export default function DeveloperCreateTestSixStepPage() {
     <section className="dct-details-section">
       <div className="dct-details-heading"><span className="dct-details-icon"><Icon name="scope" size={24}/></span><div><h3>Testing Scope</h3><p>What should testers focus on?</p></div></div>
       <div className="dct-scope-grid">
-        {[{id:"core_flows",title:"Core user flows",desc:"Main journeys and key actions"},{id:"performance",title:"Performance",desc:"Speed, responsiveness, stability"},{id:"compatibility",title:"Compatibility",desc:"Devices and Android versions"},{id:"accessibility",title:"Accessibility",desc:"Readability and inclusive use"}].map(item=><label key={item.id} className={"dct-scope-option "+(testingScope.includes(item.id)?"selected":"")}><input type="checkbox" checked={testingScope.includes(item.id)} onChange={e=>setTestingScope(current=>e.target.checked?[...current,item.id]:current.filter(value=>value!==item.id))}/><span className="dct-scope-check">{testingScope.includes(item.id)?"✓":""}</span><span><strong>{item.title}</strong><small>{item.desc}</small></span></label>)}
+        {[{id:"core_flows",title:"Core user flows",desc:"Main journeys and key actions"},{id:"performance",title:"Performance",desc:"Speed, responsiveness, stability"},{id:"compatibility",title:"Compatibility",desc:"Devices and Android versions"},{id:"accessibility",title:"Accessibility",desc:"Readability and inclusive use"}].map(item=><label key={item.id} className={"dct-scope-option "+(testingScope.includes(item.id)?"selected":"")}><input type="checkbox" checked={testingScope.includes(item.id)} onChange={e=>setTestingScope(current=>e.target.checked?[...current,item.id as "core_flows" | "performance" | "compatibility" | "accessibility"]:current.filter(value=>value!==item.id))}/><span className="dct-scope-check">{testingScope.includes(item.id)?"✓":""}</span><span><strong>{item.title}</strong><small>{item.desc}</small></span></label>)}
       </div>
     </section>
     <section className="dct-details-section">
