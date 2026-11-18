@@ -16,7 +16,7 @@ The candidate `rebuild_v2.reports` table currently contains:
 - `status` (defaults to `open`; constrained to `open`, `under_review`, `resolved`, `rejected`)
 - `reviewed_by`, `reviewed_at`, `created_at`
 
-A report may have attachment metadata in `report_attachments`, linked to an assignment, test, tester and report. The existence of this table is not evidence of a working upload or registration workflow.
+A report may have attachment metadata in `report_attachments`, linked to an assignment, test, tester and report. The table alone is not an intake workflow. Incident-report evidence upload now fails closed until a trusted intake/registration operation inserts an exact metadata row matching the V2 Storage path, file ID, extension, report, assignment and tester; authenticated clients cannot write this metadata table directly.
 
 ### Disputes
 
@@ -38,10 +38,32 @@ Payments have pending/processing/succeeded/failed/refunded statuses and a requir
 - The Report Problem page is explicitly a non-submitting placeholder. It does not create a report or upload evidence.
 - The report and dispute queues are read-only metadata views. They do not change statuses or expose report descriptions, evidence, payment amounts, or resolution text.
 - Direct authenticated writes to reports, disputes and report attachments remain denied.
-- Report visibility is scoped to the reporter and authorized Support/Admin staff.
+- Report visibility is scoped to the reporter and authorized Support/Admin staff. Incident-report Storage reads now follow the same boundary; a related Developer does not gain evidence access merely from owning the test. Assignment-submission evidence retains its separate tester/developer/Support/Admin participant policy.
 - Dispute visibility is scoped to the opener and Financial/Admin staff. Support is intentionally excluded from other users' dispute records by the candidate security fix in PR #78.
 - Refunds remain read-only. No refund approval, provider execution, bank return, or wallet credit is enabled.
 - Fraud review remains fail-closed/read-only until a trusted signal-ingestion path and audited review-decision workflow exist.
+
+## 2.1 Current Report Problem UI is not the intake contract
+
+The current placeholder UI must not be enabled by simply wiring its form to an RPC. It currently offers:
+- Categories `Technical`, `Account`, `Payment`, `Testing`, `Other`, while the candidate report schema accepts `no_activity`, `fake_feedback`, `app_broken`, `harassment`, `payment_dispute`, `other`.
+- A free-form title and a `Normal/High/Critical` priority, neither of which is represented by the current report table contract.
+- An optional related-test selector that is not populated from authorized assignment data.
+- Up to five local files, 10 MB each, with PNG/JPG/WebP/PDF/TXT client-side MIME acceptance. This is not yet a server-enforced evidence policy and must be reconciled with the private Storage bucket's allowed MIME types, the metadata extension validator, scanning, retention and upload limits.
+
+The form remains intentionally non-submitting and does not upload files. Before enabling it, product decisions must map or remove unsupported title/priority fields, map UI categories to canonical report types, determine which report types require assignment/reported-user references, and enforce one consistent evidence policy at both the UI and server boundaries.
+
+## 2.2 Legacy staged migration is not the V2 evidence contract
+
+The separate staged migration `supabase/migrations/20261109203933_add_private_report_evidence.sql` is explicitly marked staging-only and must not be applied as a substitute for the V2 candidate scripts or treated as proof of hosted Production state.
+
+It has materially different behavior from the current V2 candidate contract:
+
+- It grants authenticated users `INSERT` on `public.report_attachments` and registers metadata after an object already exists. The V2 candidate contract denies direct client metadata writes and requires a trusted metadata row before the Storage upload.
+- Its report-evidence read helper permits the reporter, the tested app's Developer, and Admin, while excluding Support. The V2 candidate contract follows report visibility: reporter and Support/Admin; a related Developer does not gain access solely through test ownership.
+- It uses the legacy unprefixed object path, whereas V2 evidence uses the explicit `v2/` namespace and exact registered object path.
+
+Do not apply, cherry-pick, or use this staged migration to configure a hosted project. If legacy report evidence is ever required, it needs a separately reviewed legacy contract and migration plan. Keep legacy and V2 bucket paths, registration order, and role visibility explicitly separated.
 
 ## 3. Gaps that must be resolved before implementation
 
@@ -77,7 +99,7 @@ Payments have pending/processing/succeeded/failed/refunded statuses and a requir
 
 Once product decisions are confirmed, implementation should be split into independently testable boundaries:
 
-1. **Intake RPC** — derives actor from `auth.uid()`; validates ownership, assignment eligibility, allowed report type and description; validates all attachment metadata against Storage objects; creates the case atomically; uses an idempotency strategy.
+1. **Intake RPC** — derives actor from `auth.uid()`; validates ownership, assignment eligibility, allowed report type and description; validates and registers attachment metadata before Storage upload; creates the case atomically; uses an idempotency strategy.
 2. **Review/transition RPC** — validates role and state transition server-side; requires a reason where appropriate; locks the target row; updates status/reviewer fields atomically; appends immutable domain history and audit event with actor, target, reason and safe metadata.
 3. **Read APIs** — separate public/user detail from Support/Admin and Financial/Admin views; never return private report descriptions or evidence to Financial unless explicitly authorized; do not rely on UI filtering as authorization.
 4. **Evidence workflow** — private bucket, opaque V2 paths, metadata registration tied to a real report, uploader ownership and authorized reviewer access; no public URLs.
