@@ -43,6 +43,16 @@ Payments have pending/processing/succeeded/failed/refunded statuses and a requir
 - Refunds remain read-only. No refund approval, provider execution, bank return, or wallet credit is enabled.
 - Fraud review remains fail-closed/read-only until a trusted signal-ingestion path and audited review-decision workflow exist.
 
+## 2.1 Current Report Problem UI is not the intake contract
+
+The current placeholder UI must not be enabled by simply wiring its form to an RPC. It currently offers:
+- Categories `Technical`, `Account`, `Payment`, `Testing`, `Other`, while the candidate report schema accepts `no_activity`, `fake_feedback`, `app_broken`, `harassment`, `payment_dispute`, `other`.
+- A free-form title and a `Normal/High/Critical` priority, neither of which is represented by the current report table contract.
+- An optional related-test selector that is not populated from authorized assignment data.
+- Up to five local files, 10 MB each, with PNG/JPG/WebP/PDF/TXT client-side MIME acceptance. This is not yet a server-enforced evidence policy and must be reconciled with the private Storage bucket's allowed MIME types, the metadata extension validator, scanning, retention and upload limits.
+
+The form remains intentionally non-submitting and does not upload files. Before enabling it, product decisions must map or remove unsupported title/priority fields, map UI categories to canonical report types, determine which report types require assignment/reported-user references, and enforce one consistent evidence policy at both the UI and server boundaries.
+
 ## 3. Gaps that must be resolved before implementation
 
 ### Report intake
