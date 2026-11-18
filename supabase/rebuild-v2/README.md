@@ -42,7 +42,7 @@ Apply all 20 scripts in numeric order, from `001_schema.sql` through `020_notifi
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 19 scripts, run:
+After all 20 scripts, run:
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
