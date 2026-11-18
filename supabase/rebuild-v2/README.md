@@ -30,6 +30,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `024_audited_support_ticket_workflow.sql`: records all ticket replies in the immutable event stream; adds reason-required Support/Admin status and priority transitions, Admin-only reopening of resolved/closed tickets, and Admin-visible audit records for staff actions.
 - `025_require_report_attachment_metadata.sql`: requires a pre-registered, exact report-attachment metadata row before incident-report evidence can be uploaded; preserves the V2 assignment-submission evidence path.
 - `026_align_report_evidence_read_access.sql`: aligns report evidence reads with report-row visibility (reporter and Support/Admin only); preserves assignment-submission participant reads.
+- `027_enforce_report_attachment_metadata_integrity.sql`: requires a non-null canonical V2 Storage path and an allowlisted extension on every report attachment metadata row.
 
 
 
@@ -43,12 +44,12 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 26 scripts in numeric order, from `001_schema.sql` through `026_align_report_evidence_read_access.sql`.
+Apply all 27 scripts in numeric order, from `001_schema.sql` through `027_enforce_report_attachment_metadata_integrity.sql`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 26 scripts, run:
+After all 27 scripts, run:
 - `tests/catalog_fingerprint.sql` — read-only catalog fingerprint for columns, constraints, indexes, function definitions, effective table/schema/function grants, RLS enabled/forced flags, policies, triggers, and Storage buckets; compare its output on the clean replay and FixLab.
 - `tests/catalog_difference_details.sql` — read-only drill-down of constraint, policy, and Storage bucket differences, including legacy Storage policy names. Neither diagnostic automatically proves parity; review all output and documented exclusions manually.
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
@@ -73,11 +74,11 @@ After all 26 scripts, run:
 - `tests/021_fraud_fail_closed_contract.sql` — verifies raw fraud evidence is Admin-only, Support can see only the review summary, client writes are denied, and fraud signal rows are immutable.
 - `tests/022_reports_disputes_fail_closed_contract.sql` — verifies reporter/opener ownership, Support/Admin report visibility, Support/Financial/Admin dispute visibility, and denial of direct client writes to reports, disputes, and report attachments.
 - `tests/023_refunds_fail_closed_contract.sql` — verifies refund visibility is limited to the owner, Financial, and Admin; Support and unrelated users cannot read refunds, and direct client writes are denied.
-- `tests/024_report_evidence_metadata_contract.sql` — verifies incident-report evidence upload is denied before trusted metadata registration and allowed only when file ID, extension, report, assignment, tester, and exact Storage path match; Support can read evidence for review, while Financial and unrelated users cannot.
+- `tests/024_report_evidence_metadata_contract.sql` — verifies incident-report evidence upload is denied before trusted metadata registration and allowed only when file ID, extension, report, assignment, tester, and exact Storage path match; malformed metadata with mismatched paths, unsupported extensions, or NULL paths is rejected; Support can read evidence for review, while Financial and unrelated users cannot.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 26 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty-five post-phase SQL diagnostics/contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 27 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty-five post-phase SQL diagnostics/contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
