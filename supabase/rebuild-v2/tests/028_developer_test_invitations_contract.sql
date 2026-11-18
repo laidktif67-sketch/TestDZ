@@ -42,11 +42,10 @@ VALUES
   ('f1e2d3c4-b5a6-4789-8c01-2d3e4f5a6b70','authenticated','authenticated','different-user@example.invalid','',now(),
    '{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Different User"}'::jsonb,now(),now());
 
+-- The auth-user trigger grants the default Tester role to new accounts.
+-- Grant only the additional Developer role to the owner fixture.
 INSERT INTO rebuild_v2.user_roles(user_id,role)
-VALUES
-  ('d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62','developer'),
-  ('a7b2c3d4-5e6f-4789-8a01-2b3c4d5e6f70','tester'),
-  ('f1e2d3c4-b5a6-4789-8c01-2d3e4f5a6b70','tester');
+VALUES ('d8c1a4e7-6b2f-4d91-9c83-2a7e5f104b62','developer');
 
 INSERT INTO rebuild_v2.apps(developer_id,name,package_name,description,category,status)
 VALUES (
