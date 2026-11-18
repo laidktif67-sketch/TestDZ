@@ -34,3 +34,13 @@
 .au-safety{background:#edf4ff;color:#38577d;border:1px solid #d8e6fb}.au-error{background:#fff1f1;color:#9d343b;border:1px solid #f3d0d0}
 @media(max-width:1100px){.au-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.au-shell{display:block}.au-shell .td-sidebar{min-height:auto}.au-main{padding:22px 14px}.au-header{display:block}.au-actions{margin-top:14px}.au-toolbar{align-items:stretch;flex-direction:column}.au-toolbar input,.au-toolbar select{width:100%;box-sizing:border-box}.au-stats{gap:9px}.au-stats article{padding:13px}}
+
+.au-grant-open{border:1px solid #bfd3ef;background:#edf4ff;color:#1554a5;border-radius:8px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer}
+.au-grant-form{display:grid;gap:7px;min-width:210px}
+.au-grant-form select,.au-grant-form textarea{width:100%;box-sizing:border-box;border:1px solid #dce5f0;border-radius:8px;padding:8px;font:inherit;font-size:11px;background:#fff;color:#334966}
+.au-grant-form textarea{min-height:62px;resize:vertical;white-space:normal}
+.au-grant-form>div{display:flex;gap:6px}
+.au-grant-form button{border:1px solid #d4deec;background:#fff;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:750;color:#52647c;cursor:pointer}
+.au-grant-form button.primary{background:#1554a5;border-color:#1554a5;color:#fff}
+.au-grant-form button:disabled{opacity:.5;cursor:wait}
+.au-table-wrap table{min-width:1050px}

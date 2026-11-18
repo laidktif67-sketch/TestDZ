@@ -99,3 +99,14 @@ export function listAdminUsers() {
     .order("created_at", { ascending: false })
     .limit(100);
 }
+
+
+export type AdminGrantableRole = "tester" | "developer" | "financial" | "support";
+
+export function grantAdminUserRole(userId: string, role: AdminGrantableRole, reason: string) {
+  return dataClient().rpc("admin_grant_role", {
+    p_user_id: userId,
+    p_role: role,
+    p_reason: reason,
+  });
+}
