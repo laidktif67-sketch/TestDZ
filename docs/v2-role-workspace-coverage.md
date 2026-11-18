@@ -77,6 +77,26 @@ No `moderator` role is present in the current V2 SQL role constraint or the shar
 7. Support assignment management, internal notes, attachment review/download and notifications require separate privacy and workflow contracts. The current attachment work only permits public-message attachments.
 8. Role switching/navigation must be reviewed independently of backend authorization. The Admin home now routes to the Admin control center instead of the Tester dashboard.
 
+## Concrete page-file inventory
+
+Counts below refer to `.tsx` page files in each role module at this PR stack, not to every route or shared component.
+
+- Tester module — 33 page files:
+  `ActiveAssignmentProgressPage`, `ActiveSessionsPage`, `ActivityHistoryPage`, `AssignmentDetailsPage`, `AssignmentSubmissionPage`, `CheckInHistoryPage`, `DiscoverTestsPage`, `FeedbackHistoryPage`, `HelpSupportPage`, `LanguageAppearancePage`, `LiveChatPage`, `LoginActivitySecurityPage`, `MyTestsPage`, `NotificationPreferencesPage`, `NotificationsCenterPage`, `PrivacyDataManagementPage`, `ReferralHistoryPage`, `ReferralProgramPage`, `ReportProblemPage`, `SettingsSecurityPage`, `SubmitFeedbackPage`, `SupportCenterPage`, `SupportTicketDetailsPage`, `TestCompletionRewardPage`, `TestCompletionSummaryPage`, `TestPreviewPage`, `TesterDashboardPage`, `TesterLeaderboardPage`, `TesterProfilePage`, `TesterSectionPage`, `WalletRewardsPage`, `WithdrawalRequestPage`, `WithdrawalStatusPage`.
+- Developer module — 5 page files:
+  `DeveloperDashboardPage`, `DeveloperFeedbackPage`, `DeveloperNotificationsPage`, `DeveloperReviewQueuePage`, `DeveloperTestsPage`. The review queue is mounted under an Admin-only route.
+- Admin module — 7 page files after this PR:
+  `AdminDashboardPage`, `AdminAuditLogPage`, `AdminFraudReviewsPage`, `AdminRoleRequestsPage`, `AdminUsersPage`, `CaseQueuesPage`, `FinancialOperationsPage`.
+- Support module — 2 page files:
+  `SupportQueuePage`, `SupportTicketDetailPage`.
+
+Shared route/identity files that govern these modules:
+- `apps/web/src/App.tsx`
+- `apps/web/src/shared/guards/RoleGuard.tsx`
+- `apps/web/src/shared/auth/identity-provider.tsx`
+- `apps/web/src/shared/auth/identity-api.ts`
+- `packages/types/src/identity.ts`
+
 ## Merge gates
 
 - Rebuild all candidate SQL scripts on a disposable local Supabase instance and run every contract on the exact PR head.
