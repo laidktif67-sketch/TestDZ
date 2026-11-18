@@ -14,7 +14,7 @@ type Range = "7D" | "30D" | "90D" | "1Y";
 
 const copy = {
   en: {
-    dashboard:"Developer Dashboard", apps:"My Apps", create:"Create App", tests:"Manage Tests", testers:"Tester Community", feedback:"Feedback Inbox", notifications:"Notifications", analytics:"Analytics", discover:"Discover", billing:"Billing", settings:"Settings",
+    dashboard:"Developer Dashboard", apps:"My Apps", create:"Create App", tests:"Manage Tests", testers:"Tester Community", results:"Test Results", feedback:"Feedback Inbox", notifications:"Notifications", analytics:"Analytics", discover:"Discover", billing:"Billing", settings:"Settings",
     promoTitle:"Build Better Together", promoBody:"Create amazing apps and prepare them for testing.", promoCta:"Explore Docs",
     search:"Search apps, tests, or developers...", welcome:"Welcome back, Developer!", subtitle:"Build, test and share your amazing applications with TestDZ.", createApp:"Create New App",
     total:"My Apps", published:"Published Apps", drafts:"Draft Apps", archived:"Archived Apps", overview:"Apps Overview", quick:"Quick Actions",
@@ -26,7 +26,7 @@ const copy = {
     days:"7 days", month:"30 days", quarter:"90 days", year:"1 year", language:"Language", account:"Developer"
   },
   fr: {
-    dashboard:"Tableau de bord développeur", apps:"Mes applications", create:"Créer une app", tests:"Gérer les tests", testers:"Communauté des testeurs", feedback:"Boîte de retours", notifications:"Notifications", analytics:"Analyses", discover:"Découvrir", billing:"Facturation", settings:"Paramètres",
+    dashboard:"Tableau de bord développeur", apps:"Mes applications", create:"Créer une app", tests:"Gérer les tests", testers:"Communauté des testeurs", results:"Résultats des tests", feedback:"Boîte de retours", notifications:"Notifications", analytics:"Analyses", discover:"Découvrir", billing:"Facturation", settings:"Paramètres",
     promoTitle:"Construisons ensemble", promoBody:"Créez des applications et préparez-les aux tests.", promoCta:"Explorer la documentation",
     search:"Rechercher des applications, tests...", welcome:"Bon retour, développeur !", subtitle:"Créez, testez et partagez vos applications avec TestDZ.", createApp:"Créer une application",
     total:"Mes applications", published:"Applications publiées", drafts:"Brouillons", archived:"Archivées", overview:"Aperçu des applications", quick:"Actions rapides",
@@ -38,7 +38,7 @@ const copy = {
     days:"7 jours", month:"30 jours", quarter:"90 jours", year:"1 an", language:"Langue", account:"Développeur"
   },
   ar: {
-    dashboard:"لوحة المطوّر", apps:"تطبيقاتي", create:"إضافة تطبيق", tests:"إدارة الاختبارات", testers:"مجتمع المختبرين", feedback:"صندوق الملاحظات", notifications:"الإشعارات", analytics:"التحليلات", discover:"اكتشف", billing:"الفوترة", settings:"الإعدادات",
+    dashboard:"لوحة المطوّر", apps:"تطبيقاتي", create:"إضافة تطبيق", tests:"إدارة الاختبارات", testers:"مجتمع المختبرين", results:"نتائج الاختبارات", feedback:"صندوق الملاحظات", notifications:"الإشعارات", analytics:"التحليلات", discover:"اكتشف", billing:"الفوترة", settings:"الإعدادات",
     promoTitle:"نبني الأفضل معاً", promoBody:"أنشئ تطبيقاتك وجهّزها للاختبار على TestDZ.", promoCta:"استكشف التوثيق",
     search:"ابحث عن التطبيقات أو الاختبارات...", welcome:"مرحباً بعودتك، أيها المطوّر!", subtitle:"أنشئ تطبيقاتك واختبرها وشاركها مع مجتمع TestDZ.", createApp:"إنشاء تطبيق جديد",
     total:"تطبيقاتي", published:"التطبيقات المنشورة", drafts:"المسودات", archived:"المؤرشفة", overview:"نظرة عامة على التطبيقات", quick:"إجراءات سريعة",
@@ -217,6 +217,7 @@ export default function DeveloperDashboardPage() {
         <Link to="/apps/new" className="dd-nav-link"><Icon name="plus"/><span>{t.create}</span></Link>
         <Link to="/developer-tests" className="dd-nav-link"><Icon name="tests"/><span>{t.tests}</span></Link>
         <Link to="/developer/testers" className="dd-nav-link"><Icon name="users"/><span>{t.testers}</span></Link>
+        <Link to="/developer-test-results" className="dd-nav-link"><Icon name="chart"/><span>{t.results}</span></Link>
         <Link to="/developer-feedback" className="dd-nav-link"><Icon name="file"/><span>{t.feedback}</span></Link>
         <Link to="/developer-notifications" className="dd-nav-link"><Icon name="bell"/><span>{t.notifications}</span></Link>
         <span className="dd-nav-link dd-disabled"><Icon name="chart"/><span>{t.analytics}</span><em>{t.soon}</em></span>
