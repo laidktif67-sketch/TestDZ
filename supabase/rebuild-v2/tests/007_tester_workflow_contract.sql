@@ -351,6 +351,10 @@ BEGIN
       WHERE n.source_event_id IN (v_join_event_id,v_submit_event_id)) <> 2 THEN
     RAISE EXCEPTION 'FAIL: dispatcher retry created duplicate inbox rows';
   END IF;
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_other,'role','authenticated')::text,true
+  );
   IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'completed' THEN
     RAISE EXCEPTION 'FAIL: assignment completion transition';
   END IF;
