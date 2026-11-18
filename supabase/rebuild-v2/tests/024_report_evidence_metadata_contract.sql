@@ -173,6 +173,53 @@ BEGIN
   EXCEPTION WHEN not_null_violation THEN
     NULL;
   END;
+  BEGIN
+    INSERT INTO rebuild_v2.report_attachments
+      (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+    VALUES (
+      '92400000-0000-4000-8000-000000000201',
+      '92400000-0000-4000-8000-000000000101',
+      v_test,'92400000-0000-4000-8000-000000000002',
+      '92400000-0000-4000-8000-000000000305',
+      'pdf','',
+      'v2/' || v_test::text || '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000305.pdf'
+    );
+    RAISE EXCEPTION 'FAIL: metadata accepted an empty original filename';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
+
+  BEGIN
+    INSERT INTO rebuild_v2.report_attachments
+      (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+    VALUES (
+      '92400000-0000-4000-8000-000000000201',
+      '92400000-0000-4000-8000-000000000101',
+      v_test,'92400000-0000-4000-8000-000000000002',
+      '92400000-0000-4000-8000-000000000306',
+      'pdf',repeat('x',252) || '.pdf',
+      'v2/' || v_test::text || '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000306.pdf'
+    );
+    RAISE EXCEPTION 'FAIL: metadata accepted an overlong original filename';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
+
+  BEGIN
+    INSERT INTO rebuild_v2.report_attachments
+      (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+    VALUES (
+      '92400000-0000-4000-8000-000000000201',
+      '92400000-0000-4000-8000-000000000101',
+      v_test,'92400000-0000-4000-8000-000000000002',
+      '92400000-0000-4000-8000-000000000307',
+      'pdf',E'bad\\nname.pdf',
+      'v2/' || v_test::text || '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000307.pdf'
+    );
+    RAISE EXCEPTION 'FAIL: metadata accepted control characters in original filename';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
 END;
 $metadata_integrity$;
 
