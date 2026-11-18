@@ -92,6 +92,9 @@ DECLARE
   v_feedback uuid;
   v_submission uuid;
   v_submission_again uuid;
+  v_join_event_id uuid;
+  v_submit_event_id uuid;
+  v_processed integer;
   v_path text;
   v_capacity_error text;
   v_start_error text;
@@ -131,6 +134,10 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'FAIL: joining a test must enqueue one developer notification event';
   END IF;
+  SELECT e.id INTO v_join_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested' AND e.aggregate_type='assignment'
+    AND e.aggregate_id=v_assignment AND e.payload->>'type'='assignment.joined';
 
   UPDATE rebuild_v2.tests SET status='ready' WHERE id=v_test;
   UPDATE rebuild_v2.cohorts SET status='ready' WHERE name='V2 Synthetic Cohort';
@@ -314,6 +321,35 @@ BEGIN
       AND e.payload->'data'->>'assignment_id'=v_assignment::text
   ) THEN
     RAISE EXCEPTION 'FAIL: final submission must enqueue one developer notification event';
+  END IF;
+  SELECT e.id INTO v_submit_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='assignment_submission'
+    AND e.aggregate_id=v_submission
+    AND e.payload->>'type'='assignment.submitted';
+
+  -- Only a service-role JWT may drain the outbox. Delivery is idempotent.
+  IF has_function_privilege('authenticated','rebuild_v2.process_notification_outbox(integer)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: authenticated must not execute the outbox dispatcher';
+  END IF;
+  PERFORM set_config('request.jwt.claims',jsonb_build_object('role','service_role')::text,true);
+  v_processed := rebuild_v2.process_notification_outbox(20);
+  IF v_processed <> 2 THEN
+    RAISE EXCEPTION 'FAIL: expected two outbox events delivered, got %',v_processed;
+  END IF;
+  IF (SELECT count(*) FROM rebuild_v2.notifications n
+      WHERE n.source_event_id IN (v_join_event_id,v_submit_event_id)
+        AND n.user_id='10000000-0000-4000-8000-000000000001'
+        AND n.recipient_role='developer') <> 2 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher must create two role-scoped inbox rows';
+  END IF;
+  IF rebuild_v2.process_notification_outbox(20) <> 0 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher retry must not redeliver completed events';
+  END IF;
+  IF (SELECT count(*) FROM rebuild_v2.notifications n
+      WHERE n.source_event_id IN (v_join_event_id,v_submit_event_id)) <> 2 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher retry created duplicate inbox rows';
   END IF;
   IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'completed' THEN
     RAISE EXCEPTION 'FAIL: assignment completion transition';
