@@ -70,13 +70,13 @@ BEGIN
   SELECT count(*) INTO v_count FROM rebuild_v2.disputes WHERE id='92200000-0000-4000-8000-000000000201';
   IF v_count <> 0 THEN RAISE EXCEPTION 'FAIL: unrelated user can read dispute'; END IF;
 
-  -- Support may triage reports/disputes, but has no direct write grants.
+  -- Support may triage reports but must not read financial dispute records.
   PERFORM set_config('request.jwt.claim.sub','92200000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"92200000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_count FROM rebuild_v2.reports WHERE id='92200000-0000-4000-8000-000000000101';
   IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: Support cannot read report queue'; END IF;
   SELECT count(*) INTO v_count FROM rebuild_v2.disputes WHERE id='92200000-0000-4000-8000-000000000201';
-  IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: Support cannot read dispute queue'; END IF;
+  IF v_count <> 0 THEN RAISE EXCEPTION 'FAIL: Support can read financial dispute records'; END IF;
 
   -- Financial may inspect disputes, but report contents remain outside its role.
   PERFORM set_config('request.jwt.claim.sub','92200000-0000-4000-8000-000000000003',true);
