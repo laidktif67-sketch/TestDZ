@@ -38,7 +38,7 @@ BEGIN
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events WHERE target_id=v_test AND actor_id='51000000-0000-4000-8000-000000000001' AND action='test.six_step_config.saved' AND metadata->>'config_version'='1';
   IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: validated six-step config audit event missing; test_id=%; matching_count=%; audit_rows=%', v_test, v_count,
-      coalesce((SELECT jsonb_agg(jsonb_build_object('actor_id',actor_id,'action',action,'target_type',target_type,'target_id',target_id,'metadata',metadata))::text FROM rebuild_v2.audit_events WHERE target_id=v_test),'[]');
+      coalesce((SELECT jsonb_agg(jsonb_build_object('actor_id',actor_id,'action',action,'target_type',target_type,'target_id',target_id,'metadata',metadata))::text FROM rebuild_v2.audit_events),'[]');
   END IF;
 
   BEGIN
