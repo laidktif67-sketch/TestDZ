@@ -42,3 +42,8 @@ user = "test"
 pass = "test"
 admin_email = "noreply@localhost"
 sender_name = "TestDZ Local"
+
+# Candidate-only server-to-server notification worker. The function validates
+# its own dispatch secret; browser/session JWTs are not accepted.
+[functions.dispatch-notifications]
+verify_jwt = false
