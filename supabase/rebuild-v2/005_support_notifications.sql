@@ -270,12 +270,17 @@ BEGIN
   END IF;
 
   v_folders := storage.foldername(p_storage_path);
-  IF coalesce(array_length(v_folders,1),0) <> 2
-     OR v_folders[1] <> p_ticket_id::text
-     OR v_folders[2] <> v_user_id::text
-     OR split_part(p_storage_path,'/',3) !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[^/]+$' THEN
+  IF coalesce(array_length(v_folders,1),0) <> 3
+     OR v_folders[1] <> 'v2'
+     OR v_folders[2] <> p_ticket_id::text
+     OR v_folders[3] <> v_user_id::text
+     OR length(split_part(p_storage_path,'/',4)) NOT BETWEEN 38 AND 256
+     OR substring(split_part(p_storage_path,'/',4) from 37 for 1) <> '-' THEN
     RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
   END IF;
+
+  -- Validate the UUID prefix embedded in the V2 object filename.
+  PERFORM substring(split_part(p_storage_path,'/',4) from 1 for 36)::uuid;
 
   SELECT * INTO v_ticket
   FROM rebuild_v2.support_tickets
@@ -286,8 +291,14 @@ BEGIN
     RAISE EXCEPTION 'support ticket unavailable' USING errcode = 'P0002';
   END IF;
 
-  IF v_ticket.user_id <> v_user_id
-     AND NOT rebuild_v2_private.has_role(v_user_id, ARRAY['support','admin']) THEN
+  IF v_ticket.user_id = v_user_id THEN
+    -- Re-check the requester's role at the metadata-registration boundary too.
+    -- Storage policies may be OR-combined with legacy policies, so this RPC
+    -- must not rely on the object-upload policy as its only authorization gate.
+    IF NOT rebuild_v2_private.has_role(v_user_id, ARRAY[v_ticket.requester_role]) THEN
+      RAISE EXCEPTION 'requester role is not authorized for this ticket' USING errcode = '42501';
+    END IF;
+  ELSIF NOT rebuild_v2_private.has_role(v_user_id, ARRAY['support','admin']) THEN
     RAISE EXCEPTION 'not a support ticket participant' USING errcode = '42501';
   END IF;
 

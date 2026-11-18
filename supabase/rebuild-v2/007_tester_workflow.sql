@@ -11,7 +11,7 @@
 --
 -- Final submission evidence reuses the private test-evidence bucket and existing
 -- storage INSERT/SELECT policies. Its object path is:
---   <test_id>/<tester_id>/<submission_id>/<file_id>.<extension>
+--   v2/<test_id>/<tester_id>/<submission_id>/<file_id>.<extension>
 -- The existing storage helper functions are extended to validate this model
 -- while retaining the legacy incident-report path.
 
@@ -668,7 +668,7 @@ BEGIN
     RAISE EXCEPTION 'ATTACHMENT_LIMIT_REACHED' USING errcode = '22023';
   END IF;
 
-  v_path := v_submission.test_id::text || '/' ||
+  v_path := 'v2/' || v_submission.test_id::text || '/' ||
             v_submission.tester_id::text || '/' ||
             v_submission.id::text || '/' ||
             p_file_id::text || '.' || p_extension;
@@ -793,12 +793,12 @@ DECLARE
   v_parent_id uuid;
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL
-     OR p_object_name !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](png|jpg|jpeg|webp|txt|pdf|zip)$' THEN
+     OR p_object_name !~* '^v2/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](png|jpg|jpeg|webp|txt|pdf|zip)$' THEN
     RETURN false;
   END IF;
-  v_test_id := split_part(p_object_name,'/',1)::uuid;
-  v_tester_id := split_part(p_object_name,'/',2)::uuid;
-  v_parent_id := split_part(p_object_name,'/',3)::uuid;
+  v_test_id := split_part(p_object_name,'/',2)::uuid;
+  v_tester_id := split_part(p_object_name,'/',3)::uuid;
+  v_parent_id := split_part(p_object_name,'/',4)::uuid;
 
   RETURN EXISTS (
     SELECT 1
@@ -842,12 +842,12 @@ DECLARE
   v_parent_id uuid;
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL
-     OR p_object_name !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](png|jpg|jpeg|webp|txt|pdf|zip)$' THEN
+     OR p_object_name !~* '^v2/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](png|jpg|jpeg|webp|txt|pdf|zip)$' THEN
     RETURN false;
   END IF;
-  v_test_id := split_part(p_object_name,'/',1)::uuid;
-  v_tester_id := split_part(p_object_name,'/',2)::uuid;
-  v_parent_id := split_part(p_object_name,'/',3)::uuid;
+  v_test_id := split_part(p_object_name,'/',2)::uuid;
+  v_tester_id := split_part(p_object_name,'/',3)::uuid;
+  v_parent_id := split_part(p_object_name,'/',4)::uuid;
 
   RETURN EXISTS (
     SELECT 1

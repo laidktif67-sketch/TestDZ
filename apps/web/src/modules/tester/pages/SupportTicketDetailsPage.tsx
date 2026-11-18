@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { getTesterSupportTicketDetails, sendTesterSupportMessage, addTesterSupportAttachment } from "../../../features/support/support-api";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
@@ -49,7 +50,8 @@ export default function SupportTicketDetailsPage(){
   if(insertError||!messageId){setSending(false);setError("Your reply could not be sent. Please try again.");return;}
   if(selectedFile){
    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
-   const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
+   const attachmentName=`${crypto.randomUUID()}-${safeName}`;
+   const storagePath=isTesterWorkflowV2Enabled?`v2/${ticket.id}/${user.id}/${attachmentName}`:`${ticket.id}/${user.id}/${attachmentName}`;
     const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
    if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
     const {error:metadataError}=await addTesterSupportAttachment({ticketId:ticket.id,messageId,userId:user.id,storagePath,filename:selectedFile.name.slice(0,255),mimeType:selectedFile.type,sizeBytes:selectedFile.size});
