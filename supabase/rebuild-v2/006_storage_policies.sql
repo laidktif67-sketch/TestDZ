@@ -29,7 +29,13 @@ BEGIN
   IF coalesce(array_length(v_folders,1),0) <> 3
      OR v_folders[1] <> 'v2'
      OR v_folders[2] <> (SELECT auth.uid())::text
-     OR v_folders[3] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
+     OR v_folders[3] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+    RETURN false;
+  END IF;
+  RETURN EXISTS (
+    SELECT 1 FROM rebuild_v2.apps a
+    WHERE a.id=v_folders[3]::uuid AND a.developer_id=(SELECT auth.uid())
+  );
 EXCEPTION WHEN invalid_text_representation THEN
   RETURN false;
 END;
