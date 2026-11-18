@@ -22,7 +22,7 @@ BEGIN
   END LOOP;
 
   IF NOT (p_config->'cohort' ?& ARRAY['targetTesters','notes'])
-     OR (p_config->'cohort' - ARRAY['targetTesters','notes']) <> '{}'::jsonb
+     OR ((p_config -> 'cohort') - ARRAY['targetTesters','notes']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'cohort'->'targetTesters') IS DISTINCT FROM 'number'
      OR (p_config->'cohort'->>'targetTesters')::numeric <> trunc((p_config->'cohort'->>'targetTesters')::numeric)
      OR (p_config->'cohort'->>'targetTesters')::integer NOT BETWEEN 1 AND 500
@@ -32,7 +32,7 @@ BEGIN
   END IF;
 
   IF NOT (p_config->'rules' ?& ARRAY['androidVersion','instructions'])
-     OR (p_config->'rules' - ARRAY['androidVersion','instructions']) <> '{}'::jsonb
+     OR ((p_config -> 'rules') - ARRAY['androidVersion','instructions']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'rules'->'androidVersion') IS DISTINCT FROM 'string'
      OR char_length(p_config->'rules'->>'androidVersion') NOT BETWEEN 1 AND 80
      OR (p_config->'rules' ? 'instructions' AND jsonb_typeof(p_config->'rules'->'instructions') NOT IN ('string','null'))
@@ -41,7 +41,7 @@ BEGIN
   END IF;
 
   IF NOT (p_config->'details' ?& ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate'])
-     OR (p_config->'details' - ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate']) <> '{}'::jsonb
+     OR ((p_config -> 'details') - ARRAY['testingObjective','priority','testingScope','successCriteria','minimumCompletionRate']) <> '{}'::jsonb
      OR p_config->'details'->>'testingObjective' NOT IN ('stability_bugs','usability','compatibility','performance','release_readiness','custom')
      OR jsonb_typeof(p_config->'details'->'testingObjective') IS DISTINCT FROM 'string'
      OR jsonb_typeof(p_config->'details'->'priority') IS DISTINCT FROM 'string'
@@ -60,7 +60,7 @@ BEGIN
   END IF;
 
   IF NOT (p_config->'schedule' ?& ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports'])
-     OR (p_config->'schedule' - ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports']) <> '{}'::jsonb
+     OR ((p_config -> 'schedule') - ARRAY['durationDays','allowMoreTesters','joiningMethod','collectFeedback','enableBugReports']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'schedule'->'allowMoreTesters') IS DISTINCT FROM 'boolean'
      OR jsonb_typeof(p_config->'schedule'->'collectFeedback') IS DISTINCT FROM 'boolean'
      OR jsonb_typeof(p_config->'schedule'->'enableBugReports') IS DISTINCT FROM 'boolean'
@@ -73,7 +73,7 @@ BEGIN
 
   -- Deliberately no googleGroup/testerEmails fields: invitation identifiers and raw CSV addresses stay local.
   IF NOT (p_config->'googlePlay' ?& ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt'])
-     OR (p_config->'googlePlay' - ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt']) <> '{}'::jsonb
+     OR ((p_config -> 'googlePlay') - ARRAY['track','testerMethod','appVersion','releaseMode','releaseAt']) <> '{}'::jsonb
      OR jsonb_typeof(p_config->'googlePlay'->'track') IS DISTINCT FROM 'string'
      OR p_config->'googlePlay'->>'track' NOT IN ('internal','closed','open')
      OR jsonb_typeof(p_config->'googlePlay'->'testerMethod') IS DISTINCT FROM 'string'
