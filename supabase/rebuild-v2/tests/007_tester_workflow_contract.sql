@@ -320,7 +320,18 @@ BEGIN
       AND e.payload->>'type'='assignment.submitted'
       AND e.payload->'data'->>'assignment_id'=v_assignment::text
   ) THEN
-    RAISE EXCEPTION 'FAIL: final submission must enqueue one developer notification event';
+    RAISE EXCEPTION
+      'FAIL: final submission event missing; submission=%, assignment=%, matching_events=%',
+      v_submission, v_assignment,
+      COALESCE((
+        SELECT jsonb_agg(jsonb_build_object(
+          'event_type',e.event_type,'aggregate_type',e.aggregate_type,
+          'aggregate_id',e.aggregate_id,'payload',e.payload
+        ))
+        FROM rebuild_v2.events e
+        WHERE e.event_type='notification.requested'
+          AND e.payload->>'type'='assignment.submitted'
+      ),'[]'::jsonb);
   END IF;
   SELECT e.id INTO v_submit_event_id
   FROM rebuild_v2.events e
