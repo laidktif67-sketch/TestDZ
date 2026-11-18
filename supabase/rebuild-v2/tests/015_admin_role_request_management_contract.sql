@@ -14,9 +14,9 @@ SET LOCAL ROLE authenticated;
 DO $test$
 DECLARE v_id uuid; v_count integer;
 BEGIN
- SELECT id INTO v_id FROM rebuild_v2.role_requests WHERE user_id='91500000-0000-4000-8000-000000000002' AND status='pending';
  PERFORM set_config('request.jwt.claim.sub','91500000-0000-4000-8000-000000000002',true);
  PERFORM set_config('request.jwt.claims','{"sub":"91500000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+ SELECT id INTO v_id FROM rebuild_v2.role_requests WHERE user_id='91500000-0000-4000-8000-000000000002' AND status='pending';
  BEGIN
   SELECT count(*) INTO v_count FROM rebuild_v2.admin_list_pending_role_requests();
   RAISE EXCEPTION 'FAIL: applicant accessed Admin queue';
