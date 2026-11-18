@@ -6,7 +6,7 @@ INSERT INTO auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,r
 VALUES
 ('51000000-0000-4000-8000-000000000001','authenticated','authenticated','six-step-dev@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
 ('51000000-0000-4000-8000-000000000002','authenticated','authenticated','six-step-admin@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
-('51000000-0000-4000-8000/000000000003','authenticated','authenticated','six-step-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
+('51000000-0000-4000-8000-000000000003','authenticated','authenticated','six-step-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
 INSERT INTO rebuild_v2.user_roles(user_id,role) VALUES
 ('51000000-0000-4000-8000-000000000001','developer'),
 ('51000000-0000-4000-8000-000000000002','admin'),
