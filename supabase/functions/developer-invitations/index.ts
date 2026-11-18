@@ -140,11 +140,23 @@ Deno.serve(async (request: Request) => {
       return respond(status, { error: "invitation_not_created" });
     }
 
+    // Fetch the persisted expiry so an idempotent retry never reports a
+    // freshly calculated timestamp that differs from the original row.
+    const { data: listed, error: listError } = await supabase.schema("rebuild_v2").rpc(
+      "list_test_invitations", { p_test_id: testId },
+    );
+    if (listError) {
+      console.warn("Invitation expiry lookup failed:", listError.code ?? "unknown");
+      return respond(503, { error: "invitation_created_but_link_unavailable_retry_same_request" });
+    }
+    const persisted = (listed ?? []).find((row: { invitation_id: string }) => row.invitation_id === data);
+    if (!persisted) return respond(503, { error: "invitation_created_but_link_unavailable_retry_same_request" });
+
     // This is the only response containing the raw capability token. No email is sent.
     return respond(201, {
       invitation_id: data,
       token,
-      expires_at: expiresAt,
+      expires_at: persisted.expires_at,
       delivery_status: "not_emailed",
       message: "Link ready — not emailed",
     });
