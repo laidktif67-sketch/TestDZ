@@ -150,5 +150,37 @@ END;
 $after_registration$;
 RESET ROLE;
 
+SET LOCAL ROLE authenticated;
+DO $read_role_boundaries$
+DECLARE
+  v_test uuid := (SELECT id FROM rebuild_v2.tests WHERE title='Report Evidence Contract Test');
+  v_path text;
+BEGIN
+  v_path := 'v2/' || v_test::text || '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000301.pdf';
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000004',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000004","role":"authenticated"}',true);
+  IF NOT rebuild_v2_private.can_read_test_evidence(v_path)
+     OR (SELECT count(*) FROM storage.objects WHERE bucket_id='test-evidence' AND name=v_path) <> 1 THEN
+    RAISE EXCEPTION 'FAIL: Support cannot read report evidence';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000005',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000005","role":"authenticated"}',true);
+  IF rebuild_v2_private.can_read_test_evidence(v_path)
+     OR (SELECT count(*) FROM storage.objects WHERE bucket_id='test-evidence' AND name=v_path) <> 0 THEN
+    RAISE EXCEPTION 'FAIL: Financial can read Support-only report evidence';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000003',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  IF rebuild_v2_private.can_read_test_evidence(v_path)
+     OR (SELECT count(*) FROM storage.objects WHERE bucket_id='test-evidence' AND name=v_path) <> 0 THEN
+    RAISE EXCEPTION 'FAIL: unrelated user can read report evidence';
+  END IF;
+END;
+$read_role_boundaries$;
+RESET ROLE;
+
 ROLLBACK;
 SELECT 'rebuild_v2_report_evidence_metadata_contract: PASS' AS result;
