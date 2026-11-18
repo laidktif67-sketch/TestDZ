@@ -43,6 +43,7 @@ import AdminAuditLogPage from "./modules/admin/pages/AdminAuditLogPage";
 import AdminFraudReviewsPage from "./modules/admin/pages/AdminFraudReviewsPage";
 import FinancialOperationsPage from "./modules/admin/pages/FinancialOperationsPage";
 import SupportQueuePage from "./modules/support/pages/SupportQueuePage";
+import SupportTicketDetailPage from "./modules/support/pages/SupportTicketDetailPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
@@ -113,6 +114,7 @@ export default function App() {
           </Route>
           <Route element={<RoleGuard requiredRole="support" />}>
             <Route path="/support-workspace" element={<SupportQueuePage />} />
+            <Route path="/support-workspace/:id" element={<SupportTicketDetailPage />} />
           </Route>
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />

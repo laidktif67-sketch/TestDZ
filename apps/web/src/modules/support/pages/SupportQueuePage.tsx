@@ -63,7 +63,7 @@ export default function SupportQueuePage() {
   return <div className="td-dashboard sq-shell">
     <TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false} />
     <main className="sq-main">
-      <header className="sq-header"><div><span className="sq-eyebrow">CUSTOMER CARE · READ ONLY</span><h1>Support queue</h1><p>Monitor incoming requests and workload. Ticket conversations and attachments are not shown here.</p></div><button type="button" onClick={() => void load()} disabled={loading}>↻ Refresh</button></header>
+      <header className="sq-header"><div><span className="sq-eyebrow">CUSTOMER CARE · STAFF WORKSPACE</span><h1>Support queue</h1><p>Monitor incoming requests, open a ticket to review its public conversation and manage its status with an audited reason.</p></div><button type="button" onClick={() => void load()} disabled={loading}>↻ Refresh</button></header>
       {error && <p className="sq-error" role="alert">{error}</p>}
       <section className="sq-stats" aria-label="Support queue summary">
         <article><span>Open</span><strong>{counts.open}</strong></article>
@@ -76,12 +76,12 @@ export default function SupportQueuePage() {
           {(["all","open","in_progress","waiting_for_user","resolved","closed"] as Filter[]).map(value => <button key={value} type="button" className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>{value === "all" ? "All" : label(value)}</button>)}
         </div><input value={search} onChange={event => setSearch(event.target.value)} aria-label="Search support tickets" placeholder="Search ticket, subject, account or category…" /></div>
         {loading ? <div className="sq-empty" aria-live="polite">Loading support tickets…</div> : <div className="sq-table-wrap"><table><thead><tr><th>Ticket</th><th>Subject</th><th>Requester</th><th>Category</th><th>Priority</th><th>Status</th><th>Updated</th></tr></thead><tbody>
-          {filtered.map(row => <tr key={row.id}><td><code>#{row.ticket_number}</code></td><td><strong>{row.subject}</strong></td><td><span>{row.requester_role}</span><br/><code>{shortId(row.user_id)}</code></td><td>{label(row.category)}</td><td><span className={"sq-priority " + row.priority}>{label(row.priority)}</span></td><td><span className={"sq-status " + row.status}>{label(row.status)}</span></td><td>{dateTime(row.updated_at)}</td></tr>)}
+          {filtered.map(row => <tr key={row.id}><td><code>#{row.ticket_number}</code></td><td><Link className="sq-ticket-link" to={"/support-workspace/" + row.id}><strong>{row.subject}</strong></Link></td><td><span>{row.requester_role}</span><br/><code>{shortId(row.user_id)}</code></td><td>{label(row.category)}</td><td><span className={"sq-priority " + row.priority}>{label(row.priority)}</span></td><td><span className={"sq-status " + row.status}>{label(row.status)}</span></td><td>{dateTime(row.updated_at)}</td></tr>)}
           {!filtered.length && <tr><td colSpan={7} className="sq-empty">No tickets match this filter.</td></tr>}
         </tbody></table></div>}
-        <footer className="sq-footer">Showing up to 100 latest tickets. This workspace is read-only: no replies, status changes, assignment changes or account actions are available.</footer>
+        <footer className="sq-footer">Showing up to 100 latest tickets. Open a ticket to send a public reply or make a reason-required, audited status/priority change.</footer>
       </section>
-      <p className="sq-safety"><strong>Privacy boundary:</strong> This list requests ticket metadata only. It does not fetch descriptions, message bodies, internal notes or attachment records.</p>
+      <p className="sq-safety"><strong>Privacy boundary:</strong> This list requests ticket metadata only. Ticket details load public messages and event metadata on demand; internal notes and attachment contents remain excluded.</p>
       <p className="sq-link"><Link to="/support">Open the customer Support Center</Link></p>
     </main>
   </div>;
