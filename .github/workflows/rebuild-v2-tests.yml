@@ -58,7 +58,7 @@ jobs:
 
           scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
           if [ "${#scripts[@]}" -ne 21 ]; then
-            echo "Expected exactly 21 candidate SQL scripts; found ${#scripts[@]}"
+            echo "Expected exactly 22 candidate SQL scripts; found ${#scripts[@]}"
             exit 1
           fi
 
@@ -87,6 +87,7 @@ jobs:
             supabase/rebuild-v2/tests/012_notification_outbox_retry_contract.sql
             supabase/rebuild-v2/tests/013_wallet_role_boundary_contract.sql
             supabase/rebuild-v2/tests/014_onboarding_developer_approval_contract.sql
+            supabase/rebuild-v2/tests/015_admin_role_request_management_contract.sql
           )
 
           for contract in "${contracts[@]}"; do
