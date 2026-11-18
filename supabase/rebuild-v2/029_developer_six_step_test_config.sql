@@ -1,23 +1,14 @@
 -- Preserve the legacy six-step developer test configuration in V2.
 -- Candidate only: replay on a disposable local Supabase database.
 -- This RPC creates the test and stores an allowlisted configuration atomically.
--- It intentionally excludes tester email lists, Google Group addresses, and
--- external release/invitation side effects.
+-- Tester email lists, Google Group addresses and external side effects are excluded.
 
 BEGIN;
 
 CREATE OR REPLACE FUNCTION rebuild_v2_private.create_test_with_config_impl(
-  p_app_id uuid,
-  p_title text,
-  p_description text,
-  p_short_summary text,
-  p_test_type text,
-  p_min_testers integer,
-  p_start_date date,
-  p_end_date date,
-  p_duration integer,
-  p_instructions text,
-  p_test_config jsonb
+  p_app_id uuid, p_title text, p_description text, p_short_summary text,
+  p_test_type text, p_min_testers integer, p_start_date date, p_end_date date,
+  p_duration integer, p_instructions text, p_test_config jsonb
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -128,89 +119,28 @@ BEGIN
      OR v_google->>'releaseMode' NOT IN ('immediately','scheduled')
      OR (v_google->'releaseAt' <> 'null'::jsonb AND
          (jsonb_typeof(v_google->'releaseAt') <> 'string'
-          OR (v_google->>'releaseAt') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}
-    RAISE EXCEPTION 'TEST_CONFIG_GOOGLE_PLAY_INVALID' USING errcode='22023';
-  END IF;
-
-  -- Reuse the existing owner-checked create boundary. Both this call and the
-  -- config update run in the same PostgreSQL transaction.
-  v_test_id := rebuild_v2_private.create_test_impl(
-    p_app_id,p_title,p_description,p_short_summary,p_test_type,
-    p_min_testers,p_start_date,p_end_date,p_duration,p_instructions
-  );
-
-  UPDATE rebuild_v2.tests
-  SET test_config = p_test_config,
-      updated_at = now()
-  WHERE id = v_test_id AND developer_id = v_user AND status = 'draft';
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'TEST_CONFIG_SAVE_FAILED' USING errcode='P0002';
-  END IF;
-
-  INSERT INTO rebuild_v2.audit_events(actor_id,action,target_type,target_id,reason,metadata)
-  VALUES (
-    v_user,
-    'test.configured',
-    'test',
-    v_test_id,
-    'Developer saved allowlisted six-step draft configuration',
-    jsonb_build_object(
-      'configuration_version',1,
-      'contains_tester_contact_data',false
-    )
-  );
-
-  RETURN v_test_id;
-END;
-$function$;
-
-CREATE OR REPLACE FUNCTION rebuild_v2.create_test_with_config(
-  p_app_id uuid,
-  p_title text,
-  p_description text,
-  p_short_summary text,
-  p_test_type text,
-  p_min_testers integer,
-  p_start_date date,
-  p_end_date date,
-  p_duration integer,
-  p_instructions text,
-  p_test_config jsonb
-)
-RETURNS uuid
-LANGUAGE sql
-SECURITY INVOKER
-SET search_path TO ''
-AS $function$
-  SELECT rebuild_v2_private.create_test_with_config_impl(
-    p_app_id,p_title,p_description,p_short_summary,p_test_type,
-    p_min_testers,p_start_date,p_end_date,p_duration,p_instructions,p_test_config
-  );
-$function$;
-
-REVOKE ALL ON FUNCTION rebuild_v2_private.create_test_with_config_impl(uuid,text,text,text,text,integer,date,date,integer,text,jsonb) FROM PUBLIC,anon;
-REVOKE ALL ON FUNCTION rebuild_v2.create_test_with_config(uuid,text,text,text,text,integer,date,date,integer,text,jsonb) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION rebuild_v2_private.create_test_with_config_impl(uuid,text,text,text,text,integer,date,date,integer,text,jsonb) TO authenticated;
-GRANT EXECUTE ON FUNCTION rebuild_v2.create_test_with_config(uuid,text,text,text,text,integer,date,date,integer,text,jsonb) TO authenticated;
-
-COMMIT;
-))
+          OR (v_google->>'releaseAt') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$'))
      OR (v_google->>'releaseMode' = 'scheduled' AND v_google->'releaseAt' = 'null'::jsonb)
      OR (v_google->>'releaseMode' = 'immediately' AND v_google->'releaseAt' <> 'null'::jsonb) THEN
     RAISE EXCEPTION 'TEST_CONFIG_GOOGLE_PLAY_INVALID' USING errcode='22023';
   END IF;
 
-  -- Reuse the existing owner-checked create boundary. Both this call and the
-  -- config update run in the same PostgreSQL transaction.
+  IF v_google->>'releaseMode' = 'scheduled' THEN
+    BEGIN
+      PERFORM (v_google->>'releaseAt')::timestamp;
+    EXCEPTION WHEN others THEN
+      RAISE EXCEPTION 'TEST_CONFIG_RELEASE_TIME_INVALID' USING errcode='22023';
+    END;
+  END IF;
+
+  -- Existing owner-checked create and config update share this transaction.
   v_test_id := rebuild_v2_private.create_test_impl(
     p_app_id,p_title,p_description,p_short_summary,p_test_type,
     p_min_testers,p_start_date,p_end_date,p_duration,p_instructions
   );
 
   UPDATE rebuild_v2.tests
-  SET test_config = p_test_config,
-      updated_at = now()
+  SET test_config = p_test_config, updated_at = now()
   WHERE id = v_test_id AND developer_id = v_user AND status = 'draft';
 
   IF NOT FOUND THEN
@@ -219,15 +149,9 @@ COMMIT;
 
   INSERT INTO rebuild_v2.audit_events(actor_id,action,target_type,target_id,reason,metadata)
   VALUES (
-    v_user,
-    'test.configured',
-    'test',
-    v_test_id,
+    v_user,'test.configured','test',v_test_id,
     'Developer saved allowlisted six-step draft configuration',
-    jsonb_build_object(
-      'configuration_version',1,
-      'contains_tester_contact_data',false
-    )
+    jsonb_build_object('configuration_version',1,'contains_tester_contact_data',false)
   );
 
   RETURN v_test_id;
@@ -235,17 +159,9 @@ END;
 $function$;
 
 CREATE OR REPLACE FUNCTION rebuild_v2.create_test_with_config(
-  p_app_id uuid,
-  p_title text,
-  p_description text,
-  p_short_summary text,
-  p_test_type text,
-  p_min_testers integer,
-  p_start_date date,
-  p_end_date date,
-  p_duration integer,
-  p_instructions text,
-  p_test_config jsonb
+  p_app_id uuid, p_title text, p_description text, p_short_summary text,
+  p_test_type text, p_min_testers integer, p_start_date date, p_end_date date,
+  p_duration integer, p_instructions text, p_test_config jsonb
 )
 RETURNS uuid
 LANGUAGE sql
