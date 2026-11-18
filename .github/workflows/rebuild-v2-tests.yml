@@ -57,8 +57,8 @@ jobs:
           test -n "${DB_URL:-}" || { echo "DB_URL was not exported by Supabase CLI"; exit 1; }
 
           scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
-          if [ "${#scripts[@]}" -ne 28 ]; then
-            echo "Expected exactly 28 candidate SQL scripts; found ${#scripts[@]}"
+          if [ "${#scripts[@]}" -ne 29 ]; then
+            echo "Expected exactly 29 candidate SQL scripts; found ${#scripts[@]}"
             exit 1
           fi
 
@@ -99,6 +99,7 @@ jobs:
             supabase/rebuild-v2/tests/022_reports_disputes_fail_closed_contract.sql
             supabase/rebuild-v2/tests/023_refunds_fail_closed_contract.sql
             supabase/rebuild-v2/tests/024_report_evidence_metadata_contract.sql
+            supabase/rebuild-v2/tests/025_six_step_test_config_contract.sql
           )
 
           for contract in "${contracts[@]}"; do
