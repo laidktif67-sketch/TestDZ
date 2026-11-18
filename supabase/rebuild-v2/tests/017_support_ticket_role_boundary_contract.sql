@@ -237,6 +237,14 @@ BEGIN
     RAISE EXCEPTION 'FAIL: Support metadata helper denies public-message attachment';
   END IF;
 
+  RAISE NOTICE 'attachment policy diagnostic: current_user=%, auth_uid=%, row_security_active=%, policies=%',
+    current_user,
+    auth.uid(),
+    row_security_active('rebuild_v2.support_ticket_attachments'::regclass),
+    (SELECT jsonb_agg(jsonb_build_object('name',policyname,'cmd',cmd,'roles',roles,'qual',qual))
+     FROM pg_policies
+     WHERE schemaname='rebuild_v2' AND tablename='support_ticket_attachments');
+
   SELECT count(*) INTO v_count
   FROM rebuild_v2.support_ticket_attachments
   WHERE ticket_id='91700000-0000-4000-8000-000000000101';
