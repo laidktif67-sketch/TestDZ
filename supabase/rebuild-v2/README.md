@@ -31,7 +31,8 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `025_require_report_attachment_metadata.sql`: requires a pre-registered, exact report-attachment metadata row before incident-report evidence can be uploaded; preserves the V2 assignment-submission evidence path.
 - `026_align_report_evidence_read_access.sql`: aligns report evidence reads with report-row visibility (reporter and Support/Admin only); preserves assignment-submission participant reads.
 - `027_enforce_report_attachment_metadata_integrity.sql`: requires a non-null canonical V2 Storage path, an allowlisted extension, and a bounded/control-character-free original filename on every report attachment metadata row.
-- `028_restrict_support_attachment_reads_to_public_messages.sql`: restricts support attachment metadata and private Storage reads to public ticket messages; internal-note attachments remain inaccessible.\n- `029_developer_six_step_test_config.sql`: adds atomic Developer test creation with strict allowlisted six-step draft configuration; tester email lists and Google Group addresses are excluded.
+- `028_restrict_support_attachment_reads_to_public_messages.sql`: restricts support attachment metadata and private Storage reads to public ticket messages; internal-note attachments remain inaccessible.
+- `029_developer_six_step_test_config.sql`: adds atomic Developer test creation with strict allowlisted six-step draft configuration; tester email lists and Google Group addresses are excluded.
 
 
 
