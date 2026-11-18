@@ -10,6 +10,13 @@ ALTER TABLE rebuild_v2.report_attachments
   CHECK (file_extension = ANY (ARRAY['png','jpg','jpeg','webp','txt','pdf','zip']::text[]));
 
 ALTER TABLE rebuild_v2.report_attachments
+  ADD CONSTRAINT report_attachments_original_filename_check
+  CHECK (
+    char_length(original_filename) BETWEEN 1 AND 255
+    AND original_filename !~ '[[:cntrl:]]'
+  );
+
+ALTER TABLE rebuild_v2.report_attachments
   ADD CONSTRAINT report_attachments_storage_path_canonical_check
   CHECK (
     storage_path =
