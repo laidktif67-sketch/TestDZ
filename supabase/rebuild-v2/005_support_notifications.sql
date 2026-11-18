@@ -291,8 +291,14 @@ BEGIN
     RAISE EXCEPTION 'support ticket unavailable' USING errcode = 'P0002';
   END IF;
 
-  IF v_ticket.user_id <> v_user_id
-     AND NOT rebuild_v2_private.has_role(v_user_id, ARRAY['support','admin']) THEN
+  IF v_ticket.user_id = v_user_id THEN
+    -- Re-check the requester's role at the metadata-registration boundary too.
+    -- Storage policies may be OR-combined with legacy policies, so this RPC
+    -- must not rely on the object-upload policy as its only authorization gate.
+    IF NOT rebuild_v2_private.has_role(v_user_id, ARRAY[v_ticket.requester_role]) THEN
+      RAISE EXCEPTION 'requester role is not authorized for this ticket' USING errcode = '42501';
+    END IF;
+  ELSIF NOT rebuild_v2_private.has_role(v_user_id, ARRAY['support','admin']) THEN
     RAISE EXCEPTION 'not a support ticket participant' USING errcode = '42501';
   END IF;
 
