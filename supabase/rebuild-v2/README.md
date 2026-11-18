@@ -23,7 +23,15 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `017_enforce_assignment_schedule.sql`: enforces test/cohort schedule windows when starting an assignment while preserving safe idempotent retries.
 - `018_verify_submission_evidence_metadata.sql`: verifies evidence object ownership, MIME type, and size before final submission completion.
 - `019_notification_recipient_roles.sql`: restores tester/developer notification feed separation, role-aware reads, and role-scoped read-state RPCs.
-- `020_notification_event_producers.sql`: adds a private server-owned event enqueue helper and an idempotency link from inbox rows to outbox events; does not deliver notifications itself.
+- `020_notification_event_producers.sql`: adds a private server-owned event enqueue helper, idempotency linkage, and a service-role-only batch dispatcher with `SKIP LOCKED`, retry backoff, and terminal failure after five attempts.
+
+
+
+## Notification outbox worker
+
+The candidate Edge Function source is `supabase/functions/dispatch-notifications/index.ts`. It accepts only server-to-server POST requests carrying the `x-dispatch-secret` header, then invokes the service-role-only `rebuild_v2.process_notification_outbox` RPC. Its configuration disables platform JWT verification only because the function performs its own shared-secret check; never expose the secret to the browser.
+
+Before enabling it in any hosted environment, deploy the Edge Function only after the V2 schema is approved and applied to the intended project, set `NOTIFICATION_DISPATCH_SECRET` as an Edge Function secret, verify the standard server-side Supabase credentials are available, and configure a scheduled invocation using Supabase Vault/pg_cron. The repository contains the worker source only; no Edge Function or cron job has been deployed or scheduled in the hosted TestDZ or FixLab projects.
 
 ## Apply and test order
 
