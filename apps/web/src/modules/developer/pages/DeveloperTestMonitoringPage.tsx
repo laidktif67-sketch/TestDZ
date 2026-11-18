@@ -143,7 +143,7 @@ export default function DeveloperTestMonitoringPage() {
   return <main className="dtm2-shell" dir="rtl">
     <header className="dtm2-topbar">
       <Brand />
-      <nav><Link to="/developer-dashboard">مساحة المطور</Link><Link to="/developer-tests">اختباراتي</Link><Link to="/apps">تطبيقاتي</Link></nav>
+      <nav><Link to="/developer-dashboard">مساحة المطور</Link><Link to="/developer-tests">اختباراتي</Link><Link to="/developer/testers">مجتمع المختبرين</Link><Link to="/developer-test-results">النتائج</Link><Link to="/apps">تطبيقاتي</Link></nav>
     </header>
     <div className="dtm2-content">
       <div className="dtm2-heading-row">
