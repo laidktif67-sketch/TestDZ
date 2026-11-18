@@ -274,7 +274,7 @@ BEGIN
      OR v_folders[1] <> 'v2'
      OR v_folders[2] <> p_ticket_id::text
      OR v_folders[3] <> v_user_id::text
-     OR split_part(p_storage_path,'/',4) !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[^/]+
+     OR split_part(p_storage_path,'/',4) !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[^/[^/]+$' THEN
     RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
   END IF;
 
