@@ -66,6 +66,38 @@ buck AS (
         coalesce((SELECT string_agg(mime,',' ORDER BY mime) FROM unnest(allowed_mime_types) AS mime),'') AS item
  FROM storage.buckets
  WHERE id <> 'app-icons'
+),
+rls AS (
+ SELECT n.nspname||'.'||c.relname||':'||c.relrowsecurity::text||':'||c.relforcerowsecurity::text AS item
+ FROM pg_class c
+ JOIN pg_namespace n ON n.oid=c.relnamespace
+ WHERE n.nspname IN ('rebuild_v2','rebuild_v2_private')
+   AND c.relkind IN ('r','p')
+),
+grants AS (
+ SELECT n.nspname||'.'||c.relname||':'||pg_get_userbyid(a.grantee)||':'||
+        a.privilege_type||':'||a.is_grantable::text||':'||pg_get_userbyid(a.grantor) AS item
+ FROM pg_class c
+ JOIN pg_namespace n ON n.oid=c.relnamespace
+ CROSS JOIN LATERAL aclexplode(
+   coalesce(c.relacl,acldefault(CASE WHEN c.relkind='S' THEN 'S'::"char" ELSE 'r'::"char" END,c.relowner))
+ ) a
+ WHERE n.nspname IN ('rebuild_v2','rebuild_v2_private','storage')
+   AND c.relkind IN ('r','p','v','m','S')
+ UNION ALL
+ SELECT 'schema:'||n.nspname||':'||pg_get_userbyid(a.grantee)||':'||
+        a.privilege_type||':'||a.is_grantable::text||':'||pg_get_userbyid(a.grantor) AS item
+ FROM pg_namespace n
+ CROSS JOIN LATERAL aclexplode(coalesce(n.nspacl,acldefault('n'::"char",n.nspowner))) a
+ WHERE n.nspname IN ('rebuild_v2','rebuild_v2_private','storage')
+ UNION ALL
+ SELECT n.nspname||'.'||p.proname||'('||pg_get_function_identity_arguments(p.oid)||'):'||
+        pg_get_userbyid(a.grantee)||':'||a.privilege_type||':'||
+        a.is_grantable::text||':'||pg_get_userbyid(a.grantor) AS item
+ FROM pg_proc p
+ JOIN pg_namespace n ON n.oid=p.pronamespace
+ CROSS JOIN LATERAL aclexplode(coalesce(p.proacl,acldefault('f'::"char",p.proowner))) a
+ WHERE n.nspname IN ('rebuild_v2','rebuild_v2_private')
 )
 SELECT jsonb_pretty(jsonb_build_object(
  'columns',jsonb_build_object('count',(select count(*) from cols),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from cols),''))),
@@ -74,5 +106,7 @@ SELECT jsonb_pretty(jsonb_build_object(
  'functions_excluding_known_date_delta',jsonb_build_object('count',(select count(*) from funcs),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from funcs),''))),
  'v2_policies',jsonb_build_object('count',(select count(*) from pol),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from pol),''))),
  'application_triggers',jsonb_build_object('count',(select count(*) from trig),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from trig),''))),
+ 'rls_table_flags',jsonb_build_object('count',(select count(*) from rls),'md5',md5(coalesce((select string_agg(item,E'\\n' order by item) from rls),''))),
+ 'effective_grants',jsonb_build_object('count',(select count(*) from grants),'md5',md5(coalesce((select string_agg(item,E'\\n' order by item) from grants),''))),
  'storage_buckets_excluding_legacy_app_icons',jsonb_build_object('count',(select count(*) from buck),'md5',md5(coalesce((select string_agg(item,E'\n' order by item) from buck),''))
 ))) AS catalog_fingerprint;
