@@ -41,6 +41,7 @@ import AdminUsersPage from "./modules/admin/pages/AdminUsersPage";
 import AdminAuditLogPage from "./modules/admin/pages/AdminAuditLogPage";
 import AdminFraudReviewsPage from "./modules/admin/pages/AdminFraudReviewsPage";
 import FinancialOperationsPage from "./modules/admin/pages/FinancialOperationsPage";
+import SupportQueuePage from "./modules/support/pages/SupportQueuePage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
 import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
@@ -108,6 +109,9 @@ export default function App() {
           <Route path="/notifications" element={<NotificationsCenterPage />} />
           <Route element={<RoleGuard requiredRole="financial" />}>
             <Route path="/financial-operations" element={<FinancialOperationsPage />} />
+          </Route>
+          <Route element={<RoleGuard requiredRole="support" />}>
+            <Route path="/support-workspace" element={<SupportQueuePage />} />
           </Route>
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
