@@ -57,9 +57,9 @@ Current V2 reference: PR #82 head `9d3b71f...`.
 |---|---|---|
 | Developer dashboard | Present | `DeveloperDashboardPage` exists and uses V2-aware app APIs. |
 | App list | Present outside developer module | `/apps` and `AppsPage` exist. |
-| Add app | Partial | V2 `create_app` API/RPC exists, but the dedicated `DeveloperAddAppPage` and `/apps/new` route are absent. |
+| Add app | Restored in PR #84 | `/apps/new` now uses V2 `create_app`, app-limit and owner-scoped icon upload APIs. Draft-only; no legacy distribution RPC. |
 | App details | Present outside developer module | `/apps/:id` and `AppDetailPage` exist. |
-| Six-step test creation | Missing as a dedicated UI | Current `DeveloperTestsPage` supports a V2 create flow, content, build/asset uploads, review submission and cohorts; it is not the legacy six-step page. |
+| Six-step test creation | Restored in PR #86; CI pending | `/developer/tests/new` ports the six-stage legacy flow to V2. The draft and allowlisted `test_config` are created atomically through `create_test_with_config`; CSV emails and Google Group addresses remain local and are not persisted. |
 | My tests | Partial | Current `DeveloperTestsPage` lists and manages V2 tests; no separate full `DeveloperMyTestsPage`/campaign route. |
 | Campaign details | Missing | V2 has cohort and test lifecycle APIs, but no dedicated developer campaign detail route/page. |
 | Test monitoring | Missing | No developer monitoring route/page in V2. |
@@ -75,7 +75,7 @@ Current V2 reference: PR #82 head `9d3b71f...`.
 | Support center/details | Missing developer-facing UI | V2 support queue/detail is staff-side. Support schema allows tester/developer requester roles, but current V2 support API surface does not provide the complete developer requester portal. |
 | Report review | Separate Admin workflow | The report/dispute queues are role-scoped; no developer report-review page is mounted. |
 
-V2 currently has five pages physically under `modules/developer/pages`: Dashboard, Tests, Feedback, Notifications, and Review Queue. The Review Queue is mounted under an Admin route, not a Developer route. App list/detail pages are outside the developer folder and are still part of the developer experience.
+V2 now includes the Dashboard, Add App, six-step Create Test, Tests, Feedback, Notifications, and Review Queue pages under `modules/developer/pages` (the Review Queue remains mounted under an Admin route). App list/detail pages remain outside the developer folder. The Review Queue is mounted under an Admin route, not a Developer route. App list/detail pages are outside the developer folder and are still part of the developer experience.
 
 ## 3. Data/API compatibility findings
 
@@ -111,13 +111,13 @@ V2 already provides a stronger foundation for important parts of the workspace:
 5. Analytics, tester management, test monitoring and test results need explicit V2 query/API contracts and RLS verification before pages are enabled.
 6. Billing can initially be read-only. Do not add checkout, payment confirmation, subscription activation, refund approval, or wallet credit behavior without a verified provider and audited server-side workflow.
 7. Keep test CSV email parsing as local draft configuration only unless a separate, consented invitation workflow is designed. Parsing a CSV must not silently invite or disclose tester email addresses.
-8. Keep the six-step UI's useful form sections, validation, localization and navigation, but map each persisted field to the current V2 `tests`/test-content/cohort/build/asset model. Do not silently discard fields that have no V2 destination; document them as product/schema decisions.
+8. The V2 six-step wizard now persists its validated configuration through candidate migration `029_six_step_test_config.sql`. The RPC accepts only explicit keys/enums and creates the test draft and configuration in one transaction. Raw CSV email addresses and Google Group email addresses are excluded; invitation delivery remains a separate future workflow. The six-step wizard is under exact-head CI and still requires visual QA.
 
 ## 4. Recommended V2 port sequence
 
-1. **Developer shell and route completeness:** add a V2 developer navigation map and restore safe routes for app creation, test detail/monitoring, testers, results, analytics, feedback details, settings, subscription, help and support. Each route must be guarded by the persisted Developer role; app and test resources must still be owner-scoped in the backend.
-2. **App creation:** restore the Add App page using the existing V2 `create_app` and app-icon upload contract. Do not call the legacy `create_app_with_distribution` RPC unless a V2 contract is explicitly added and tested.
-3. **Six-step test creation:** adapt the six-step UI to current V2 test APIs and build/asset upload lifecycle. Keep draft/save/submit states aligned with V2 server transitions.
+1. **Developer shell and route completeness:** the app creation and six-step test creation slices are restored in PRs #84 and #86. Remaining route work: test detail/monitoring, testers, results, analytics, feedback details, settings, subscription, help and support. Each route must be guarded by the persisted Developer role; app and test resources must still be owner-scoped in the backend.
+2. **App creation:** implemented in PR #84 with the existing V2 `create_app` and app-icon upload contract. No legacy `create_app_with_distribution` RPC.
+3. **Six-step test creation:** implemented in PR #86 using the V2 test API and atomic allowlisted config RPC; exact-head CI and visual QA are pending.
 4. **Test operations:** define owner-scoped V2 APIs for campaign/test details, cohort/assignment monitoring, tester profile minimization, and result/feedback aggregation. Do not expose tester private profile fields or unrelated assignments.
 5. **Feedback details:** add the V2 detail page against existing feedback/message/review RPCs; add attachment/event reads and writes only after their exact RLS, Storage and audit contracts are verified.
 6. **Account:** restore settings through shared profile/identity APIs. Subscription page is initially read-only and must state that payments are not processed until provider integration exists.

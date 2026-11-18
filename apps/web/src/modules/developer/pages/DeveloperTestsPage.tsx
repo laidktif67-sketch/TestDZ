@@ -228,7 +228,7 @@ export default function DeveloperTestsPage() {
   return <main className="dashboard-shell">
     <header className="site-header container"><Brand/><nav className="header-actions"><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/apps">تطبيقاتي</Link></nav></header>
     <section className="dashboard-welcome container">
-      <div className="apps-heading"><div><span className="eyebrow">مساحة المطوّر · V2</span><h1>إدارة الاختبارات</h1><p>أنشئ اختباراً لتطبيق منشور، أرسله للمراجعة، ثم جهّز مجموعة المختبرين بعد اعتماده.</p></div><button className="button button-primary" onClick={()=>setShowCreate(v=>!v)} disabled={!publishedApps.length}>＋ إنشاء اختبار</button></div>
+      <div className="apps-heading"><div><span className="eyebrow">مساحة المطوّر · V2</span><h1>إدارة الاختبارات</h1><p>أنشئ اختباراً لتطبيق منشور، أرسله للمراجعة، ثم جهّز مجموعة المختبرين بعد اعتماده.</p></div><button className="button button-primary" onClick={()=>setShowCreate(v=>!v)} disabled={!publishedApps.length}>＋ إنشاء اختبار</button><Link className="button button-outline" to="/developer/tests/new">فتح معالج إنشاء الاختبار · 6 خطوات</Link></div>
       {!publishedApps.length&&<div className="notice">يلزم نشر تطبيق واحد على الأقل قبل إنشاء اختبار. يمكنك إرسال مسودة التطبيق للمراجعة من صفحة تفاصيله.</div>}
       {notice&&<div className="notice notice-success">{notice}</div>}{error&&<div className="notice notice-error">{error}</div>}
       {showCreate&&<form className="dashboard-card auth-form" onSubmit={createTest}>
