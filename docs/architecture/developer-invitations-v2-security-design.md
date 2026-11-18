@@ -11,7 +11,7 @@
 - The candidate branch now contains `032_developer_test_invitations.sql`, `028_developer_test_invitations_contract.sql`, and `supabase/functions/developer-invitations/index.ts`. These are unverified candidate changes until the isolated workflow passes.
 
 ## Required lifecycle
-1. **Create.** An authenticated Developer uses a server-side Edge Function. Verify the session with Supabase Auth, check Developer role and test ownership, normalize the recipient email, generate a cryptographically random one-time token, and hash it with Web Crypto SHA-256.
+1. **Create.** An authenticated Developer uses a server-side Edge Function. Verify the session with Supabase Auth, check Developer role and test ownership, normalize the recipient email, derive a 256-bit one-time token using HMAC-SHA-256 over the authenticated user ID and client-generated UUID idempotency key, then hash it with Web Crypto SHA-256.
 2. **Persist.** Store only the token hash, normalized email, test/cohort IDs, owner, status, expiry, idempotency key, and timestamps. Never store the raw token. Use a narrowly scoped owner-checked RPC.
 3. **Deliver.** If an approved provider is configured, send the redemption URL through a server-side adapter. Otherwise show `Link ready — not emailed` and allow the owner to copy the link. Never claim email was sent without provider confirmation.
 4. **Redeem.** Require an authenticated Tester with a confirmed Auth email matching the invitation recipient. Verify token hash, pending status, expiry, revocation, test eligibility, and cohort capacity. In one transaction, call the existing private join implementation and mark the invitation accepted.
@@ -40,11 +40,11 @@
 ## Candidate implementation added (not yet validated)
 - `rebuild_v2.test_invitations` stores only a 32-byte SHA-256 token hash, normalized recipient email, test/developer ownership, status, expiry, idempotency key, and acceptance/revocation audit fields.
 - Table RLS is enabled and forced; direct client table privileges are revoked. The four public RPC wrappers are authenticated-only; their private implementations enforce Developer ownership, Tester role, confirmed Auth email, and existing join eligibility.
-- Creation is limited to 50 pending invitations per test and expiry between 1 hour and 30 days. The current Edge Function uses a 7-day expiry and creates a cryptographically random 256-bit token.
+- Creation is limited to 50 pending invitations per test and expiry between 1 hour and 30 days. The current Edge Function uses a 7-day expiry and derives a pseudorandom 256-bit token with HMAC-SHA-256. This makes a retried create request reproduce the same token without storing the raw token; `DEVELOPER_INVITATION_TOKEN_SECRET` (minimum 32 characters) must be configured as an Edge Function secret before create is enabled.
 - Redemption locks the invitation row, compares the confirmed Auth email, and calls `rebuild_v2_private.join_test_impl` in the same database transaction before marking the invitation accepted. Revoke and redeem therefore serialize on the same row.
 - The Edge Function verifies the bearer token with `supabase.auth.getUser`, hashes tokens with Web Crypto SHA-256, and returns the raw token only in the one-time create response. It does not send email. Its status is `Link ready — not emailed`.
 - The isolated SQL workflow now includes candidate script 032 and contract 028, and Deno type-checks the invitation function. Results must be checked against the latest commit before describing this feature as passing.
-- Idempotency is strict: reusing a key with a different generated token hash is rejected rather than returning an unusable prior link. The client must retain the same create request/token lifecycle or issue a new idempotency key after an ambiguous failed response; this behavior needs explicit UI handling.
+- Idempotency is strict: the same authenticated user and idempotency key deterministically reproduce the same token. Reusing a key with a different test or email is rejected. Expired pending rows are transitioned to `expired` before a replacement invite is inserted, so the partial unique index does not permanently block re-invites.
 - Not implemented yet: Developer invitation UI, copy-link flow, token redemption page/route, end-to-end Auth tests, email provider, provider webhooks, and manual mobile/desktop/RTL QA.
 
 ## Provider readiness gate
