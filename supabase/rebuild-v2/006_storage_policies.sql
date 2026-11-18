@@ -24,14 +24,15 @@ DECLARE
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL THEN RETURN false; END IF;
   v_folders := storage.foldername(p_object_name);
-  IF coalesce(array_length(v_folders,1),0) <> 2
-     OR v_folders[1] <> (SELECT auth.uid())::text
-     OR v_folders[2] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+  IF coalesce(array_length(v_folders,1),0) <> 3
+     OR v_folders[1] <> 'v2'
+     OR v_folders[2] <> (SELECT auth.uid())::text
+     OR v_folders[3] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
     RETURN false;
   END IF;
   RETURN EXISTS (
     SELECT 1 FROM rebuild_v2.apps a
-    WHERE a.id=v_folders[2]::uuid AND a.developer_id=(SELECT auth.uid())
+    WHERE a.id=v_folders[3]::uuid AND a.developer_id=(SELECT auth.uid())
   );
 EXCEPTION WHEN invalid_text_representation THEN
   RETURN false;

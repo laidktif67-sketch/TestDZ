@@ -65,10 +65,11 @@ After all 23 scripts, run:
 - `tests/016_admin_role_grant_contract.sql` — verifies Admin-only role grants, no self-grant or Admin-role grant, no direct role-table writes, reason validation, actor attribution, and idempotent duplicate grants.
 - `tests/017_support_ticket_role_boundary_contract.sql` — verifies Support can read the ticket queue and conversation records, cannot directly mutate ticket/conversation/attachment tables, and cannot read another user's payments, refunds, or wallet ledger.
 - `tests/018_audit_event_append_only_contract.sql` — verifies only Admin can read audit events, authenticated clients cannot write them directly, and database triggers reject UPDATE/DELETE even when exercised by the local migration owner.
+- `tests/019_app_icon_storage_boundary_contract.sql` — verifies V2 app icons use the `v2/{user_id}/{app_id}/...` path, require app ownership, and cannot be written by a different authenticated user.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the nineteen post-phase SQL diagnostics/contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty post-phase SQL diagnostics/contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
@@ -80,6 +81,17 @@ The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.
 - The disposable local Supabase stack stopped successfully.
 - Read-only FixLab inventory confirmed 47 candidate tables, RLS and FORCE RLS on all 47, 439 columns, 297 constraints, 157 indexes, 48 candidate policies, 96 candidate functions (39 exposed-schema and 57 private-schema functions), six candidate triggers, seven Storage buckets, and 18 Storage object policies.
 - FixLab's current hosted migration history still contains 21 records. It has not been repaired or reset.
+
+## Current clean replay snapshot (2026-11-18)
+
+GitHub Actions run [#44293133432](https://github.com/laidktif67-sketch/TestDZ/actions/runs/44293133432) on the current 23-script candidate completed successfully. The read-only local fingerprint reported:
+
+- 440 columns, 297 constraints, 159 indexes, 97 functions (excluding the documented date-delta functions), 66 V2 policies, 47 RLS/ FORCE RLS table flags, 863 effective table/schema/function grants, and 7 application triggers.
+- Six buckets in the fingerprint (excluding the legacy `app-icons` bucket); the detailed report lists all seven buckets.
+- The local replay retains `app-icons` at 512000 bytes from the earlier migration because candidate script 006 requests 524288 bytes but uses `ON CONFLICT DO NOTHING`. This is an explicit configuration delta to verify against FixLab, not a reason to overwrite an existing bucket automatically.
+- Twelve legacy Storage object policies coexist with V2 policies in the local replay: `app_icons_owner_delete`, `app_icons_owner_insert`, `app_icons_owner_update`, `app_icons_public_read`, `avatars_owner_delete`, `avatars_owner_insert`, `avatars_owner_select`, `avatars_owner_update`, `report_evidence_insert_active_assignment`, `report_evidence_select_authorized_participants`, `support_attachments_insert_participants`, and `support_attachments_select_participants`.
+
+**Storage compatibility note:** permissive Storage policies combine with OR semantics. The V2 app-icon path is now isolated as `v2/{user_id}/{app_id}/...`; the V2 helper validates both the authenticated owner and the app row, while the legacy first-folder-equals-user policies do not match the `v2/` prefix. Contract 019 verifies owner upload and rejects another developer. Legacy unprefixed paths remain available for the legacy workflow; do not remove the legacy policies until that workflow is formally retired. The legacy report-evidence and support-attachment policies still consult legacy `public` records; retain them while legacy paths remain supported and verify combined policy behavior before cutover. No hosted or Production policy was changed.
 
 ## Remaining validation gates
 

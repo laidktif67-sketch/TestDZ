@@ -1,6 +1,7 @@
 import type { AppLimit, AppRecord } from "@testdz/types";
 import { supabase } from "../../lib/supabase";
 import { getAppDataClient } from "../../lib/supabase-data";
+import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
 
 const APP_SELECT = "id,developer_id,name,package_name,description,category,icon_url,status,created_at";
 
@@ -64,7 +65,9 @@ export function updateApp(input: {
 export async function uploadAppIcon(userId: string, appId: string, file: File, metadata: { name: string; description: string; category: string }) {
   const storage = client().storage;
   const extension = file.type === "image/png" ? "png" : "jpg";
-  const path = userId + "/" + appId + "/icon." + extension;
+  const path = isTesterWorkflowV2Enabled
+    ? "v2/" + userId + "/" + appId + "/icon." + extension
+    : userId + "/" + appId + "/icon." + extension;
   const upload = await storage.from("app-icons").upload(path, file, {
     upsert: true,
     contentType: file.type,

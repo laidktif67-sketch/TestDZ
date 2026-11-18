@@ -93,6 +93,7 @@ jobs:
             supabase/rebuild-v2/tests/016_admin_role_grant_contract.sql
             supabase/rebuild-v2/tests/017_support_ticket_role_boundary_contract.sql
             supabase/rebuild-v2/tests/018_audit_event_append_only_contract.sql
+            supabase/rebuild-v2/tests/019_app_icon_storage_boundary_contract.sql
           )
 
           for contract in "${contracts[@]}"; do

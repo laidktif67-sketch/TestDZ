@@ -64,7 +64,7 @@ BEGIN
     IF SQLERRM <> 'PLAN_LIMIT_REACHED' THEN RAISE; END IF;
   END;
 
-  v_icon_path := '30000000-0000-4000-8000-000000000001/'||v_app_id::text||'/icon.png';
+  v_icon_path := 'v2/30000000-0000-4000-8000-000000000001/'||v_app_id::text||'/icon.png';
   IF NOT rebuild_v2_private.can_manage_app_icon(v_icon_path) THEN
     RAISE EXCEPTION 'FAIL: owner app-icon Storage policy helper denied the owner';
   END IF;
