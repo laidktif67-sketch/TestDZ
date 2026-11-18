@@ -23,13 +23,13 @@ export default function SupportCenterPage({ workspaceRole = "tester" }: { worksp
   const firstName=name.split(/[\s._-]+/)[0] || "Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
   const nav=developerWorkspace?[
     {label:"Dashboard",icon:"home",href:"/developer-dashboard"},
-    {label:"My Apps",icon:"apps",href:"/apps"},
+    {label:"My Apps",icon:"grid",href:"/apps"},
     {label:"My Tests",icon:"tests",href:"/developer-tests"},
     {label:"Tester Community",icon:"users",href:"/developer/testers"},
     {label:"Results",icon:"chart",href:"/developer-test-results"},
     {label:"Feedback",icon:"star",href:"/developer-feedback"},
-    {label:"Help Center",icon:"book",href:"/developer-help"},
-    {label:"Support Center",icon:"headset",href:"/developer-support",active:true},
+    {label:"Help Center",icon:"help",href:"/developer-help"},
+    {label:"Support Center",icon:"message",href:"/developer-support",active:true},
     {label:"Workspace Settings",icon:"settings",href:"/developer-settings"}
   ]:[
     {label:"Dashboard",icon:"home",href:"/tester-dashboard"},
