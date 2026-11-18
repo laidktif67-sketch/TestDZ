@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useIdentity } from "../auth/hooks/useIdentity";
+import { getSafeAuthRedirect } from "../../lib/auth-routing";
 import "./route-guards.css";
 
 export default function AuthGuard() {
@@ -30,9 +31,13 @@ export default function AuthGuard() {
   }
 
   if (!session || !user) {
+    const requestedRoute = getSafeAuthRedirect(location.pathname + location.search);
+    const authRoute = requestedRoute
+      ? "/auth?next=" + encodeURIComponent(requestedRoute)
+      : "/auth";
     return (
       <Navigate
-        to="/auth"
+        to={authRoute}
         replace
         state={{ from: location.pathname + location.search + location.hash }}
       />
