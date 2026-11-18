@@ -77,20 +77,20 @@ BEGIN
     ),
     'dailyActivity',COALESCE((
       WITH events AS (
-        SELECT a.assigned_at AS occurred_at
+        SELECT a.assigned_at AS occurred_at,a.tester_id
         FROM rebuild_v2.assignments a WHERE a.test_id=t.id
         UNION ALL
-        SELECT a.started_at FROM rebuild_v2.assignments a
+        SELECT a.started_at,a.tester_id FROM rebuild_v2.assignments a
         WHERE a.test_id=t.id AND a.started_at IS NOT NULL
         UNION ALL
-        SELECT a.completed_at FROM rebuild_v2.assignments a
+        SELECT a.completed_at,a.tester_id FROM rebuild_v2.assignments a
         WHERE a.test_id=t.id AND a.completed_at IS NOT NULL
         UNION ALL
-        SELECT c.created_at FROM rebuild_v2.checkins c
+        SELECT c.created_at,c.tester_id FROM rebuild_v2.checkins c
         JOIN rebuild_v2.assignments a ON a.id=c.assignment_id
         WHERE a.test_id=t.id
         UNION ALL
-        SELECT f.created_at FROM rebuild_v2.feedback f
+        SELECT f.created_at,f.tester_id FROM rebuild_v2.feedback f
         JOIN rebuild_v2.assignments a ON a.id=f.assignment_id
         WHERE a.test_id=t.id
       ), daily AS (
@@ -100,7 +100,7 @@ BEGIN
         WHERE e.occurred_at >= (((now() AT TIME ZONE 'Africa/Algiers')::date - 6)::timestamp
           AT TIME ZONE 'Africa/Algiers')
         GROUP BY (e.occurred_at AT TIME ZONE 'Africa/Algiers')::date
-        HAVING count(*) >= 3
+        HAVING count(DISTINCT e.tester_id) >= 3
       )
       SELECT jsonb_agg(jsonb_build_object('date',d.activity_date,'count',d.activity_count)
         ORDER BY d.activity_date)
