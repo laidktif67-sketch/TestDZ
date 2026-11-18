@@ -8,10 +8,15 @@ INSERT INTO auth.users
 VALUES
   ('92400000-0000-4000-8000-000000000001','authenticated','authenticated','v2-report-evidence-dev@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Developer"}'::jsonb,now(),now()),
   ('92400000-0000-4000-8000-000000000002','authenticated','authenticated','v2-report-evidence-tester@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Tester"}'::jsonb,now(),now()),
-  ('92400000-0000-4000-8000-000000000003','authenticated','authenticated','v2-report-evidence-outsider@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Outsider"}'::jsonb,now(),now());
+  ('92400000-0000-4000-8000-000000000003','authenticated','authenticated','v2-report-evidence-outsider@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Outsider"}'::jsonb,now(),now()),
+  ('92400000-0000-4000-8000-000000000004','authenticated','authenticated','v2-report-evidence-support@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Support"}'::jsonb,now(),now()),
+  ('92400000-0000-4000-8000-000000000005','authenticated','authenticated','v2-report-evidence-financial@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Evidence Financial"}'::jsonb,now(),now());
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
-VALUES ('92400000-0000-4000-8000-000000000001','developer');
+VALUES
+  ('92400000-0000-4000-8000-000000000001','developer'),
+  ('92400000-0000-4000-8000-000000000004','support'),
+  ('92400000-0000-4000-8000-000000000005','financial');
 
 INSERT INTO rebuild_v2.apps(developer_id,name,package_name,description,category,status)
 VALUES (
