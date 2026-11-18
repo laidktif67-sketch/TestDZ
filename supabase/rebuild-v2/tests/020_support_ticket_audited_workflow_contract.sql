@@ -50,6 +50,17 @@ BEGIN
     AND event_type IN ('status_changed','priority_changed');
   IF v_count <> 2 THEN RAISE EXCEPTION 'FAIL: status/priority event history missing'; END IF;
 
+  IF has_table_privilege('authenticated','rebuild_v2.support_ticket_events','INSERT')
+     OR has_table_privilege('authenticated','rebuild_v2.support_ticket_events','UPDATE')
+     OR has_table_privilege('authenticated','rebuild_v2.support_ticket_events','DELETE')
+     OR has_table_privilege('authenticated','rebuild_v2.audit_events','INSERT')
+     OR has_table_privilege('authenticated','rebuild_v2.audit_events','UPDATE')
+     OR has_table_privilege('authenticated','rebuild_v2.audit_events','DELETE')
+     OR has_function_privilege('anon','rebuild_v2.update_support_ticket(uuid,text,text,text)','EXECUTE')
+     OR has_function_privilege('anon','rebuild_v2_private.update_support_ticket_impl(uuid,text,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: direct audit writes or anonymous ticket workflow execution are available';
+  END IF;
+
   -- A Support agent cannot reopen a resolved ticket.
   BEGIN
     PERFORM 1 FROM rebuild_v2.update_support_ticket(
@@ -59,6 +70,14 @@ BEGIN
     RAISE EXCEPTION 'FAIL: Support reopened a resolved ticket';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
+
+  -- Support may close a resolved ticket after confirming the outcome.
+  SELECT new_status INTO v_status
+  FROM rebuild_v2.update_support_ticket(
+    '92000000-0000-4000-8000-000000000103',
+    'closed',NULL,'Close the resolved case after requester confirmation'
+  );
+  IF v_status <> 'closed' THEN RAISE EXCEPTION 'FAIL: Support could not close a resolved ticket'; END IF;
 
   -- A Support agent cannot reopen a closed ticket or change its priority.
   BEGIN
@@ -157,6 +176,13 @@ BEGIN
 
   SELECT count(*) INTO v_count FROM rebuild_v2.audit_events
   WHERE actor_id='92000000-0000-4000-8000-000000000001'
+    AND action='support.ticket_updated'
+    AND target_id='92000000-0000-4000-8000-000000000103'
+    AND reason='Close the resolved case after requester confirmation';
+  IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: Support close audit record missing'; END IF;
+
+  SELECT count(*) INTO v_count FROM rebuild_v2.audit_events
+  WHERE actor_id='92000000-0000-4000-8000-000000000001'
     AND action='support.reply_sent'
     AND target_id='92000000-0000-4000-8000-000000000101'
     AND metadata ? 'message_id';
@@ -217,6 +243,15 @@ BEGIN
     WHERE ticket_id='92000000-0000-4000-8000-000000000101'
       AND event_type='message_sent';
     RAISE EXCEPTION 'FAIL: support event UPDATE unexpectedly succeeded';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT LIKE 'immutable_record:%' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    DELETE FROM rebuild_v2.support_ticket_events
+    WHERE ticket_id='92000000-0000-4000-8000-000000000101'
+      AND event_type='message_sent';
+    RAISE EXCEPTION 'FAIL: support event DELETE unexpectedly succeeded';
   EXCEPTION WHEN OTHERS THEN
     IF SQLERRM NOT LIKE 'immutable_record:%' THEN RAISE; END IF;
   END;
