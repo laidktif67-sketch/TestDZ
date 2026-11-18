@@ -55,10 +55,11 @@ After all 21 scripts, run:
 - `tests/010_security_definer_boundary_contract.sql` — verifies the V2 schema exposure boundary, restricted schema creation, and SECURITY DEFINER ownership/search-path requirements.
 - `tests/011_notification_recipient_roles_contract.sql` — verifies tester/developer feed isolation and role-scoped read-one/read-all operations.
 - `tests/012_notification_outbox_retry_contract.sql` — verifies authenticated callers cannot drain the outbox, retry attempts record errors and backoff, and the fifth failure moves an undeliverable event to terminal `failed` without creating an inbox row.
+- `tests/013_wallet_role_boundary_contract.sql` — verifies Tester and Support cannot post wallet entries, Financial and Admin can post audited entries, authenticated users cannot directly mutate wallet or role tables, Support cannot read another user's financial records, Financial/Admin can inspect the expected financial records, and private role-request/review/grant helpers are not executable by client roles.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 21 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the eleven post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 21 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twelve post-phase contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
