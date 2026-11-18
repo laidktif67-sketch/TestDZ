@@ -58,9 +58,9 @@ export default function CaseQueuesPage({ view }: { view: View }) {
   }, [disputes, filter, search]);
 
   const nav = [
-    ...(isAdmin ? [{ label: "Admin Workspace", icon: "shield", href: "/admin" }, { label: "Case Queues", icon: "folder-search", href: "/admin/cases", active: view === "all" }] : []),
-    ...(isSupport ? [{ label: "Support Queue", icon: "headset", href: "/support-workspace" }, { label: "Reports", icon: "flag", href: "/support-workspace/reports", active: view === "reports" }] : []),
-    ...(isFinancial ? [{ label: "Financial Operations", icon: "wallet", href: "/financial-operations" }, { label: "Disputes", icon: "scale", href: "/financial-operations/disputes", active: view === "disputes" }] : []),
+    ...(isAdmin ? [{ label: "Admin Workspace", icon: "shield", href: "/admin" }, { label: "Case Queues", icon: "folder", href: "/admin/cases", active: view === "all" }] : []),
+    ...(isSupport ? [{ label: "Support Queue", icon: "headset", href: "/support-workspace" }, { label: "Reports", icon: "alert", href: "/support-workspace/reports", active: view === "reports" }] : []),
+    ...(isFinancial ? [{ label: "Financial Operations", icon: "wallet", href: "/financial-operations" }, { label: "Disputes", icon: "file", href: "/financial-operations/disputes", active: view === "disputes" }] : []),
     { label: "Profile", icon: "user", href: "/profile" },
   ];
 
