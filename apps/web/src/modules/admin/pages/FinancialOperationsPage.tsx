@@ -45,7 +45,7 @@ export default function FinancialOperationsPage() {
   useEffect(() => { void load(); }, [load]);
 
   const filteredPayments = useMemo(() => payments.filter(row => [row.status, row.provider, row.currency, row.user_id].join(" ").toLowerCase().includes(search.toLowerCase())), [payments, search]);
-  const filteredRefunds = useMemo(() => refunds.filter(row => [row.status, row.refund_method, row.reason, row.user_id, row.payment_id].join(" ").toLowerCase().includes(search.toLowerCase())), [refunds, search]);
+  const filteredRefunds = useMemo(() => refunds.filter(row => [row.status, row.refund_method, row.user_id, row.payment_id].join(" ").toLowerCase().includes(search.toLowerCase())), [refunds, search]);
   const filteredLedger = useMemo(() => ledger.filter(row => [row.entry_type, row.wallet_type, row.reason, row.user_id, row.reference_type].join(" ").toLowerCase().includes(search.toLowerCase())), [ledger, search]);
   const successfulTotal = payments.filter(row => row.status === "succeeded").reduce((sum, row) => sum + Number(row.amount_dzd), 0);
   const pendingPayments = payments.filter(row => row.status === "pending" || row.status === "processing").length;
