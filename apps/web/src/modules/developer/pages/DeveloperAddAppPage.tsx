@@ -44,19 +44,22 @@ export default function DeveloperAddAppPage() {
       if (!identityLoading) navigate("/auth", { replace: true });
       return () => { active = false; };
     }
-    void getAppLimit().then(({ data, error: requestError }) => {
-      if (!active) return;
-      if (requestError) setError("Could not check your application plan limit. The server will still validate app creation.");
-      else {
-        const row = Array.isArray(data) ? data[0] : data;
-        setLimit((row ?? null) as AppLimit | null);
+    void (async () => {
+      try {
+        const result = await getAppLimit();
+        if (!active) return;
+        if (result.error) setError("Could not check your application plan limit. The server will still validate app creation.");
+        else {
+          const row = Array.isArray(result.data) ? result.data[0] : result.data;
+          setLimit((row ?? null) as AppLimit | null);
+        }
+      } catch {
+        if (!active) return;
+        setError("Could not check your application plan limit.");
+      } finally {
+        if (active) setLimitLoading(false);
       }
-      setLimitLoading(false);
-    }).catch(() => {
-      if (!active) return;
-      setError("Could not check your application plan limit.");
-      setLimitLoading(false);
-    });
+    })();
     return () => { active = false; };
   }, [identityLoading, navigate, user]);
 
