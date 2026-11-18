@@ -15,7 +15,6 @@ export default function SupportCenterPage({ workspaceRole = "tester" }: { worksp
   const { user, roles = [] } = useIdentity();
   const developerWorkspace = workspaceRole === "developer";
   const developerSupportEnabled = !developerWorkspace || import.meta.env.VITE_TESTER_WORKFLOW_V2_ENABLED === "true";
-  const developerWorkspace = workspaceRole === "developer";
   const [searchParams] = useSearchParams();
   const [menuOpen,setMenuOpen]=useState(false),[tickets,setTickets]=useState<Ticket[]>([]),[loading,setLoading]=useState(true);
   const [subject,setSubject]=useState(""),[category,setCategory]=useState("technical"),[priority,setPriority]=useState("normal"),[description,setDescription]=useState("");
