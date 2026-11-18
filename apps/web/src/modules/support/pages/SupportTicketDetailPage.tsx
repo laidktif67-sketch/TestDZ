@@ -19,7 +19,6 @@ const dateTime = (value: string) => {
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
 };
 const shortId = (value: string | null | undefined) => value ? value.slice(0, 8).toUpperCase() : "—";
-const sizeLabel = (value: number) => value < 1024 ? value + " B" : value < 1048576 ? (value / 1024).toFixed(1) + " KB" : (value / 1048576).toFixed(1) + " MB";
 
 export default function SupportTicketDetailPage() {
   const { id = "" } = useParams();
