@@ -48,21 +48,29 @@ $function$;
 REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_support_attachment(text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_read_support_attachment(text) TO authenticated;
 
--- Existing permissive policy still decides which role/ticket may read the row.
--- This restrictive guard additionally prevents every role from seeing metadata
--- attached to an internal note, including through an alternate client query.
-DROP POLICY IF EXISTS support_attachment_public_message_read_guard_v2
+-- Replace the former broad staff OR-policy. Every access path (requester,
+-- Support and Admin) must be joined to a public message explicitly.
+DROP POLICY IF EXISTS support_attachments_select_ticket_participants_v2
   ON rebuild_v2.support_ticket_attachments;
-CREATE POLICY support_attachment_public_message_read_guard_v2
+CREATE POLICY support_attachments_select_ticket_participants_v2
 ON rebuild_v2.support_ticket_attachments
-AS RESTRICTIVE
+AS PERMISSIVE
 FOR SELECT TO authenticated
 USING (
   EXISTS (
     SELECT 1
     FROM rebuild_v2.support_ticket_messages m
+    JOIN rebuild_v2.support_tickets st ON st.id=m.ticket_id
     WHERE m.id=support_ticket_attachments.message_id
       AND m.ticket_id=support_ticket_attachments.ticket_id
       AND m.internal_note=false
+      AND (
+        (st.user_id=(SELECT auth.uid())
+          AND EXISTS (
+            SELECT 1 FROM rebuild_v2.user_roles ur
+            WHERE ur.user_id=(SELECT auth.uid()) AND ur.role=st.requester_role
+          ))
+        OR rebuild_v2_private.has_role((SELECT auth.uid()),ARRAY['support','admin'])
+      )
   )
 );
