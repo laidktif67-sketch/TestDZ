@@ -38,6 +38,7 @@ import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage"
 import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
 import AdminUsersPage from "./modules/admin/pages/AdminUsersPage";
+import AdminAuditLogPage from "./modules/admin/pages/AdminAuditLogPage";
 import FinancialOperationsPage from "./modules/admin/pages/FinancialOperationsPage";
 import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
 import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
@@ -111,6 +112,7 @@ export default function App() {
             <Route path="/admin" element={<TesterSectionPage />} />
             <Route path="/admin/role-requests" element={<AdminRoleRequestsPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/audit-log" element={<AdminAuditLogPage />} />
             <Route path="/admin/developer-reviews" element={<DeveloperReviewQueuePage />} />
           </Route>
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
