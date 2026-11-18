@@ -1,20 +1,11 @@
 -- Enforce canonical, non-null V2 report attachment metadata.
+-- The baseline schema already enforces the extension allowlist and filename
+-- length/control-character checks; this script adds only the missing invariants.
 -- Candidate-only migration; replayed only on disposable local Supabase.
 BEGIN;
 
 ALTER TABLE rebuild_v2.report_attachments
   ALTER COLUMN storage_path SET NOT NULL;
-
-ALTER TABLE rebuild_v2.report_attachments
-  ADD CONSTRAINT report_attachments_file_extension_allowed_check
-  CHECK (file_extension = ANY (ARRAY['png','jpg','jpeg','webp','txt','pdf','zip']::text[]));
-
-ALTER TABLE rebuild_v2.report_attachments
-  ADD CONSTRAINT report_attachments_original_filename_check
-  CHECK (
-    char_length(original_filename) BETWEEN 1 AND 255
-    AND original_filename !~ '[[:cntrl:]]'
-  );
 
 ALTER TABLE rebuild_v2.report_attachments
   ADD CONSTRAINT report_attachments_storage_path_canonical_check
