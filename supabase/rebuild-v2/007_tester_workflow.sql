@@ -842,7 +842,605 @@ DECLARE
   v_parent_id uuid;
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL
-     OR p_object_name !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](png|jpg|jpeg|webp|txt|pdf|zip)$' THEN
+     OR p_object_name !~* '^v2/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](png|jpg|jpeg|webp|txt|pdf|zip) THEN
+    RETURN false;
+  END IF;
+  v_test_id := split_part(p_object_name,'/',2)::uuid;
+  v_tester_id := split_part(p_object_name,'/',3)::uuid;
+  v_parent_id := split_part(p_object_name,'/',4)::uuid;
+
+  RETURN EXISTS (
+    SELECT 1
+    FROM rebuild_v2.report_attachments ra
+    JOIN rebuild_v2.reports r ON r.id = ra.report_id
+    JOIN rebuild_v2.assignments a ON a.id = r.assignment_id
+    JOIN rebuild_v2.tests t ON t.id = a.test_id
+    WHERE ra.storage_path = p_object_name
+      AND ra.report_id = v_parent_id
+      AND ra.test_id = v_test_id
+      AND ra.tester_id = v_tester_id
+      AND a.tester_id = v_tester_id
+      AND (
+        r.reporter_id = (SELECT auth.uid())
+        OR t.developer_id = (SELECT auth.uid())
+        OR rebuild_v2_private.has_role((SELECT auth.uid()), ARRAY['admin','support'])
+      )
+  ) OR EXISTS (
+    SELECT 1
+    FROM rebuild_v2.assignment_submission_attachments sa
+    JOIN rebuild_v2.assignment_submissions s ON s.id = sa.submission_id
+    JOIN rebuild_v2.assignments a ON a.id = s.assignment_id
+    JOIN rebuild_v2.tests t ON t.id = s.test_id
+    WHERE sa.storage_path = p_object_name
+      AND sa.submission_id = v_parent_id
+      AND sa.test_id = v_test_id
+      AND sa.tester_id = v_tester_id
+      AND (
+        s.tester_id = (SELECT auth.uid())
+        OR t.developer_id = (SELECT auth.uid())
+        OR rebuild_v2_private.has_role((SELECT auth.uid()), ARRAY['admin','support'])
+      )
+  );
+EXCEPTION WHEN invalid_text_representation THEN
+  RETURN false;
+END;
+$function$;
+
+-- ---------------------------------------------------------------------------
+-- 7. Public RPC wrappers. Only these wrappers are granted to authenticated.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION rebuild_v2.get_discoverable_tests()
+RETURNS TABLE (
+  test_id uuid, cohort_id uuid, app_id uuid, app_name text, app_icon_url text,
+  app_category text, title text, short_summary text, description text,
+  test_type text, test_status text, start_date date, end_date date,
+  estimated_duration_minutes integer,
+  min_testers integer, eligibility_criteria jsonb, device_requirements jsonb,
+  tester_instructions text, cohort_name text, cohort_capacity integer,
+  spots_remaining integer, cohort_starts_at timestamptz, cohort_ends_at timestamptz
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT * FROM rebuild_v2_private.get_discoverable_tests_impl();
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.join_test(p_test_id uuid)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.join_test_impl(p_test_id);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.start_assignment(p_assignment_id uuid)
+RETURNS timestamptz
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.start_assignment_impl(p_assignment_id);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.submit_checkin(p_assignment_id uuid, p_note text DEFAULT NULL)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.submit_checkin_impl(p_assignment_id, p_note);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.submit_tester_feedback(
+  p_assignment_id uuid, p_category text, p_body text, p_rating smallint DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.submit_tester_feedback_impl(
+    p_assignment_id, p_category, p_body, p_rating
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.create_assignment_submission(
+  p_assignment_id uuid, p_summary text, p_comments text DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.create_assignment_submission_impl(
+    p_assignment_id, p_summary, p_comments
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.register_assignment_submission_attachment(
+  p_submission_id uuid, p_file_id uuid, p_extension text,
+  p_original_filename text, p_mime_type text, p_size_bytes bigint
+)
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.register_assignment_submission_attachment_impl(
+    p_submission_id, p_file_id, p_extension,
+    p_original_filename, p_mime_type, p_size_bytes
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.finalize_assignment_submission(p_submission_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.finalize_assignment_submission_impl(p_submission_id);
+$function$;
+
+-- Private implementations and Storage helpers are not directly callable by clients.
+REVOKE ALL ON FUNCTION rebuild_v2_private.algeria_local_date(timestamptz) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.get_discoverable_tests_impl() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.join_test_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.start_assignment_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.submit_checkin_impl(uuid,text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.submit_tester_feedback_impl(uuid,text,text,smallint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.create_assignment_submission_impl(uuid,text,text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.register_assignment_submission_attachment_impl(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.finalize_assignment_submission_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) TO authenticated;
+
+REVOKE ALL ON FUNCTION rebuild_v2.get_discoverable_tests() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.join_test(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.start_assignment(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.submit_checkin(uuid,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.submit_tester_feedback(uuid,text,text,smallint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.create_assignment_submission(uuid,text,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.register_assignment_submission_attachment(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.finalize_assignment_submission(uuid) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION rebuild_v2.get_discoverable_tests() TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.join_test(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.start_assignment(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.submit_checkin(uuid,text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.submit_tester_feedback(uuid,text,text,smallint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.create_assignment_submission(uuid,text,text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.register_assignment_submission_attachment(uuid,uuid,text,text,text,bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.finalize_assignment_submission(uuid) TO authenticated;
+
+COMMIT;
+ THEN
+    RETURN false;
+  END IF;
+  v_test_id := split_part(p_object_name,'/',2)::uuid;
+  v_tester_id := split_part(p_object_name,'/',3)::uuid;
+  v_parent_id := split_part(p_object_name,'/',4)::uuid;
+
+  RETURN EXISTS (
+    SELECT 1
+    FROM rebuild_v2.reports r
+    JOIN rebuild_v2.assignments a ON a.id = r.assignment_id
+    WHERE r.id = v_parent_id
+      AND r.reporter_id = (SELECT auth.uid())
+      AND a.tester_id = v_tester_id
+      AND a.test_id = v_test_id
+      AND a.status = 'active'
+      AND r.status = 'open'
+  ) OR EXISTS (
+    SELECT 1
+    FROM rebuild_v2.assignment_submission_attachments sa
+    JOIN rebuild_v2.assignment_submissions s ON s.id = sa.submission_id
+    JOIN rebuild_v2.assignments a ON a.id = s.assignment_id
+    WHERE sa.storage_path = p_object_name
+      AND sa.test_id = v_test_id
+      AND sa.tester_id = v_tester_id
+      AND sa.submission_id = v_parent_id
+      AND s.status = 'draft'
+      AND a.status = 'active'
+      AND a.tester_id = (SELECT auth.uid())
+  );
+EXCEPTION WHEN invalid_text_representation THEN
+  RETURN false;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2_private.can_read_test_evidence(p_object_name text)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+DECLARE
+  v_test_id uuid;
+  v_tester_id uuid;
+  v_parent_id uuid;
+BEGIN
+  IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL
+     OR p_object_name !~* '^v2/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.](png|jpg|jpeg|webp|txt|pdf|zip)$' THEN
+    RETURN false;
+  END IF;
+  v_test_id := split_part(p_object_name,'/',2)::uuid;
+  v_tester_id := split_part(p_object_name,'/',3)::uuid;
+  v_parent_id := split_part(p_object_name,'/',4)::uuid;
+
+  RETURN EXISTS (
+    SELECT 1
+    FROM rebuild_v2.report_attachments ra
+    JOIN rebuild_v2.reports r ON r.id = ra.report_id
+    JOIN rebuild_v2.assignments a ON a.id = r.assignment_id
+    JOIN rebuild_v2.tests t ON t.id = a.test_id
+    WHERE ra.storage_path = p_object_name
+      AND ra.report_id = v_parent_id
+      AND ra.test_id = v_test_id
+      AND ra.tester_id = v_tester_id
+      AND a.tester_id = v_tester_id
+      AND (
+        r.reporter_id = (SELECT auth.uid())
+        OR t.developer_id = (SELECT auth.uid())
+        OR rebuild_v2_private.has_role((SELECT auth.uid()), ARRAY['admin','support'])
+      )
+  ) OR EXISTS (
+    SELECT 1
+    FROM rebuild_v2.assignment_submission_attachments sa
+    JOIN rebuild_v2.assignment_submissions s ON s.id = sa.submission_id
+    JOIN rebuild_v2.assignments a ON a.id = s.assignment_id
+    JOIN rebuild_v2.tests t ON t.id = s.test_id
+    WHERE sa.storage_path = p_object_name
+      AND sa.submission_id = v_parent_id
+      AND sa.test_id = v_test_id
+      AND sa.tester_id = v_tester_id
+      AND (
+        s.tester_id = (SELECT auth.uid())
+        OR t.developer_id = (SELECT auth.uid())
+        OR rebuild_v2_private.has_role((SELECT auth.uid()), ARRAY['admin','support'])
+      )
+  );
+EXCEPTION WHEN invalid_text_representation THEN
+  RETURN false;
+END;
+$function$;
+
+-- ---------------------------------------------------------------------------
+-- 7. Public RPC wrappers. Only these wrappers are granted to authenticated.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION rebuild_v2.get_discoverable_tests()
+RETURNS TABLE (
+  test_id uuid, cohort_id uuid, app_id uuid, app_name text, app_icon_url text,
+  app_category text, title text, short_summary text, description text,
+  test_type text, test_status text, start_date date, end_date date,
+  estimated_duration_minutes integer,
+  min_testers integer, eligibility_criteria jsonb, device_requirements jsonb,
+  tester_instructions text, cohort_name text, cohort_capacity integer,
+  spots_remaining integer, cohort_starts_at timestamptz, cohort_ends_at timestamptz
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT * FROM rebuild_v2_private.get_discoverable_tests_impl();
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.join_test(p_test_id uuid)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.join_test_impl(p_test_id);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.start_assignment(p_assignment_id uuid)
+RETURNS timestamptz
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.start_assignment_impl(p_assignment_id);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.submit_checkin(p_assignment_id uuid, p_note text DEFAULT NULL)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.submit_checkin_impl(p_assignment_id, p_note);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.submit_tester_feedback(
+  p_assignment_id uuid, p_category text, p_body text, p_rating smallint DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.submit_tester_feedback_impl(
+    p_assignment_id, p_category, p_body, p_rating
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.create_assignment_submission(
+  p_assignment_id uuid, p_summary text, p_comments text DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.create_assignment_submission_impl(
+    p_assignment_id, p_summary, p_comments
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.register_assignment_submission_attachment(
+  p_submission_id uuid, p_file_id uuid, p_extension text,
+  p_original_filename text, p_mime_type text, p_size_bytes bigint
+)
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.register_assignment_submission_attachment_impl(
+    p_submission_id, p_file_id, p_extension,
+    p_original_filename, p_mime_type, p_size_bytes
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.finalize_assignment_submission(p_submission_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.finalize_assignment_submission_impl(p_submission_id);
+$function$;
+
+-- Private implementations and Storage helpers are not directly callable by clients.
+REVOKE ALL ON FUNCTION rebuild_v2_private.algeria_local_date(timestamptz) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.get_discoverable_tests_impl() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.join_test_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.start_assignment_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.submit_checkin_impl(uuid,text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.submit_tester_feedback_impl(uuid,text,text,smallint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.create_assignment_submission_impl(uuid,text,text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.register_assignment_submission_attachment_impl(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.finalize_assignment_submission_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) TO authenticated;
+
+REVOKE ALL ON FUNCTION rebuild_v2.get_discoverable_tests() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.join_test(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.start_assignment(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.submit_checkin(uuid,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.submit_tester_feedback(uuid,text,text,smallint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.create_assignment_submission(uuid,text,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.register_assignment_submission_attachment(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.finalize_assignment_submission(uuid) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION rebuild_v2.get_discoverable_tests() TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.join_test(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.start_assignment(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.submit_checkin(uuid,text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.submit_tester_feedback(uuid,text,text,smallint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.create_assignment_submission(uuid,text,text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.register_assignment_submission_attachment(uuid,uuid,text,text,text,bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.finalize_assignment_submission(uuid) TO authenticated;
+
+COMMIT;
+ THEN
+    RETURN false;
+  END IF;
+  v_test_id := split_part(p_object_name,'/',2)::uuid;
+  v_tester_id := split_part(p_object_name,'/',3)::uuid;
+  v_parent_id := split_part(p_object_name,'/',4)::uuid;
+
+  RETURN EXISTS (
+    SELECT 1
+    FROM rebuild_v2.report_attachments ra
+    JOIN rebuild_v2.reports r ON r.id = ra.report_id
+    JOIN rebuild_v2.assignments a ON a.id = r.assignment_id
+    JOIN rebuild_v2.tests t ON t.id = a.test_id
+    WHERE ra.storage_path = p_object_name
+      AND ra.report_id = v_parent_id
+      AND ra.test_id = v_test_id
+      AND ra.tester_id = v_tester_id
+      AND a.tester_id = v_tester_id
+      AND (
+        r.reporter_id = (SELECT auth.uid())
+        OR t.developer_id = (SELECT auth.uid())
+        OR rebuild_v2_private.has_role((SELECT auth.uid()), ARRAY['admin','support'])
+      )
+  ) OR EXISTS (
+    SELECT 1
+    FROM rebuild_v2.assignment_submission_attachments sa
+    JOIN rebuild_v2.assignment_submissions s ON s.id = sa.submission_id
+    JOIN rebuild_v2.assignments a ON a.id = s.assignment_id
+    JOIN rebuild_v2.tests t ON t.id = s.test_id
+    WHERE sa.storage_path = p_object_name
+      AND sa.submission_id = v_parent_id
+      AND sa.test_id = v_test_id
+      AND sa.tester_id = v_tester_id
+      AND (
+        s.tester_id = (SELECT auth.uid())
+        OR t.developer_id = (SELECT auth.uid())
+        OR rebuild_v2_private.has_role((SELECT auth.uid()), ARRAY['admin','support'])
+      )
+  );
+EXCEPTION WHEN invalid_text_representation THEN
+  RETURN false;
+END;
+$function$;
+
+-- ---------------------------------------------------------------------------
+-- 7. Public RPC wrappers. Only these wrappers are granted to authenticated.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION rebuild_v2.get_discoverable_tests()
+RETURNS TABLE (
+  test_id uuid, cohort_id uuid, app_id uuid, app_name text, app_icon_url text,
+  app_category text, title text, short_summary text, description text,
+  test_type text, test_status text, start_date date, end_date date,
+  estimated_duration_minutes integer,
+  min_testers integer, eligibility_criteria jsonb, device_requirements jsonb,
+  tester_instructions text, cohort_name text, cohort_capacity integer,
+  spots_remaining integer, cohort_starts_at timestamptz, cohort_ends_at timestamptz
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT * FROM rebuild_v2_private.get_discoverable_tests_impl();
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.join_test(p_test_id uuid)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.join_test_impl(p_test_id);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.start_assignment(p_assignment_id uuid)
+RETURNS timestamptz
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.start_assignment_impl(p_assignment_id);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.submit_checkin(p_assignment_id uuid, p_note text DEFAULT NULL)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.submit_checkin_impl(p_assignment_id, p_note);
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.submit_tester_feedback(
+  p_assignment_id uuid, p_category text, p_body text, p_rating smallint DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.submit_tester_feedback_impl(
+    p_assignment_id, p_category, p_body, p_rating
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.create_assignment_submission(
+  p_assignment_id uuid, p_summary text, p_comments text DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.create_assignment_submission_impl(
+    p_assignment_id, p_summary, p_comments
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.register_assignment_submission_attachment(
+  p_submission_id uuid, p_file_id uuid, p_extension text,
+  p_original_filename text, p_mime_type text, p_size_bytes bigint
+)
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.register_assignment_submission_attachment_impl(
+    p_submission_id, p_file_id, p_extension,
+    p_original_filename, p_mime_type, p_size_bytes
+  );
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.finalize_assignment_submission(p_submission_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT rebuild_v2_private.finalize_assignment_submission_impl(p_submission_id);
+$function$;
+
+-- Private implementations and Storage helpers are not directly callable by clients.
+REVOKE ALL ON FUNCTION rebuild_v2_private.algeria_local_date(timestamptz) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.get_discoverable_tests_impl() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.join_test_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.start_assignment_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.submit_checkin_impl(uuid,text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.submit_tester_feedback_impl(uuid,text,text,smallint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.create_assignment_submission_impl(uuid,text,text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.register_assignment_submission_attachment_impl(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.finalize_assignment_submission_impl(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_upload_test_evidence(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_read_test_evidence(text) TO authenticated;
+
+REVOKE ALL ON FUNCTION rebuild_v2.get_discoverable_tests() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.join_test(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.start_assignment(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.submit_checkin(uuid,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.submit_tester_feedback(uuid,text,text,smallint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.create_assignment_submission(uuid,text,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.register_assignment_submission_attachment(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.finalize_assignment_submission(uuid) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION rebuild_v2.get_discoverable_tests() TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.join_test(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.start_assignment(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.submit_checkin(uuid,text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.submit_tester_feedback(uuid,text,text,smallint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.create_assignment_submission(uuid,text,text) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.register_assignment_submission_attachment(uuid,uuid,text,text,text,bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.finalize_assignment_submission(uuid) TO authenticated;
+
+COMMIT;
+ THEN
     RETURN false;
   END IF;
   v_test_id := split_part(p_object_name,'/',2)::uuid;
