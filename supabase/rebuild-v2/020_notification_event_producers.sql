@@ -177,6 +177,9 @@ BEGIN
 END;
 $function$;
 
+-- The server-side worker uses PostgREST with the service role. Grant schema
+-- visibility only to that role; no client role gains access from this grant.
+GRANT USAGE ON SCHEMA rebuild_v2 TO service_role;
 REVOKE ALL ON FUNCTION rebuild_v2.process_notification_outbox(integer)
   FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION rebuild_v2.process_notification_outbox(integer)
