@@ -48,6 +48,39 @@ $function$;
 REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_support_attachment(text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_read_support_attachment(text) TO authenticated;
 
+CREATE OR REPLACE FUNCTION rebuild_v2_private.can_read_support_attachment_metadata(
+  p_ticket_id uuid,
+  p_message_id uuid
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+  SELECT (SELECT auth.uid()) IS NOT NULL
+    AND EXISTS (
+      SELECT 1
+      FROM rebuild_v2.support_ticket_messages m
+      JOIN rebuild_v2.support_tickets st ON st.id=m.ticket_id
+      WHERE m.id=p_message_id
+        AND m.ticket_id=p_ticket_id
+        AND m.internal_note=false
+        AND (
+          (st.user_id=(SELECT auth.uid())
+            AND EXISTS (
+              SELECT 1 FROM rebuild_v2.user_roles ur
+              WHERE ur.user_id=(SELECT auth.uid()) AND ur.role=st.requester_role
+            ))
+          OR rebuild_v2_private.has_role((SELECT auth.uid()),ARRAY['support','admin'])
+        )
+    );
+$function$;
+
+REVOKE ALL ON FUNCTION rebuild_v2_private.can_read_support_attachment_metadata(uuid,uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.can_read_support_attachment_metadata(uuid,uuid) TO authenticated;
+
 -- Replace the former broad staff OR-policy. Every access path (requester,
 -- Support and Admin) must be joined to a public message explicitly.
 DROP POLICY IF EXISTS support_attachments_select_ticket_participants_v2
@@ -57,20 +90,8 @@ ON rebuild_v2.support_ticket_attachments
 AS PERMISSIVE
 FOR SELECT TO authenticated
 USING (
-  EXISTS (
-    SELECT 1
-    FROM rebuild_v2.support_ticket_messages m
-    JOIN rebuild_v2.support_tickets st ON st.id=m.ticket_id
-    WHERE m.id=support_ticket_attachments.message_id
-      AND m.ticket_id=support_ticket_attachments.ticket_id
-      AND m.internal_note=false
-      AND (
-        (st.user_id=(SELECT auth.uid())
-          AND EXISTS (
-            SELECT 1 FROM rebuild_v2.user_roles ur
-            WHERE ur.user_id=(SELECT auth.uid()) AND ur.role=st.requester_role
-          ))
-        OR rebuild_v2_private.has_role((SELECT auth.uid()),ARRAY['support','admin'])
-      )
+  rebuild_v2_private.can_read_support_attachment_metadata(
+    support_ticket_attachments.ticket_id,
+    support_ticket_attachments.message_id
   )
 );
