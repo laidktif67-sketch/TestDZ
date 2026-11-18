@@ -20,6 +20,7 @@ import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import DeveloperTestsPage from "./modules/developer/pages/DeveloperTestsPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
+import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
 import DeveloperReviewQueuePage from "./modules/developer/pages/DeveloperReviewQueuePage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
@@ -138,6 +139,7 @@ export default function App() {
           </Route>
           <Route element={<RoleGuard requiredRole="developer" />}>
             <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
+            <Route path="/developer-notifications" element={<DeveloperNotificationsPage />} />
             <Route path="/developer-tests" element={<DeveloperTestsPage />} />
             <Route path="/developer-feedback" element={<DeveloperFeedbackPage />} />
             <Route path="/apps" element={<AppsPage />} />
