@@ -36,7 +36,7 @@ import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmen
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
 import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
-import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
+import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
 import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
 import AdminUsersPage from "./modules/admin/pages/AdminUsersPage";
 import AdminAuditLogPage from "./modules/admin/pages/AdminAuditLogPage";
@@ -120,7 +120,7 @@ export default function App() {
             <Route path="/support-workspace/:id" element={<SupportTicketDetailPage />} />
           </Route>
           <Route element={<RoleGuard requiredRole="admin" />}>
-            <Route path="/admin" element={<TesterSectionPage />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/role-requests" element={<AdminRoleRequestsPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/audit-log" element={<AdminAuditLogPage />} />
