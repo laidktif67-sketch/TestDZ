@@ -1,6 +1,6 @@
 -- Read-only fingerprint of the final V2 catalog.
 -- Run after all 23 candidate scripts (001..023). Excludes the known live/candidate date-delta functions:
--- Known date deltas: candidate-only algeria_local_date, four tester business-date implementations, and checkins.checkin_date's Algeria-local default. Also excludes legacy Storage policies inherited from supabase/migrations (only *_v2 policies are part of this V2 fingerprint) and app-icons runtime metadata because the legacy migration pre-seeds 500000 bytes while V2 source/FixLab specify 524288.
+-- Known date deltas: candidate-only algeria_local_date, four tester business-date implementations, and checkins.checkin_date's Algeria-local default. Also excludes legacy Storage policies inherited from supabase/migrations (only *_v2 policies are part of this V2 fingerprint) and app-icons runtime metadata because the clean local replay retains 512000 bytes from the earlier legacy migration while V2 script 006 requests 524288 and uses ON CONFLICT DO NOTHING; verify the live FixLab value independently before parity claims.
 -- Also excludes two CHECK constraints whose expressions differ only in redundant parenthesis grouping; their full definitions are emitted by catalog_difference_details.sql. This is a diagnostic fingerprint, not proof of FixLab parity; compare outputs from both environments and review every excluded delta. Compare this output with the same query on FixLab before any hosted baseline or patch operation.
 
 WITH
