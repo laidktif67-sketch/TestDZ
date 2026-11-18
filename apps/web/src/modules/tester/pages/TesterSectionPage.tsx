@@ -22,7 +22,7 @@ const sections: Record<string, { title: string; subtitle: string; icon: string; 
   },
   "/admin": {
     title: "Admin", subtitle: "Administrator workspace.", icon: "shield",
-    items: [{ title: "Developer review queue", description: "Review submitted apps and tests. Approval and rejection decisions require an audit reason.", href: "/admin/developer-reviews" }]
+    items: [{ title: "Developer access requests", description: "Approve or reject requests to enter the Developer workspace. Every decision requires a reason and is audited.", href: "/admin/role-requests" }, { title: "Developer review queue", description: "Review submitted apps and tests. Approval and rejection decisions require an audit reason.", href: "/admin/developer-reviews" }]
   }
 };
 
@@ -43,7 +43,7 @@ export default function TesterSectionPage() {
     { label: "Settings", icon: "settings", href: "/settings", active: location.pathname === "/settings" },
     ...(isDeveloper || isAdmin ? [{ label: "Discover Apps", icon: "search", href: "/apps" }] : []),
     ...(isDeveloper || isAdmin ? [{ label: "Developer Dashboard", icon: "code", href: "/developer-dashboard" }] : []),
-    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin", active: location.pathname === "/admin" }, { label: "Review Queue", icon: "check", href: "/admin/developer-reviews", active: location.pathname === "/admin/developer-reviews" }] : [])
+    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin", active: location.pathname === "/admin" }, { label: "Role Requests", icon: "users", href: "/admin/role-requests", active: location.pathname === "/admin/role-requests" }, { label: "Review Queue", icon: "check", href: "/admin/developer-reviews", active: location.pathname === "/admin/developer-reviews" }] : [])
   ];
   return <main className="tester-profile-page">
     <TesterSidebar nav={nav} name="TestDZ Member" firstName="T" avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={workspaceMenuOpen} setWorkspaceMenuOpen={setWorkspaceMenuOpen} previewMode={false} sidebarClassName="tester-sidebar" />
