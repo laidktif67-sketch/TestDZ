@@ -320,18 +320,6 @@ WITH CHECK (bucket_id='test-evidence' AND rebuild_v2_private.can_upload_test_evi
 CREATE POLICY report_evidence_select_v2 ON storage.objects
 FOR SELECT TO authenticated
 USING (bucket_id='test-evidence' AND rebuild_v2_private.can_read_test_evidence(name));
- THEN
-    RETURN false;
-  END IF;
-  RETURN EXISTS (
-    SELECT 1 FROM rebuild_v2.apps a
-    WHERE a.id=v_folders[3]::uuid AND a.developer_id=(SELECT auth.uid())
-  );
-EXCEPTION WHEN invalid_text_representation THEN
-  RETURN false;
-END;
-$function$;
-
 CREATE OR REPLACE FUNCTION rebuild_v2_private.can_upload_support_attachment(p_object_name text)
 RETURNS boolean
 LANGUAGE plpgsql
