@@ -31,7 +31,7 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub','51000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"51000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
-  v_test:=rebuild_v2.create_test_with_config(v_app,'Six Step Wizard Contract','A complete description for the six-step wizard contract test.','Wizard contract','google_play_closed',24,current_date,current_date+14,30,'Follow the supplied test instructions.',v_config);
+  v_test:=rebuild_v2.create_test_with_config(v_app,'Six Step Wizard Contract','A complete description for the six-step wizard contract test.','Wizard contract','google_play_closed',24,current_date,current_date+14,30,'Complete the main purchase flow',v_config);
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND status='draft' AND test_config=v_config) THEN
     RAISE EXCEPTION 'FAIL: six-step configuration was not saved with draft';
   END IF;
