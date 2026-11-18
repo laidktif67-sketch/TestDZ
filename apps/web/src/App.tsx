@@ -24,6 +24,7 @@ import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTest
 import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
 import DeveloperTestResultsPage from "./modules/developer/pages/DeveloperTestResultsPage";
 import DeveloperHelpPage from "./modules/developer/pages/DeveloperHelpPage";
+import DeveloperWorkspaceSettingsPage from "./modules/developer/pages/DeveloperWorkspaceSettingsPage";
 import DeveloperTestsPage from "./modules/developer/pages/DeveloperTestsPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
@@ -158,6 +159,7 @@ export default function App() {
             <Route path="/developer/testers" element={<DeveloperTestersPage />} />
             <Route path="/developer-test-results" element={<DeveloperTestResultsPage />} />
             <Route path="/developer-help" element={<DeveloperHelpPage />} />
+            <Route path="/developer-settings" element={<DeveloperWorkspaceSettingsPage />} />
             <Route path="/developer-feedback" element={<DeveloperFeedbackPage />} />
             <Route path="/apps" element={<AppsPage />} />
             <Route path="/apps/new" element={<DeveloperAddAppPage />} />
