@@ -149,6 +149,13 @@ BEGIN
     RAISE EXCEPTION 'only Admin can change a closed ticket' USING errcode = '42501';
   END IF;
 
+  -- Support may close a case only after it has reached resolved.
+  -- Admin retains authority to close from any active state.
+  IF v_status_changed AND p_status = 'closed'
+     AND NOT v_is_admin AND v_ticket.status <> 'resolved' THEN
+    RAISE EXCEPTION 'Support can close only resolved tickets' USING errcode = '42501';
+  END IF;
+
   IF v_status_changed THEN
     IF v_ticket.status = 'open' AND p_status NOT IN ('in_progress','waiting_for_user','resolved','closed') THEN
       RAISE EXCEPTION 'invalid ticket status transition' USING errcode = '22023';
