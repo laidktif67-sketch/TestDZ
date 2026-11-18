@@ -27,6 +27,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `021_feedback_notification_producers.sql`: notifies the owning developer when tester feedback is submitted, and notifies the tester when the developer changes review status or replies; event payloads contain identifiers and status only, never feedback/message bodies.
 - `022_admin_role_request_management.sql`: exposes an Admin-only pending Developer role-request queue and reason-required, self-review-protected decisions.
 - `023_admin_role_grants.sql`: exposes a reason-required Admin-only role grant wrapper; prevents self-grants and Admin-role grants, and records one audit event per newly granted role.
+- `024_audited_support_ticket_workflow.sql`: records all ticket replies in the immutable event stream; adds reason-required Support/Admin status and priority transitions, Admin-only reopening of resolved/closed tickets, and Admin-visible audit records for staff actions.
 
 
 
@@ -40,7 +41,7 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 23 scripts in numeric order, from `001_schema.sql` through `023_admin_role_grants.sql`.
+Apply all 24 scripts in numeric order, from `001_schema.sql` through `024_audited_support_ticket_workflow.sql`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
@@ -66,10 +67,11 @@ After all 23 scripts, run:
 - `tests/017_support_ticket_role_boundary_contract.sql` — verifies Support can read the ticket queue and conversation records, cannot directly mutate ticket/conversation/attachment tables, cannot read another user's financial records, and that V2 support attachments use a namespaced path with owner-only upload/read.
 - `tests/018_audit_event_append_only_contract.sql` — verifies only Admin can read audit events, authenticated clients cannot write them directly, and database triggers reject UPDATE/DELETE even when exercised by the local migration owner.
 - `tests/019_app_icon_storage_boundary_contract.sql` — verifies V2 app icons use the `v2/{user_id}/{app_id}/...` path, require app ownership, and cannot be written by a different authenticated user.
+- `tests/020_support_ticket_audited_workflow_contract.sql` — verifies Support/Admin-only ticket transitions, reason-required audit events, Admin-only reopening, immutable reply events, staff reply attribution without message-body leakage, and rejection of invalid/no-op changes.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty post-phase SQL diagnostics/contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 24 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty-one post-phase SQL diagnostics/contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
