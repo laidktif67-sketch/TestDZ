@@ -7,6 +7,7 @@ import TesterSidebar from "../../tester/components/TesterSidebar";
 import "./admin-users.css";
 
 type RoleFilter = "all" | "tester" | "developer" | "financial" | "support" | "admin";
+const grantableRoles: AdminGrantableRole[] = ["tester", "developer", "financial", "support"];
 const shortId = (value: string) => value.slice(0, 8).toUpperCase();
 const dateTime = (value: string) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString(); };
 const rolesOf = (user: AdminUserRecord) => (user.user_roles ?? []).map(item => item.role);
@@ -45,8 +46,7 @@ export default function AdminUsersPage() {
   useEffect(() => { void load(); }, [load]);
 
   const openGrantForm = (target: AdminUserRecord) => {
-    const available: AdminGrantableRole[] = ["tester", "developer", "financial", "support"]
-      .filter(role => !rolesOf(target).includes(role));
+    const available = grantableRoles.filter(role => !rolesOf(target).includes(role));
     if (!available.length) return;
     setGrantUserId(target.id);
     setGrantRole(available[0]);
@@ -120,7 +120,7 @@ export default function AdminUsersPage() {
         {loading ? <div className="au-empty">Loading accounts…</div> : <div className="au-table-wrap"><table><thead><tr><th>Account</th><th>Account ID</th><th>Workspace roles</th><th>Locale</th><th>Joined</th><th>Verification</th><th>Status</th><th>Role access</th></tr></thead><tbody>
           {filtered.map(account => {
             const accountRoles = rolesOf(account);
-            const availableRoles: AdminGrantableRole[] = ["tester", "developer", "financial", "support"].filter(role => !accountRoles.includes(role));
+            const availableRoles = grantableRoles.filter(role => !accountRoles.includes(role));
             return <tr key={account.id}>
               <td><strong>{account.display_name || "Unnamed account"}</strong></td>
               <td><code>{shortId(account.id)}</code></td>
