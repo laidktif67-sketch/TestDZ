@@ -5,6 +5,7 @@ import {
   type DeveloperTestMonitoringSummary,
 } from "../../../features/apps/apps-api";
 import { Brand } from "../../../shared/components/Brand";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import "../styles/developer-test-monitoring-v2.css";
 
 const statusLabels: Record<string, string> = {
@@ -66,6 +67,11 @@ export default function DeveloperTestMonitoringPage() {
   useEffect(() => {
     let alive = true;
     async function initialLoad() {
+      if (!isTesterWorkflowV2Enabled) {
+        setError("ميزة V2 غير مفعّلة في هذا الإصدار.");
+        setLoading(false);
+        return;
+      }
       try {
         const { data, error: requestError } = await getDeveloperTestMonitoringSummary(id);
         if (!alive) return;
