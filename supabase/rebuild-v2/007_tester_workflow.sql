@@ -11,7 +11,7 @@
 --
 -- Final submission evidence reuses the private test-evidence bucket and existing
 -- storage INSERT/SELECT policies. Its object path is:
---   <test_id>/<tester_id>/<submission_id>/<file_id>.<extension>
+--   v2/<test_id>/<tester_id>/<submission_id>/<file_id>.<extension>
 -- The existing storage helper functions are extended to validate this model
 -- while retaining the legacy incident-report path.
 
@@ -668,7 +668,7 @@ BEGIN
     RAISE EXCEPTION 'ATTACHMENT_LIMIT_REACHED' USING errcode = '22023';
   END IF;
 
-  v_path := v_submission.test_id::text || '/' ||
+  v_path := 'v2/' || v_submission.test_id::text || '/' ||
             v_submission.tester_id::text || '/' ||
             v_submission.id::text || '/' ||
             p_file_id::text || '.' || p_extension;
