@@ -94,8 +94,6 @@ BEGIN
     RAISE EXCEPTION 'invalid support message' USING errcode = '22023';
   END IF;
 
-  v_file_id := substring(split_part(p_storage_path,'/',4) from 1 for 36)::uuid;
-
   SELECT * INTO v_ticket
   FROM rebuild_v2.support_tickets st
   WHERE st.id = p_ticket_id
@@ -257,7 +255,6 @@ DECLARE
   v_attachment_id uuid;
   v_folders text[];
   v_object_owner text;
-  v_file_id uuid;
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'authentication required' USING errcode = '42501';
@@ -281,6 +278,9 @@ BEGIN
      OR substring(split_part(p_storage_path,'/',4) from 37 for 1) <> '-' THEN
     RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
   END IF;
+
+  -- Validate the UUID prefix embedded in the V2 object filename.
+  PERFORM substring(split_part(p_storage_path,'/',4) from 1 for 36)::uuid;
 
   SELECT * INTO v_ticket
   FROM rebuild_v2.support_tickets
