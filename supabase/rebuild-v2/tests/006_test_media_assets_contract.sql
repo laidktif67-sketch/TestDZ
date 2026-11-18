@@ -151,6 +151,20 @@ BEGIN
     SELECT 1 FROM rebuild_v2.test_assets
     WHERE id=current_setting('testdz.media_asset_id')::uuid AND status='uploaded'
   ) THEN RAISE EXCEPTION 'FAIL: media asset not marked uploaded'; END IF;
+
+  -- Audit visibility is Admin-only; inspect as the local migration owner while
+  -- retaining the developer JWT so actor_id must still identify the uploader.
+  PERFORM set_config('role','postgres',true);
+  IF NOT EXISTS(
+    SELECT 1 FROM rebuild_v2.audit_events
+    WHERE actor_id='60000000-0000-4000-8000-000000000001'
+      AND action='test.asset.uploaded'
+      AND target_id=current_setting('testdz.media_test_id')::uuid
+      AND metadata->>'asset_id'=current_setting('testdz.media_asset_id')
+  ) THEN
+    RAISE EXCEPTION 'FAIL: private test asset upload audit event missing actor/target/asset';
+  END IF;
+  PERFORM set_config('role','authenticated',true);
 END;
 $finalize$;
 

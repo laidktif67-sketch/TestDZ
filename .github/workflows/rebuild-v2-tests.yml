@@ -75,6 +75,8 @@ jobs:
 
           contracts=(
             supabase/rebuild-v2/tests/final_state_contract.sql
+            supabase/rebuild-v2/tests/catalog_fingerprint.sql
+            supabase/rebuild-v2/tests/catalog_difference_details.sql
             supabase/rebuild-v2/tests/010_security_definer_boundary_contract.sql
             supabase/rebuild-v2/tests/003_app_lifecycle_contract.sql
             supabase/rebuild-v2/tests/004_profile_contract.sql

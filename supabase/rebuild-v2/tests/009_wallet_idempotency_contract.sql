@@ -28,6 +28,7 @@ DECLARE
   v_retry_id uuid;
   v_reference_id uuid := '90000000-0000-4000-8000-000000000099';
   v_ledger_count integer;
+  v_audit_count integer;
   v_balance bigint;
 BEGIN
   v_first_id := rebuild_v2_private.post_wallet_entry(
@@ -108,6 +109,21 @@ BEGIN
   IF v_ledger_count <> 1 THEN
     RAISE EXCEPTION 'FAIL: expected exactly one ledger row, got %',v_ledger_count;
   END IF;
+
+  -- Audit log is Admin-only; inspect as the local migration owner. The retry
+  -- and rejected key reuses must still produce exactly one financial audit row.
+  PERFORM set_config('role','postgres',true);
+  SELECT count(*) INTO v_audit_count
+  FROM rebuild_v2.audit_events
+  WHERE actor_id='90000000-0000-4000-8000-000000000001'
+    AND action='wallet.entry.posted'
+    AND target_id='90000000-0000-4000-8000-000000000003'
+    AND request_id='wallet-idem-regression-001'
+    AND metadata->>'entry_id'=v_first_id::text;
+  IF v_audit_count <> 1 THEN
+    RAISE EXCEPTION 'FAIL: expected exactly one audited wallet posting, got %',v_audit_count;
+  END IF;
+  PERFORM set_config('role','authenticated',true);
 
   SELECT earned_points INTO v_balance
   FROM rebuild_v2.wallets

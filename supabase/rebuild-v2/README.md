@@ -46,14 +46,16 @@ Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
 After all 23 scripts, run:
+- `tests/catalog_fingerprint.sql` — read-only catalog fingerprint for columns, constraints, indexes, function definitions, effective table/schema/function grants, RLS enabled/forced flags, policies, triggers, and Storage buckets; compare its output on the clean replay and FixLab.
+- `tests/catalog_difference_details.sql` — read-only drill-down of constraint, policy, and Storage bucket differences, including legacy Storage policy names. Neither diagnostic automatically proves parity; review all output and documented exclusions manually.
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
 - `tests/005_developer_lifecycle_contract.sql`
-- `tests/006_test_media_assets_contract.sql`
+- `tests/006_test_media_assets_contract.sql` — verifies private media upload/access boundaries and the uploader/target audit event.
 - `tests/007_tester_workflow_contract.sql`
 - `tests/008_developer_feedback_privacy_contract.sql`
-- `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
+- `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry, changed operation/reference/reason/actor are rejected, and one successful wallet posting creates exactly one actor/request-linked audit event.
 - `tests/010_security_definer_boundary_contract.sql` — verifies the V2 schema exposure boundary, restricted schema creation, and SECURITY DEFINER ownership/search-path requirements.
 - `tests/011_notification_recipient_roles_contract.sql` — verifies tester/developer feed isolation and role-scoped read-one/read-all operations.
 - `tests/012_notification_outbox_retry_contract.sql` — verifies authenticated callers cannot drain the outbox, retry attempts record errors and backoff, and the fifth failure moves an undeliverable event to terminal `failed` without creating an inbox row.
@@ -66,7 +68,7 @@ After all 23 scripts, run:
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the seventeen post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the nineteen post-phase SQL diagnostics/contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
@@ -78,6 +80,17 @@ The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.
 - The disposable local Supabase stack stopped successfully.
 - Read-only FixLab inventory confirmed 47 candidate tables, RLS and FORCE RLS on all 47, 439 columns, 297 constraints, 157 indexes, 48 candidate policies, 96 candidate functions (39 exposed-schema and 57 private-schema functions), six candidate triggers, seven Storage buckets, and 18 Storage object policies.
 - FixLab's current hosted migration history still contains 21 records. It has not been repaired or reset.
+
+## Current clean replay snapshot (2026-11-18)
+
+GitHub Actions run [#44293133432](https://github.com/laidktif67-sketch/TestDZ/actions/runs/44293133432) on the current 23-script candidate completed successfully. The read-only local fingerprint reported:
+
+- 440 columns, 297 constraints, 159 indexes, 97 functions (excluding the documented date-delta functions), 66 V2 policies, 47 RLS/ FORCE RLS table flags, 863 effective table/schema/function grants, and 7 application triggers.
+- Six buckets in the fingerprint (excluding the legacy `app-icons` bucket); the detailed report lists all seven buckets.
+- The local replay retains `app-icons` at 512000 bytes from the earlier migration because candidate script 006 requests 524288 bytes but uses `ON CONFLICT DO NOTHING`. This is an explicit configuration delta to verify against FixLab, not a reason to overwrite an existing bucket automatically.
+- Twelve legacy Storage object policies coexist with V2 policies in the local replay: `app_icons_owner_delete`, `app_icons_owner_insert`, `app_icons_owner_update`, `app_icons_public_read`, `avatars_owner_delete`, `avatars_owner_insert`, `avatars_owner_select`, `avatars_owner_update`, `report_evidence_insert_active_assignment`, `report_evidence_select_authorized_participants`, `support_attachments_insert_participants`, and `support_attachments_select_participants`.
+
+**Cutover blocker:** permissive Storage policies combine with OR semantics. In particular, the legacy `app_icons_owner_insert/update/delete` policies check only the user's folder, while the V2 policies call `can_manage_app_icon` to verify app ownership. The legacy policies can therefore bypass the stricter V2 ownership check for objects under that user's folder. Do not claim V2 Storage isolation is complete or cut over app-icon uploads until the legacy/V2 policy interaction is resolved. The legacy report-evidence and support-attachment policies still consult the legacy `public` records; keep them until the legacy workflow is formally retired, and test the combined policies before cutover. No legacy policy was dropped or modified in this audit.
 
 ## Remaining validation gates
 
