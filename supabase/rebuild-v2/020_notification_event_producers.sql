@@ -89,6 +89,102 @@ REVOKE ALL ON FUNCTION rebuild_v2_private.enqueue_notification_event(
   uuid,text,text,text,text,text,uuid,jsonb
 ) FROM PUBLIC,anon,authenticated;
 
+CREATE OR REPLACE FUNCTION rebuild_v2.process_notification_outbox(p_limit integer DEFAULT 50)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+SET row_security TO 'off'
+AS $function$
+DECLARE
+  v_event record;
+  v_user_id uuid;
+  v_recipient_role text;
+  v_processed integer := 0;
+BEGIN
+  IF COALESCE(auth.jwt()->>'role','') <> 'service_role' THEN
+    RAISE EXCEPTION 'SERVICE_ROLE_REQUIRED' USING errcode='42501';
+  END IF;
+  IF p_limit IS NULL OR p_limit NOT BETWEEN 1 AND 100 THEN
+    RAISE EXCEPTION 'OUTBOX_BATCH_SIZE_INVALID' USING errcode='22023';
+  END IF;
+
+  FOR v_event IN
+    SELECT e.*
+    FROM rebuild_v2.events e
+    WHERE e.event_type='notification.requested'
+      AND e.status='pending'
+      AND e.available_at <= now()
+    ORDER BY e.created_at,e.id
+    LIMIT p_limit
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    BEGIN
+      IF jsonb_typeof(v_event.payload) <> 'object'
+         OR jsonb_typeof(v_event.payload->'data') <> 'object'
+         OR v_event.payload->>'title' IS NULL
+         OR char_length(btrim(v_event.payload->>'title')) NOT BETWEEN 1 AND 160
+         OR v_event.payload->>'body' IS NULL
+         OR char_length(btrim(v_event.payload->>'body')) NOT BETWEEN 1 AND 1000
+         OR v_event.payload->>'type' IS NULL
+         OR v_event.payload->>'recipient_role' NOT IN ('tester','developer') THEN
+        RAISE EXCEPTION 'NOTIFICATION_EVENT_PAYLOAD_INVALID';
+      END IF;
+
+      v_user_id := (v_event.payload->>'user_id')::uuid;
+      v_recipient_role := v_event.payload->>'recipient_role';
+      IF NOT EXISTS (
+        SELECT 1 FROM rebuild_v2.user_roles ur
+        WHERE ur.user_id=v_user_id AND (
+          (v_recipient_role='tester' AND ur.role='tester')
+          OR (v_recipient_role='developer' AND ur.role IN ('developer','admin'))
+        )
+      ) THEN
+        RAISE EXCEPTION 'NOTIFICATION_RECIPIENT_ROLE_REVOKED';
+      END IF;
+
+      INSERT INTO rebuild_v2.notifications(
+        user_id,type,title,body,data,recipient_role,source_event_id
+      ) VALUES (
+        v_user_id,
+        v_event.payload->>'type',
+        btrim(v_event.payload->>'title'),
+        btrim(v_event.payload->>'body'),
+        v_event.payload->'data',
+        v_recipient_role,
+        v_event.id
+      )
+      ON CONFLICT (source_event_id) WHERE source_event_id IS NOT NULL DO NOTHING;
+
+      UPDATE rebuild_v2.events
+      SET status='delivered',processed_at=now(),last_error=NULL
+      WHERE id=v_event.id;
+      v_processed := v_processed + 1;
+    EXCEPTION WHEN OTHERS THEN
+      UPDATE rebuild_v2.events
+      SET attempts=attempts+1,
+          status=CASE WHEN attempts+1 >= 5 THEN 'failed' ELSE 'pending' END,
+          available_at=CASE
+            WHEN attempts+1 >= 5 THEN available_at
+            ELSE now() + interval '1 minute' * power(2,LEAST(attempts,4))
+          END,
+          last_error=left(SQLERRM,1000)
+      WHERE id=v_event.id;
+    END;
+  END LOOP;
+
+  RETURN v_processed;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION rebuild_v2.process_notification_outbox(integer)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.process_notification_outbox(integer)
+  TO service_role;
+
+COMMENT ON FUNCTION rebuild_v2.process_notification_outbox(integer) IS
+  'Service-role-only transactional outbox dispatcher with SKIP LOCKED, idempotent inbox insertion, exponential retry, and terminal failure after five attempts.';
+
 COMMENT ON COLUMN rebuild_v2.notifications.source_event_id IS
   'Trusted outbox event that created this inbox item; unique for idempotent dispatch.';
 
