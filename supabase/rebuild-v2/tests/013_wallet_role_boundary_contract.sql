@@ -32,8 +32,19 @@ BEGIN
      OR has_table_privilege('authenticated','rebuild_v2.wallets','UPDATE')
      OR has_table_privilege('authenticated','rebuild_v2.wallet_ledger','INSERT')
      OR has_table_privilege('authenticated','rebuild_v2.wallet_ledger','UPDATE')
-     OR has_table_privilege('authenticated','rebuild_v2.wallet_ledger','DELETE') THEN
-    RAISE EXCEPTION 'FAIL: authenticated role has direct wallet write privileges';
+     OR has_table_privilege('authenticated','rebuild_v2.wallet_ledger','DELETE')
+     OR has_table_privilege('authenticated','rebuild_v2.user_roles','INSERT')
+     OR has_table_privilege('authenticated','rebuild_v2.user_roles','UPDATE')
+     OR has_table_privilege('authenticated','rebuild_v2.user_roles','DELETE') THEN
+    RAISE EXCEPTION 'FAIL: authenticated role has direct wallet or role write privileges';
+  END IF;
+
+  IF has_function_privilege(
+    'authenticated',
+    'rebuild_v2_private.grant_role(uuid,text,text)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'FAIL: private role-grant helper is directly executable by authenticated clients';
   END IF;
 
   PERFORM set_config('request.jwt.claim.sub','91300000-0000-4000-8000-000000000001',true);
@@ -67,26 +78,13 @@ BEGIN
     'wallet-boundary-financial-001','Authorized financial wallet posting'
   );
 
-  BEGIN
-    PERFORM rebuild_v2_private.grant_role(
-      '91300000-0000-4000-8000-000000000005','developer',
-      'Financial staff cannot grant roles'
-    );
-    RAISE EXCEPTION 'FAIL: financial role unexpectedly granted a user role';
-  EXCEPTION WHEN SQLSTATE '42501' THEN
-    NULL;
-  END;
-
   PERFORM set_config('request.jwt.claim.sub','91300000-0000-4000-8000-000000000004',true);
   PERFORM set_config('request.jwt.claims','{"sub":"91300000-0000-4000-8000-000000000004","role":"authenticated"}',true);
   PERFORM rebuild_v2_private.post_wallet_entry(
     '91300000-0000-4000-8000-000000000005','earned_points',50,'adjustment',
     'wallet-boundary-admin-001','Authorized admin wallet adjustment'
   );
-  PERFORM rebuild_v2_private.grant_role(
-    '91300000-0000-4000-8000-000000000005','developer',
-    'Admin grants developer role for boundary contract'
-  );
+
 
   SELECT count(*) INTO v_count
   FROM rebuild_v2.wallet_ledger
