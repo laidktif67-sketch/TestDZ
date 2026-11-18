@@ -41,6 +41,12 @@ BEGIN
   END IF;
 
   BEGIN
+    PERFORM rebuild_v2.create_test_with_config(v_app,'Mismatched Target Test','A complete description for a mismatched target validation.','Mismatch','custom',24,NULL,NULL,30,'Follow the supplied test instructions.',
+      jsonb_set(v_config,'{cohort,targetTesters}','25'::jsonb));
+    RAISE EXCEPTION 'FAIL: mismatched target count was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
+  END;
+  BEGIN
     PERFORM rebuild_v2.create_test_with_config(v_app,'Invalid Config Test','A complete description for invalid config validation.','Invalid','custom',12,NULL,NULL,30,NULL,
       v_config || '{"googlePlay":{"track":"closed","testerMethod":"upload_list","appVersion":"latest_available","releaseMode":"immediately","testerEmails":["private@example.com"]}}'::jsonb);
     RAISE EXCEPTION 'FAIL: raw tester emails were accepted';
