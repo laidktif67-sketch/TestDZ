@@ -16,7 +16,7 @@ The candidate `rebuild_v2.reports` table currently contains:
 - `status` (defaults to `open`; constrained to `open`, `under_review`, `resolved`, `rejected`)
 - `reviewed_by`, `reviewed_at`, `created_at`
 
-A report may have attachment metadata in `report_attachments`, linked to an assignment, test, tester and report. The existence of this table is not evidence of a working upload or registration workflow.
+A report may have attachment metadata in `report_attachments`, linked to an assignment, test, tester and report. The table alone is not an intake workflow. Incident-report evidence upload now fails closed until a trusted intake/registration operation inserts an exact metadata row matching the V2 Storage path, file ID, extension, report, assignment and tester; authenticated clients cannot write this metadata table directly.
 
 ### Disputes
 
