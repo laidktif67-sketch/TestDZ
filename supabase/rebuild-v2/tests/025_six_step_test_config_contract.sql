@@ -35,8 +35,8 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND status='draft' AND test_config=v_config) THEN
     RAISE EXCEPTION 'FAIL: six-step configuration was not saved with draft';
   END IF;
-  IF (SELECT count(*) FROM rebuild_v2.audit_events WHERE target_id=v_test AND action IN ('test.created','test.six_step_config.saved'))<>2 THEN
-    RAISE EXCEPTION 'FAIL: expected create/config audit events missing';
+  IF (SELECT count(*) FROM rebuild_v2.audit_events WHERE target_id=v_test AND actor_id='51000000-0000-4000-8000-000000000001' AND action='test.six_step_config.saved' AND metadata->>'config_version'='1')<>1 THEN
+    RAISE EXCEPTION 'FAIL: validated six-step config audit event missing';
   END IF;
 
   BEGIN
