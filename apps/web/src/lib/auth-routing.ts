@@ -18,6 +18,6 @@ export async function getPostAuthRoute(userId: string): Promise<"/tester-dashboa
 
 /** Allow only same-app tester test-preview destinations after authentication. */
 export function getSafeAuthRedirect(value: string | null | undefined): string | null {
-  if (!value || !/^\\/tests\\/[A-Za-z0-9-]+$/.test(value)) return null;
+  if (!value || !/^\/tests\/[A-Za-z0-9-]+$/.test(value)) return null;
   return value;
 }
