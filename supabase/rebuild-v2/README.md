@@ -70,10 +70,11 @@ After all 24 scripts, run:
 - `tests/020_support_ticket_audited_workflow_contract.sql` — verifies Support/Admin-only ticket transitions, reason-required audit events, Admin-only reopening, immutable reply events, staff reply attribution without message-body leakage, and rejection of invalid/no-op changes.
 - `tests/021_fraud_fail_closed_contract.sql` — verifies raw fraud evidence is Admin-only, Support can see only the review summary, client writes are denied, and fraud signal rows are immutable.
 - `tests/022_reports_disputes_fail_closed_contract.sql` — verifies reporter/opener ownership, Support/Admin report visibility, Support/Financial/Admin dispute visibility, and denial of direct client writes to reports, disputes, and report attachments.
+- `tests/023_refunds_fail_closed_contract.sql` — verifies refund visibility is limited to the owner, Financial, and Admin; Support and unrelated users cannot read refunds, and direct client writes are denied.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 24 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty-three post-phase SQL diagnostics/contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 24 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the twenty-four post-phase SQL diagnostics/contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
