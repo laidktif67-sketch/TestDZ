@@ -52,14 +52,16 @@ BEGIN
       SELECT 1 FROM rebuild_v2.user_roles ur
       WHERE ur.user_id = p_recipient_id AND ur.role IN ('developer','admin')
     ) THEN
-      RETURN NULL;
+      RAISE EXCEPTION 'NOTIFICATION_DEVELOPER_RECIPIENT_ROLE_REQUIRED'
+        USING errcode='23514';
     END IF;
   ELSIF p_recipient_role = 'tester' THEN
     IF NOT EXISTS (
       SELECT 1 FROM rebuild_v2.user_roles ur
       WHERE ur.user_id = p_recipient_id AND ur.role = 'tester'
     ) THEN
-      RETURN NULL;
+      RAISE EXCEPTION 'NOTIFICATION_TESTER_RECIPIENT_ROLE_REQUIRED'
+        USING errcode='23514';
     END IF;
   ELSE
     RAISE EXCEPTION 'NOTIFICATION_RECIPIENT_ROLE_INVALID' USING errcode='22023';
