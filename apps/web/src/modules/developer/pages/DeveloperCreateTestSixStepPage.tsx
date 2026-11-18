@@ -221,7 +221,7 @@ export default function DeveloperCreateTestSixStepPage() {
   }
 
   return <main className="dct-shell">
-    <div className="dct-sidebar-brand"><Brand /></div>
+    <aside className="dct-sidebar"><Brand /></aside>
     <section className="dct-content">
       <header className="dct-topbar">
         <label className="dct-global-search"><Icon name="search" /><input placeholder="Search apps, tests, or anything..." /></label>
@@ -388,7 +388,7 @@ export default function DeveloperCreateTestSixStepPage() {
     </section>
     <label className="dct-cohort-notes">Cohort preferences (optional)<textarea value={cohortNotes} onChange={e=>setCohortNotes(e.target.value)} maxLength={1000} placeholder="Device coverage, tester experience, or cohort notes…"/></label>
     <label className="dct-cohort-notes">Tester instructions<textarea value={instructions} onChange={e=>setInstructions(e.target.value)} maxLength={3000} placeholder="Describe the tasks testers should perform and what feedback is useful…"/></label>
-    <p className="dct-field-note">These settings are saved as draft configuration. TestDZ does not send invitations or publish to Google Play automatically.</p>
+    <p className="dct-field-note">These settings are saved as draft configuration. CSV email addresses and Google Group addresses stay local in this browser; TestDZ does not save them, send invitations, or publish to Google Play automatically.</p>
   </div>
   <aside className="dct-schedule-summary">
     <div className="dct-schedule-summary-head"><Icon name="info" size={22}/><strong>Test Summary</strong></div>
