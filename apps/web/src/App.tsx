@@ -36,7 +36,6 @@ import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmen
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
 import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
-import TesterSectionPage from "./modules/tester/pages/TesterSectionPage";
 import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
 import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
 import AdminUsersPage from "./modules/admin/pages/AdminUsersPage";
