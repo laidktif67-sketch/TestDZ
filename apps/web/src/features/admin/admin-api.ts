@@ -34,6 +34,7 @@ export type FinancialPayment = {
   id: string;
   user_id: string;
   amount_dzd: number;
+  currency: string;
   status: string;
   provider: string | null;
   verified_at: string | null;
@@ -67,7 +68,7 @@ export type FinancialLedgerEntry = {
 export async function getFinancialOperationsPageData() {
   const client = dataClient();
   const [payments, refunds, ledger] = await Promise.all([
-    client.from("payments").select("id,user_id,amount_dzd,status,provider,verified_at,created_at").order("created_at", { ascending: false }).limit(100),
+    client.from("payments").select("id,user_id,amount_dzd,currency,status,provider,verified_at,created_at").order("created_at", { ascending: false }).limit(100),
     client.from("refunds").select("id,payment_id,user_id,amount_dzd,reason,status,refund_method,created_at").order("created_at", { ascending: false }).limit(100),
     client.from("wallet_ledger").select("id,user_id,wallet_type,amount,entry_type,reference_type,actor_id,reason,created_at").order("created_at", { ascending: false }).limit(100),
   ]);
