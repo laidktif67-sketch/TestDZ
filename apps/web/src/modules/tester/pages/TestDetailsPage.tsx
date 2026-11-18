@@ -17,14 +17,6 @@ type TestDetails = {
   app: { name: string; icon_url: string | null; category: string | null } | null;
 };
 
-function categoryOf(value?: string | null) {
-  const category = (value || "").toLowerCase();
-  if (/games|android|ios|mobile/.test(category)) return "mobile";
-  if (/web|saas|website/.test(category)) return "web";
-  if (/desktop|windows|mac|linux/.test(category)) return "desktop";
-  return "other";
-}
-
 function dateLabel(value: string | null) {
   if (!value) return "To be announced";
   const date = new Date(value + "T00:00:00");
@@ -152,7 +144,7 @@ export default function TestDetailsPage() {
             ) : test ? (
               <article className="dt-card dt-detail-card">
                 <div className="dt-card-top">
-                  <div className={"dt-app-icon " + categoryOf(test.app?.category)}>
+                  <div className="dt-app-icon">
                     {test.app?.icon_url ? <img src={test.app.icon_url} alt="" /> : <span><Icon name="flask" size={22} /></span>}
                   </div>
                   <span className={"dt-status " + (test.status === "ready" ? "upcoming" : "recruiting")}>
