@@ -345,6 +345,17 @@ BEGIN
       )
       RETURNING id INTO v_assignment_id;
 
+      PERFORM rebuild_v2_private.enqueue_notification_event(
+        v_test.developer_id,
+        'developer',
+        'assignment.joined',
+        'New tester joined your test',
+        'A tester joined ' || v_test.title || '.',
+        'assignment',
+        v_assignment_id,
+        jsonb_build_object('test_id', p_test_id, 'assignment_id', v_assignment_id)
+      );
+
       RETURN v_assignment_id;
     END IF;
   END LOOP;
@@ -691,6 +702,8 @@ DECLARE
   v_assignment rebuild_v2.assignments%ROWTYPE;
   v_count integer;
   v_uploaded integer;
+  v_developer_id uuid;
+  v_test_title text;
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
@@ -737,6 +750,26 @@ BEGIN
   UPDATE rebuild_v2.assignments
   SET status = 'completed', completed_at = COALESCE(completed_at, now())
   WHERE id = v_submission.assignment_id;
+
+  SELECT t.developer_id, t.title
+  INTO v_developer_id, v_test_title
+  FROM rebuild_v2.tests t
+  WHERE t.id = v_submission.test_id;
+
+  PERFORM rebuild_v2_private.enqueue_notification_event(
+    v_developer_id,
+    'developer',
+    'assignment.submitted',
+    'Final report submitted',
+    'A tester submitted the final report for ' || v_test_title || '.',
+    'assignment_submission',
+    v_submission.id,
+    jsonb_build_object(
+      'test_id', v_submission.test_id,
+      'assignment_id', v_submission.assignment_id,
+      'submission_id', v_submission.id
+    )
+  );
 
   RETURN true;
 END;
