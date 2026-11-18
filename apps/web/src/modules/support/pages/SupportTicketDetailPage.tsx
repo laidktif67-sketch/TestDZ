@@ -74,6 +74,12 @@ export default function SupportTicketDetailPage() {
   const isClosed = ticket?.status === "closed";
   const statusLocked = !!ticket && (ticket.status === "closed" || ticket.status === "resolved") && !isAdmin;
   const canEdit = !!ticket && (!isClosed || isAdmin);
+  const allowedStatuses: SupportTicketDetail["status"][] = !ticket ? [] :
+    ticket.status === "closed" ? (isAdmin ? ["closed", "open"] : ["closed"]) :
+    ticket.status === "resolved" ? (isAdmin ? ["resolved", "open", "in_progress", "closed"] : ["resolved"]) :
+    ticket.status === "open" ? ["open", "in_progress", "waiting_for_user", "resolved", "closed"] :
+    ticket.status === "in_progress" ? ["in_progress", "open", "waiting_for_user", "resolved", "closed"] :
+    ["waiting_for_user", "in_progress", "resolved", "closed"];
   const canSave = !!ticket && canEdit && !saving &&
     (status !== ticket.status || priority !== ticket.priority) &&
     reason.trim().length >= 10 && reason.trim().length <= 1000;
@@ -134,7 +140,7 @@ export default function SupportTicketDetailPage() {
             <div className="std-section-heading"><h2>Ticket controls</h2><span>Every change is audited</span></div>
             <label className="std-field">Status
               <select value={status} onChange={event => setStatus(event.target.value as SupportTicketDetail["status"])} disabled={!canEdit || statusLocked}>
-                <option value="open">Open</option><option value="in_progress">In progress</option><option value="waiting_for_user">Waiting for user</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
+                {allowedStatuses.map(value => <option key={value} value={value}>{label(value)}</option>)}
               </select>
             </label>
             <label className="std-field">Priority
