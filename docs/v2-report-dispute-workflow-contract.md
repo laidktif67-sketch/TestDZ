@@ -38,7 +38,7 @@ Payments have pending/processing/succeeded/failed/refunded statuses and a requir
 - The Report Problem page is explicitly a non-submitting placeholder. It does not create a report or upload evidence.
 - The report and dispute queues are read-only metadata views. They do not change statuses or expose report descriptions, evidence, payment amounts, or resolution text.
 - Direct authenticated writes to reports, disputes and report attachments remain denied.
-- Report visibility is scoped to the reporter and authorized Support/Admin staff.
+- Report visibility is scoped to the reporter and authorized Support/Admin staff. Incident-report Storage reads now follow the same boundary; a related Developer does not gain evidence access merely from owning the test. Assignment-submission evidence retains its separate tester/developer/Support/Admin participant policy.
 - Dispute visibility is scoped to the opener and Financial/Admin staff. Support is intentionally excluded from other users' dispute records by the candidate security fix in PR #78.
 - Refunds remain read-only. No refund approval, provider execution, bank return, or wallet credit is enabled.
 - Fraud review remains fail-closed/read-only until a trusted signal-ingestion path and audited review-decision workflow exist.
