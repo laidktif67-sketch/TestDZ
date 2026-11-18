@@ -79,3 +79,23 @@ export async function getFinancialOperationsPageData() {
   ]);
   return { payments, refunds, ledger };
 }
+
+
+export type AdminUserRecord = {
+  id: string;
+  display_name: string | null;
+  locale: string;
+  is_verified: boolean;
+  is_banned: boolean;
+  created_at: string;
+  user_roles: Array<{ role: string }>;
+};
+
+/** Admin-only read. RLS on profiles and user_roles enforces the boundary. */
+export function listAdminUsers() {
+  return dataClient()
+    .from("profiles")
+    .select("id,display_name,locale,is_verified,is_banned,created_at,user_roles(role)")
+    .order("created_at", { ascending: false })
+    .limit(100);
+}
