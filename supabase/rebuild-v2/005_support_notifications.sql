@@ -274,7 +274,143 @@ BEGIN
      OR v_folders[1] <> 'v2'
      OR v_folders[2] <> p_ticket_id::text
      OR v_folders[3] <> v_user_id::text
-     OR split_part(p_storage_path,'/',4) !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[^/[^/]+$' THEN
+     OR split_part(p_storage_path,'/',4) !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[^/]+ THEN
+    RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
+  END IF;
+
+  SELECT * INTO v_ticket
+  FROM rebuild_v2.support_tickets
+  WHERE id = p_ticket_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR v_ticket.status = 'closed' THEN
+    RAISE EXCEPTION 'support ticket unavailable' USING errcode = 'P0002';
+  END IF;
+
+  IF v_ticket.user_id <> v_user_id
+     AND NOT rebuild_v2_private.has_role(v_user_id, ARRAY['support','admin']) THEN
+    RAISE EXCEPTION 'not a support ticket participant' USING errcode = '42501';
+  END IF;
+
+  SELECT * INTO v_message
+  FROM rebuild_v2.support_ticket_messages
+  WHERE id = p_message_id AND ticket_id = p_ticket_id;
+
+  IF NOT FOUND OR v_message.sender_id <> v_user_id OR v_message.internal_note THEN
+    RAISE EXCEPTION 'attachment must belong to the caller public message' USING errcode = '42501';
+  END IF;
+
+  SELECT coalesce(o.owner_id,o.owner::text) INTO v_object_owner
+  FROM storage.objects o
+  WHERE o.bucket_id='support-attachments' AND o.name=p_storage_path;
+
+  IF NOT FOUND OR v_object_owner IS DISTINCT FROM v_user_id::text THEN
+    RAISE EXCEPTION 'uploaded support object not found or not owned by caller' USING errcode = '42501';
+  END IF;
+
+  INSERT INTO rebuild_v2.support_ticket_attachments(
+    ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes
+  )
+  VALUES (
+    p_ticket_id,p_message_id,v_user_id,p_storage_path,btrim(p_original_filename),p_mime_type,p_size_bytes
+  )
+  RETURNING id INTO v_attachment_id;
+
+  RETURN v_attachment_id;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.add_support_attachment(
+  p_ticket_id uuid,
+  p_message_id uuid,
+  p_storage_path text,
+  p_original_filename text,
+  p_mime_type text,
+  p_size_bytes bigint
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path TO ''
+AS $function$
+  SELECT rebuild_v2_private.add_support_attachment_impl(
+    p_ticket_id,p_message_id,p_storage_path,p_original_filename,p_mime_type,p_size_bytes
+  );
+$function$;
+
+REVOKE ALL ON FUNCTION rebuild_v2_private.add_support_attachment_impl(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.add_support_attachment_impl(uuid,uuid,text,text,text,bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint) TO authenticated;
+ THEN
+    RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
+  END IF;
+
+  SELECT * INTO v_ticket
+  FROM rebuild_v2.support_tickets
+  WHERE id = p_ticket_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR v_ticket.status = 'closed' THEN
+    RAISE EXCEPTION 'support ticket unavailable' USING errcode = 'P0002';
+  END IF;
+
+  IF v_ticket.user_id <> v_user_id
+     AND NOT rebuild_v2_private.has_role(v_user_id, ARRAY['support','admin']) THEN
+    RAISE EXCEPTION 'not a support ticket participant' USING errcode = '42501';
+  END IF;
+
+  SELECT * INTO v_message
+  FROM rebuild_v2.support_ticket_messages
+  WHERE id = p_message_id AND ticket_id = p_ticket_id;
+
+  IF NOT FOUND OR v_message.sender_id <> v_user_id OR v_message.internal_note THEN
+    RAISE EXCEPTION 'attachment must belong to the caller public message' USING errcode = '42501';
+  END IF;
+
+  SELECT coalesce(o.owner_id,o.owner::text) INTO v_object_owner
+  FROM storage.objects o
+  WHERE o.bucket_id='support-attachments' AND o.name=p_storage_path;
+
+  IF NOT FOUND OR v_object_owner IS DISTINCT FROM v_user_id::text THEN
+    RAISE EXCEPTION 'uploaded support object not found or not owned by caller' USING errcode = '42501';
+  END IF;
+
+  INSERT INTO rebuild_v2.support_ticket_attachments(
+    ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes
+  )
+  VALUES (
+    p_ticket_id,p_message_id,v_user_id,p_storage_path,btrim(p_original_filename),p_mime_type,p_size_bytes
+  )
+  RETURNING id INTO v_attachment_id;
+
+  RETURN v_attachment_id;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION rebuild_v2.add_support_attachment(
+  p_ticket_id uuid,
+  p_message_id uuid,
+  p_storage_path text,
+  p_original_filename text,
+  p_mime_type text,
+  p_size_bytes bigint
+)
+RETURNS uuid
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path TO ''
+AS $function$
+  SELECT rebuild_v2_private.add_support_attachment_impl(
+    p_ticket_id,p_message_id,p_storage_path,p_original_filename,p_mime_type,p_size_bytes
+  );
+$function$;
+
+REVOKE ALL ON FUNCTION rebuild_v2_private.add_support_attachment_impl(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION rebuild_v2_private.add_support_attachment_impl(uuid,uuid,text,text,text,bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION rebuild_v2.add_support_attachment(uuid,uuid,text,text,text,bigint) TO authenticated;
+ THEN
     RAISE EXCEPTION 'support attachment path is not bound to ticket and uploader' USING errcode = '42501';
   END IF;
 
