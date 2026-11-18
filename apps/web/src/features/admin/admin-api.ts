@@ -33,14 +33,11 @@ export function reviewDeveloperRoleRequest(
 export type FinancialPayment = {
   id: string;
   user_id: string;
-  subscription_id: string | null;
   amount_dzd: number;
-  currency: string;
   status: string;
   provider: string | null;
   verified_at: string | null;
   created_at: string;
-  updated_at: string;
 };
 
 export type FinancialRefund = {
@@ -51,7 +48,6 @@ export type FinancialRefund = {
   reason: string;
   status: string;
   refund_method: string;
-  approved_by: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -63,7 +59,6 @@ export type FinancialLedgerEntry = {
   amount: number;
   entry_type: string;
   reference_type: string | null;
-  reference_id: string | null;
   actor_id: string | null;
   reason: string | null;
   created_at: string;
@@ -73,9 +68,9 @@ export type FinancialLedgerEntry = {
 export async function getFinancialOperationsPageData() {
   const client = dataClient();
   const [payments, refunds, ledger] = await Promise.all([
-    client.from("payments").select("id,user_id,subscription_id,amount_dzd,currency,status,provider,verified_at,created_at,updated_at").order("created_at", { ascending: false }).limit(100),
-    client.from("refunds").select("id,payment_id,user_id,amount_dzd,reason,status,refund_method,approved_by,created_at,updated_at").order("created_at", { ascending: false }).limit(100),
-    client.from("wallet_ledger").select("id,user_id,wallet_type,amount,entry_type,reference_type,reference_id,actor_id,reason,created_at").order("created_at", { ascending: false }).limit(100),
+    client.from("payments").select("id,user_id,amount_dzd,status,provider,verified_at,created_at").order("created_at", { ascending: false }).limit(100),
+    client.from("refunds").select("id,payment_id,user_id,amount_dzd,reason,status,refund_method,created_at").order("created_at", { ascending: false }).limit(100),
+    client.from("wallet_ledger").select("id,user_id,wallet_type,amount,entry_type,reference_type,actor_id,reason,created_at").order("created_at", { ascending: false }).limit(100),
   ]);
   return { payments, refunds, ledger };
 }
