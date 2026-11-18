@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
+  createSupportAttachmentDownloadUrl,
   getSupportTicketDetails,
   sendSupportStaffReply,
   updateSupportTicket,
   type SupportTicketDetail,
+  type SupportTicketAttachment,
   type SupportTicketEvent,
   type SupportTicketMessage,
 } from "../../../features/support/support-api";
@@ -26,6 +28,9 @@ export default function SupportTicketDetailPage() {
   const [ticket, setTicket] = useState<SupportTicketDetail | null>(null);
   const [messages, setMessages] = useState<SupportTicketMessage[]>([]);
   const [events, setEvents] = useState<SupportTicketEvent[]>([]);
+  const [attachments, setAttachments] = useState<SupportTicketAttachment[]>([]);
+  const [attachmentUrls, setAttachmentUrls] = useState<Record<string, string>>({});
+  const [openingAttachmentId, setOpeningAttachmentId] = useState<string | null>(null);
   const [status, setStatus] = useState<SupportTicketDetail["status"]>("open");
   const [priority, setPriority] = useState<SupportTicketDetail["priority"]>("normal");
   const [reason, setReason] = useState("");
@@ -50,14 +55,17 @@ export default function SupportTicketDetailPage() {
       if (!result.ticketResult.data) throw new Error("Ticket not found or access denied.");
       if (result.messageResult?.error) throw result.messageResult.error;
       if (result.eventResult?.error) throw result.eventResult.error;
+      if (result.attachmentResult?.error) throw result.attachmentResult.error;
       const nextTicket = result.ticketResult.data as SupportTicketDetail;
       setTicket(nextTicket);
       setStatus(nextTicket.status);
       setPriority(nextTicket.priority);
       setMessages((result.messageResult?.data ?? []) as SupportTicketMessage[]);
       setEvents((result.eventResult?.data ?? []) as SupportTicketEvent[]);
+      setAttachments((result.attachmentResult?.data ?? []) as SupportTicketAttachment[]);
+      setAttachmentUrls({});
     } catch {
-      setTicket(null); setMessages([]); setEvents([]);
+      setTicket(null); setMessages([]); setEvents([]); setAttachments([]); setAttachmentUrls({});
       setError("Ticket details could not be loaded. Confirm your Support access and retry.");
     } finally { setLoading(false); }
   }, [id]);
@@ -101,6 +109,20 @@ export default function SupportTicketDetailPage() {
     } catch {
       setError("The ticket could not be updated. The database rejected the action or your permissions changed.");
     } finally { setSaving(false); }
+  }
+
+  async function prepareAttachmentDownload(attachment: SupportTicketAttachment) {
+    if (openingAttachmentId) return;
+    setOpeningAttachmentId(attachment.id); setError(""); setNotice("");
+    try {
+      const result = await createSupportAttachmentDownloadUrl(attachment.storage_path);
+      if (result.error || !result.data?.signedUrl) throw result.error || new Error("Download URL unavailable");
+      setAttachmentUrls(current => ({ ...current, [attachment.id]: result.data.signedUrl }));
+    } catch {
+      setError("This attachment could not be opened. Its access may have expired or your ticket permissions may have changed.");
+    } finally {
+      setOpeningAttachmentId(null);
+    }
   }
 
   async function sendReply() {
@@ -169,13 +191,23 @@ export default function SupportTicketDetailPage() {
           {isClosed && <p className="std-hint">This ticket is closed. An Admin must reopen it before a reply can be sent.</p>}
         </section>
         <section className="std-panel">
+          <div className="std-section-heading"><h2>Public message attachments</h2><span>{attachments.length} files · private Storage</span></div>
+          {attachments.length ? <ul className="std-attachments">{attachments.map(attachment => <li key={attachment.id}>
+            <div><strong>{attachment.original_filename}</strong><span>{attachment.mime_type} · {(attachment.size_bytes / 1024).toFixed(0)} KB · {dateTime(attachment.created_at)}</span></div>
+            {attachmentUrls[attachment.id]
+              ? <a href={attachmentUrls[attachment.id]} target="_blank" rel="noopener noreferrer">Download</a>
+              : <button type="button" onClick={() => void prepareAttachmentDownload(attachment)} disabled={openingAttachmentId !== null}>{openingAttachmentId === attachment.id ? "Preparing…" : "Prepare download"}</button>}
+          </li>)}</ul> : <p className="std-hint">No attachments are registered on public messages. Internal-note attachments are not shown.</p>}
+          <p className="std-hint">Downloads use short-lived signed links and are still checked against private Storage access policies.</p>
+        </section>
+        <section className="std-panel">
           <div className="std-section-heading"><h2>Immutable ticket history</h2><span>{events.length} events</span></div>
           {events.length ? <ol className="std-events">{events.map(event => <li key={event.id}>
             <span className="std-event-dot" />
             <div><strong>{label(event.event_type)}</strong><p>{event.event_type === "status_changed" ? label(event.old_status || "") + " → " + label(event.new_status || "") : event.event_type === "priority_changed" ? label(event.old_priority || "") + " → " + label(event.new_priority || "") : event.event_type === "message_sent" ? "Public message recorded" : "Ticket created"}</p><small>{shortId(event.actor_id)} · {dateTime(event.created_at)}</small></div>
           </li>)}</ol> : <p className="std-hint">No history events are available.</p>}
         </section>
-        <p className="std-privacy"><strong>Privacy boundary:</strong> This view loads public conversation messages only. Internal notes and attachment contents are not requested. Message bodies are never copied into audit metadata.</p>
+        <p className="std-privacy"><strong>Privacy boundary:</strong> This view loads public conversation messages only. Internal notes and their attachments are excluded. Attachment files are opened only through short-lived private Storage links. Message bodies are never copied into audit metadata.</p>
       </>}
     </main>
   </div>;
