@@ -105,7 +105,7 @@ export default function DeveloperTestersPage() {
   if(rolesError)return <main className="dtv2-shell"><section className="dtv2-state"><h1>تعذر التحقق من الصلاحيات</h1><p>لم نغيّر صلاحيات حسابك. أعد المحاولة.</p><button onClick={()=>void refreshRoles()}>إعادة المحاولة</button></section></main>;
 
   return <main className="dtv2-shell" dir="rtl">
-    <header className="dtv2-header"><Brand/><nav><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/developer-tests">اختباراتي</Link><Link to="/apps">تطبيقاتي</Link></nav></header>
+    <header className="dtv2-header"><Brand/><nav><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/developer-tests">اختباراتي</Link><Link to="/developer-test-results">النتائج</Link><Link to="/apps">تطبيقاتي</Link></nav></header>
     <section className="dtv2-content">
       <div className="dtv2-heading">
         <div><Link className="dtv2-back" to="/developer-tests">← العودة إلى الاختبارات</Link><span className="dtv2-eyebrow">مساحة المطوّر · مجتمع المختبرين</span><h1>متابعة مجتمع المختبرين</h1><p>راقب حجم المشاركة والتقدم لكل اختبار باستخدام إحصاءات مجمّعة تحافظ على خصوصية المشاركين.</p></div>
