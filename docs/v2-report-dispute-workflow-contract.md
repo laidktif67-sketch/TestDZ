@@ -77,7 +77,7 @@ Payments have pending/processing/succeeded/failed/refunded statuses and a requir
 
 Once product decisions are confirmed, implementation should be split into independently testable boundaries:
 
-1. **Intake RPC** — derives actor from `auth.uid()`; validates ownership, assignment eligibility, allowed report type and description; validates all attachment metadata against Storage objects; creates the case atomically; uses an idempotency strategy.
+1. **Intake RPC** — derives actor from `auth.uid()`; validates ownership, assignment eligibility, allowed report type and description; validates and registers attachment metadata before Storage upload; creates the case atomically; uses an idempotency strategy.
 2. **Review/transition RPC** — validates role and state transition server-side; requires a reason where appropriate; locks the target row; updates status/reviewer fields atomically; appends immutable domain history and audit event with actor, target, reason and safe metadata.
 3. **Read APIs** — separate public/user detail from Support/Admin and Financial/Admin views; never return private report descriptions or evidence to Financial unless explicitly authorized; do not rely on UI filtering as authorization.
 4. **Evidence workflow** — private bucket, opaque V2 paths, metadata registration tied to a real report, uploader ownership and authorized reviewer access; no public URLs.
