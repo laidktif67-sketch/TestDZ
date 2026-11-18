@@ -54,7 +54,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.create_test_with_config(
       v_app,'Invalid config test','Synthetic description long enough for the V2 test creation contract.',
-      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,20160,
+      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,NULL,
       NULL,v_config || '{"googlePlay":{"track":"internal","testerMethod":"upload_list","appVersion":"latest_available","releaseMode":"immediately","testerEmails":["private@example.invalid"]}}'::jsonb
     );
     RAISE EXCEPTION 'FAIL: unapproved testerEmails configuration was accepted';
@@ -68,7 +68,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.create_test_with_config(
       v_app,'Support forbidden test','Synthetic description long enough for the V2 test creation contract.',
-      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,20160,
+      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,NULL,
       NULL,v_config
     );
     RAISE EXCEPTION 'FAIL: Support role created a Developer test';
@@ -82,7 +82,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.create_test_with_config(
       v_app,'Outsider forbidden test','Synthetic description long enough for the V2 test creation contract.',
-      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,20160,
+      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,NULL,
       NULL,v_config
     );
     RAISE EXCEPTION 'FAIL: unrelated user created a Developer test';
@@ -96,7 +96,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.create_test_with_config(
       v_app,'Invalid range test','Synthetic description long enough for the V2 test creation contract.',
-      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,20160,
+      NULL,'google_play_closed',12,CURRENT_DATE,CURRENT_DATE+14,NULL,
       NULL,jsonb_set(v_config,'{details,minimumCompletionRate}','101'::jsonb)
     );
     RAISE EXCEPTION 'FAIL: invalid completion rate was accepted';
