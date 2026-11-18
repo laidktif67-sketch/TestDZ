@@ -21,12 +21,34 @@ export default function SupportCenterPage({ workspaceRole = "tester" }: { worksp
   const [showForm,setShowForm]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
   const name=user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Tester";
   const firstName=name.split(/[\s._-]+/)[0] || "Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
-  const nav=[{label:"Dashboard",icon:"home",href:developerWorkspace?"/developer-dashboard":"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:developerWorkspace?"/developer-support":"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper&&!developerWorkspace?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
+  const nav=developerWorkspace?[
+    {label:"Dashboard",icon:"home",href:"/developer-dashboard"},
+    {label:"My Apps",icon:"apps",href:"/apps"},
+    {label:"My Tests",icon:"tests",href:"/developer-tests"},
+    {label:"Tester Community",icon:"users",href:"/developer/testers"},
+    {label:"Results",icon:"chart",href:"/developer-test-results"},
+    {label:"Feedback",icon:"star",href:"/developer-feedback"},
+    {label:"Help Center",icon:"book",href:"/developer-help"},
+    {label:"Support Center",icon:"headset",href:"/developer-support",active:true},
+    {label:"Workspace Settings",icon:"settings",href:"/developer-settings"}
+  ]:[
+    {label:"Dashboard",icon:"home",href:"/tester-dashboard"},
+    {label:"Discover Tests",icon:"search",href:"/discover-tests"},
+    {label:"My Tests",icon:"tests",href:"/my-tests"},
+    {label:"Feedback History",icon:"star",href:"/feedback-history"},
+    {label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},
+    {label:"Profile",icon:"user",href:"/profile"},
+    {label:"Help Center",icon:"book",href:"/help"},
+    {label:"Support Center",icon:"headset",href:"/support",active:true},
+    {label:"Settings",icon:"settings",href:"/settings"},
+    ...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),
+    ...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])
+  ]
   async function loadTickets(){if(!user||(developerWorkspace&&!developerSupportEnabled)){setLoading(false);return;}setLoading(true);setError("");const {data,error}=await getTesterSupportTickets(user.id, workspaceRole);if(error)setError("Could not load your support tickets. Please refresh.");else setTickets((data||[]) as Ticket[]);setLoading(false);}
   useEffect(()=>{void loadTickets();},[user?.id]);
   useEffect(()=>{if(searchParams.get("new")==="1"&&developerSupportEnabled)setShowForm(true);},[searchParams,developerSupportEnabled]);
   async function createTicket(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!user)return;if(developerWorkspace&&!developerSupportEnabled){setError("Developer support intake is waiting for the approved V2 schema cutover. No ticket has been sent.");return;}setBusy(true);setError("");setNotice("");const result=developerWorkspace?await createDeveloperSupportTicket({subject:subject.trim(),category,priority,description:description.trim()}):await createTesterSupportTicket({userId:user.id,subject:subject.trim(),category,priority,description:description.trim()});const created=Array.isArray(result.data)?result.data[0]:result.data;setBusy(false);if(result.error||!created){setError("Your ticket could not be created. Please check the details and try again.");return;}setTickets(current=>[created as Ticket,...current]);setSubject("");setDescription("");setPriority("normal");setCategory("technical");setShowForm(false);setNotice("Your support ticket was created successfully.");}
-  return <div className="td-dashboard sc-dashboard"><TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/><main className="td-main sc-main"><header className="td-topbar sc-topbar"><label className="td-search sc-search"><Icon name="search" size={20}/><input placeholder="Search support tickets…" aria-label="Search support tickets"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
+  return <div className="td-dashboard sc-dashboard"><TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/><main className="td-main sc-main"><header className="td-topbar sc-topbar"><label className="td-search sc-search"><Icon name="search" size={20}/><input placeholder="Search support tickets…" aria-label="Search support tickets"/></label><div className="td-top-actions"><Link to={developerWorkspace?"/developer-notifications":"/notifications"} className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
   <div className="sc-content"><Link to={developerWorkspace?"/developer-help":"/help"} className="sc-back">← Back to Help Center</Link>
   <section className="sc-hero"><div><span className="sc-eyebrow">{developerWorkspace?"TESTDZ DEVELOPER SUPPORT":"TESTDZ CUSTOMER CARE"}</span><h1>We’re here to help.</h1><p>{developerWorkspace?"Create a Developer support ticket and track every update in one place.":"Create a support ticket and track every update in one place."}</p><button type="button" onClick={()=>setShowForm(true)} disabled={developerWorkspace&&!developerSupportEnabled}><Icon name="send" size={18}/> Create a Support Ticket</button></div><div className="sc-hero-art"><Icon name="headset" size={92}/><span>?</span></div></section>
   {developerWorkspace&&!developerSupportEnabled&&<p className="sc-error" role="status">Developer ticket creation will become available after the V2 role-explicit RPC is approved and enabled. No request is sent while it is disabled.</p>}{notice&&<p className="sc-notice" role="status">{notice}</p>}{error&&<p className="sc-error" role="alert">{error}</p>}
