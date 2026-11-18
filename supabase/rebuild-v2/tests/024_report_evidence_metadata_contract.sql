@@ -160,12 +160,12 @@ DECLARE
 BEGIN
   v_path := 'v2/' || v_test::text || '/92400000-0000-4000-8000-000000000002/92400000-0000-4000-8000-000000000201/92400000-0000-4000-8000-000000000301.pdf';
 
-  -- The test developer and Admin are also authorized reviewers.
+  -- Report visibility excludes the related Developer unless they are also Support/Admin.
   PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"92400000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-  IF NOT rebuild_v2_private.can_read_test_evidence(v_path)
-     OR (SELECT count(*) FROM storage.objects WHERE bucket_id='test-evidence' AND name=v_path) <> 1 THEN
-    RAISE EXCEPTION 'FAIL: test developer cannot read report evidence';
+  IF rebuild_v2_private.can_read_test_evidence(v_path)
+     OR (SELECT count(*) FROM storage.objects WHERE bucket_id='test-evidence' AND name=v_path) <> 0 THEN
+    RAISE EXCEPTION 'FAIL: related Developer can read report evidence without report access';
   END IF;
 
   PERFORM set_config('request.jwt.claim.sub','92400000-0000-4000-8000-000000000006',true);
