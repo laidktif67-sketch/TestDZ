@@ -29,6 +29,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `023_admin_role_grants.sql`: exposes a reason-required Admin-only role grant wrapper; prevents self-grants and Admin-role grants, and records one audit event per newly granted role.
 - `024_audited_support_ticket_workflow.sql`: records all ticket replies in the immutable event stream; adds reason-required Support/Admin status and priority transitions, Admin-only reopening of resolved/closed tickets, and Admin-visible audit records for staff actions.
 - `025_require_report_attachment_metadata.sql`: requires a pre-registered, exact report-attachment metadata row before incident-report evidence can be uploaded; preserves the V2 assignment-submission evidence path.
+- `026_align_report_evidence_read_access.sql`: aligns report evidence reads with report-row visibility (reporter and Support/Admin only); preserves assignment-submission participant reads.
 
 
 
@@ -42,7 +43,7 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 25 scripts in numeric order, from `001_schema.sql` through `025_require_report_attachment_metadata.sql`.
+Apply all 26 scripts in numeric order, from `001_schema.sql` through `026_align_report_evidence_read_access.sql`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
