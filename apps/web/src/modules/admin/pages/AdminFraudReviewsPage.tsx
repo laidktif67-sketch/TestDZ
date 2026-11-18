@@ -53,7 +53,7 @@ export default function AdminFraudReviewsPage() {
     { label: "Role Requests", icon: "users", href: "/admin/role-requests" },
     { label: "Review Queue", icon: "check", href: "/admin/developer-reviews" },
     { label: "Fraud Reviews", icon: "shield-alert", href: "/admin/fraud-reviews", active: true },
-    { label: "Case Queues", icon: "folder-search", href: "/admin/cases" },
+    { label: "Case Queues", icon: "folder", href: "/admin/cases" },
     { label: "Audit Log", icon: "file-text", href: "/admin/audit-log" },
     { label: "Financial Operations", icon: "wallet", href: "/financial-operations" },
     { label: "Profile", icon: "user", href: "/profile" },
