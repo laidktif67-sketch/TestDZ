@@ -180,4 +180,4 @@ jobs:
           deno-version: 2.9.8
 
       - name: Type-check notification dispatcher
-        run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts
