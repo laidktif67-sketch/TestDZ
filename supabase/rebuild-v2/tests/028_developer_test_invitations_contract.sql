@@ -13,8 +13,12 @@ BEGIN
   IF has_table_privilege('authenticated','rebuild_v2.test_invitations','SELECT')
      OR has_table_privilege('authenticated','rebuild_v2.test_invitations','INSERT')
      OR has_table_privilege('authenticated','rebuild_v2.test_invitations','UPDATE')
-     OR has_table_privilege('authenticated','rebuild_v2.test_invitations','DELETE') THEN
-    RAISE EXCEPTION 'FAIL: direct client access to invitations table is available';
+     OR has_table_privilege('authenticated','rebuild_v2.test_invitations','DELETE')
+     OR has_table_privilege('service_role','rebuild_v2.test_invitations','SELECT')
+     OR has_table_privilege('service_role','rebuild_v2.test_invitations','INSERT')
+     OR has_table_privilege('service_role','rebuild_v2.test_invitations','UPDATE')
+     OR has_table_privilege('service_role','rebuild_v2.test_invitations','DELETE') THEN
+    RAISE EXCEPTION 'FAIL: direct table access to invitations is available to client or service_role';
   END IF;
 
   IF has_function_privilege('anon','rebuild_v2.create_test_invitation(uuid,text,bytea,timestamp with time zone,uuid)','EXECUTE')
