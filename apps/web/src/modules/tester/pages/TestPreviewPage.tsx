@@ -68,7 +68,7 @@ export default function TestPreviewPage(){
   void load().catch(()=>{if(alive){setError("Unable to load this test. Please try again.");setLoading(false);}});
   return()=>{alive=false;};
  },[id,identityLoading,session]);
- if(!identityLoading&&!session&&!previewMode)return <Navigate to="/auth" replace/>;
+ if(!identityLoading&&!session&&!previewMode)return <Navigate to={id?"/auth?next="+encodeURIComponent("/tests/"+encodeURIComponent(id)):"/auth"} replace/>;
  const nav=[{label:"Dashboard",icon:"flask",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
  const handleAccept=async()=>{
   if(!isTesterWorkflowV2Enabled||!id||joining)return;
