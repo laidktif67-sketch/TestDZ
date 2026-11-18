@@ -214,7 +214,7 @@ export default function DeveloperDashboardPage() {
         <Link to="/developer-dashboard" className="dd-nav-link active"><Icon name="home"/><span>{t.dashboard}</span></Link>
         <span className="dd-nav-label">APPS & WORKSPACE</span>
         <Link to="/apps" className="dd-nav-link"><Icon name="apps"/><span>{t.apps}</span><b>{counts.total}</b></Link>
-        <Link to="/apps" className="dd-nav-link"><Icon name="plus"/><span>{t.create}</span></Link>
+        <Link to="/apps/new" className="dd-nav-link"><Icon name="plus"/><span>{t.create}</span></Link>
         <Link to="/developer-tests" className="dd-nav-link"><Icon name="tests"/><span>{t.tests}</span></Link>
         <Link to="/developer-feedback" className="dd-nav-link"><Icon name="file"/><span>{t.feedback}</span></Link>
         <Link to="/developer-notifications" className="dd-nav-link"><Icon name="bell"/><span>{t.notifications}</span></Link>
@@ -237,7 +237,7 @@ export default function DeveloperDashboardPage() {
       </header>
 
       <section className="dd-hero">
-        <div className="dd-hero-copy"><span className="dd-hero-kicker">TESTDZ · DEVELOPER SPACE</span><h1>👋 {t.welcome}</h1><p>{t.subtitle}</p><Link to="/apps" className="dd-primary"><Icon name="plus"/>{t.createApp}<Icon name="arrow" size={17}/></Link></div>
+        <div className="dd-hero-copy"><span className="dd-hero-kicker">TESTDZ · DEVELOPER SPACE</span><h1>👋 {t.welcome}</h1><p>{t.subtitle}</p><Link to="/apps/new" className="dd-primary"><Icon name="plus"/>{t.createApp}<Icon name="arrow" size={17}/></Link></div>
         <div className="dd-hero-art" aria-hidden="true"><DeveloperMascot/></div>
       </section>
 
@@ -259,7 +259,7 @@ export default function DeveloperDashboardPage() {
         <article className="dd-panel dd-quick">
           <div className="dd-panel-head"><h2><Icon name="rocket"/>{t.quick}</h2><Link to="/apps">{t.view}<Icon name="arrow" size={15}/></Link></div>
           <div className="dd-quick-grid">
-            <Link to="/apps" className="dd-quick-item q-blue"><span><Icon name="plus" size={24}/></span><div><strong>{t.createApp}</strong><small>{t.create}</small></div><Icon name="arrow"/></Link>
+            <Link to="/apps/new" className="dd-quick-item q-blue"><span><Icon name="plus" size={24}/></span><div><strong>{t.createApp}</strong><small>{t.create}</small></div><Icon name="arrow"/></Link>
             <Link to="/apps" className="dd-quick-item q-green"><span><Icon name="apps" size={24}/></span><div><strong>{t.manage}</strong><small>{t.all}</small></div><Icon name="arrow"/></Link>
             <Link to="/profile" className="dd-quick-item q-violet"><span><Icon name="wallet" size={24}/></span><div><strong>{t.billing}</strong><small>{limit?.plan_code?.toUpperCase()||"—"}</small></div><Icon name="arrow"/></Link>
             {canTester&&<Link to="/tester-dashboard" className="dd-quick-item q-amber"><span><Icon name="search" size={24}/></span><div><strong>{t.discover}</strong><small>{t.tests}</small></div><Icon name="arrow"/></Link>}
@@ -271,7 +271,7 @@ export default function DeveloperDashboardPage() {
         <article className="dd-panel dd-apps-panel">
           <div className="dd-panel-head"><h2><Icon name="box"/>{t.apps}</h2><Link to="/apps">{t.view}<Icon name="arrow" size={15}/></Link></div>
           <div className="dd-filter-row">{(["all","active","draft","archived"] as const).map(item=><button key={item} className={filter===item?"selected":""} onClick={()=>setFilter(item)}>{item==="all"?t.all:item==="active"?t.published:item==="draft"?t.drafts:t.archived}</button>)}</div>
-          {visible.length?<div className="dd-app-grid">{visible.slice(0,4).map(app=><article className="dd-app-card" key={app.id}><div className="dd-app-icon">{app.icon_url?<img src={app.icon_url} alt=""/>:<Icon name="code" size={31}/>}</div><strong>{app.name}</strong><small dir="ltr">{app.package_name}</small><span className={statusClass(app.status)}>{t.status[app.status]}</span><Link to={"/apps/"+app.id}>{t.open}<Icon name="arrow" size={15}/></Link></article>)}</div>:<div className="dd-app-empty"><Icon name="box" size={36}/><strong>{apps.length?t.noSearch:t.emptyTitle}</strong><p>{apps.length?t.noSearch:t.emptyBody}</p>{!apps.length&&<Link to="/apps" className="dd-primary">{t.addFirst}<Icon name="arrow"/></Link>}</div>}
+          {visible.length?<div className="dd-app-grid">{visible.slice(0,4).map(app=><article className="dd-app-card" key={app.id}><div className="dd-app-icon">{app.icon_url?<img src={app.icon_url} alt=""/>:<Icon name="code" size={31}/>}</div><strong>{app.name}</strong><small dir="ltr">{app.package_name}</small><span className={statusClass(app.status)}>{t.status[app.status]}</span><Link to={"/apps/"+app.id}>{t.open}<Icon name="arrow" size={15}/></Link></article>)}</div>:<div className="dd-app-empty"><Icon name="box" size={36}/><strong>{apps.length?t.noSearch:t.emptyTitle}</strong><p>{apps.length?t.noSearch:t.emptyBody}</p>{!apps.length&&<Link to="/apps/new" className="dd-primary">{t.addFirst}<Icon name="arrow"/></Link>}</div>}
         </article>
         <article className="dd-panel dd-recent">
           <div className="dd-panel-head"><h2><Icon name="clock"/>{t.recent}</h2><Link to="/apps">{t.view}<Icon name="arrow" size={15}/></Link></div>
