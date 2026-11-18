@@ -202,7 +202,7 @@ export default function DeveloperTestMonitoringPage() {
                 <small>{item.label}</small>
               </div>)}
             </div>
-            <p className="dtm2-footnote">لا يظهر اليوم في الرسم إلا إذا بلغ عدد أحداثه المجمّعة ثلاثة أحداث على الأقل.</p>
+            <p className="dtm2-footnote">لا يظهر اليوم في الرسم إلا إذا شارك فيه ثلاثة مختبرين مختلفين على الأقل.</p>
           </article>
         </section>
 
