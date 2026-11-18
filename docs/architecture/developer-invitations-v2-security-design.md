@@ -1,6 +1,6 @@
 # Developer tester invitations — V2 security design
 
-**Status:** candidate implementation in progress. SQL/RPC and a JWT-verified Edge Function now exist on this Draft branch; local CI verification and UI integration remain pending. Nothing has been applied to hosted Supabase.
+**Status:** candidate implementation is present on this Draft branch. SQL/RPC, JWT-verified Edge Function, Developer invitation management UI, and Tester redemption through the existing test preview are implemented. SQL/Deno and frontend checks have passed on the preceding implementation head; the final AuthGuard return-path hardening is awaiting its own frontend CI. Nothing has been applied to hosted Supabase.
 
 ## Verified current baseline
 - The six-step wizard stores validated V2 test configuration and explicitly rejects raw tester email lists and Google Group addresses.
@@ -19,11 +19,10 @@
 6. **Observe.** Owners see only their own invitation statuses and masked email addresses. Do not expose recipient user IDs or another developer's invitations.
 
 ## Candidate data model
-- UUID primary key; test ID; cohort ID; developer ID; normalized recipient email; SHA-256 token hash; status (`pending`, `accepted`, `revoked`, `expired`, `delivery_failed`); expiry; creator and timestamps; accepted/revoked actor and timestamps; revocation reason; idempotency key.
-- Optional delivery metadata: provider name, provider message ID, delivered timestamp, and sanitized error code only.
+- UUID primary key; test ID; developer ID; normalized recipient email; SHA-256 token hash; status (`pending`, `accepted`, `revoked`, `expired`); expiry; idempotency key; created/updated timestamps; accepted/revoked actor and timestamps; revocation reason.
+- Cohort is intentionally not stored on the invitation. The existing `join_test_impl` chooses an eligible cohort and enforces its current capacity atomically at redemption.
 - Unique token hash; unique owner/idempotency key; partial uniqueness for one pending invitation per test and normalized email.
-- Composite foreign keys must prove the cohort belongs to the same test and developer.
-- RLS enabled and forced. No direct table grants to `anon` or `authenticated`; all operations through audited RPCs.
+- RLS enabled and forced. Direct table privileges are revoked from `PUBLIC`, `anon`, `authenticated`, and `service_role`; operations go through owner/role-checked RPCs.
 
 ## Security boundaries
 - `create_test_invitation`: authenticated, Developer/Admin role checked from `user_roles`, test ownership checked, strict inputs, rate-limited and idempotent.
@@ -37,15 +36,16 @@
 - Token, full email, and message body must never appear in logs, analytics, browser storage, audit metadata, or notification payloads.
 - Redemption cannot grant Tester, Developer, Admin, Support, or Financial roles. It only enrolls a user who already has Tester role.
 
-## Candidate implementation added (not yet validated)
+## Candidate implementation added and locally validated
 - `rebuild_v2.test_invitations` stores only a 32-byte SHA-256 token hash, normalized recipient email, test/developer ownership, status, expiry, idempotency key, and acceptance/revocation audit fields.
-- Table RLS is enabled and forced; direct client table privileges are revoked. The four public RPC wrappers are authenticated-only; their private implementations enforce Developer ownership, Tester role, confirmed Auth email, and existing join eligibility.
+- Table RLS is enabled and forced; direct table privileges are revoked from client roles and `service_role`. The four public RPC wrappers are authenticated-only; their private implementations enforce Developer ownership, Tester role, confirmed Auth email, and existing join eligibility.
 - Creation is limited to 50 pending invitations per test and expiry between 1 hour and 30 days. The current Edge Function uses a 7-day expiry and derives a pseudorandom 256-bit token with HMAC-SHA-256. This makes a retried create request reproduce the same token without storing the raw token; `DEVELOPER_INVITATION_TOKEN_SECRET` (minimum 32 characters) must be configured as an Edge Function secret before create is enabled.
 - Redemption locks the invitation row, compares the confirmed Auth email, and calls `rebuild_v2_private.join_test_impl` in the same database transaction before marking the invitation accepted. Revoke and redeem therefore serialize on the same row.
 - The Edge Function verifies the bearer token with `supabase.auth.getUser`, hashes tokens with Web Crypto SHA-256, and returns the raw token only in the one-time create response. It does not send email. Its status is `Link ready — not emailed`.
-- The isolated SQL workflow now includes candidate script 032 and contract 028, and Deno type-checks the invitation function. Results must be checked against the latest commit before describing this feature as passing.
+- Isolated SQL workflow run #44395704302 passed candidate script 032, final-state checks, invitation lifecycle contract 028, and local PostgREST verification. The notification/invitation Edge Function Deno type-check also passed.
 - Idempotency is strict: the same authenticated user and idempotency key deterministically reproduce the same token. Reusing a key with a different test or email is rejected. Expired pending rows are transitioned to `expired` before a replacement invite is inserted, so the partial unique index does not permanently block re-invites.
-- Not implemented yet: Developer invitation UI, copy-link flow, token redemption page/route, end-to-end Auth tests, email provider, provider webhooks, and manual mobile/desktop/RTL QA.
+- The Developer Testers page now provides invitation creation, masked invitation history, revocation, and a one-time copyable link. The link opens `/tests/:id?invite=...`; the existing Tester test-preview page redeems it through the Edge Function. The AuthGuard return path is restricted to the validated invitation URL shape.
+- Still outstanding: full browser end-to-end Auth testing, provider integration/webhooks, and manual mobile/desktop/RTL visual QA. No email is sent.
 
 ## Provider readiness gate
 Before outbound email is enabled, choose and approve a provider; verify sender domain and SPF/DKIM/DMARC; store its API key only as an Edge Function secret; review retention/terms; design signed webhook verification and replay protection; handle bounces, complaints, suppression and idempotent retries; and provide a sandbox recipient mode.
@@ -68,13 +68,12 @@ Until this gate passes, invitation links may be created and copied but must be l
 13. Without a provider, status explicitly says `Link ready — not emailed`.
 
 ## Implementation order
-1. Candidate-only schema and RPCs plus rolled-back SQL contracts.
-2. Edge Function create/list/revoke/redeem with Web Crypto token handling.
-3. Isolated V2 SQL replay, PostgREST boundary checks, Deno typecheck, and security contracts.
-4. Developer invitation management UI; initially copy-link only.
+1. Candidate-only schema/RPCs, Edge Function, and rolled-back lifecycle/security contracts — implemented and locally verified.
+2. Developer invitation management UI and Tester preview redemption — implemented; frontend typecheck/build passed on the implementation head.
+3. Safe AuthGuard return-path preservation for invitation links — added; final frontend CI pending.
+4. Full browser end-to-end Auth tests and manual mobile/desktop/RTL visual QA.
 5. Provider adapter and signed webhooks in a separate change after provider approval.
-6. Mobile/desktop/RTL visual QA and end-to-end tests with synthetic Auth users.
-7. Keep all changes Draft/unmerged until reviewed. No hosted migration, secrets, cron, email delivery, or deployment without explicit approval.
+6. Keep all changes Draft/unmerged until reviewed. No hosted migration, secrets, cron, email delivery, or deployment without explicit approval.
 
 ## Explicit non-goals
 - No automatic Developer/Admin role grant.
