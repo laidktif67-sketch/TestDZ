@@ -1,6 +1,6 @@
 # Developer tester invitations — V2 security design
 
-**Status:** candidate implementation is present on this Draft branch. SQL/RPC, JWT-verified Edge Function, Developer invitation management UI, and Tester redemption through the existing test preview are implemented. SQL/Deno and frontend checks have passed on the preceding implementation head; the final AuthGuard return-path hardening is awaiting its own frontend CI. Nothing has been applied to hosted Supabase.
+**Status:** candidate implementation is present on this Draft branch. SQL/RPC, JWT-verified Edge Function, Developer invitation management UI, and Tester redemption through the existing test preview are implemented. SQL/Deno and frontend checks have passed on the latest implementation head, including the final AuthGuard return-path hardening. Nothing has been applied to hosted Supabase. Nothing has been applied to hosted Supabase.
 
 ## Verified current baseline
 - The six-step wizard stores validated V2 test configuration and explicitly rejects raw tester email lists and Google Group addresses.
@@ -42,9 +42,9 @@
 - Creation is limited to 50 pending invitations per test and expiry between 1 hour and 30 days. The current Edge Function uses a 7-day expiry and derives a pseudorandom 256-bit token with HMAC-SHA-256. This makes a retried create request reproduce the same token without storing the raw token; `DEVELOPER_INVITATION_TOKEN_SECRET` (minimum 32 characters) must be configured as an Edge Function secret before create is enabled.
 - Redemption locks the invitation row, compares the confirmed Auth email, and calls `rebuild_v2_private.join_test_impl` in the same database transaction before marking the invitation accepted. Revoke and redeem therefore serialize on the same row.
 - The Edge Function verifies the bearer token with `supabase.auth.getUser`, hashes tokens with Web Crypto SHA-256, and returns the raw token only in the one-time create response. It does not send email. Its status is `Link ready — not emailed`.
-- Isolated SQL workflow run #44395704302 passed candidate script 032, final-state checks, invitation lifecycle contract 028, and local PostgREST verification. The notification/invitation Edge Function Deno type-check also passed.
+- Latest isolated SQL workflow run #44396148370 passed candidate script 032, final-state checks, invitation lifecycle contract 028, and local PostgREST verification. The notification/invitation Edge Function Deno type-check passed in the same run.
 - Idempotency is strict: the same authenticated user and idempotency key deterministically reproduce the same token. Reusing a key with a different test or email is rejected. Expired pending rows are transitioned to `expired` before a replacement invite is inserted, so the partial unique index does not permanently block re-invites.
-- The Developer Testers page now provides invitation creation, masked invitation history, revocation, and a one-time copyable link. The link opens `/tests/:id?invite=...`; the existing Tester test-preview page redeems it through the Edge Function. The AuthGuard return path is restricted to the validated invitation URL shape.
+- The Developer Testers page now provides invitation creation, masked invitation history, revocation, and a one-time copyable link. The link opens `/tests/:id?invite=...`; the existing Tester test-preview page redeems it through the Edge Function. The AuthGuard return path is restricted to the validated invitation URL shape; it passed in the latest TestDZ CI run #44396148486 and Frontend typecheck/build run #44396148093.
 - Still outstanding: full browser end-to-end Auth testing, provider integration/webhooks, and manual mobile/desktop/RTL visual QA. No email is sent.
 
 ## Provider readiness gate
