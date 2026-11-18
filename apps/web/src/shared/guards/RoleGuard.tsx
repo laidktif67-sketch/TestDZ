@@ -54,7 +54,9 @@ export default function RoleGuard({ requiredRole }: { requiredRole: WorkspaceRol
       state={{
         accessNotice: requiredRole === "tester"
           ? "This workspace requires tester access. We opened a workspace available to your account."
-          : "This workspace requires developer access. We opened a workspace available to your account.",
+          : requiredRole === "financial"
+            ? "This workspace requires Financial access. We opened a workspace available to your account."
+            : "This workspace requires developer access. We opened a workspace available to your account.",
       }}
     />
   );
