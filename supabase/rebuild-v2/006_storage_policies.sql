@@ -55,12 +55,13 @@ DECLARE
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL THEN RETURN false; END IF;
   v_folders := storage.foldername(p_object_name);
-  IF coalesce(array_length(v_folders,1),0) <> 2
-     OR v_folders[1] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-     OR v_folders[2] <> (SELECT auth.uid())::text THEN
+  IF coalesce(array_length(v_folders,1),0) <> 3
+     OR v_folders[1] <> 'v2'
+     OR v_folders[2] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+     OR v_folders[3] <> (SELECT auth.uid())::text THEN
     RETURN false;
   END IF;
-  v_ticket_id := v_folders[1]::uuid;
+  v_ticket_id := v_folders[2]::uuid;
   RETURN EXISTS (
     SELECT 1 FROM rebuild_v2.support_tickets st
     WHERE st.id=v_ticket_id AND st.status<>'closed'
@@ -91,12 +92,13 @@ DECLARE
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL THEN RETURN false; END IF;
   v_folders := storage.foldername(p_object_name);
-  IF coalesce(array_length(v_folders,1),0) <> 2
-     OR v_folders[1] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-     OR v_folders[2] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+  IF coalesce(array_length(v_folders,1),0) <> 3
+     OR v_folders[1] <> 'v2'
+     OR v_folders[2] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+     OR v_folders[3] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
     RETURN false;
   END IF;
-  v_ticket_id := v_folders[1]::uuid;
+  v_ticket_id := v_folders[2]::uuid;
   RETURN EXISTS (
     SELECT 1
     FROM rebuild_v2.support_ticket_attachments att
@@ -105,6 +107,7 @@ BEGIN
     JOIN rebuild_v2.support_tickets st ON st.id=att.ticket_id
     WHERE att.storage_path=p_object_name
       AND st.id=v_ticket_id
+      AND att.uploaded_by=v_folders[3]::uuid
       AND (
         (st.user_id=(SELECT auth.uid())
           AND m.internal_note=false
