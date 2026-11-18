@@ -237,6 +237,9 @@ BEGIN
     RAISE EXCEPTION 'FAIL: Support metadata helper denies public-message attachment';
   END IF;
 
+  -- Restore the authenticated role after the trusted fixture verification above;
+  -- otherwise this query runs as postgres and bypasses RLS, invalidating the contract.
+  PERFORM set_config('role','authenticated',true);
   SELECT count(*) INTO v_count
   FROM rebuild_v2.support_ticket_attachments
   WHERE ticket_id='91700000-0000-4000-8000-000000000101';
