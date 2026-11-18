@@ -74,6 +74,25 @@ export async function addTesterSupportAttachment(input: {
 }
 
 
+/** Metadata for a public support-message attachment. File bytes stay in the private bucket. */
+export type SupportTicketAttachment = {
+  id: string;
+  ticket_id: string;
+  message_id: string;
+  uploaded_by: string;
+  storage_path: string;
+  original_filename: string;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string;
+};
+
+/** Create a short-lived download URL; Storage RLS remains the authorization boundary. */
+export function createSupportAttachmentDownloadUrl(storagePath: string) {
+  return getAppDataClient().storage.from("support-attachments")
+    .createSignedUrl(storagePath, 60, { download: true });
+}
+
 export type SupportQueueTicket = {
   id: string;
   ticket_number: number;
@@ -152,7 +171,15 @@ export async function getSupportTicketDetails(ticketId: string) {
       .select("id,ticket_id,actor_id,event_type,old_status,new_status,old_priority,new_priority,created_at")
       .eq("ticket_id", ticketId).order("created_at", { ascending: true }),
   ]);
-  return { ticketResult, messageResult, eventResult };
+  if (messageResult.error) return { ticketResult, messageResult, eventResult, attachmentResult: null };
+  const publicMessageIds = (messageResult.data ?? []).map((message: { id: string }) => message.id);
+  const attachmentResult = publicMessageIds.length
+    ? await client.from("support_ticket_attachments")
+        .select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at")
+        .eq("ticket_id", ticketId).in("message_id", publicMessageIds)
+        .order("created_at", { ascending: true })
+    : { data: [], error: null };
+  return { ticketResult, messageResult, eventResult, attachmentResult };
 }
 
 /** Post a public staff reply through the audited V2 RPC. */
