@@ -84,8 +84,13 @@ BEGIN
   EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
   END;
 
-  IF EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id='app-icons' AND name=v_path) THEN
-    RAISE EXCEPTION 'FAIL: outsider replaced or duplicated the owner's V2 app icon';
+  IF (SELECT count(*) FROM storage.objects WHERE bucket_id='app-icons' AND name=v_path) <> 1
+     OR NOT EXISTS(
+       SELECT 1 FROM storage.objects
+       WHERE bucket_id='app-icons' AND name=v_path
+         AND owner_id='91900000-0000-4000-8000-000000000001'
+     ) THEN
+    RAISE EXCEPTION 'FAIL: outsider changed or removed the owner's V2 app icon';
   END IF;
 END;
 $outsider$;
