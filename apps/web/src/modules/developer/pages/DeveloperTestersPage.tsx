@@ -2,11 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getDeveloperTestMonitoringSummary, listDeveloperTests, type DeveloperTestMonitoringSummary } from "../../../features/apps/apps-api";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
+import { supabase } from "../../../lib/supabase";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { Brand } from "../../../shared/components/Brand";
 import "../styles/developer-testers-v2.css";
 
 type TesterCampaign = DeveloperTestMonitoringSummary;
+type InvitationRow = {
+  invitation_id: string;
+  test_id: string;
+  recipient_email_masked: string;
+  status: "pending" | "accepted" | "revoked" | "expired";
+  expires_at: string;
+  created_at: string;
+};
+const invitationStatusLabels: Record<string,string> = {
+  pending: "بانتظار القبول", accepted: "مقبولة", revoked: "ملغاة", expired: "منتهية"
+};
 
 const statusLabels: Record<string,string> = {
   draft:"مسودة", submitted:"قيد المراجعة", recruiting:"يستقبل المختبرين",
@@ -27,6 +39,14 @@ export default function DeveloperTestersPage() {
   const [query,setQuery]=useState("");
   const [status,setStatus]=useState("all");
   const [shareNotice,setShareNotice]=useState("");
+  const [inviteTestId,setInviteTestId]=useState("");
+  const [inviteEmail,setInviteEmail]=useState("");
+  const [inviteRows,setInviteRows]=useState<InvitationRow[]>([]);
+  const [inviteLink,setInviteLink]=useState("");
+  const [inviteBusy,setInviteBusy]=useState(false);
+  const [inviteError,setInviteError]=useState("");
+  const [inviteNotice,setInviteNotice]=useState("");
+  const [inviteIdempotencyKey,setInviteIdempotencyKey]=useState(()=>crypto.randomUUID());
 
   async function load(isRefresh=false) {
     if(isRefresh)setRefreshing(true);else setLoading(true);
@@ -97,6 +117,83 @@ export default function DeveloperTestersPage() {
     }
   }
 
+  async function loadInvitations(testId:string) {
+    if(!supabase) { setInviteError("اتصال Supabase غير متاح."); return; }
+    setInviteError("");
+    const {data,error:invokeError}=await supabase.functions.invoke("developer-invitations",{
+      body:{action:"list",test_id:testId}
+    });
+    if(invokeError) { setInviteError("تعذر تحميل الدعوات. تحقق من إعداد وظيفة الدعوات."); return; }
+    setInviteRows((data?.invitations??[]) as InvitationRow[]);
+  }
+
+  function openInvitationManager(testId:string) {
+    setInviteTestId(testId);
+    setInviteEmail("");
+    setInviteLink("");
+    setInviteRows([]);
+    setInviteError("");
+    setInviteNotice("");
+    setInviteIdempotencyKey(crypto.randomUUID());
+    void loadInvitations(testId);
+  }
+
+  async function createInvitation(event:React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if(!supabase||!inviteTestId||inviteBusy)return;
+    setInviteBusy(true);setInviteError("");setInviteNotice("");setInviteLink("");
+    try {
+      const {data,error:invokeError}=await supabase.functions.invoke("developer-invitations",{
+        body:{
+          action:"create",
+          test_id:inviteTestId,
+          email:inviteEmail.trim().toLowerCase(),
+          idempotency_key:inviteIdempotencyKey
+        }
+      });
+      if(invokeError||!data?.token)throw invokeError??new Error("INVITATION_CREATE_FAILED");
+      const link=new URL(
+        "/tests/"+encodeURIComponent(inviteTestId)+"?invite="+encodeURIComponent(data.token),
+        window.location.origin
+      ).toString();
+      setInviteLink(link);
+      setInviteNotice("الرابط جاهز، لكنه لم يُرسل بالبريد. انسخه وشاركه مع صاحب البريد المحدد.");
+      setInviteIdempotencyKey(crypto.randomUUID());
+      await loadInvitations(inviteTestId);
+    } catch {
+      setInviteError("تعذر إنشاء الدعوة. تأكد من إعداد سر الدعوات ومن صلاحية الاختبار والبريد.");
+    } finally {
+      setInviteBusy(false);
+    }
+  }
+
+  async function revokeInvitation(invitationId:string) {
+    if(!supabase||inviteBusy)return;
+    setInviteBusy(true);setInviteError("");setInviteNotice("");
+    try {
+      const {error:invokeError}=await supabase.functions.invoke("developer-invitations",{
+        body:{action:"revoke",invitation_id:invitationId,reason:"Revoked by test owner"}
+      });
+      if(invokeError)throw invokeError;
+      setInviteNotice("تم إلغاء الدعوة.");
+      await loadInvitations(inviteTestId);
+    } catch {
+      setInviteError("تعذر إلغاء الدعوة. حدّث القائمة ثم حاول مجدداً.");
+    } finally {
+      setInviteBusy(false);
+    }
+  }
+
+  async function copyInvitationLink() {
+    if(!inviteLink)return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setInviteNotice("تم نسخ رابط الدعوة. تذكّر أنه لم يُرسل بالبريد.");
+    } catch {
+      setInviteNotice("تعذر النسخ التلقائي؛ انسخ الرابط من الحقل يدوياً.");
+    }
+  }
+
   function exportCsv(){
     const lines=[
       ["الاختبار","التطبيق","حالة الاختبار","عدد المشاركين في الاختبار","إجمالي المشاركات","نشط","بانتظار البدء","مكتمل","نسبة الإكمال"],
@@ -133,6 +230,27 @@ export default function DeveloperTestersPage() {
           <Stat label="نسبة الإكمال" value={completion+"%"} detail={totals.completed+" مشاركة مكتملة"} symbol="✓"/>
         </section>
         {shareNotice&&<p className="dtv2-share-notice" role="status">{shareNotice}</p>}
+        {inviteTestId&&<section className="dtv2-invitation-panel" aria-labelledby="dtv2-invite-title">
+          <div className="dtv2-invite-heading">
+            <div><span className="dtv2-eyebrow">دعوات خاصة مرتبطة بالبريد</span><h2 id="dtv2-invite-title">إدارة دعوات المختبرين</h2><p>تُقبل الدعوة فقط من حساب Tester الذي يملك البريد المحدد بعد تأكيده.</p></div>
+            <button type="button" onClick={()=>setInviteTestId("")}>إغلاق</button>
+          </div>
+          <form className="dtv2-invite-form" onSubmit={createInvitation}>
+            <label>البريد الإلكتروني للمختبر
+              <input type="email" required maxLength={254} value={inviteEmail} onChange={event=>{setInviteEmail(event.target.value);setInviteIdempotencyKey(crypto.randomUUID());}} placeholder="tester@example.com" dir="ltr"/>
+            </label>
+            <button type="submit" disabled={inviteBusy||!inviteEmail.trim()}>{inviteBusy?"جارٍ التنفيذ…":"إنشاء رابط دعوة"}</button>
+          </form>
+          {inviteError&&<p className="dtv2-invite-error" role="alert">{inviteError}</p>}
+          {inviteNotice&&<p className="dtv2-invite-notice" role="status">{inviteNotice}</p>}
+          {inviteLink&&<div className="dtv2-invite-link"><label>رابط الدعوة (يظهر مرة واحدة بعد الإنشاء)<input readOnly value={inviteLink} dir="ltr"/></label><button type="button" onClick={()=>void copyInvitationLink()}>نسخ الرابط</button></div>}
+          <div className="dtv2-invite-list"><strong>الدعوات السابقة</strong>
+            {inviteRows.length===0?<p>لا توجد دعوات مسجلة لهذا الاختبار.</p>:<ul>{inviteRows.map(invite=><li key={invite.invitation_id}>
+              <span><b dir="ltr">{invite.recipient_email_masked}</b><small>{invitationStatusLabels[invite.status]??invite.status} · تنتهي {new Date(invite.expires_at).toLocaleDateString("ar-DZ")}</small></span>
+              {invite.status==="pending"&&<button type="button" disabled={inviteBusy} onClick={()=>void revokeInvitation(invite.invitation_id)}>إلغاء</button>}
+            </li>)}</ul>}
+          </div>
+        </section>}
         <section className="dtv2-toolbar">
           <label className="dtv2-search"><span aria-hidden="true">⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث باسم الاختبار أو التطبيق…" aria-label="البحث"/></label>
           <select value={status} onChange={e=>setStatus(e.target.value)} aria-label="تصفية حالة الاختبار">
@@ -148,7 +266,7 @@ export default function DeveloperTestersPage() {
               <td>{row.metrics.uniqueTesters}</td><td>{row.metrics.totalAssignments}</td><td>{row.metrics.active}</td><td>{row.metrics.completed}</td>
               <td><div className="dtv2-progress"><i style={{width:row.metrics.completionRate+"%"}}/></div><small>{row.metrics.completionRate}%</small></td>
               <td><span className={"dtv2-status status-"+row.test.status}>{statusLabels[row.test.status]??row.test.status}</span></td>
-              <td className="dtv2-row-actions">{row.test.status==="recruiting"&&<button type="button" onClick={()=>void copyRecruitmentLink(row.test.id)} aria-label={"نسخ رابط اختبار "+row.test.title}>نسخ رابط الانضمام</button>}<Link to={"/developer/tests/"+row.test.id+"/monitoring"}>التفاصيل ←</Link></td>
+              <td className="dtv2-row-actions">{row.test.status==="recruiting"&&<><button type="button" onClick={()=>void copyRecruitmentLink(row.test.id)} aria-label={"نسخ رابط اختبار "+row.test.title}>نسخ الرابط العام</button><button type="button" onClick={()=>openInvitationManager(row.test.id)} aria-label={"إدارة دعوات "+row.test.title}>دعوة مختبر</button></>}<Link to={"/developer/tests/"+row.test.id+"/monitoring"}>التفاصيل ←</Link></td>
             </tr>)}
           </tbody></table></section>
         }

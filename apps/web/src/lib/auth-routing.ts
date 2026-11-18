@@ -16,8 +16,11 @@ export async function getPostAuthRoute(userId: string): Promise<"/tester-dashboa
   return profile?.onboarding_completed_at ? "/tester-dashboard" : "/onboarding";
 }
 
-/** Allow only same-app tester test-preview destinations after authentication. */
+/** Allow only same-app tester preview destinations, including a validated one-time invitation token. */
 export function getSafeAuthRedirect(value: string | null | undefined): string | null {
-  if (!value || !/^\/tests\/[A-Za-z0-9-]+$/.test(value)) return null;
+  if (!value) return null;
+  const plainTestRoute = /^\/tests\/[A-Za-z0-9-]+$/;
+  const invitedTestRoute = /^\/tests\/[A-Za-z0-9-]+\?invite=[A-Za-z0-9_-]{43}$/;
+  if (!plainTestRoute.test(value) && !invitedTestRoute.test(value)) return null;
   return value;
 }

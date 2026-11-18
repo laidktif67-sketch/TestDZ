@@ -57,8 +57,8 @@ jobs:
           test -n "${DB_URL:-}" || { echo "DB_URL was not exported by Supabase CLI"; exit 1; }
 
           scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
-          if [ "${#scripts[@]}" -ne 31 ]; then
-            echo "Expected exactly 31 candidate SQL scripts; found ${#scripts[@]}"
+          if [ "${#scripts[@]}" -ne 32 ]; then
+            echo "Expected exactly 32 candidate SQL scripts; found ${#scripts[@]}"
             exit 1
           fi
 
@@ -102,6 +102,7 @@ jobs:
             supabase/rebuild-v2/tests/025_six_step_test_config_contract.sql
             supabase/rebuild-v2/tests/026_developer_test_monitoring_privacy_contract.sql
             supabase/rebuild-v2/tests/027_role_explicit_support_ticket_creation_contract.sql
+            supabase/rebuild-v2/tests/028_developer_test_invitations_contract.sql
           )
 
           for contract in "${contracts[@]}"; do
@@ -178,5 +179,5 @@ jobs:
         with:
           deno-version: 2.9.8
 
-      - name: Type-check notification dispatcher
-        run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts
+      - name: Type-check notification and invitation Edge Functions
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts

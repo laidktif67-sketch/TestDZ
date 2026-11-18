@@ -68,11 +68,28 @@ export default function TestPreviewPage(){
   void load().catch(()=>{if(alive){setError("Unable to load this test. Please try again.");setLoading(false);}});
   return()=>{alive=false;};
  },[id,identityLoading,session]);
- if(!identityLoading&&!session&&!previewMode)return <Navigate to={id?"/auth?next="+encodeURIComponent("/tests/"+encodeURIComponent(id)):"/auth"} replace/>;
+ if(!identityLoading&&!session&&!previewMode){
+  const requestedRoute=window.location.pathname+window.location.search;
+  return <Navigate to={id?"/auth?next="+encodeURIComponent(requestedRoute):"/auth"} replace/>;
+ }
  const nav=[{label:"Dashboard",icon:"flask",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
+ const invitationToken=new URLSearchParams(window.location.search).get("invite");
  const handleAccept=async()=>{
   if(!isTesterWorkflowV2Enabled||!id||joining)return;
   setJoining(true);setError("");
+  if(invitationToken){
+   if(!supabase){setError("Invitation redemption is not configured in this environment.");setJoining(false);return;}
+   const {data,error:redeemError}=await supabase.functions.invoke("developer-invitations",{
+    body:{action:"redeem",token:invitationToken}
+   });
+   if(redeemError||!data?.assignment_id){
+    setError("This invitation is invalid, expired, already used, or belongs to another confirmed email.");
+    setJoining(false);
+    return;
+   }
+   navigate("/assignments/"+data.assignment_id);
+   return;
+  }
   const {data,error:joinError}=await joinTesterTest(id);
   if(joinError||!data){
    setError(joinError?.message||"This test could not be joined. It may have reached capacity.");
@@ -121,7 +138,7 @@ export default function TestPreviewPage(){
        <article className="to-panel to-feedback-banner"><div className="to-trophy" aria-hidden="true">🏆</div><div><h2>Your Feedback Matters!</h2><p>Help us build a better app and earn rewards.</p></div></article>
       </aside>
      </div>
-     <footer className="to-bottom-actions"><Link className="to-question" to="/help"><Icon name="info" size={25}/>Ask a Question</Link>{alreadyAssigned?<Link className="to-accept is-assigned" to="/my-tests"><Icon name="check" size={26}/>View My Tests<Icon name="arrow" size={24}/></Link>:<button className="to-accept" type="button" onClick={handleAccept} disabled={!isTesterWorkflowV2Enabled||joining} title={!isTesterWorkflowV2Enabled?"Secure enrollment will be enabled after the V2 backend is deployed to this environment.":""}><Icon name="check" size={27}/><span>{joining?"Joining…":"Accept Test"}</span><Icon name="arrow" size={25}/></button>}</footer>
+     <footer className="to-bottom-actions"><Link className="to-question" to="/help"><Icon name="info" size={25}/>Ask a Question</Link>{alreadyAssigned?<Link className="to-accept is-assigned" to="/my-tests"><Icon name="check" size={26}/>View My Tests<Icon name="arrow" size={24}/></Link>:<button className="to-accept" type="button" onClick={handleAccept} disabled={!isTesterWorkflowV2Enabled||joining} title={!isTesterWorkflowV2Enabled?"Secure enrollment will be enabled after the V2 backend is deployed to this environment.":""}><Icon name="check" size={27}/><span>{joining?"Joining…":invitationToken?"Accept Invitation":"Accept Test"}</span><Icon name="arrow" size={25}/></button>}</footer>
      {test.app?.play_store_url&&<p className="to-store-link"><a href={test.app.play_store_url} target="_blank" rel="noreferrer"><Icon name="link" size={15}/> View app on Google Play</a></p>}
     </>}
    </div>
