@@ -59,7 +59,7 @@ Current V2 reference: PR #82 head `9d3b71f...`.
 | App list | Present outside developer module | `/apps` and `AppsPage` exist. |
 | Add app | Partial | V2 `create_app` API/RPC exists, but the dedicated `DeveloperAddAppPage` and `/apps/new` route are absent. |
 | App details | Present outside developer module | `/apps/:id` and `AppDetailPage` exist. |
-| Six-step test creation | Missing as a dedicated UI | Current `DeveloperTestsPage` supports a V2 create flow, content, build/asset uploads, review submission and cohorts; it is not the legacy six-step page. |
+| Six-step test creation | Restored in PR #85 candidate | Dedicated `/developer/tests/new` route; uses `create_test_with_config` and a strict server-side allowlist to save draft configuration atomically. CSV tester emails and Google Group addresses remain local and are never persisted or sent. |
 | My tests | Partial | Current `DeveloperTestsPage` lists and manages V2 tests; no separate full `DeveloperMyTestsPage`/campaign route. |
 | Campaign details | Missing | V2 has cohort and test lifecycle APIs, but no dedicated developer campaign detail route/page. |
 | Test monitoring | Missing | No developer monitoring route/page in V2. |

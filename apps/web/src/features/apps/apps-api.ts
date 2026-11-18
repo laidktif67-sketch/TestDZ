@@ -133,6 +133,51 @@ export function createDeveloperTest(input: DeveloperTestInput) {
   });
 }
 
+export interface DeveloperSixStepTestConfig {
+  cohort: { targetTesters: number; notes: string | null };
+  rules: { androidVersion: string; instructions: string | null };
+  details: {
+    testingObjective: "stability_bugs" | "usability" | "compatibility" | "performance" | "release_readiness" | "custom";
+    priority: "low" | "medium" | "high";
+    testingScope: Array<"core_flows" | "performance" | "compatibility" | "accessibility">;
+    successCriteria: string | null;
+    minimumCompletionRate: number;
+  };
+  schedule: {
+    durationDays: number | null;
+    allowMoreTesters: boolean;
+    joiningMethod: "google_play_link" | "closed_group" | "upload_list" | "open_testing";
+    collectFeedback: boolean;
+    enableBugReports: boolean;
+  };
+  googlePlay: {
+    track: "internal" | "closed" | "open";
+    testerMethod: "join_link" | "google_groups" | "upload_list";
+    appVersion: "latest_available";
+    releaseMode: "immediately" | "scheduled";
+    releaseAt: string | null;
+  };
+}
+
+/** Create a test and its allowlisted six-step draft config in one server transaction. */
+export function createDeveloperTestWithConfig(
+  input: DeveloperTestInput & { testConfig: DeveloperSixStepTestConfig },
+) {
+  return dataClient().rpc("create_test_with_config", {
+    p_app_id: input.appId,
+    p_title: input.title,
+    p_description: input.description,
+    p_short_summary: input.shortSummary ?? null,
+    p_test_type: input.testType,
+    p_min_testers: input.minTesters,
+    p_start_date: input.startDate ?? null,
+    p_end_date: input.endDate ?? null,
+    p_duration: input.durationMinutes ?? null,
+    p_instructions: input.instructions ?? null,
+    p_test_config: input.testConfig,
+  });
+}
+
 export function updateDeveloperTest(testId: string, input: Omit<DeveloperTestInput, "appId">) {
   return dataClient().rpc("update_test", {
     p_test_id: testId,
