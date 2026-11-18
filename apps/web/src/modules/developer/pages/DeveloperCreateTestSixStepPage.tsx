@@ -217,7 +217,7 @@ export default function DeveloperCreateTestSixStepPage() {
       setSaving(false);
       return;
     }
-    navigate("/developer/tests", { state: { createdTestId: data } });
+    navigate("/developer-tests", { state: { createdTestId: data } });
   }
 
   return <main className="dct-shell">
