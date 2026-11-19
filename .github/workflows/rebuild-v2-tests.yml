@@ -104,6 +104,7 @@ jobs:
             supabase/rebuild-v2/tests/027_role_explicit_support_ticket_creation_contract.sql
             supabase/rebuild-v2/tests/028_developer_test_invitations_contract.sql
             supabase/rebuild-v2/tests/029_developer_test_edit_contract.sql
+            supabase/rebuild-v2/tests/030_developer_cohort_transition_contract.sql
           )
 
           for contract in "${contracts[@]}"; do
