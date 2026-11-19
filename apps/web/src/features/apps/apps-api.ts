@@ -26,7 +26,7 @@ export function getAppLimit() {
 
 /** Read one application; access remains enforced by the existing RLS policies. */
 export function getAppById(id: string, developerId: string) {
-  return dataClient().from("apps").select(APP_SELECT).eq("id", id).eq("developer_id", developerId).single();
+  return dataClient().from("apps").select(APP_SELECT + ",distribution_method,distribution_url").eq("id", id).eq("developer_id", developerId).single();
 }
 
 /** Create an application through the existing server-side RPC. */
@@ -109,6 +109,15 @@ export interface DeveloperTestInput {
   endDate?: string | null;
   durationMinutes?: number | null;
   instructions?: string | null;
+}
+
+/** List tests belonging to one app and the authenticated developer; RLS remains authoritative. */
+export function listDeveloperTestsForApp(appId: string, developerId: string) {
+  return dataClient().from("tests")
+    .select("id,app_id,developer_id,title,status,start_date,end_date,created_at")
+    .eq("app_id", appId)
+    .eq("developer_id", developerId)
+    .order("created_at", { ascending: false });
 }
 
 export function listDeveloperTests(developerId: string) {

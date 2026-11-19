@@ -157,10 +157,10 @@ export default function DeveloperDashboardPage() {
     if(previewMode){
       const now=Date.now();
       const sample:AppRecord[]=[
-        {id:"preview-1",developer_id:"preview",name:"CodeMaster",package_name:"com.testdz.codemaster",description:"A sample developer workspace app.",category:"tools",icon_url:null,status:"published",created_at:new Date(now-86400000).toISOString()},
-        {id:"preview-2",developer_id:"preview",name:"GameQuiz",package_name:"com.testdz.gamequiz",description:"A sample quiz app.",category:"games",icon_url:null,status:"published",created_at:new Date(now-3*86400000).toISOString()},
-        {id:"preview-3",developer_id:"preview",name:"EduTest",package_name:"com.testdz.edutest",description:"A sample learning app.",category:"education",icon_url:null,status:"draft",created_at:new Date(now-5*86400000).toISOString()},
-        {id:"preview-4",developer_id:"preview",name:"SkillCheck",package_name:"com.testdz.skillcheck",description:"A sample skills app.",category:"tools",icon_url:null,status:"paused",created_at:new Date(now-9*86400000).toISOString()}
+        {id:"preview-1",developer_id:"preview",name:"CodeMaster",package_name:"com.testdz.codemaster",description:"A sample developer workspace app.",category:"tools",icon_url:null,distribution_method:"none",distribution_url:null,status:"published",created_at:new Date(now-86400000).toISOString()},
+        {id:"preview-2",developer_id:"preview",name:"GameQuiz",package_name:"com.testdz.gamequiz",description:"A sample quiz app.",category:"games",icon_url:null,distribution_method:"none",distribution_url:null,status:"published",created_at:new Date(now-3*86400000).toISOString()},
+        {id:"preview-3",developer_id:"preview",name:"EduTest",package_name:"com.testdz.edutest",description:"A sample learning app.",category:"education",icon_url:null,distribution_method:"none",distribution_url:null,status:"draft",created_at:new Date(now-5*86400000).toISOString()},
+        {id:"preview-4",developer_id:"preview",name:"SkillCheck",package_name:"com.testdz.skillcheck",description:"A sample skills app.",category:"tools",icon_url:null,distribution_method:"none",distribution_url:null,status:"paused",created_at:new Date(now-9*86400000).toISOString()}
       ];
       setApps(sample);setName("John Doe");setLimit({plan_code:"starter",max_active_apps:10,current_active_apps:3,can_create:true});setLoading(false);return;
     }
