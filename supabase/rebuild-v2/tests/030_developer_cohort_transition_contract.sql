@@ -152,5 +152,5 @@ SELECT jsonb_build_object(
   'synthetic_app_after_rollback',(SELECT count(*) FROM rebuild_v2.apps WHERE package_name='dz.testdz.cohort-transition'),
   'synthetic_test_after_rollback',(SELECT count(*) FROM rebuild_v2.tests WHERE title='Cohort Transition Test'),
   'synthetic_cohort_after_rollback',(SELECT count(*) FROM rebuild_v2.cohorts WHERE name='Transition Cohort'),
-  'synthetic_assignments_after_rollback',(SELECT count(*) FROM rebuild_v2.assignments WHERE id IN ('00000000-0000-0000-0000-000000000000'))
+  'synthetic_assignments_after_rollback',(SELECT count(*) FROM rebuild_v2.assignments WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Cohort Transition Test'))
 ) AS rollback_cleanup_check;
