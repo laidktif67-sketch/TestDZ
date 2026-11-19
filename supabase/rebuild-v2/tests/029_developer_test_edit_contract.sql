@@ -97,16 +97,9 @@ BEGIN
 
   PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
-  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
-  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_audit_after
   FROM rebuild_v2.audit_events
   WHERE target_id=v_test AND action='test.updated';
-  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000001',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-
   IF v_audit_after<>v_audit_before+1 THEN
     RAISE EXCEPTION 'FAIL: successful edit must append exactly one test.updated event';
   END IF;
@@ -160,9 +153,14 @@ BEGIN
   IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND title='Updated edit contract title') THEN
     RAISE EXCEPTION 'FAIL: invalid edit changed the persisted title';
   END IF;
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_audit_after
   FROM rebuild_v2.audit_events
   WHERE target_id=v_test AND action='test.updated';
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
   IF v_audit_after<>v_audit_before+1 THEN
     RAISE EXCEPTION 'FAIL: invalid or unauthorized edit appended an audit event';
   END IF;
@@ -179,6 +177,8 @@ BEGIN
   EXCEPTION WHEN SQLSTATE 'P0002' THEN NULL;
   END;
 
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_audit_after
   FROM rebuild_v2.audit_events
   WHERE target_id=v_test AND action='test.updated';
