@@ -26,7 +26,7 @@ export function getAppLimit() {
 
 /** Read one application; access remains enforced by the existing RLS policies. */
 export function getAppById(id: string, developerId: string) {
-  return dataClient().from("apps").select(APP_SELECT).eq("id", id).eq("developer_id", developerId).single();
+  return dataClient().from("apps").select(APP_SELECT + ",distribution_method,distribution_url").eq("id", id).eq("developer_id", developerId).single();
 }
 
 /** Create an application through the existing server-side RPC. */
