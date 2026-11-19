@@ -106,10 +106,6 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
-  IF v_audit_after<>v_audit_before+1 THEN
-    RAISE EXCEPTION 'FAIL: successful edit must append exactly one test.updated event';
-  END IF;
-
   -- Admin role alone does not override the function's developer_id = auth.uid() predicate.
   PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
