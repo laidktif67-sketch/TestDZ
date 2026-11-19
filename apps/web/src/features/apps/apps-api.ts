@@ -113,7 +113,7 @@ export interface DeveloperTestInput {
 
 export function listDeveloperTests(developerId: string) {
   return dataClient().from("tests")
-    .select("id,app_id,developer_id,title,description,short_summary,test_type,status,min_testers,start_date,end_date,estimated_duration_minutes,created_at")
+    .select("id,app_id,developer_id,title,description,short_summary,test_type,status,min_testers,start_date,end_date,estimated_duration_minutes,tester_instructions,created_at")
     .eq("developer_id", developerId)
     .order("created_at", { ascending: false });
 }
