@@ -111,6 +111,15 @@ export interface DeveloperTestInput {
   instructions?: string | null;
 }
 
+/** List tests belonging to one app and the authenticated developer; RLS remains authoritative. */
+export function listDeveloperTestsForApp(appId: string, developerId: string) {
+  return dataClient().from("tests")
+    .select("id,app_id,developer_id,title,status,start_date,end_date,created_at")
+    .eq("app_id", appId)
+    .eq("developer_id", developerId)
+    .order("created_at", { ascending: false });
+}
+
 export function listDeveloperTests(developerId: string) {
   return dataClient().from("tests")
     .select("id,app_id,developer_id,title,description,short_summary,test_type,status,min_testers,start_date,end_date,estimated_duration_minutes,tester_instructions,created_at")
