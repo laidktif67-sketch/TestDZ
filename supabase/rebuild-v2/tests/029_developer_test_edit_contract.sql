@@ -123,10 +123,6 @@ BEGIN
   EXCEPTION WHEN SQLSTATE 'P0002' THEN NULL;
   END;
 
-  -- A role outside Developer/Admin is rejected before ownership lookup.
-  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
-  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
-  -- Admin is intentionally allowed by the role gate; ownership remains independently enforced above.
 
   -- Invalid input is rejected and cannot mutate the previously saved title or audit count.
   PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000001',true);
