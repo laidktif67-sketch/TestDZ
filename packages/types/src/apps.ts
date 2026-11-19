@@ -8,6 +8,8 @@ export interface AppRecord {
   description: string | null;
   category: string;
   icon_url: string | null;
+  distribution_method: "none" | "play_store" | "external_link" | "apk_upload";
+  distribution_url: string | null;
   status: AppStatus;
   created_at: string;
 }
