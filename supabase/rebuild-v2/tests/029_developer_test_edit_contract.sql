@@ -55,9 +55,14 @@ BEGIN
     'Original tester instructions.'
   );
 
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_audit_before
   FROM rebuild_v2.audit_events
   WHERE target_id=v_test AND action='test.updated';
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
 
   -- Owner can edit the draft and all exposed base fields are persisted.
   PERFORM rebuild_v2.update_test(
@@ -90,12 +95,25 @@ BEGIN
     RAISE EXCEPTION 'FAIL: owner update did not persist every editable base field';
   END IF;
 
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_audit_after
   FROM rebuild_v2.audit_events
   WHERE target_id=v_test AND action='test.updated';
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
   IF v_audit_after<>v_audit_before+1 THEN
     RAISE EXCEPTION 'FAIL: successful edit must append exactly one test.updated event';
   END IF;
+  PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"59000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+
+
 
   -- Admin role alone does not override the function's developer_id = auth.uid() predicate.
   PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
