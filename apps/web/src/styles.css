@@ -2416,3 +2416,13 @@ html:lang(fr),
  .tester-profile-page .tester-setting-art .profile-line-icon,.tester-profile-page .tester-setting-art.security .profile-line-icon,.tester-profile-page .tester-setting-art.language .profile-line-icon,.tester-profile-page .tester-setting-art.notifications .profile-line-icon{width:36px;height:36px}
  .tester-profile-page .tester-device-art>.profile-line-icon{width:52px;height:52px}
 }
+
+
+/* App detail: owner-scoped related test summaries */
+.related-tests-list{display:grid;gap:12px;margin:16px 0}
+.related-test-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px;border:1px solid var(--border-color,#e5e7eb);border-radius:12px}
+.related-test-row>div{display:grid;gap:5px;min-width:0}
+.related-test-row strong{overflow-wrap:anywhere}
+.related-test-row small{color:var(--muted,#6b7280);font-size:.85rem}
+.related-test-row>a{flex-shrink:0}
+@media(max-width:560px){.related-test-row{align-items:flex-start;gap:10px}.related-test-row>a{white-space:nowrap}}
