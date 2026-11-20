@@ -93,8 +93,6 @@ BEGIN
   EXCEPTION
     WHEN insufficient_privilege THEN
       v_rejected:=true;
-    WHEN OTHERS THEN
-      RAISE;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort'; END IF;
 
@@ -129,8 +127,6 @@ BEGIN
   EXCEPTION
     WHEN object_not_in_prerequisite_state THEN
       v_rejected:=true;
-    WHEN OTHERS THEN
-      RAISE;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments'; END IF;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
@@ -149,8 +145,6 @@ BEGIN
   EXCEPTION
     WHEN object_not_in_prerequisite_state THEN
       v_rejected:=true;
-    WHEN OTHERS THEN
-      RAISE;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: running cohort was cancelled'; END IF;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
