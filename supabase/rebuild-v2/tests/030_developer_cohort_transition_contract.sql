@@ -32,7 +32,6 @@ DECLARE
   v_assignment_one uuid;
   v_assignment_two uuid;
   v_count integer;
-  v_rejected boolean;
 BEGIN
   v_app:=rebuild_v2.create_app(
     'Cohort Transition Demo',
@@ -87,13 +86,11 @@ BEGIN
   END IF;
 
   -- A tester cannot advance a developer-owned cohort.
-  v_rejected:=true;
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Tester must not control developer cohort');
-    v_rejected:=false;
+    RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort' USING ERRCODE='P0001';
   EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
   END;
-  IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort'; END IF;
 
   -- Owner can move forming -> ready once the minimum tester count is reached.
   PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000001',true);
@@ -120,13 +117,11 @@ BEGIN
   END IF;
 
   -- Pending assignments prevent completion; a failed transition must not mutate either status.
-  v_rejected:=true;
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'completed','Premature completion must be blocked.');
-    v_rejected:=false;
+    RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments' USING ERRCODE='P0001';
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
-  IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments'; END IF;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
   IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: rejected completion changed cohort status';
@@ -137,13 +132,11 @@ BEGIN
   END IF;
 
   -- Running cohorts cannot be cancelled through the forming/ready cancellation path.
-  v_rejected:=true;
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'cancelled','Running cohort cancellation must be blocked.');
-    v_rejected:=false;
+    RAISE EXCEPTION 'FAIL: running cohort was cancelled' USING ERRCODE='P0001';
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
-  IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: running cohort was cancelled'; END IF;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
   IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: rejected cancellation changed cohort status';
