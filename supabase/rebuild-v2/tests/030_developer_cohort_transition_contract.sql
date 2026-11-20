@@ -89,7 +89,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Tester must not control developer cohort');
     RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort';
-  EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
 
   -- Owner can move forming -> ready once the minimum tester count is reached.
@@ -120,7 +120,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'completed','Premature completion must be blocked.');
     RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments';
-  EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
+  EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL;
   END;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
   IF v_count<>1 THEN
@@ -135,7 +135,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'cancelled','Running cohort cancellation must be blocked.');
     RAISE EXCEPTION 'FAIL: running cohort was cancelled';
-  EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
+  EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL;
   END;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
   IF v_count<>1 THEN
