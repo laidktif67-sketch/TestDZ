@@ -88,7 +88,7 @@ BEGIN
   -- A tester cannot advance a developer-owned cohort.
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Tester must not control developer cohort');
-    RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort' USING ERRCODE='P0001';
+    RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort';
   EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
   END;
 
