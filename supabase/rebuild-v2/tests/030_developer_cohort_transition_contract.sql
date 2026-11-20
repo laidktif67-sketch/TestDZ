@@ -91,7 +91,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Tester must not control developer cohort');
   EXCEPTION
-    WHEN insufficient_privilege THEN
+    WHEN SQLSTATE '42501' THEN
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort'; END IF;
@@ -125,7 +125,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'completed','Premature completion must be blocked.');
   EXCEPTION
-    WHEN object_not_in_prerequisite_state THEN
+    WHEN SQLSTATE '55000' THEN
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments'; END IF;
@@ -143,7 +143,7 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'cancelled','Running cohort cancellation must be blocked.');
   EXCEPTION
-    WHEN object_not_in_prerequisite_state THEN
+    WHEN SQLSTATE '55000' THEN
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: running cohort was cancelled'; END IF;
