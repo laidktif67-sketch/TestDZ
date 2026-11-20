@@ -119,7 +119,7 @@ BEGIN
   -- Pending assignments prevent completion; a failed transition must not mutate either status.
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'completed','Premature completion must be blocked.');
-    RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments' USING ERRCODE='P0001';
+    RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments';
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
@@ -134,7 +134,7 @@ BEGIN
   -- Running cohorts cannot be cancelled through the forming/ready cancellation path.
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'cancelled','Running cohort cancellation must be blocked.');
-    RAISE EXCEPTION 'FAIL: running cohort was cancelled' USING ERRCODE='P0001';
+    RAISE EXCEPTION 'FAIL: running cohort was cancelled';
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
