@@ -72,11 +72,20 @@ BEGIN
   -- Two distinct testers join the forming cohort through the public workflow.
   PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000003',true);
   PERFORM set_config('request.jwt.claims','{"sub":"60000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+  IF auth.uid()<>'60000000-0000-4000-8000-000000000003'::uuid THEN
+    RAISE EXCEPTION 'FAIL: first tester JWT subject was not applied';
+  END IF;
   v_assignment_one:=rebuild_v2.join_test(v_test);
 
   PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000004',true);
   PERFORM set_config('request.jwt.claims','{"sub":"60000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
+  IF auth.uid()<>'60000000-0000-4000-8000-000000000004'::uuid THEN
+    RAISE EXCEPTION 'FAIL: second tester JWT subject was not applied';
+  END IF;
   v_assignment_two:=rebuild_v2.join_test(v_test);
+  IF v_assignment_two=v_assignment_one THEN
+    RAISE EXCEPTION 'FAIL: two distinct tester identities returned the same assignment';
+  END IF;
 
   SELECT count(*) INTO v_count
   FROM rebuild_v2.assignments
