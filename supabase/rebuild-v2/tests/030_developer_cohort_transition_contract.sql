@@ -35,7 +35,7 @@ DECLARE
 BEGIN
   v_app:=rebuild_v2.create_app(
     'Cohort Transition Demo',
-    'dz.testdz.cohort-transition',
+    'dz.testdz.cohorttransition',
     'A synthetic app used only to exercise the developer cohort lifecycle contract.',
     'tools'
   );
@@ -156,7 +156,7 @@ ROLLBACK;
 
 SELECT jsonb_build_object(
   'synthetic_auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id IN ('60000000-0000-4000-8000-000000000001','60000000-0000-4000-8000-000000000002','60000000-0000-4000-8000-000000000003','60000000-0000-4000-8000-000000000004')),
-  'synthetic_app_after_rollback',(SELECT count(*) FROM rebuild_v2.apps WHERE package_name='dz.testdz.cohort-transition'),
+  'synthetic_app_after_rollback',(SELECT count(*) FROM rebuild_v2.apps WHERE package_name='dz.testdz.cohorttransition'),
   'synthetic_test_after_rollback',(SELECT count(*) FROM rebuild_v2.tests WHERE title='Cohort Transition Test'),
   'synthetic_cohort_after_rollback',(SELECT count(*) FROM rebuild_v2.cohorts WHERE name='Transition Cohort'),
   'synthetic_assignments_after_rollback',(SELECT count(*) FROM rebuild_v2.assignments WHERE test_id IN (SELECT id FROM rebuild_v2.tests WHERE title='Cohort Transition Test'))
