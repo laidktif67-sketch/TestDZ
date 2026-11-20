@@ -140,7 +140,7 @@ BEGIN
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
   IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: rejected cancellation changed cohort status';
-  END;
+  END IF;
 
   SELECT count(*) INTO v_count
   FROM rebuild_v2.audit_events
