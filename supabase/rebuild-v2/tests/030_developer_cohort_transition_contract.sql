@@ -33,6 +33,7 @@ DECLARE
   v_assignment_two uuid;
   v_count integer;
   v_rejected boolean;
+  v_error_state text;
 BEGIN
   v_app:=rebuild_v2.create_app(
     'Cohort Transition Demo',
@@ -91,7 +92,9 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Tester must not control developer cohort');
   EXCEPTION
-    WHEN SQLSTATE '42501' THEN
+    WHEN OTHERS THEN
+      GET STACKED DIAGNOSTICS v_error_state = RETURNED_SQLSTATE;
+      IF v_error_state <> '42501' THEN RAISE; END IF;
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort'; END IF;
@@ -125,7 +128,9 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'completed','Premature completion must be blocked.');
   EXCEPTION
-    WHEN SQLSTATE '55000' THEN
+    WHEN OTHERS THEN
+      GET STACKED DIAGNOSTICS v_error_state = RETURNED_SQLSTATE;
+      IF v_error_state <> '55000' THEN RAISE; END IF;
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments'; END IF;
@@ -143,7 +148,9 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'cancelled','Running cohort cancellation must be blocked.');
   EXCEPTION
-    WHEN SQLSTATE '55000' THEN
+    WHEN OTHERS THEN
+      GET STACKED DIAGNOSTICS v_error_state = RETURNED_SQLSTATE;
+      IF v_error_state <> '55000' THEN RAISE; END IF;
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: running cohort was cancelled'; END IF;
