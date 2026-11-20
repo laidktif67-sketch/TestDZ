@@ -96,19 +96,23 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
   PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Minimum tester capacity reached for contract test.');
-  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='ready') THEN
+  SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='ready';
+  IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: forming -> ready transition did not persist';
   END IF;
-  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND status='ready') THEN
+  SELECT count(*) INTO v_count FROM rebuild_v2.tests WHERE id=v_test AND status='ready';
+  IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: linked test did not advance to ready';
   END IF;
 
   -- Owner can move ready -> running and the linked test follows.
   PERFORM rebuild_v2.transition_test_cohort(v_cohort,'running','Start synthetic cohort lifecycle contract.');
-  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running') THEN
+  SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
+  IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: ready -> running transition did not persist';
   END IF;
-  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND status='running') THEN
+  SELECT count(*) INTO v_count FROM rebuild_v2.tests WHERE id=v_test AND status='running';
+  IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: linked test did not advance to running';
   END IF;
 
@@ -118,10 +122,12 @@ BEGIN
     RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments';
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
-  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running') THEN
+  SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
+  IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: rejected completion changed cohort status';
   END IF;
-  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.tests WHERE id=v_test AND status='running') THEN
+  SELECT count(*) INTO v_count FROM rebuild_v2.tests WHERE id=v_test AND status='running';
+  IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: rejected completion changed test status';
   END IF;
 
@@ -131,7 +137,8 @@ BEGIN
     RAISE EXCEPTION 'FAIL: running cohort was cancelled';
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
-  IF NOT EXISTS(SELECT 1 FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running') THEN
+  SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
+  IF v_count<>1 THEN
     RAISE EXCEPTION 'FAIL: rejected cancellation changed cohort status';
   END;
 
