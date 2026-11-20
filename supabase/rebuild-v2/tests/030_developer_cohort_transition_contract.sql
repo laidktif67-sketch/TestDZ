@@ -94,7 +94,7 @@ BEGIN
   EXCEPTION
     WHEN OTHERS THEN
       GET STACKED DIAGNOSTICS v_error_state = RETURNED_SQLSTATE;
-      IF v_error_state <> '42501' THEN RAISE; END IF;
+      IF v_error_state <> '42501' THEN RAISE EXCEPTION 'Unexpected SQLSTATE % in cohort transition contract', v_error_state; END IF;
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort'; END IF;
@@ -130,7 +130,7 @@ BEGIN
   EXCEPTION
     WHEN OTHERS THEN
       GET STACKED DIAGNOSTICS v_error_state = RETURNED_SQLSTATE;
-      IF v_error_state <> '55000' THEN RAISE; END IF;
+      IF v_error_state <> '55000' THEN RAISE EXCEPTION 'Unexpected SQLSTATE % in cohort transition contract', v_error_state; END IF;
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments'; END IF;
@@ -150,7 +150,7 @@ BEGIN
   EXCEPTION
     WHEN OTHERS THEN
       GET STACKED DIAGNOSTICS v_error_state = RETURNED_SQLSTATE;
-      IF v_error_state <> '55000' THEN RAISE; END IF;
+      IF v_error_state <> '55000' THEN RAISE EXCEPTION 'Unexpected SQLSTATE % in cohort transition contract', v_error_state; END IF;
       v_rejected:=true;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: running cohort was cancelled'; END IF;
