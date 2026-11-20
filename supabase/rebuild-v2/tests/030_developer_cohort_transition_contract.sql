@@ -91,8 +91,10 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Tester must not control developer cohort');
   EXCEPTION
-    WHEN SQLSTATE '42501' THEN v_rejected:=true;
-    WHEN OTHERS THEN RAISE;
+    WHEN insufficient_privilege THEN
+      v_rejected:=true;
+    WHEN OTHERS THEN
+      RAISE;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort'; END IF;
 
@@ -125,8 +127,10 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'completed','Premature completion must be blocked.');
   EXCEPTION
-    WHEN SQLSTATE '55000' THEN v_rejected:=true;
-    WHEN OTHERS THEN RAISE;
+    WHEN object_not_in_prerequisite_state THEN
+      v_rejected:=true;
+    WHEN OTHERS THEN
+      RAISE;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: cohort completed with unfinished assignments'; END IF;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
@@ -143,8 +147,10 @@ BEGIN
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'cancelled','Running cohort cancellation must be blocked.');
   EXCEPTION
-    WHEN SQLSTATE '55000' THEN v_rejected:=true;
-    WHEN OTHERS THEN RAISE;
+    WHEN object_not_in_prerequisite_state THEN
+      v_rejected:=true;
+    WHEN OTHERS THEN
+      RAISE;
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: running cohort was cancelled'; END IF;
   SELECT count(*) INTO v_count FROM rebuild_v2.cohorts WHERE id=v_cohort AND status='running';
