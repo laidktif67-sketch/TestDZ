@@ -50,6 +50,7 @@ export default function TestDetailsPage() {
       try {
         const { data: sessionData, error: sessionError } = await client.auth.getSession();
         if (sessionError) throw sessionError;
+        const currentUserId = sessionData.session?.user.id;
         if (sessionData.session) {
           const { data: profile } = await client
             .from("profiles")
@@ -66,7 +67,6 @@ export default function TestDetailsPage() {
           .from("tests")
           .select("id,title,description,status,min_testers,start_date,end_date,app:apps(name,icon_url,category)")
           .eq("id", id)
-          .in("status", ["recruiting", "ready"])
           .maybeSingle();
 
         if (queryError) throw queryError;
@@ -74,8 +74,28 @@ export default function TestDetailsPage() {
         if (!data) {
           setError("This opportunity is no longer available.");
           setTest(null);
-        } else {
+        } else if (data.status === "recruiting" || data.status === "ready") {
           setTest(data as unknown as TestDetails);
+        } else if (data.status === "running" && currentUserId) {
+          const { data: assignment, error: assignmentError } = await client
+            .from("assignments")
+            .select("id")
+            .eq("tester_id", currentUserId)
+            .eq("test_id", id)
+            .eq("status", "active")
+            .maybeSingle();
+
+          if (assignmentError) throw assignmentError;
+          if (!alive) return;
+          if (assignment) {
+            setTest(data as unknown as TestDetails);
+          } else {
+            setError("This opportunity is no longer available.");
+            setTest(null);
+          }
+        } else {
+          setError("This opportunity is no longer available.");
+          setTest(null);
         }
       } catch {
         if (alive) setError("We couldn’t load this test. Return to opportunities and try again.");
@@ -148,7 +168,7 @@ export default function TestDetailsPage() {
                     {test.app?.icon_url ? <img src={test.app.icon_url} alt="" /> : <span><Icon name="flask" size={22} /></span>}
                   </div>
                   <span className={"dt-status " + (test.status === "ready" ? "upcoming" : "recruiting")}>
-                    <i />{test.status === "ready" ? "Coming soon" : "Recruiting"}
+                    <i />{test.status === "ready" ? "Coming soon" : test.status === "running" ? "In progress" : "Recruiting"}
                   </span>
                 </div>
                 <div className="dt-card-heading">
@@ -164,7 +184,9 @@ export default function TestDetailsPage() {
                   <div><span>End date</span><strong>{dateLabel(test.end_date)}</strong></div>
                 </div>
                 <p className="dt-detail-note">
-                  Test assignments appear in My Tests when they are assigned to your account. Viewing this page does not enroll you in a test.
+                  {test.status === "running"
+                    ? "This test is assigned to your account. This page shows the test brief; use My Tests to review your assignment."
+                    : "Test assignments appear in My Tests when they are assigned to your account. Viewing this page does not enroll you in a test."}
                 </p>
                 <div className="dt-detail-actions">
                   <Link to="/discover-tests">Back to opportunities</Link>
