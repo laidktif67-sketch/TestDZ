@@ -40,12 +40,12 @@ This audit is documentation-only. No application code, SQL, migration, hosted Su
 | App name, package ID, category, description, status, created date | Present | Present | Core information preserved. |
 | Edit app metadata | Name, category, description | Name, category, description | Preserved for permitted statuses. |
 | Archive / restore | Both actions | Both actions | Preserved. |
-| Distribution method and distribution URL | Explicitly displayed; URL can be opened/copied | Not displayed in current V2 detail page | Important app-distribution context is absent from the page. |
-| Related tests | Inline list with status and created/start/end dates, links to each test detail | Link to general Developer tests page | Per-app related-test context is absent. |
+| Distribution method and distribution URL | Explicitly displayed; URL can be opened/copied | Read-only method and URL are loaded and displayed; URL can be opened | Core distribution context is now preserved. A dedicated copy-link control is not present in the current V2 page. |
+| Related tests | Inline list with status and created/start/end dates, links to each test detail | Owner-filtered inline list with status and created/start/end dates; links to per-test monitoring | Core per-app related-test context is now preserved. V2 routes to aggregate monitoring rather than the legacy individual campaign-detail route. |
 | Version history | Explicit placeholder says version tracking is not available in the data model | No equivalent section | No version data should be invented; an explicit future/unsupported state is optional. |
 | Review lifecycle | Legacy screen predates current V2 review gate | V2 submit-for-review and submitted/published restrictions | V2 review flow is an improvement and must remain. |
 
-**Recommended disposition:** restore read-only distribution metadata and an owner-scoped related-tests section in V2. Keep the existing V2 review restrictions. Do not create a version-history table until a real version model and lifecycle are designed.
+**Verified current disposition:** the current V2 `AppDetailPage` already displays read-only distribution metadata and an owner-filtered related-tests section. `getAppById` selects `distribution_method`/`distribution_url` and filters by both app ID and authenticated developer ID; `listDeveloperTestsForApp` filters by both app ID and developer ID, with RLS remaining authoritative. Keep the V2 review restrictions. A copy-link affordance is a small optional parity improvement, not a blocker. Do not create a version-history table until a real version model and lifecycle are designed.
 
 ## 3. Test list and campaign detail parity
 
@@ -78,7 +78,7 @@ The legacy campaign details page rendered tester display names, avatar URLs and 
 1. Does V2 provide a safe owner-scoped way to update campaign title/description/date/target after creation, or are those values intentionally frozen in the draft/review lifecycle?
 2. Is there a supported campaign-level pause/resume/end operation, distinct from transitioning an individual cohort?
 3. Does the results workspace expose all campaign-level outcome fields that were shown in the legacy Results tab?
-4. Can the app detail page query only the selected owner's related tests without duplicating list-wide queries?
+4. Does the current per-app related-tests section need pagination if app test counts grow, or is the current bounded UI sufficient?
 5. Which legacy activity events have safe aggregate equivalents, and which should remain unavailable due to tester privacy?
 
 These are source/API contract questions; do not implement client-side writes or infer support from a button or status label.
@@ -86,7 +86,7 @@ These are source/API contract questions; do not implement client-side writes or 
 ## 4. Safe implementation sequence
 
 1. Add back V2 app-list search/filter/sort/layout controls without changing persistence or schema.
-2. Add read-only distribution method/link and a related-tests summary to AppDetailPage using existing owner-scoped APIs.
+2. Keep the existing read-only distribution metadata and owner-filtered related-tests section in AppDetailPage; consider adding a copy-link affordance after UX QA.
 3. Inspect V2 test/cohort RPC contracts for campaign edit and recruitment lifecycle before proposing UI controls.
 4. Map legacy campaign summary fields to existing monitoring/results RPC output; document any field with no safe destination.
 5. Keep tester identity minimized; do not port legacy names, avatars, tester IDs or raw activity to Developer pages.
@@ -172,3 +172,37 @@ A direct source comparison was completed between the legacy DeveloperTestResults
 - supabase/rebuild-v2/tests/026_developer_test_monitoring_privacy_contract.sql — aggregate correctness, minimum-three-distinct-testers threshold, and private-data non-disclosure assertions.
 
 This comparison was documentation-only. No app code, SQL, database, hosted service, or deployment was changed.
+
+
+## 7. App-detail source verification and monitoring edge cases (2026-11-21)
+
+The earlier app-detail gap statement above was rechecked against the current V2 stack after PR #116. It is now superseded by the verified implementation:
+
+- `AppDetailPage` calls `getAppById(id, userData.user.id)`; the API selects `distribution_method` and `distribution_url` and applies both app-ID and developer-ID filters.
+- The page displays the distribution method and an external link when configured. It does not currently provide a copy-link action.
+- The page calls `listDeveloperTestsForApp(id, userData.user.id)`; that query selects only the selected app's tests for that developer and orders them newest first. The related-test rows show title, status, start/end dates (or created date) and link to `/developer/tests/:id/monitoring`.
+- The monitoring route is mounted in `apps/web/src/App.tsx`. The RPC implementation independently checks the Developer role and exact test ownership before returning data; the app/test RLS policies also retain owner checks.
+- This means the core related-test and distribution context are already restored in the current V2 page. The legacy campaign-detail route itself remains intentionally replaced by a monitoring route plus separate Developer workspace pages.
+
+### Two monitoring presentation issues found
+
+1. **Timezone key mismatch:** SQL buckets `dailyActivity.date` in `Africa/Algiers`, while `DeveloperTestMonitoringPage` creates its seven date keys using the browser's local `Date` getters. If a Developer's device timezone is not Algeria, SQL and browser day keys can differ and the activity may appear under the wrong day or as zero. The UI should use an explicit `Africa/Algiers` date-key formatter (or the API should return a clearly defined timezone and the UI must honor it).
+2. **Feedback count label:** SQL `feedbackCount` counts all feedback rows, while `ratingCount` counts only rows with a non-null rating. The Results and Monitoring pages currently label `feedbackCount` as received ratings/evaluations. The label should say feedback submissions/records; use `ratingCount` when the UI means star ratings.
+
+### Safe follow-up
+
+- Correct the timezone key generation and add a deterministic test for a non-Algeria browser timezone.
+- Correct the UI labels to distinguish feedback submissions from rated feedback; preserve the separate average-rating calculation.
+- Keep the current owner-filtered related-test query. Add pagination only if real app test volume and UX evidence justify it.
+- Do not add new data queries or expose tester-level details for these presentation fixes.
+
+### Source evidence inspected
+
+- V2 `apps/web/src/pages/AppDetailPage.tsx`.
+- V2 `apps/web/src/features/apps/apps-api.ts` — `getAppById` and `listDeveloperTestsForApp`.
+- V2 `apps/web/src/modules/developer/pages/DeveloperTestMonitoringPage.tsx`.
+- V2 `apps/web/src/modules/developer/pages/DeveloperTestResultsPage.tsx`.
+- V2 `supabase/rebuild-v2/002_security.sql` — app/test owner-read policies.
+- V2 `supabase/rebuild-v2/030_developer_test_monitoring_summary.sql` — Algiers daily buckets and separate feedback/rating counts.
+
+This update is documentation-only. No application code, SQL, database, hosted service, or deployment was changed.
