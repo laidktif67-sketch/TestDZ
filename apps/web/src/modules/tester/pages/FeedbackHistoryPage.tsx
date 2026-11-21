@@ -59,6 +59,7 @@ export default function FeedbackHistoryPage() {
   const [rows, setRows] = useState<FeedbackRow[]>([]);
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
   const [developerReplies, setDeveloperReplies] = useState<TesterFeedbackMessage[]>([]);
+  const [replyLoadError, setReplyLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<"all" | FeedbackStatus>("all");
@@ -83,6 +84,7 @@ export default function FeedbackHistoryPage() {
       } else {
         setName(session!.user.email?.split("@")[0] || "Tester");
       }
+      setReplyLoadError(Boolean(result.repliesResult?.error));
       if (result.repliesResult && !result.repliesResult.error) setDeveloperReplies((result.repliesResult.data ?? []) as TesterFeedbackMessage[]);
       else setDeveloperReplies([]);
       if (result.feedbackResult.error) {
@@ -188,7 +190,7 @@ export default function FeedbackHistoryPage() {
                 <section className="fh-rating-detail"><h3>Your Rating</h3><div><RatingStars value={row.rating}/><strong>{row.rating === null ? "—" : row.rating.toFixed(1) + " / 5"}</strong></div><small>Overall rating recorded for this feedback</small></section>
                 <section className="fh-comment-detail"><h3>Your Comment</h3><blockquote>{row.body}</blockquote><span className="fh-category">{formatCategory(row.category)}</span></section>
                 <section className="fh-review-detail"><h3>Review Status</h3><span className={"fh-status " + row.quality_status}>{statusText[row.quality_status]}</span><small>{row.reviewed_at ? "Reviewed on " + formatDate(row.reviewed_at) : "Awaiting QA review"}</small><div className="fh-reward-box"><Icon name="gift" size={25}/><span>{isTesterWorkflowV2Enabled?"Reward not enabled":"Reward Earned"}<strong>{isTesterWorkflowV2Enabled?"—":"+"+reward+" pts"}</strong></span></div></section>
-                {isTesterWorkflowV2Enabled && <section className="fh-response-detail" aria-label="Developer responses"><h3>Developer response</h3>{developerReplies.filter(reply => reply.feedback_id === row.id).length ? developerReplies.filter(reply => reply.feedback_id === row.id).map((reply,index)=><article key={reply.feedback_id+"-"+reply.created_at+"-"+index}><p>{reply.body}</p><small>Developer · {formatDate(reply.created_at)}</small></article>) : <p className="fh-no-response">No developer response yet.</p>}</section>}
+                {isTesterWorkflowV2Enabled && <section className="fh-response-detail" aria-label="Developer responses"><h3>Developer response</h3>{replyLoadError ? <p className="fh-no-response" role="status">Developer responses could not be loaded. Please refresh to try again.</p> : developerReplies.filter(reply => reply.feedback_id === row.id).length ? developerReplies.filter(reply => reply.feedback_id === row.id).map((reply,index)=><article key={reply.feedback_id+"-"+reply.created_at+"-"+index}><p>{reply.body}</p><small>Developer · {formatDate(reply.created_at)}</small></article>) : <p className="fh-no-response">No developer response yet.</p>}</section>}
               </div>}
             </article>;
           }) : <div className="fh-empty"><span>★</span><strong>{rows.length ? "No matching feedback" : "Your feedback journey starts here"}</strong><p>{rows.length ? "There are no entries for these filters. Clear them to see your full history." : "Feedback you submit after completing a test will appear here, together with its review status and earned points."}</p>{hasActiveFilters && <button type="button" onClick={clearFilters}>Clear all filters</button>}</div>}
