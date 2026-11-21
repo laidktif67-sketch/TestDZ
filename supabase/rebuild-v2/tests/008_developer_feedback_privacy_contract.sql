@@ -174,6 +174,34 @@ BEGIN
 END;
 $owner_privacy$;
 
+-- The tester can read only developer-authored replies to their own feedback.
+SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000003',true);
+SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+DO $tester_reply_access$
+DECLARE v_count integer;
+BEGIN
+ SELECT count(*) INTO v_count
+ FROM rebuild_v2.get_tester_feedback_messages()
+ WHERE feedback_id=current_setting('testdz.feedback_id')::uuid
+   AND body='We are reviewing the navigation issue for the next release.';
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: tester cannot read developer reply for own feedback'; END IF;
+END;
+$tester_reply_access$;
+
+-- A different developer cannot use the tester-only reply RPC.
+SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000004',true);
+SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
+DO $outsider_tester_reply_boundary$
+DECLARE v_count integer;
+BEGIN
+ BEGIN
+  SELECT count(*) INTO v_count FROM rebuild_v2.get_tester_feedback_messages();
+  RAISE EXCEPTION 'FAIL: non-tester role accessed tester feedback replies';
+ EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
+ END;
+END;
+$outsider_tester_reply_boundary$;
+
 -- A different developer sees no rows and cannot update or message this feedback.
 SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000004',true);
 SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
