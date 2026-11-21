@@ -13,7 +13,10 @@ SET row_security TO 'off'
 AS $function$
 DECLARE v_user uuid:=auth.uid();
 BEGIN
-  IF v_user IS NULL OR NOT rebuild_v2_private.has_role(v_user,ARRAY['tester']) THEN
+  IF v_user IS NULL OR NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.user_roles ur
+    WHERE ur.user_id=v_user AND ur.role='tester'
+  ) THEN
     RAISE EXCEPTION 'TESTER_ROLE_REQUIRED' USING errcode='42501';
   END IF;
 
