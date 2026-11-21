@@ -1,5 +1,5 @@
 -- Developer feedback privacy and ownership contract.
--- Run ONLY against isolated TestDZ-FixLab after candidate SQL 001..016.
+-- Run ONLY against isolated TestDZ-FixLab after all candidate Rebuild V2 SQL migrations.
 -- Synthetic users, feedback, review rows, messages and events are rolled back.
 
 BEGIN;
