@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import BlurText from "../components/react-bits/BlurText";
+const BlurText = lazy(() => import("../components/react-bits/BlurText"));
 import { useLenis } from "../hooks/useLenis";
 import "../styles/onboarding.css";
 
@@ -211,7 +211,9 @@ export default function OnboardingPage() {
       <div className="onboarding-heading">
         <span className="onboarding-kicker">{t.step}</span>
         <h1>{t.title}</h1>
-        <BlurText text={t.intro} className="onboarding-intro-motion" animateBy="words" delay={45} direction="top" effect="focus" stepDuration={0.32} trigger="load" />
+        <Suspense fallback={<p className="onboarding-intro-motion">{t.intro}</p>}>
+          <BlurText text={t.intro} className="onboarding-intro-motion" animateBy="words" delay={45} direction="top" effect="focus" stepDuration={0.32} trigger="load" />
+        </Suspense>
       </div>
       <div className="onboarding-role-grid" role="group" aria-label={t.roleLabel}>
         {roles.map(role => <button
