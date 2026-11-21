@@ -165,6 +165,11 @@ BEGIN
     RAISE EXCEPTION 'FAIL: rejected cancellation changed cohort status';
   END IF;
 
+  -- Audit events are intentionally visible only to Admin under RLS.
+  -- Switch to the synthetic Admin identity for the audit assertion rather
+  -- than weakening the production audit_events policy for Developers.
+  PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000002',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"60000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
   SELECT count(*) INTO v_count
   FROM rebuild_v2.audit_events
   WHERE target_id=v_cohort AND action IN ('cohort.status.ready','cohort.status.running');
