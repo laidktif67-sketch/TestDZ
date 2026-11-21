@@ -201,7 +201,7 @@ function LandingPage() {
           </div>
         </div>
         <div className="lp-hero-art lp-hero-image-wrap">
-          <img className="lp-hero-image" src="/images/hero-dashboard.png" alt={t.illustration} fetchPriority="high" />
+          <img className="lp-hero-image" src="/images/hero-dashboard.png" alt={t.illustration} fetchPriority="high" decoding="async" />
         </div>
       </section>
 
@@ -233,7 +233,7 @@ function LandingPage() {
       </section>
 
       <section className="lp-faq" id="faq">
-        <div className="lp-faq-illustration"><img className="lp-faq-image" src="/images/faq-assistant.png" alt={t.illustration} loading="lazy" /></div>
+        <div className="lp-faq-illustration"><img className="lp-faq-image" src="/images/faq-assistant.png" alt={t.illustration} loading="lazy" decoding="async" /></div>
         <div className="lp-faq-copy"><h2>{t.faqTitle}</h2><p>{t.faqIntro}</p><a href="#faq-questions">{t.viewFaq} <LpIcon name="arrow" size={15}/></a></div>
         <div className="lp-faq-list" id="faq-questions"><details><summary>{t.faq1q}</summary><p>{t.faq1a}</p></details><details><summary>{t.faq2q}</summary><p>{t.faq2a}</p></details><details><summary>{t.faq3q}</summary><p>{t.faq3a}</p></details><details><summary>{t.faq4q}</summary><p>{t.faq4a}</p></details></div>
       </section>
