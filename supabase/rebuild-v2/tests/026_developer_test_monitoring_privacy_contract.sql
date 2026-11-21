@@ -10,6 +10,7 @@ VALUES
 ('53000000-0000-4000-8000-000000000003','authenticated','authenticated','monitor-tester-one@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
 ('53000000-0000-4000-8000-000000000004','authenticated','authenticated','monitor-tester-two@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
 ('53000000-0000-4000-8000-000000000005','authenticated','authenticated','monitor-tester-three@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
+('53000000-0000-4000-8000-000000000007','authenticated','authenticated','monitor-tester-four@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now()),
 ('53000000-0000-4000-8000-000000000006','authenticated','authenticated','monitor-admin@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{}'::jsonb,now(),now());
 INSERT INTO rebuild_v2.user_roles(user_id,role) VALUES
 ('53000000-0000-4000-8000-000000000001','developer'),
@@ -44,7 +45,8 @@ INSERT INTO rebuild_v2.assignments(id,cohort_id,test_id,tester_id,status,assigne
 VALUES
 ('53200000-0000-4000-8000-000000000001','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000003','completed',now(),now(),now()),
 ('53200000-0000-4000-8000-000000000002','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000004','active',now(),now(),NULL),
-('53200000-0000-4000-8000-000000000003','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000005','pending',now(),NULL,NULL);
+('53200000-0000-4000-8000-000000000003','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000005','pending',now(),NULL,NULL),
+('53200000-0000-4000-8000-000000000004','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000007','pending',now(),NULL,NULL);
 INSERT INTO rebuild_v2.checkins(assignment_id,tester_id,checkin_date,note,evidence_path,created_at)
 VALUES
 ('53200000-0000-4000-8000-000000000001','53000000-0000-4000-8000-000000000003',current_date,'PRIVATE_CHECKIN_NOTE_DO_NOT_EXPOSE','private/evidence/secret-one.png',now()),
@@ -71,9 +73,9 @@ DO $assert$
 DECLARE v_test uuid:=current_setting('testdz.monitoring_test_id')::uuid; v_payload jsonb; v_count integer; v_text text;
 BEGIN
   v_payload:=rebuild_v2.get_developer_test_monitoring(v_test);
-  IF v_payload->'metrics'->>'totalAssignments'<>'3'
-     OR v_payload->'metrics'->>'uniqueTesters'<>'3'
-     OR v_payload->'metrics'->>'pending'<>'1'
+  IF v_payload->'metrics'->>'totalAssignments'<>'4'
+     OR v_payload->'metrics'->>'uniqueTesters'<>'4'
+     OR v_payload->'metrics'->>'pending'<>'2'
      OR v_payload->'metrics'->>'active'<>'1'
      OR v_payload->'metrics'->>'completed'<>'1'
      OR v_payload->'metrics'->>'checkins'<>'3'
@@ -91,6 +93,7 @@ BEGIN
   IF position('53000000-0000-4000-8000-000000000003' IN v_text)>0
      OR position('53000000-0000-4000-8000-000000000004' IN v_text)>0
      OR position('53000000-0000-4000-8000-000000000005' IN v_text)>0
+     OR position('53000000-0000-4000-8000-000000000007' IN v_text)>0
      OR position('monitor-tester-' IN v_text)>0
      OR position('PRIVATE_CHECKIN_NOTE_DO_NOT_EXPOSE' IN v_text)>0
      OR position('private/evidence/' IN v_text)>0
