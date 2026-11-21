@@ -57,7 +57,7 @@ jobs:
           test -n "${DB_URL:-}" || { echo "DB_URL was not exported by Supabase CLI"; exit 1; }
 
           scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
-          if [ "${#scripts[@]}" -ne 33 ]; then
+          if [ "${#scripts[@]}" -ne 34 ]; then
             echo "Expected exactly 33 candidate SQL scripts; found ${#scripts[@]}"
             exit 1
           fi
