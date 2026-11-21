@@ -72,7 +72,8 @@ const ProfileCompletionPage = lazy(() => import("./pages/ProfileCompletionPage")
 import { IdentityProvider } from "./shared/auth/identity-provider";
 const AuthGuard = lazy(() => import("./shared/guards/AuthGuard"));
 const OnboardingGuard = lazy(() => import("./shared/guards/OnboardingGuard"));
-import RoleGuard, { RoleHomeRedirect } from "./shared/guards/RoleGuard";
+const RoleGuard = lazy(() => import("./shared/guards/RoleGuard").then(({ default: Component }) => ({ default: Component })));
+const RoleHomeRedirect = lazy(() => import("./shared/guards/RoleGuard").then(({ RoleHomeRedirect: Component }) => ({ default: Component })));
 
 export default function App() {
   return (
