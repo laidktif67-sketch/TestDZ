@@ -12,6 +12,16 @@ VALUES
  ('80000000-0000-4000-8000-000000000004','authenticated','authenticated','v2-feedback-outsider@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Developer"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000005','authenticated','authenticated','v2-feedback-support@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Support Agent"}'::jsonb,now(),now());
 
+-- The auth-user trigger grants the default tester role to every new account.
+-- Remove that default from synthetic staff/outsider fixtures before assigning their intended roles.
+DELETE FROM rebuild_v2.user_roles
+WHERE user_id IN (
+ '80000000-0000-4000-8000-000000000001',
+ '80000000-0000-4000-8000-000000000002',
+ '80000000-0000-4000-8000-000000000004',
+ '80000000-0000-4000-8000-000000000005'
+) AND role='tester';
+
 INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
  ('80000000-0000-4000-8000-000000000001','developer'),
