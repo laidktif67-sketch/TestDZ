@@ -127,3 +127,48 @@ The follow-up source inspection resolves the campaign pause/resume question for 
 - apps/web/src/features/apps/apps-api.ts — client wrapper surface should remain cohort-specific; no test-wide pause/resume wrapper was identified in the inspected Developer Tests imports.
 
 This is a source-contract finding only. No SQL, app code, database, hosted service, or deployment was changed by this audit update.
+
+
+## 6. Verified results-page parity and privacy review (2026-11-21)
+
+A direct source comparison was completed between the legacy DeveloperTestResultsPage and the V2 DeveloperTestResultsPage, plus the V2 monitoring RPC and its privacy contract.
+
+| Capability | Legacy results page | V2 results page | Finding |
+|---|---|---|---|
+| Overall totals and status breakdown | Assignment rows loaded directly and classified client-side | Aggregated per-test monitoring summaries | V2 avoids exposing raw assignment rows. |
+| Date range (7/30/90/all) | Client-side filter over assignment created_at | No global date-range filter | Missing in V2; cannot be reconstructed accurately from the current seven-day-only dailyActivity field. |
+| App/test/status filters | Present | Test title/app search and test-status filter | V2 has search and test-status filter; no separate app selector or assignment-outcome filter. |
+| Trend chart | Seven-day assignment-created trend with completion ratio and run counts | Per-test seven-day activity counts in monitoring page; no cross-test chart on Results page | Not equivalent: monitoring dailyActivity counts multiple event types, not completed runs or success rate. Do not relabel it as a success trend. |
+| Recent results table | Individual assignment rows with date, test, app and outcome | Per-test aggregate table | Individual rows are intentionally not exposed in V2. |
+| Average rating | Calculated from feedback ratings | Weighted correctly from averageRating × ratingCount across test summaries | Aggregate insight retained. |
+| Unique testers | Calculated from tester IDs across selected assignment rows | Unique tester count is available per test only | Do not sum per-test uniqueTesters to claim a global unique count; the same tester may appear in multiple tests. |
+| Repeat-run share | Derived from tester IDs across raw rows | Not exposed | Cannot be reconstructed safely from current aggregate response. |
+| CSV export | Included tester_id in exported rows | Per-test aggregate summary only | V2 is safer; do not restore tester identifiers. |
+
+### Verified V2 data contract
+
+- The existing owner-scoped RPC get_developer_test_monitoring returns test metadata, test configuration, assignment-state counts, feedback/rating aggregates, and dailyActivity.
+- The SQL computes dailyActivity from assignment, start, completion, check-in, and feedback event timestamps. It emits a day only when at least three distinct testers contributed events that day. Its count is an event count, not an assignment count or completion count.
+- The monitoring privacy contract explicitly asserts that tester IDs, assignment IDs, check-in notes, evidence paths, raw feedback bodies, and raw assignment/check-in/feedback rows are not exposed to a Developer. It also checks that another Developer and a Tester cannot read the target test's monitoring response.
+- The current V2 Results page aggregates total assignments, completed, failed, active, pending, feedback count, and a rating average weighted by ratingCount. It correctly does not attempt to sum uniqueTesters across tests.
+
+### Safe parity decisions
+
+1. Keep V2 aggregate-only results and aggregate CSV export. Never reintroduce tester IDs, names, avatars, assignment IDs, raw feedback bodies, check-in notes, or evidence paths into Developer results.
+2. Do not add a global date-range selector until the backend exposes date-bounded aggregate counts with a clear definition (assignment creation vs completion vs activity) and privacy thresholds.
+3. Do not build a global completion/success trend from dailyActivity. A future trend requires an explicit owner-scoped RPC returning date-bucketed assignment outcomes, with privacy suppression and SQL contract tests.
+4. An app selector can be added safely as a client-side filter over the already loaded owned-test summaries, without extra data access. An assignment-outcome filter is not equivalent to test-status filtering and should not be added until the summary exposes a well-defined outcome distribution (including withdrawn/rejected semantics).
+5. Do not restore repeat-run share or global unique tester totals from per-test counts; deduplicating across tests would require privacy-reviewed aggregate backend support.
+6. A safe near-term UI enhancement is an explicit per-test activity view using the existing seven-day activity data, clearly labeled as activity events and retaining the SQL minimum-three-distinct-testers suppression. The existing per-test Monitoring page already renders this information.
+
+### Source evidence inspected
+
+- Legacy apps/web/src/modules/developer/pages/DeveloperTestResultsPage.tsx — assignment-based filters, seven-day trend, recent rows, unique tester/repeat-run metrics and CSV containing tester_id.
+- Legacy apps/web/src/modules/developer/pages/DeveloperTestCampaignDetailsPage.tsx — individual tester and feedback identity/content in campaign detail.
+- V2 apps/web/src/modules/developer/pages/DeveloperTestResultsPage.tsx — per-test summary aggregation, weighted rating, filters, aggregate CSV and privacy notice.
+- V2 apps/web/src/modules/developer/pages/DeveloperTestMonitoringPage.tsx — per-test activity chart and aggregate metrics.
+- V2 apps/web/src/features/apps/apps-api.ts — DeveloperTestMonitoringSummary and getDeveloperTestMonitoringSummary wrapper.
+- supabase/rebuild-v2/030_developer_test_monitoring_summary.sql — owner check, aggregate metrics, daily event grouping and threshold.
+- supabase/rebuild-v2/tests/026_developer_test_monitoring_privacy_contract.sql — aggregate correctness, minimum-three-distinct-testers threshold, and private-data non-disclosure assertions.
+
+This comparison was documentation-only. No app code, SQL, database, hosted service, or deployment was changed.
