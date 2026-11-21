@@ -5,7 +5,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLenis } from "../hooks/useLenis";
 import { LpIcon } from "../shared/components/LpIcon";
 
-const BlurText = lazy(() => import("../components/react-bits/BlurText"));
 const LightRays = lazy(() => import("../components/react-bits/LightRays"));
 const StarBorder = lazy(() => import("../components/react-bits/StarBorder"));
 
@@ -186,7 +185,7 @@ function LandingPage() {
         /></Suspense></div>}
         <div className="lp-hero-copy">
           <h1 className="lp-hero-semantic-title">TestDZ</h1>
-          {reducedMotion ? <span className="lp-hero-title" aria-hidden="true">TestDZ</span> : <Suspense fallback={<span className="lp-hero-title" aria-hidden="true">TestDZ</span>}><BlurText text="TestDZ" className="lp-hero-title" ariaHidden effect="blur" animateBy="words" direction="bottom" trigger="load" delay={65} stepDuration={0.42} blur={8} distance={14} /></Suspense>}
+          <span className="lp-hero-title" aria-hidden="true">TestDZ</span>
           <h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
           <p>{t.heroBody}</p>
           <div className="lp-hero-buttons">
