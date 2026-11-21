@@ -101,6 +101,10 @@ BEGIN
     RAISE EXCEPTION 'FAIL: two distinct tester identities returned the same assignment';
   END IF;
 
+  -- A tester is intentionally allowed to read only their own assignment.
+  -- Switch to the owning developer before asserting the cohort-wide total.
+  PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
   SELECT count(*) INTO v_count
   FROM rebuild_v2.assignments
   WHERE cohort_id=v_cohort AND status NOT IN ('withdrawn','rejected');
@@ -114,6 +118,8 @@ BEGIN
   END IF;
 
   -- A tester cannot advance a developer-owned cohort.
+  PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000004',true);
+  PERFORM set_config('request.jwt.claims','{"sub":"60000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
   BEGIN
     PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Tester must not control developer cohort');
     RAISE EXCEPTION 'FAIL: tester transitioned a developer cohort';
