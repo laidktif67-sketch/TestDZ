@@ -1,81 +1,83 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import AppsPage from "./pages/AppsPage";
-import AppDetailPage from "./pages/AppDetailPage";
-import AuthPage from "./pages/AuthPage";
-import SignupSuccessPage from "./pages/SignupSuccessPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import PasswordResetSuccessPage from "./pages/PasswordResetSuccessPage";
-import InvalidOtpPage from "./pages/InvalidOtpPage";
-import OnboardingPage from "./pages/OnboardingPage";
-import InterestsPage from "./pages/InterestsPage";
-import LandingPage from "./pages/LandingPage";
-import LegalPage from "./pages/LegalPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import AuthCallbackPage from "./pages/AuthCallbackPage";
-import TesterDashboardPage from "./modules/tester/pages/TesterDashboardPage";
-import MyTestsPage from "./modules/tester/pages/MyTestsPage";
-import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
-import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
-import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
-import DeveloperAnalyticsPage from "./modules/developer/pages/DeveloperAnalyticsPage";
-import DeveloperAddAppPage from "./modules/developer/pages/DeveloperAddAppPage";
-import DeveloperCreateTestSixStepPage from "./modules/developer/pages/DeveloperCreateTestSixStepPage";
-import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTestMonitoringPage";
-import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
-import DeveloperTestResultsPage from "./modules/developer/pages/DeveloperTestResultsPage";
-import DeveloperHelpPage from "./modules/developer/pages/DeveloperHelpPage";
-import DeveloperWorkspaceSettingsPage from "./modules/developer/pages/DeveloperWorkspaceSettingsPage";
-import DeveloperTestsPage from "./modules/developer/pages/DeveloperTestsPage";
-import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
-import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
-import DeveloperReviewQueuePage from "./modules/developer/pages/DeveloperReviewQueuePage";
-import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
-import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
-import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
-import LanguageAppearancePage from "./modules/tester/pages/LanguageAppearancePage";
-import PrivacyDataManagementPage from "./modules/tester/pages/PrivacyDataManagementPage";
-import ActiveSessionsPage from "./modules/tester/pages/ActiveSessionsPage";
-import LoginActivitySecurityPage from "./modules/tester/pages/LoginActivitySecurityPage";
-import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterPage";
-import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
-import AssignmentDetailsPage from "./modules/tester/pages/AssignmentDetailsPage";
-import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmentProgressPage";
-import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
-import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
-import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
-import AdminDashboardPage from "./modules/admin/pages/AdminDashboardPage";
-import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
-import AdminUsersPage from "./modules/admin/pages/AdminUsersPage";
-import AdminAuditLogPage from "./modules/admin/pages/AdminAuditLogPage";
-import AdminFraudReviewsPage from "./modules/admin/pages/AdminFraudReviewsPage";
-import CaseQueuesPage from "./modules/admin/pages/CaseQueuesPage";
-import FinancialOperationsPage from "./modules/admin/pages/FinancialOperationsPage";
-import SupportQueuePage from "./modules/support/pages/SupportQueuePage";
-import SupportTicketDetailPage from "./modules/support/pages/SupportTicketDetailPage";
-import WalletRewardsPage from "./modules/tester/pages/WalletRewardsPage";
-import WithdrawalRequestPage from "./modules/tester/pages/WithdrawalRequestPage";
-import WithdrawalStatusPage from "./modules/tester/pages/WithdrawalStatusPage";
-import SubmitFeedbackPage from "./modules/tester/pages/SubmitFeedbackPage";
-import ReportProblemPage from "./modules/tester/pages/ReportProblemPage";
-import FeedbackHistoryPage from "./modules/tester/pages/FeedbackHistoryPage";
-import CheckInHistoryPage from "./modules/tester/pages/CheckInHistoryPage";
-import ActivityHistoryPage from "./modules/tester/pages/ActivityHistoryPage";
-import ReferralProgramPage from "./modules/tester/pages/ReferralProgramPage";
-import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
-import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
-import SupportCenterPage from "./modules/tester/pages/SupportCenterPage";
-import SupportTicketDetailsPage from "./modules/tester/pages/SupportTicketDetailsPage";
-import LiveChatPage from "./modules/tester/pages/LiveChatPage";
-import ProfileCompletionPage from "./pages/ProfileCompletionPage";
+const AppsPage = lazy(() => import("./pages/AppsPage"));
+const AppDetailPage = lazy(() => import("./pages/AppDetailPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const SignupSuccessPage = lazy(() => import("./pages/SignupSuccessPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const PasswordResetSuccessPage = lazy(() => import("./pages/PasswordResetSuccessPage"));
+const InvalidOtpPage = lazy(() => import("./pages/InvalidOtpPage"));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+const InterestsPage = lazy(() => import("./pages/InterestsPage"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
+const TesterDashboardPage = lazy(() => import("./modules/tester/pages/TesterDashboardPage"));
+const MyTestsPage = lazy(() => import("./modules/tester/pages/MyTestsPage"));
+const DiscoverTestsPage = lazy(() => import("./modules/tester/pages/DiscoverTestsPage"));
+const TestPreviewPage = lazy(() => import("./modules/tester/pages/TestPreviewPage"));
+const DeveloperDashboardPage = lazy(() => import("./modules/developer/pages/DeveloperDashboardPage"));
+const DeveloperAnalyticsPage = lazy(() => import("./modules/developer/pages/DeveloperAnalyticsPage"));
+const DeveloperAddAppPage = lazy(() => import("./modules/developer/pages/DeveloperAddAppPage"));
+const DeveloperCreateTestSixStepPage = lazy(() => import("./modules/developer/pages/DeveloperCreateTestSixStepPage"));
+const DeveloperTestMonitoringPage = lazy(() => import("./modules/developer/pages/DeveloperTestMonitoringPage"));
+const DeveloperTestersPage = lazy(() => import("./modules/developer/pages/DeveloperTestersPage"));
+const DeveloperTestResultsPage = lazy(() => import("./modules/developer/pages/DeveloperTestResultsPage"));
+const DeveloperHelpPage = lazy(() => import("./modules/developer/pages/DeveloperHelpPage"));
+const DeveloperWorkspaceSettingsPage = lazy(() => import("./modules/developer/pages/DeveloperWorkspaceSettingsPage"));
+const DeveloperTestsPage = lazy(() => import("./modules/developer/pages/DeveloperTestsPage"));
+const DeveloperFeedbackPage = lazy(() => import("./modules/developer/pages/DeveloperFeedbackPage"));
+const DeveloperNotificationsPage = lazy(() => import("./modules/developer/pages/DeveloperNotificationsPage"));
+const DeveloperReviewQueuePage = lazy(() => import("./modules/developer/pages/DeveloperReviewQueuePage"));
+const TesterProfilePage = lazy(() => import("./modules/tester/pages/TesterProfilePage"));
+const SettingsSecurityPage = lazy(() => import("./modules/tester/pages/SettingsSecurityPage"));
+const NotificationPreferencesPage = lazy(() => import("./modules/tester/pages/NotificationPreferencesPage"));
+const LanguageAppearancePage = lazy(() => import("./modules/tester/pages/LanguageAppearancePage"));
+const PrivacyDataManagementPage = lazy(() => import("./modules/tester/pages/PrivacyDataManagementPage"));
+const ActiveSessionsPage = lazy(() => import("./modules/tester/pages/ActiveSessionsPage"));
+const LoginActivitySecurityPage = lazy(() => import("./modules/tester/pages/LoginActivitySecurityPage"));
+const NotificationsCenterPage = lazy(() => import("./modules/tester/pages/NotificationsCenterPage"));
+const AssignmentSubmissionPage = lazy(() => import("./modules/tester/pages/AssignmentSubmissionPage"));
+const AssignmentDetailsPage = lazy(() => import("./modules/tester/pages/AssignmentDetailsPage"));
+const ActiveAssignmentProgressPage = lazy(() => import("./modules/tester/pages/ActiveAssignmentProgressPage"));
+const TestCompletionSummaryPage = lazy(() => import("./modules/tester/pages/TestCompletionSummaryPage"));
+const TestCompletionRewardPage = lazy(() => import("./modules/tester/pages/TestCompletionRewardPage"));
+const TesterLeaderboardPage = lazy(() => import("./modules/tester/pages/TesterLeaderboardPage"));
+const AdminDashboardPage = lazy(() => import("./modules/admin/pages/AdminDashboardPage"));
+const AdminRoleRequestsPage = lazy(() => import("./modules/admin/pages/AdminRoleRequestsPage"));
+const AdminUsersPage = lazy(() => import("./modules/admin/pages/AdminUsersPage"));
+const AdminAuditLogPage = lazy(() => import("./modules/admin/pages/AdminAuditLogPage"));
+const AdminFraudReviewsPage = lazy(() => import("./modules/admin/pages/AdminFraudReviewsPage"));
+const CaseQueuesPage = lazy(() => import("./modules/admin/pages/CaseQueuesPage"));
+const FinancialOperationsPage = lazy(() => import("./modules/admin/pages/FinancialOperationsPage"));
+const SupportQueuePage = lazy(() => import("./modules/support/pages/SupportQueuePage"));
+const SupportTicketDetailPage = lazy(() => import("./modules/support/pages/SupportTicketDetailPage"));
+const WalletRewardsPage = lazy(() => import("./modules/tester/pages/WalletRewardsPage"));
+const WithdrawalRequestPage = lazy(() => import("./modules/tester/pages/WithdrawalRequestPage"));
+const WithdrawalStatusPage = lazy(() => import("./modules/tester/pages/WithdrawalStatusPage"));
+const SubmitFeedbackPage = lazy(() => import("./modules/tester/pages/SubmitFeedbackPage"));
+const ReportProblemPage = lazy(() => import("./modules/tester/pages/ReportProblemPage"));
+const FeedbackHistoryPage = lazy(() => import("./modules/tester/pages/FeedbackHistoryPage"));
+const CheckInHistoryPage = lazy(() => import("./modules/tester/pages/CheckInHistoryPage"));
+const ActivityHistoryPage = lazy(() => import("./modules/tester/pages/ActivityHistoryPage"));
+const ReferralProgramPage = lazy(() => import("./modules/tester/pages/ReferralProgramPage"));
+const ReferralHistoryPage = lazy(() => import("./modules/tester/pages/ReferralHistoryPage"));
+const HelpSupportPage = lazy(() => import("./modules/tester/pages/HelpSupportPage"));
+const SupportCenterPage = lazy(() => import("./modules/tester/pages/SupportCenterPage"));
+const SupportTicketDetailsPage = lazy(() => import("./modules/tester/pages/SupportTicketDetailsPage"));
+const LiveChatPage = lazy(() => import("./modules/tester/pages/LiveChatPage"));
+const ProfileCompletionPage = lazy(() => import("./pages/ProfileCompletionPage"));
 import { IdentityProvider } from "./shared/auth/identity-provider";
-import AuthGuard from "./shared/guards/AuthGuard";
-import OnboardingGuard from "./shared/guards/OnboardingGuard";
+const AuthGuard = lazy(() => import("./shared/guards/AuthGuard"));
+const OnboardingGuard = lazy(() => import("./shared/guards/OnboardingGuard"));
 import RoleGuard, { RoleHomeRedirect } from "./shared/guards/RoleGuard";
 
 export default function App() {
   return (
     <IdentityProvider>
+      <Suspense fallback={<div role="status" className="route-loading" aria-live="polite">Loading TestDZ…</div>}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/terms" element={<LegalPage kind="terms" />} />
@@ -172,6 +174,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </IdentityProvider>
   );
 }
