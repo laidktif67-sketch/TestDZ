@@ -84,7 +84,8 @@ export async function getFeedbackHistoryPageData(userId: string): Promise<any> {
       .eq("tester_id", userId).order("created_at", { ascending: false }),
   ]);
   if (isTesterWorkflowV2Enabled) {
-    return { profileResult, feedbackResult, ledgerResult: null, isV2: true as const };
+    const repliesResult = await client.rpc("get_tester_feedback_messages");
+    return { profileResult, feedbackResult, repliesResult, ledgerResult: null, isV2: true as const };
   }
   const ledgerResult = await client.from("points_ledger").select("amount,reference_id,reference_type")
     .eq("user_id", userId).eq("wallet_type", "earned_points");
