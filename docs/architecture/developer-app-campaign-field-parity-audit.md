@@ -99,3 +99,31 @@ These are source/API contract questions; do not implement client-side writes or 
 - No hosted Supabase migration or data mutation, Storage/Auth change, secret, Edge deployment, cron, Vercel Preview or Production deployment was performed or authorized.
 - Do not merge legacy Developer branches wholesale.
 - Do not claim CI or browser QA passed unless exact-head workflow/browser evidence is recorded.
+
+
+## 5. Verified V2 campaign lifecycle contract (2026-11-21)
+
+The follow-up source inspection resolves the campaign pause/resume question for the current V2 candidate:
+
+- rebuild_v2.tests.status permits: draft, submitted, recruiting, ready, running, at_risk, completed, failed, and cancelled. There is no paused test status.
+- rebuild_v2.cohorts.status permits: forming, ready, running, completed, and cancelled. There is no paused cohort status.
+- The candidate RPC rebuild_v2.transition_test_cohort(p_cohort_id, p_new_status, p_reason) is owner-scoped (cohort created_by=auth.uid()), locks the cohort/test/assignments, and writes an audit event with the supplied reason.
+- Supported cohort transitions are narrowly defined:
+  - forming → ready: requires an approved/published app, a recruiting/ready linked test, and the test's minimum tester count.
+  - ready → running.
+  - running → completed: blocked while any assignment is pending or active; the linked test completes only when no other forming/ready/running cohort remains.
+  - forming|ready → cancelled: blocked if active assignments exist; pending assignments are withdrawn.
+  - Other transitions fail closed.
+- The Developer Tests UI calls this cohort RPC for ready/running/completed/cancelled. This is cohort management, not a test-wide pause/resume/end API.
+- App status separately includes paused, but that is the app lifecycle and must not be repurposed as a test/campaign pause switch.
+
+**Conclusion:** the current candidate has no safe test-level pause/resume operation and no distinct campaign-level end operation. Do not add buttons that mutate tests.status directly, and do not map pause/resume to app pause or cohort cancellation. A future campaign pause/resume feature needs an explicit lifecycle design (including what happens to active assignments, recruitment visibility, linked cohorts, notifications, and audit reasons), schema/status compatibility, an owner-checked transactional RPC, and contract tests before UI work.
+
+### Contract evidence inspected
+
+- supabase/rebuild-v2/001_schema.sql — tests/cohorts status constraints.
+- supabase/rebuild-v2/012_cohort_management.sql — transition_test_cohort_impl, public wrapper, role/ownership checks, transition guards, audit event.
+- apps/web/src/modules/developer/pages/DeveloperTestsPage.tsx — visible cohort transition actions and calls to transitionDeveloperTestCohort.
+- apps/web/src/features/apps/apps-api.ts — client wrapper surface should remain cohort-specific; no test-wide pause/resume wrapper was identified in the inspected Developer Tests imports.
+
+This is a source-contract finding only. No SQL, app code, database, hosted service, or deployment was changed by this audit update.
