@@ -91,7 +91,12 @@ BEGIN
   FROM rebuild_v2.assignments
   WHERE cohort_id=v_cohort AND status NOT IN ('withdrawn','rejected');
   IF v_count<>2 THEN
-    RAISE EXCEPTION 'FAIL: expected two active cohort registrations before ready, got %',v_count;
+    RAISE EXCEPTION 'FAIL: expected two active cohort registrations before ready, got %. cohort=%, first_assignment=%, second_assignment=%, current_uid=%, assignments_for_test=%, linked_cohorts=%',
+      v_count,v_cohort,v_assignment_one,v_assignment_two,auth.uid(),
+      (SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.id,'cohort_id',a.cohort_id,'tester_id',a.tester_id,'status',a.status) ORDER BY a.assigned_at),'[]'::jsonb)
+       FROM rebuild_v2.assignments a WHERE a.test_id=v_test),
+      (SELECT coalesce(jsonb_agg(jsonb_build_object('cohort_id',ct.cohort_id,'developer_id',ct.developer_id)),'[]'::jsonb)
+       FROM rebuild_v2.cohort_tests ct WHERE ct.test_id=v_test);
   END IF;
 
   -- A tester cannot advance a developer-owned cohort.
