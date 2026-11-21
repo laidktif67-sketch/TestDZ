@@ -77,6 +77,20 @@ BEGIN
   END IF;
   v_assignment_one:=rebuild_v2.join_test(v_test);
 
+  -- Pinpoint whether the first enrollment is missing immediately or is lost
+  -- only after the second tester executes the same public workflow.
+  SELECT count(*) INTO v_count
+  FROM rebuild_v2.assignments
+  WHERE cohort_id=v_cohort AND test_id=v_test
+    AND tester_id='60000000-0000-4000-8000-000000000003'
+    AND status NOT IN ('withdrawn','rejected');
+  IF v_count<>1 THEN
+    RAISE EXCEPTION 'FAIL: first tester enrollment did not persist immediately after join_test; count=%, returned_assignment=%, cohort=%, test=%, assignments=%',
+      v_count,v_assignment_one,v_cohort,v_test,
+      (SELECT coalesce(jsonb_agg(jsonb_build_object('id',a.id,'cohort_id',a.cohort_id,'test_id',a.test_id,'tester_id',a.tester_id,'status',a.status)),'[]'::jsonb)
+       FROM rebuild_v2.assignments a WHERE a.test_id=v_test);
+  END IF;
+
   PERFORM set_config('request.jwt.claim.sub','60000000-0000-4000-8000-000000000004',true);
   PERFORM set_config('request.jwt.claims','{"sub":"60000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
   IF auth.uid()<>'60000000-0000-4000-8000-000000000004'::uuid THEN
