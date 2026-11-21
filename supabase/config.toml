@@ -9,8 +9,9 @@ extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54322
-shadow_port = 54320
+# Use a non-default local DB port to avoid collisions on GitHub-hosted runners.
+port = 54332
+shadow_port = 54330
 major_version = 17
 
 [studio]
