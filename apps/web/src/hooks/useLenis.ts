@@ -1,20 +1,21 @@
 import { useEffect } from "react";
-import Lenis from "lenis";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import type Lenis from "lenis";
 import "lenis/dist/lenis.css";
 
 export function useLenis() {
   useEffect(() => {
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
     let lenis: Lenis | null = null;
+    let gsap: typeof import("gsap").gsap | null = null;
+    let scrollTrigger: typeof import("gsap/ScrollTrigger").ScrollTrigger | null = null;
+    let loading = false;
+    let disposed = false;
 
-    gsap.registerPlugin(ScrollTrigger);
-    const syncScrollTrigger = () => ScrollTrigger.update();
+    const syncScrollTrigger = () => scrollTrigger?.update();
     const updateLenis = (time: number) => lenis?.raf(time * 1000);
 
     const stop = () => {
-      if (!lenis) return;
+      if (!lenis || !gsap) return;
       gsap.ticker.remove(updateLenis);
       lenis.off("scroll", syncScrollTrigger);
       lenis.destroy();
@@ -22,30 +23,48 @@ export function useLenis() {
       gsap.ticker.lagSmoothing(500, 33);
     };
 
-    const start = () => {
-      if (motionPreference.matches || lenis) return;
-      lenis = new Lenis({
-        duration: 1.15,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smoothWheel: true,
-        syncTouch: false,
-        anchors: true,
-        stopInertiaOnNavigate: true,
-        respectReducedMotion: true,
-      });
-      lenis.on("scroll", syncScrollTrigger);
-      gsap.ticker.add(updateLenis);
-      gsap.ticker.lagSmoothing(0);
+    const start = async () => {
+      if (motionPreference.matches || lenis || loading || disposed) return;
+      loading = true;
+      try {
+        const [{ default: LenisConstructor }, gsapModule, scrollTriggerModule] = await Promise.all([
+          import("lenis"),
+          import("gsap"),
+          import("gsap/ScrollTrigger"),
+        ]);
+        if (disposed || motionPreference.matches) return;
+
+        gsap = gsapModule.gsap;
+        scrollTrigger = scrollTriggerModule.ScrollTrigger;
+        gsap.registerPlugin(scrollTrigger);
+        lenis = new LenisConstructor({
+          duration: 1.15,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          syncTouch: false,
+          anchors: true,
+          stopInertiaOnNavigate: true,
+          respectReducedMotion: true,
+        });
+        lenis.on("scroll", syncScrollTrigger);
+        gsap.ticker.add(updateLenis);
+        gsap.ticker.lagSmoothing(0);
+      } catch (error) {
+        if (!disposed) console.error("Smooth scrolling could not be initialized", error);
+      } finally {
+        loading = false;
+      }
     };
 
     const onPreferenceChange = () => {
       if (motionPreference.matches) stop();
-      else start();
+      else void start();
     };
 
-    start();
+    void start();
     motionPreference.addEventListener("change", onPreferenceChange);
     return () => {
+      disposed = true;
       motionPreference.removeEventListener("change", onPreferenceChange);
       stop();
     };
