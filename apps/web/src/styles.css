@@ -2426,3 +2426,11 @@ html:lang(fr),
 .related-test-row small{color:var(--muted,#6b7280);font-size:.85rem}
 .related-test-row>a{flex-shrink:0}
 @media(max-width:560px){.related-test-row{align-items:flex-start;gap:10px}.related-test-row>a{white-space:nowrap}}
+
+
+/* Keep the large hero artwork static on phones to avoid continuous transform work. */
+@media (max-width: 650px) {
+  .lp-hero-image {
+    animation: none;
+  }
+}
