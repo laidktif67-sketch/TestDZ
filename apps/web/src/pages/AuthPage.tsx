@@ -128,15 +128,18 @@ function AuthPage() {
       }
     };
 
-    void animateModeChange();
-    desktopMotion.addEventListener("change", () => {
+    const syncMotion = () => {
       if (!desktopMotion.matches) {
         revert?.();
         revert = undefined;
       }
-    });
+    };
+
+    void animateModeChange();
+    desktopMotion.addEventListener("change", syncMotion);
     return () => {
       disposed = true;
+      desktopMotion.removeEventListener("change", syncMotion);
       revert?.();
     };
   }, [mode]);
