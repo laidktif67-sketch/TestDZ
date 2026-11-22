@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { gsap } from "gsap";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { getPostAuthRoute, getSafeAuthRedirect, translateAuthError } from "../lib/auth-routing";
 import { identityApi } from "../shared/auth/identity-api";
@@ -34,54 +33,64 @@ function AuthPage() {
   ];
   const passwordStrength = passwordRules.slice(0, 3).filter(rule => rule.valid).length;
 
-  // Cinematic entrance is scoped to this page and fully reverted on cleanup.
+  // Keep the cinematic authentication entrance off mobile and reduced-motion devices.
   useEffect(() => {
     const root = authRoot.current;
     if (!root) return;
 
-    const context = gsap.context(() => {
-      const media = gsap.matchMedia();
-      media.add("(prefers-reduced-motion: no-preference)", () => {
-        const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
-        intro
-          .fromTo(".auth-reference-brand", { autoAlpha: 0, y: -12 }, { autoAlpha: 1, y: 0, duration: 0.52 })
-          .fromTo(".auth-reference-copy", { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7 }, "-=0.24")
-          .fromTo(".auth-illustration img", { autoAlpha: 0, y: 26, scale: 0.965 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.92, ease: "power2.out" }, "-=0.38")
-          .fromTo(".auth-code-bubble", { autoAlpha: 0, scale: 0.72, rotation: -18 }, { autoAlpha: 1, scale: 1, rotation: -9, duration: 0.52, ease: "back.out(1.6)" }, "-=0.55")
-          .fromTo(".auth-orbit", { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 0.82, scale: 1, duration: 0.58, stagger: 0.1 }, "-=0.5")
-          .fromTo(".auth-reference-form-wrap", { autoAlpha: 0, x: 26, y: 12, scale: 0.985 }, { autoAlpha: 1, x: 0, y: 0, scale: 1, duration: 0.78 }, "-=0.72")
-          .fromTo(".auth-benefits li", { autoAlpha: 0, x: -10 }, { autoAlpha: 1, x: 0, duration: 0.34, stagger: 0.085 }, "-=0.38")
-          .fromTo(".auth-security", { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.3 }, "-=0.18");
+    const desktopMotion = window.matchMedia("(min-width: 768px) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    let disposed = false;
+    let loading = false;
+    let revert: (() => void) | undefined;
 
-        const orbitMotion = gsap.to(".auth-orbit-one", {
-          rotation: 360,
-          duration: 30,
-          repeat: -1,
-          ease: "none",
-          transformOrigin: "50% 50%",
-        });
-        const bubbleMotion = gsap.to(".auth-code-bubble", {
-          y: -6,
-          duration: 2.5,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-        });
+    const startAnimations = async () => {
+      if (!desktopMotion.matches || loading || disposed) return;
+      loading = true;
+      try {
+        const { gsap } = await import("gsap");
+        if (disposed || !desktopMotion.matches) return;
 
-        return () => {
-          intro.kill();
-          orbitMotion.kill();
-          bubbleMotion.kill();
-        };
-      });
+        const context = gsap.context(() => {
+          const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+          intro
+            .fromTo(".auth-reference-brand", { autoAlpha: 0, y: -12 }, { autoAlpha: 1, y: 0, duration: 0.52 })
+            .fromTo(".auth-reference-copy", { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7 }, "-=0.24")
+            .fromTo(".auth-illustration img", { autoAlpha: 0, y: 26, scale: 0.965 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.92, ease: "power2.out" }, "-=0.38")
+            .fromTo(".auth-code-bubble", { autoAlpha: 0, scale: 0.72, rotation: -18 }, { autoAlpha: 1, scale: 1, rotation: -9, duration: 0.52, ease: "back.out(1.6)" }, "-=0.55")
+            .fromTo(".auth-orbit", { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 0.82, scale: 1, duration: 0.58, stagger: 0.1 }, "-=0.5")
+            .fromTo(".auth-reference-form-wrap", { autoAlpha: 0, x: 26, y: 12, scale: 0.985 }, { autoAlpha: 1, x: 0, y: 0, scale: 1, duration: 0.78 }, "-=0.72")
+            .fromTo(".auth-benefits li", { autoAlpha: 0, x: -10 }, { autoAlpha: 1, x: 0, duration: 0.34, stagger: 0.085 }, "-=0.38")
+            .fromTo(".auth-security", { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.3 }, "-=0.18");
 
-      return () => media.revert();
-    }, root);
+          gsap.to(".auth-orbit-one", { rotation: 360, duration: 30, repeat: -1, ease: "none", transformOrigin: "50% 50%" });
+          gsap.to(".auth-code-bubble", { y: -6, duration: 2.5, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        }, root);
+        revert = () => context.revert();
+      } catch (error) {
+        if (!disposed) console.error("Authentication animations could not be initialized", error);
+      } finally {
+        loading = false;
+      }
+    };
 
-    return () => context.revert();
+    const syncMotion = () => {
+      if (desktopMotion.matches) void startAnimations();
+      else {
+        revert?.();
+        revert = undefined;
+      }
+    };
+
+    syncMotion();
+    desktopMotion.addEventListener("change", syncMotion);
+    return () => {
+      disposed = true;
+      desktopMotion.removeEventListener("change", syncMotion);
+      revert?.();
+    };
   }, []);
 
-  // Animate only when the user switches between Login and Register, not on first paint.
+  // Animate form changes only on desktop devices that allow motion.
   const previousAuthMode = useRef(mode);
   useEffect(() => {
     if (previousAuthMode.current === mode) return;
@@ -90,26 +99,46 @@ function AuthPage() {
     const root = authRoot.current;
     if (!root) return;
 
-    const context = gsap.context(() => {
-      const media = gsap.matchMedia();
-      media.add("(prefers-reduced-motion: no-preference)", () => {
-        const transition = gsap.timeline({ defaults: { ease: "power2.out" } });
-        transition
-          .fromTo(".auth-reference-heading", { autoAlpha: 0, y: 12, filter: "blur(4px)" }, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.38 })
-          .fromTo(
-            ".auth-reference-fields .auth-input, .auth-account-types, .auth-terms, .auth-password-guidance, .auth-form-options",
-            { autoAlpha: 0, y: 9 },
-            { autoAlpha: 1, y: 0, duration: 0.25, stagger: 0.035 },
-            "-=0.12",
-          )
-          .fromTo(".auth-socials button", { autoAlpha: 0, y: 7 }, { autoAlpha: 1, y: 0, duration: 0.22, stagger: 0.045 }, "-=0.12")
-          .fromTo(".auth-reference-submit", { y: 5, scale: 0.99 }, { y: 0, scale: 1, duration: 0.24 }, "-=0.12");
-        return () => transition.kill();
-      });
-      return () => media.revert();
-    }, root);
+    const desktopMotion = window.matchMedia("(min-width: 768px) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    let disposed = false;
+    let revert: (() => void) | undefined;
 
-    return () => context.revert();
+    const animateModeChange = async () => {
+      if (!desktopMotion.matches) return;
+      try {
+        const { gsap } = await import("gsap");
+        if (disposed || !desktopMotion.matches) return;
+
+        const context = gsap.context(() => {
+          const transition = gsap.timeline({ defaults: { ease: "power2.out" } });
+          transition
+            .fromTo(".auth-reference-heading", { autoAlpha: 0, y: 12, filter: "blur(4px)" }, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.38 })
+            .fromTo(
+              ".auth-reference-fields .auth-input, .auth-account-types, .auth-terms, .auth-password-guidance, .auth-form-options",
+              { autoAlpha: 0, y: 9 },
+              { autoAlpha: 1, y: 0, duration: 0.25, stagger: 0.035 },
+              "-=0.12",
+            )
+            .fromTo(".auth-socials button", { autoAlpha: 0, y: 7 }, { autoAlpha: 1, y: 0, duration: 0.22, stagger: 0.045 }, "-=0.12")
+            .fromTo(".auth-reference-submit", { y: 5, scale: 0.99 }, { y: 0, scale: 1, duration: 0.24 }, "-=0.12");
+        }, root);
+        revert = () => context.revert();
+      } catch (error) {
+        if (!disposed) console.error("Authentication form transition could not be initialized", error);
+      }
+    };
+
+    void animateModeChange();
+    desktopMotion.addEventListener("change", () => {
+      if (!desktopMotion.matches) {
+        revert?.();
+        revert = undefined;
+      }
+    });
+    return () => {
+      disposed = true;
+      revert?.();
+    };
   }, [mode]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {

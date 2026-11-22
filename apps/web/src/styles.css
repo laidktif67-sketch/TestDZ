@@ -2434,3 +2434,14 @@ html:lang(fr),
     animation: none;
   }
 }
+
+/* Keep authentication artwork static on phones to reduce continuous animation work. */
+@media (max-width: 767px) {
+  .auth-reference-form-wrap,
+  .auth-illustration img,
+  .auth-code-bubble,
+  .auth-orbit,
+  .auth-points {
+    animation: none !important;
+  }
+}
