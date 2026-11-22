@@ -50,6 +50,15 @@ function LandingPage() {
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   const [enableHeroRays, setEnableHeroRays] = useState(false);
+  const [enableDesktopMotion, setEnableDesktopMotion] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    const update = () => setEnableDesktopMotion(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)");
@@ -89,7 +98,7 @@ function LandingPage() {
 
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".landing-page");
-    if (!root || reducedMotion) return;
+    if (!root || !enableDesktopMotion) return;
 
     let cancelled = false;
     let revert: (() => void) | undefined;
@@ -142,7 +151,7 @@ function LandingPage() {
       cancelled = true;
       revert?.();
     };
-  }, [reducedMotion]);
+  }, [enableDesktopMotion]);
 
   return (
     <main className="landing-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
@@ -151,7 +160,7 @@ function LandingPage() {
         <nav className="lp-nav" aria-label={t.home}>
           <a className="active" href="#home">{t.home}</a><a href="#features">{t.features}</a><a href="#developers">{t.developers}⌄</a><a href="#testers">{t.testers}⌄</a><a href="#how-it-works">{t.how}</a><a href="#faq">FAQ</a>
         </nav>
-        <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); window.requestAnimationFrame(() => { void import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => ScrollTrigger.refresh()); }); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
+        <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); if (enableDesktopMotion) window.requestAnimationFrame(() => { void import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => ScrollTrigger.refresh()); }); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
       </header>
 
       <section className="lp-hero lp-hero-reference" id="home">
