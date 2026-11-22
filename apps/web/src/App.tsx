@@ -178,9 +178,12 @@ export default function App() {
     </Suspense>
   );
 
-  // The public landing page does not consume identity state. Keep the auth client
-  // and session provider out of its initial dependency graph.
-  if (location.pathname === "/") return routes;
+  // Public content pages do not consume identity state. Keep the auth client
+  // and session provider out of their initial dependency graphs.
+  const publicContentPath = location.pathname.replace(/\/+$/, "") || "/";
+  if (publicContentPath === "/" || publicContentPath === "/terms" || publicContentPath === "/privacy") {
+    return routes;
+  }
 
   return (
     <Suspense fallback={<div role="status" className="route-loading" aria-live="polite">Loading account…</div>}>
