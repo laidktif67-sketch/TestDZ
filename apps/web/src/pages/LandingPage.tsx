@@ -1,7 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLenis } from "../hooks/useLenis";
 import { LpIcon } from "../shared/components/LpIcon";
 
@@ -83,69 +81,57 @@ function LandingPage() {
     const root = document.querySelector<HTMLElement>(".landing-page");
     if (!root || reducedMotion) return;
 
-    gsap.registerPlugin(ScrollTrigger);
-    const context = gsap.context(() => {
-      const intro = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.75 } });
-      intro
-        .from(".lp-hero-copy h2", { y: 18, opacity: 0 })
-        .from(".lp-hero-copy > p:not(.lp-hero-title)", { y: 14, opacity: 0 }, "-=0.38")
-        .from(".lp-hero-buttons", { y: 12, opacity: 0 }, "-=0.32")
-        .from(".lp-proof", { y: 10, opacity: 0 }, "-=0.28");
+    let cancelled = false;
+    let revert: (() => void) | undefined;
 
-      gsap.from(".lp-hero-art", {
-        y: 28,
-        opacity: 0,
-        scale: 0.97,
-        duration: 1,
-        ease: "power2.out",
-        delay: 0.12,
-      });
+    void Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([{ gsap }, { ScrollTrigger }]) => {
+      if (cancelled) return;
+      gsap.registerPlugin(ScrollTrigger);
+      const context = gsap.context(() => {
+        const intro = gsap.timeline({ defaults: { ease: "power3.out", duration: 0.75 } });
+        intro
+          .from(".lp-hero-copy h2", { y: 18, opacity: 0 })
+          .from(".lp-hero-copy > p:not(.lp-hero-title)", { y: 14, opacity: 0 }, "-=0.38")
+          .from(".lp-hero-buttons", { y: 12, opacity: 0 }, "-=0.32")
+          .from(".lp-proof", { y: 10, opacity: 0 }, "-=0.28");
 
-      const reveal = (selector: string, trigger: string, stagger = 0.12) => {
-        gsap.from(selector, {
-          y: 30,
-          opacity: 0,
-          duration: 0.72,
-          stagger,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger,
-            start: "top 84%",
-            once: true,
-          },
+        gsap.from(".lp-hero-art", {
+          y: 28, opacity: 0, scale: 0.97, duration: 1, ease: "power2.out", delay: 0.12,
         });
-      };
 
-      reveal(".lp-features article", ".lp-features", 0.13);
-      reveal(".lp-how .lp-section-title", ".lp-how", 0.1);
-      reveal(".lp-community .lp-section-title", ".lp-community", 0.1);
-      reveal(".lp-steps article", ".lp-steps", 0.16);
-      reveal(".lp-promo > *", ".lp-promo", 0.1);
-      reveal(".lp-community article", ".lp-community", 0.12);
-      gsap.utils.toArray<HTMLElement>(".lp-counter").forEach((element, index) => {
-        const target = Number(element.dataset.count || 0);
-        gsap.fromTo(
-          element,
-          { textContent: 0 },
-          {
-            textContent: target,
-            duration: 1.35,
-            delay: index * 0.08,
-            ease: "power2.out",
+        const reveal = (selector: string, trigger: string, stagger = 0.12) => {
+          gsap.from(selector, {
+            y: 30, opacity: 0, duration: 0.72, stagger, ease: "power2.out",
+            scrollTrigger: { trigger, start: "top 84%", once: true },
+          });
+        };
+
+        reveal(".lp-features article", ".lp-features", 0.13);
+        reveal(".lp-how .lp-section-title", ".lp-how", 0.1);
+        reveal(".lp-community .lp-section-title", ".lp-community", 0.1);
+        reveal(".lp-steps article", ".lp-steps", 0.16);
+        reveal(".lp-promo > *", ".lp-promo", 0.1);
+        reveal(".lp-community article", ".lp-community", 0.12);
+        gsap.utils.toArray<HTMLElement>(".lp-counter").forEach((element, index) => {
+          const target = Number(element.dataset.count || 0);
+          gsap.fromTo(element, { textContent: 0 }, {
+            textContent: target, duration: 1.35, delay: index * 0.08, ease: "power2.out",
             snap: { textContent: 1 },
-            scrollTrigger: {
-              trigger: element,
-              start: "top 90%",
-              once: true,
-            },
-          },
-        );
-      });
-      reveal(".lp-faq-illustration, .lp-faq-copy, .lp-faq-list details", ".lp-faq", 0.08);
-      reveal(".lp-footer > *", ".lp-footer", 0.08);
-    }, root);
+            scrollTrigger: { trigger: element, start: "top 90%", once: true },
+          });
+        });
+        reveal(".lp-faq-illustration, .lp-faq-copy, .lp-faq-list details", ".lp-faq", 0.08);
+        reveal(".lp-footer > *", ".lp-footer", 0.08);
+      }, root);
+      revert = () => context.revert();
+    }).catch((error) => {
+      if (!cancelled) console.error("Landing animations could not be initialized", error);
+    });
 
-    return () => context.revert();
+    return () => {
+      cancelled = true;
+      revert?.();
+    };
   }, [reducedMotion]);
 
   return (
@@ -155,7 +141,7 @@ function LandingPage() {
         <nav className="lp-nav" aria-label={t.home}>
           <a className="active" href="#home">{t.home}</a><a href="#features">{t.features}</a><a href="#developers">{t.developers}⌄</a><a href="#testers">{t.testers}⌄</a><a href="#how-it-works">{t.how}</a><a href="#faq">FAQ</a>
         </nav>
-        <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); window.requestAnimationFrame(() => ScrollTrigger.refresh()); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
+        <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); window.requestAnimationFrame(() => { void import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => ScrollTrigger.refresh()); }); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
       </header>
 
       <section className="lp-hero lp-hero-reference" id="home">
