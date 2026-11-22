@@ -47,21 +47,21 @@ const landingCopy = {
 function LandingPage() {
   useLenis();
 
-  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-
   const [enableHeroRays, setEnableHeroRays] = useState(false);
+  const [enableDesktopMotion, setEnableDesktopMotion] = useState(false);
 
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)");
-    const update = () => setEnableHeroRays(media.matches);
+    const media = window.matchMedia("(min-width: 768px) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    const update = () => setEnableDesktopMotion(media.matches);
     update();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
 
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(media.matches);
+    const media = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)");
+    const update = () => setEnableHeroRays(media.matches);
+    update();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
@@ -89,7 +89,7 @@ function LandingPage() {
 
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".landing-page");
-    if (!root || reducedMotion) return;
+    if (!root || !enableDesktopMotion) return;
 
     let cancelled = false;
     let revert: (() => void) | undefined;
@@ -142,7 +142,7 @@ function LandingPage() {
       cancelled = true;
       revert?.();
     };
-  }, [reducedMotion]);
+  }, [enableDesktopMotion]);
 
   return (
     <main className="landing-page" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
@@ -151,7 +151,7 @@ function LandingPage() {
         <nav className="lp-nav" aria-label={t.home}>
           <a className="active" href="#home">{t.home}</a><a href="#features">{t.features}</a><a href="#developers">{t.developers}⌄</a><a href="#testers">{t.testers}⌄</a><a href="#how-it-works">{t.how}</a><a href="#faq">FAQ</a>
         </nav>
-        <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); window.requestAnimationFrame(() => { void import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => ScrollTrigger.refresh()); }); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
+        <div className="lp-header-actions"><div className="lp-language-switch" role="group" aria-label={t.languageLabel}>{(["en", "fr", "ar"] as const).map((code) => <button key={code} type="button" className={language === code ? "active" : ""} aria-pressed={language === code} onClick={() => { setLanguage(code); if (enableDesktopMotion) window.requestAnimationFrame(() => { void import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => ScrollTrigger.refresh()); }); }}>{code.toUpperCase()}</button>)}</div><Link className="lp-signin" to="/auth">{t.signIn}</Link><Link className="lp-cta" to="/auth?mode=signup">{t.getStarted}</Link></div>
       </header>
 
       <section className="lp-hero lp-hero-reference" id="home">
@@ -185,7 +185,7 @@ function LandingPage() {
           <h2>{t.heroLead} <span>{t.heroAccent}</span></h2>
           <p>{t.heroBody}</p>
           <div className="lp-hero-buttons">
-            <Link className="lp-cta lp-cta-star" to="/auth?mode=signup">{reducedMotion ? <span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span> : <Suspense fallback={<span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span>}><StarBorder as="span" className="lp-star-border-inner" theme="light" backgroundColor="transparent" textColor="#ffffff" borderColor="rgba(255,255,255,.42)" color="#ffffff" trailColor="#d8e8ff" duration={5.2} thickness={1} radius={26} trailLength={0.22} stars={1} glow={0.38} sparkle={false} hover="brighten" clickPulse={false}>{t.getStarted} <LpIcon name="arrow" size={17}/></StarBorder></Suspense>}</Link>
+            <Link className="lp-cta lp-cta-star" to="/auth?mode=signup">{!enableDesktopMotion ? <span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span> : <Suspense fallback={<span className="lp-star-border-inner lp-star-border-static">{t.getStarted} <LpIcon name="arrow" size={17}/></span>}><StarBorder as="span" className="lp-star-border-inner" theme="light" backgroundColor="transparent" textColor="#ffffff" borderColor="rgba(255,255,255,.42)" color="#ffffff" trailColor="#d8e8ff" duration={5.2} thickness={1} radius={26} trailLength={0.22} stars={1} glow={0.38} sparkle={false} hover="brighten" clickPulse={false}>{t.getStarted} <LpIcon name="arrow" size={17}/></StarBorder></Suspense>}</Link>
             <a className="lp-secondary" href="#features">{t.exploreTests} <LpIcon name="play" size={15}/></a>
           </div>
           <div className="lp-proof" aria-label={t.visualLabel}>
