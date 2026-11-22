@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import type Lenis from "lenis";
-import "lenis/dist/lenis.css";
 
 export function useLenis() {
   useEffect(() => {
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const desktopPreference = window.matchMedia("(min-width: 768px) and (pointer: fine)");
     let lenis: Lenis | null = null;
     let gsap: typeof import("gsap").gsap | null = null;
     let scrollTrigger: typeof import("gsap/ScrollTrigger").ScrollTrigger | null = null;
@@ -24,15 +24,16 @@ export function useLenis() {
     };
 
     const start = async () => {
-      if (motionPreference.matches || lenis || loading || disposed) return;
+      if (motionPreference.matches || !desktopPreference.matches || lenis || loading || disposed) return;
       loading = true;
       try {
         const [{ default: LenisConstructor }, gsapModule, scrollTriggerModule] = await Promise.all([
           import("lenis"),
           import("gsap"),
           import("gsap/ScrollTrigger"),
+          import("lenis/dist/lenis.css"),
         ]);
-        if (disposed || motionPreference.matches) return;
+        if (disposed || motionPreference.matches || !desktopPreference.matches) return;
 
         gsap = gsapModule.gsap;
         scrollTrigger = scrollTriggerModule.ScrollTrigger;
@@ -57,15 +58,17 @@ export function useLenis() {
     };
 
     const onPreferenceChange = () => {
-      if (motionPreference.matches) stop();
+      if (motionPreference.matches || !desktopPreference.matches) stop();
       else void start();
     };
 
     void start();
     motionPreference.addEventListener("change", onPreferenceChange);
+    desktopPreference.addEventListener("change", onPreferenceChange);
     return () => {
       disposed = true;
       motionPreference.removeEventListener("change", onPreferenceChange);
+      desktopPreference.removeEventListener("change", onPreferenceChange);
       stop();
     };
   }, []);
