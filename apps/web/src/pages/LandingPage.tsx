@@ -47,8 +47,6 @@ const landingCopy = {
 function LandingPage() {
   useLenis();
 
-  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-
   const [enableHeroRays, setEnableHeroRays] = useState(false);
   const [enableDesktopMotion, setEnableDesktopMotion] = useState(false);
 
@@ -64,13 +62,6 @@ function LandingPage() {
     const media = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)");
     const update = () => setEnableHeroRays(media.matches);
     update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(media.matches);
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
