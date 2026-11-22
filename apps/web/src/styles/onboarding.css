@@ -59,5 +59,5 @@
 .onboarding-page .onboarding-continue:before{content:"";position:absolute;z-index:-1;inset:0;transform:translateX(-115%);background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.25) 50%,transparent 75%);transition:transform .75s cubic-bezier(.22,1,.36,1)}
 .onboarding-page .onboarding-continue:hover:before{transform:translateX(115%)}
 .onboarding-page .onboarding-role-card:focus-visible{outline-offset:5px}
-@media(max-width:760px){.onboarding-page .onboarding-art{will-change:auto}.onboarding-intro-motion{max-width:460px}}
+@media(max-width:760px){.onboarding-page .onboarding-art,.onboarding-page .onboarding-bg-top{will-change:auto}.onboarding-intro-motion{max-width:460px}}
 @media(prefers-reduced-motion:reduce){.onboarding-page .onboarding-role-card,.onboarding-page .onboarding-continue,.onboarding-page .onboarding-continue:before{transition:none!important}.onboarding-intro-motion span{transform:none!important;filter:none!important}}

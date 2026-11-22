@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 const BlurText = lazy(() => import("../components/react-bits/BlurText"));
@@ -158,20 +157,53 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     const root = pageRef.current;
-    if (!root) return;
-    const context = gsap.context(() => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      const entrance = gsap.timeline({ defaults: { ease: "power3.out" } });
-      entrance
-        .fromTo(".onboarding-progress", { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.55 })
-        .fromTo(".onboarding-heading h1", { y: 24, autoAlpha: 0, filter: "blur(8px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.72 }, "-=0.28")
-        .fromTo(".onboarding-intro-motion", { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.55 }, "-=0.42")
-        .fromTo(".onboarding-role-card", { y: 30, autoAlpha: 0, scale: 0.97 }, { y: 0, autoAlpha: 1, scale: 1, duration: 0.62, stagger: 0.12 }, "-=0.2")
-        .fromTo(".onboarding-trust-note, .onboarding-actions", { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.1 }, "-=0.25");
-      gsap.to(".onboarding-art", { y: -11, duration: 3.8, ease: "sine.inOut", yoyo: true, repeat: -1 });
-      gsap.to(".onboarding-bg-top", { rotate: -12, scale: 1.04, duration: 7, ease: "sine.inOut", yoyo: true, repeat: -1 });
-    }, root);
-    return () => context.revert();
+    const desktopMotion = window.matchMedia("(min-width: 768px) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    let cancelled = false;
+    let loading = false;
+    let revert: (() => void) | undefined;
+
+    const startAnimations = async () => {
+      if (!root || !desktopMotion.matches || loading || cancelled) return;
+      loading = true;
+      try {
+        const { gsap } = await import("gsap");
+        if (cancelled || !desktopMotion.matches) return;
+
+        const context = gsap.context(() => {
+          const entrance = gsap.timeline({ defaults: { ease: "power3.out" } });
+          entrance
+            .fromTo(".onboarding-progress", { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.55 })
+            .fromTo(".onboarding-heading h1", { y: 24, autoAlpha: 0, filter: "blur(8px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.72 }, "-=0.28")
+            .fromTo(".onboarding-intro-motion", { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.55 }, "-=0.42")
+            .fromTo(".onboarding-role-card", { y: 30, autoAlpha: 0, scale: 0.97 }, { y: 0, autoAlpha: 1, scale: 1, duration: 0.62, stagger: 0.12 }, "-=0.2")
+            .fromTo(".onboarding-trust-note, .onboarding-actions", { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.1 }, "-=0.25");
+          gsap.to(".onboarding-art", { y: -11, duration: 3.8, ease: "sine.inOut", yoyo: true, repeat: -1 });
+          gsap.to(".onboarding-bg-top", { rotate: -12, scale: 1.04, duration: 7, ease: "sine.inOut", yoyo: true, repeat: -1 });
+        }, root);
+        revert = () => context.revert();
+      } catch (error) {
+        if (!cancelled) console.error("Onboarding animations could not be initialized", error);
+      } finally {
+        loading = false;
+      }
+    };
+
+    const syncMotion = () => {
+      if (desktopMotion.matches) {
+        void startAnimations();
+      } else {
+        revert?.();
+        revert = undefined;
+      }
+    };
+
+    syncMotion();
+    desktopMotion.addEventListener("change", syncMotion);
+    return () => {
+      cancelled = true;
+      desktopMotion.removeEventListener("change", syncMotion);
+      revert?.();
+    };
   }, []);
 
   useEffect(() => {
