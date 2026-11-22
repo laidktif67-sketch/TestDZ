@@ -49,6 +49,16 @@ function LandingPage() {
 
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
+  const [enableHeroRays, setEnableHeroRays] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)");
+    const update = () => setEnableHeroRays(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setReducedMotion(media.matches);
@@ -145,7 +155,7 @@ function LandingPage() {
       </header>
 
       <section className="lp-hero lp-hero-reference" id="home">
-        {!reducedMotion && <div className="lp-hero-rays" aria-hidden="true"><Suspense fallback={null}><LightRays
+        {enableHeroRays && <div className="lp-hero-rays" aria-hidden="true"><Suspense fallback={null}><LightRays
           raysOrigin="top-center"
           raysColor="#075cf5"
           raysSpeed={0.12}
