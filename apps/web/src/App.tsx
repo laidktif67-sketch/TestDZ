@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 const AppsPage = lazy(() => import("./pages/AppsPage"));
 const AppDetailPage = lazy(() => import("./pages/AppDetailPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
@@ -69,16 +69,16 @@ const SupportCenterPage = lazy(() => import("./modules/tester/pages/SupportCente
 const SupportTicketDetailsPage = lazy(() => import("./modules/tester/pages/SupportTicketDetailsPage"));
 const LiveChatPage = lazy(() => import("./modules/tester/pages/LiveChatPage"));
 const ProfileCompletionPage = lazy(() => import("./pages/ProfileCompletionPage"));
-import { IdentityProvider } from "./shared/auth/identity-provider";
+const IdentityProvider = lazy(() => import("./shared/auth/identity-provider").then(({ IdentityProvider: Component }) => ({ default: Component })));
 const AuthGuard = lazy(() => import("./shared/guards/AuthGuard"));
 const OnboardingGuard = lazy(() => import("./shared/guards/OnboardingGuard"));
 const RoleGuard = lazy(() => import("./shared/guards/RoleGuard").then(({ default: Component }) => ({ default: Component })));
 const RoleHomeRedirect = lazy(() => import("./shared/guards/RoleGuard").then(({ RoleHomeRedirect: Component }) => ({ default: Component })));
 
 export default function App() {
-  return (
-    <IdentityProvider>
-      <Suspense fallback={<div role="status" className="route-loading" aria-live="polite">Loading TestDZ…</div>}>
+  const location = useLocation();
+  const routes = (
+    <Suspense fallback={<div role="status" className="route-loading" aria-live="polite">Loading TestDZ…</div>}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/terms" element={<LegalPage kind="terms" />} />
@@ -175,7 +175,16 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      </Suspense>
-    </IdentityProvider>
+    </Suspense>
+  );
+
+  // The public landing page does not consume identity state. Keep the auth client
+  // and session provider out of its initial dependency graph.
+  if (location.pathname === "/") return routes;
+
+  return (
+    <Suspense fallback={<div role="status" className="route-loading" aria-live="polite">Loading account…</div>}>
+      <IdentityProvider>{routes}</IdentityProvider>
+    </Suspense>
   );
 }
