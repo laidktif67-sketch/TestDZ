@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { gsap } from "gsap";
 import { supabase } from "../../../lib/supabase";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { getTesterDashboardData } from "../../../features/tester/dashboard-api";
@@ -194,21 +193,47 @@ export default function TesterDashboardPage() {
   const success = stats.assignments ? progress : 0;
   useEffect(() => {
     const values = { available: stats.available, completed: stats.completed, success, points: stats.points };
-    const counter = { available: 0, completed: 0, success: 0, points: 0 };
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) { setAnimatedStats(values); return; }
-    const tween = gsap.to(counter, {
-      ...values,
-      duration: 1.35,
-      ease: "power3.out",
-      onUpdate: () => setAnimatedStats({
-        available: Math.round(counter.available),
-        completed: Math.round(counter.completed),
-        success: Math.round(counter.success),
-        points: Math.round(counter.points)
-      })
-    });
-    return () => { tween.kill(); };
+    const desktopMotion = window.matchMedia("(min-width: 768px) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    let cancelled = false;
+    let tween: { kill: () => void } | undefined;
+
+    const animateCounters = async () => {
+      if (!desktopMotion.matches) {
+        setAnimatedStats(values);
+        return;
+      }
+
+      const counter = { available: 0, completed: 0, success: 0, points: 0 };
+      try {
+        const { gsap } = await import("gsap");
+        if (cancelled || !desktopMotion.matches) {
+          setAnimatedStats(values);
+          return;
+        }
+        tween = gsap.to(counter, {
+          ...values,
+          duration: 1.1,
+          ease: "power3.out",
+          onUpdate: () => setAnimatedStats({
+            available: Math.round(counter.available),
+            completed: Math.round(counter.completed),
+            success: Math.round(counter.success),
+            points: Math.round(counter.points)
+          })
+        });
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Dashboard counter animation could not be initialized", error);
+          setAnimatedStats(values);
+        }
+      }
+    };
+
+    void animateCounters();
+    return () => {
+      cancelled = true;
+      tween?.kill();
+    };
   }, [stats.available, stats.completed, stats.points, success]);
   const firstName = name.split(/\s+/)[0];
   const isDeveloper = roles.includes("developer");
