@@ -2008,8 +2008,7 @@ html:lang(fr),
 @keyframes signup-success-glow {0%,100%{filter:drop-shadow(0 9px 15px rgba(16,185,129,.1))}50%{filter:drop-shadow(0 10px 20px rgba(16,185,129,.24))}}
 @keyframes signup-celebrate {0%,80%,100%{transform:rotate(0) scale(1)}85%{transform:rotate(12deg) scale(1.12)}90%{transform:rotate(-8deg) scale(1.06)}}
 @media(max-width:850px) {
-  .signup-success-envelope {animation:none}
-  .signup-success-check {animation:none}
+  .signup-success-envelope,.signup-success-check,.signup-success-icon,.signup-success-celebration {animation:none}
 }
 @media(prefers-reduced-motion:reduce) {
   .signup-success-envelope,.signup-success-check,.signup-success-icon,.signup-success-celebration {animation:none}
