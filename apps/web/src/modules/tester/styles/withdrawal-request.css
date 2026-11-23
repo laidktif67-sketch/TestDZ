@@ -124,3 +124,12 @@
 .twr-status-link:hover{border-color:#a9c9f5;background:#e4efff}
 .twr-back:hover{border-color:#b9cbea;background:#f8fbff;color:#075bdc}
 @media(max-width:700px){.twr-title-icon{width:32px;height:32px;border-radius:10px}.twr-header-actions{gap:7px}.twr-status-link,.twr-back{min-height:38px;padding:9px 11px;font-size:10px}}
+
+
+/* Keep decorative payout artwork still on phones; loading feedback remains animated. */
+@media (max-width: 700px) {
+  .twr-balance-spark,
+  .twr-info-art {
+    animation: none;
+  }
+}
