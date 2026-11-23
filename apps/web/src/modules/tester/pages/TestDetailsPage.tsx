@@ -167,7 +167,7 @@ export default function TestDetailsPage() {
                   <div className="dt-app-icon">
                     {test.app?.icon_url ? <img src={test.app.icon_url} alt="" /> : <span><Icon name="flask" size={22} /></span>}
                   </div>
-                  <span className={"dt-status " + (test.status === "ready" ? "upcoming" : "recruiting")}>
+                  <span className={"dt-status " + (test.status === "ready" ? "upcoming" : test.status === "running" ? "running" : "recruiting")}>
                     <i />{test.status === "ready" ? "Coming soon" : test.status === "running" ? "In progress" : "Recruiting"}
                   </span>
                 </div>
