@@ -49,3 +49,14 @@
  .otp-card{order:0!important}
  .otp-story{order:1!important}
 }
+
+
+/* Keep the security illustration static on phones; preserve the alert entrance. */
+@media (max-width: 700px) {
+  .otp-shield,
+  .otp-status-emoji,
+  .otp-heading-emoji,
+  .otp-script-sparkle {
+    animation: none;
+  }
+}
