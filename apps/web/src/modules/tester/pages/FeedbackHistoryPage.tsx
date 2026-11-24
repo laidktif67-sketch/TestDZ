@@ -48,7 +48,7 @@ function RatingStars({ value }: { value: number | null }) {
 function AppMark({ name, iconUrl }: { name: string; iconUrl?: string | null }) {
   const lower = name.toLowerCase();
   const fallback = lower.includes("secure") || lower.includes("vault") ? "✓" : lower.includes("media") ? "▶" : lower.includes("health") ? "♥" : "✦";
-  return <span className="fh-app-mark">{iconUrl ? <img src={iconUrl} alt="" /> : fallback}</span>;
+  return <span className="fh-app-mark">{iconUrl ? <img src={iconUrl} alt="" loading="lazy" decoding="async" /> : fallback}</span>;
 }
 
 export default function FeedbackHistoryPage() {
