@@ -91,7 +91,7 @@ export default function DiscoverTestsPage(){
        const type=categoryOf(test.app?.category);
        return <article className="discover-test-card" key={test.id}>
         <div className="discover-card-top">
-         <div className={"discover-app-icon app-"+type}>{test.app?.icon_url?<img src={test.app.icon_url} alt=""/>:<span>{type==="mobile"?"▣":type==="web"?"▥":type==="desktop"?"▱":"✦"}</span>}</div>
+         <div className={"discover-app-icon app-"+type}>{test.app?.icon_url?<img src={test.app.icon_url} alt="" loading="lazy" decoding="async"/>:<span>{type==="mobile"?"▣":type==="web"?"▥":type==="desktop"?"▱":"✦"}</span>}</div>
          <span className="discover-status"><i/>{test.status==="ready"?"Upcoming":"Recruiting"}</span>
         </div>
         <h3>{test.title}</h3>
