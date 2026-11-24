@@ -30,7 +30,7 @@ const dayKey = (value: string) => {
 const csvCell = (value: unknown) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
 
 function AppMark({ name, url }: { name: string; url: string | null }) {
-  return <span className="ah-app-mark">{url ? <img src={url} alt="" /> : <span>{name.slice(0,1).toUpperCase()}</span>}</span>;
+  return <span className="ah-app-mark">{url ? <img src={url} alt="" loading="lazy" decoding="async" /> : <span>{name.slice(0,1).toUpperCase()}</span>}</span>;
 }
 
 function ActivityChart({ events }: { events: ActivityEvent[] }) {

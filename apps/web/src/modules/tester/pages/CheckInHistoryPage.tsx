@@ -51,7 +51,7 @@ const statusLabel = (status?: string) => ({
 const csvCell = (value: unknown) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
 
 function AppIcon({ name, url }: { name: string; url: string | null }) {
-  return <span className="cih-app-icon">{url ? <img src={url} alt="" /> : <span>{name.slice(0, 1).toUpperCase()}</span>}</span>;
+  return <span className="cih-app-icon">{url ? <img src={url} alt="" loading="lazy" decoding="async" /> : <span>{name.slice(0, 1).toUpperCase()}</span>}</span>;
 }
 
 export default function CheckInHistoryPage() {
