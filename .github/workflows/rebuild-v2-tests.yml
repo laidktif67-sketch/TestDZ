@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - rebuild/testdz-v2
+      - fix/wallet-ledger-reversal-integrity
     paths:
       - "supabase/rebuild-v2/**"
       - "supabase/seed.sql"
