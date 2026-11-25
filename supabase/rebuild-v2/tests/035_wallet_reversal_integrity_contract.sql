@@ -381,7 +381,7 @@ END;
 $mutation$;
 
 -- REV-10: an audit failure must roll back the ledger row and wallet balance.
-CREATE FUNCTION pg_temp.reject_wallet_reversal_audit()
+CREATE FUNCTION rebuild_v2_private.test_reject_wallet_reversal_audit()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $function$
@@ -395,7 +395,7 @@ $function$;
 
 CREATE TRIGGER test_reject_wallet_reversal_audit
 BEFORE INSERT ON rebuild_v2.audit_events
-FOR EACH ROW EXECUTE FUNCTION pg_temp.reject_wallet_reversal_audit();
+FOR EACH ROW EXECUTE FUNCTION rebuild_v2_private.test_reject_wallet_reversal_audit();
 
 DO $atomicity$
 DECLARE
@@ -439,6 +439,7 @@ END;
 $atomicity$;
 
 DROP TRIGGER test_reject_wallet_reversal_audit ON rebuild_v2.audit_events;
+DROP FUNCTION rebuild_v2_private.test_reject_wallet_reversal_audit();
 
 ROLLBACK;
 
