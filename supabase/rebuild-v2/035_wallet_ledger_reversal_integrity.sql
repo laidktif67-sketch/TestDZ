@@ -195,6 +195,28 @@ BEGIN
       RAISE EXCEPTION 'a reversal cannot reverse another reversal';
     END IF;
 
+    -- A concurrent exact retry may have waited on this original row.
+    -- Re-check its idempotency key before treating the original as already reversed.
+    SELECT *
+      INTO v_existing
+      FROM rebuild_v2.wallet_ledger
+     WHERE idempotency_key = p_idempotency_key;
+
+    IF FOUND THEN
+      IF v_existing.user_id IS DISTINCT FROM p_user_id
+         OR v_existing.wallet_type IS DISTINCT FROM p_wallet_type
+         OR v_existing.amount IS DISTINCT FROM p_amount
+         OR v_existing.entry_type IS DISTINCT FROM p_entry_type
+         OR v_existing.reference_type IS DISTINCT FROM p_reference_type
+         OR v_existing.reference_id IS DISTINCT FROM p_reference_id
+         OR v_existing.reversal_of IS DISTINCT FROM p_reversal_of
+         OR v_existing.actor_id IS DISTINCT FROM v_actor
+         OR v_existing.reason IS DISTINCT FROM p_reason THEN
+        RAISE EXCEPTION 'idempotency key already used for a different operation';
+      END IF;
+      RETURN v_existing.id;
+    END IF;
+
     IF v_original.user_id IS DISTINCT FROM p_user_id THEN
       RAISE EXCEPTION 'reversal user does not match original ledger user';
     END IF;
