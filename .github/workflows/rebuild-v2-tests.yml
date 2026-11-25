@@ -57,8 +57,8 @@ jobs:
           test -n "${DB_URL:-}" || { echo "DB_URL was not exported by Supabase CLI"; exit 1; }
 
           scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
-          if [ "${#scripts[@]}" -ne 34 ]; then
-            echo "Expected exactly 34 candidate SQL scripts; found ${#scripts[@]}"
+          if [ "${#scripts[@]}" -ne 35 ]; then
+            echo "Expected exactly 35 candidate SQL scripts; found ${#scripts[@]}"
             exit 1
           fi
 
@@ -104,6 +104,7 @@ jobs:
             supabase/rebuild-v2/tests/027_role_explicit_support_ticket_creation_contract.sql
             supabase/rebuild-v2/tests/028_developer_test_invitations_contract.sql
             supabase/rebuild-v2/tests/029_developer_test_edit_contract.sql
+            supabase/rebuild-v2/tests/035_wallet_reversal_integrity_contract.sql
           )
 
           for contract in "${contracts[@]}"; do
@@ -111,6 +112,10 @@ jobs:
             psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$contract"
             echo "::endgroup::"
           done
+
+          echo "::group::Run two-session wallet reversal concurrency contract"
+          DATABASE_URL="$DB_URL" bash supabase/rebuild-v2/tests/wallet_reversal_concurrency.sh
+          echo "::endgroup::"
 
           echo "::group::Verify local PostgREST schema exposure"
           test -n "${API_URL:-}" || { echo "API_URL was not exported by Supabase CLI"; exit 1; }
