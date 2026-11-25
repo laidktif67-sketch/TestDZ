@@ -11,7 +11,7 @@ VALUES
   ('93500000-0000-4000-8000-000000000001','authenticated','authenticated','v2-reversal-financial@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Reversal Financial"}'::jsonb,now(),now()),
   ('93500000-0000-4000-8000-000000000002','authenticated','authenticated','v2-reversal-admin@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Reversal Admin"}'::jsonb,now(),now()),
   ('93500000-0000-4000-8000-000000000003','authenticated','authenticated','v2-reversal-target@example.invalid','',now(),'{"name":"Reversal Target"}'::jsonb,now(),now()),
-  ('93500000-0000-4000-8000/000000000004','authenticated','authenticated','v2-reversal-other@example.invalid','',now(),'{"name":"Other Target"}'::jsonb,now(),now());
+  ('93500000-0000-4000-8000-000000000004','authenticated','authenticated','v2-reversal-other@example.invalid','',now(),'{"name":"Other Target"}'::jsonb,now(),now());
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
