@@ -209,6 +209,72 @@ BEGIN
 END;
 $test$;
 
+-- Owner-level mutation probes exercise the table trigger independently of
+-- post_wallet_entry. They must fail before any invalid reversal row is stored.
+RESET ROLE;
+
+DO $mutation$
+DECLARE
+  v_original uuid;
+  v_reversal uuid;
+BEGIN
+  SELECT id INTO v_original
+    FROM rebuild_v2.wallet_ledger
+   WHERE idempotency_key='reversal-original-0001';
+  SELECT id INTO v_reversal
+    FROM rebuild_v2.wallet_ledger
+   WHERE idempotency_key='reversal-valid-0001';
+
+  BEGIN
+    INSERT INTO rebuild_v2.wallet_ledger(
+      user_id,wallet_type,amount,entry_type,reversal_of,idempotency_key,reason
+    ) VALUES (
+      '93500000-0000-4000-8000-000000000004',
+      'earned_points',-200,'reversal',v_original,
+      'mutation-wrong-user-001','Mutation wrong user direct insert'
+    );
+    RAISE EXCEPTION 'FAIL MUTATION: trigger accepted a reversal for another user';
+  EXCEPTION WHEN SQLSTATE '23514' THEN NULL;
+  END;
+
+  BEGIN
+    INSERT INTO rebuild_v2.wallet_ledger(
+      user_id,wallet_type,amount,entry_type,reversal_of,idempotency_key,reason
+    ) VALUES (
+      '93500000-0000-4000-8000-000000000003',
+      'purchased_credits',-200,'reversal',v_original,
+      'mutation-wrong-wallet-001','Mutation wrong wallet direct insert'
+    );
+    RAISE EXCEPTION 'FAIL MUTATION: trigger accepted a wallet-type mismatch';
+  EXCEPTION WHEN SQLSTATE '23514' THEN NULL;
+  END;
+
+  BEGIN
+    INSERT INTO rebuild_v2.wallet_ledger(
+      user_id,wallet_type,amount,entry_type,reversal_of,idempotency_key,reason
+    ) VALUES (
+      '93500000-0000-4000-8000-000000000003',
+      'earned_points',-199,'reversal',v_original,
+      'mutation-wrong-amount-001','Mutation wrong amount direct insert'
+    );
+    RAISE EXCEPTION 'FAIL MUTATION: trigger accepted an inexact amount';
+  EXCEPTION WHEN SQLSTATE '23514' THEN NULL;
+  END;
+
+  BEGIN
+    INSERT INTO rebuild_v2.wallet_ledger(
+      user_id,wallet_type,amount,entry_type,reversal_of,idempotency_key,reason
+    ) VALUES (
+      '93500000-0000-4000-8000-000000000003',
+      'earned_points',200,'reversal',v_reversal,
+      'mutation-reversal-chain-001','Mutation reversal chain direct insert'
+    );
+    RAISE EXCEPTION 'FAIL MUTATION: trigger accepted reversal of reversal';
+  EXCEPTION WHEN SQLSTATE '23514' THEN NULL;
+  END;
+END;
+$mutation$;
+
 -- REV-10: an audit failure must roll back the ledger row and wallet balance.
 CREATE FUNCTION pg_temp.reject_wallet_reversal_audit()
 RETURNS trigger
