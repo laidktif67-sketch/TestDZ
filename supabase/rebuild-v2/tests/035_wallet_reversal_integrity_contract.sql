@@ -4,6 +4,56 @@
 
 BEGIN;
 
+DO $catalog$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema='rebuild_v2'
+       AND table_name='wallet_ledger'
+       AND column_name='reversal_of'
+  ) THEN
+    RAISE EXCEPTION 'FAIL CATALOG: wallet_ledger.reversal_of is missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+      FROM pg_constraint
+     WHERE conrelid='rebuild_v2.wallet_ledger'::regclass
+       AND conname='wallet_ledger_reversal_of_fkey'
+       AND contype='f'
+  ) THEN
+    RAISE EXCEPTION 'FAIL CATALOG: self-referencing reversal foreign key is missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+      FROM pg_indexes
+     WHERE schemaname='rebuild_v2'
+       AND tablename='wallet_ledger'
+       AND indexname='wallet_ledger_one_reversal_per_original_idx'
+       AND indexdef ILIKE '%UNIQUE INDEX%'
+       AND indexdef ILIKE '%WHERE (reversal_of IS NOT NULL)%'
+  ) THEN
+    RAISE EXCEPTION 'FAIL CATALOG: one-reversal partial unique index is missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+     WHERE tgrelid='rebuild_v2.wallet_ledger'::regclass
+       AND tgname='wallet_ledger_reversal_integrity_v2'
+       AND NOT tgisinternal
+       AND tgenabled <> 'D'
+  ) THEN
+    RAISE EXCEPTION 'FAIL CATALOG: reversal integrity trigger is missing or disabled';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid)') IS NOT NULL
+     OR to_regprocedure('rebuild_v2_private.post_wallet_entry(uuid,text,bigint,text,text,text,text,uuid,uuid)') IS NULL THEN
+    RAISE EXCEPTION 'FAIL CATALOG: wallet posting function overload is not the expected 9-argument contract';
+  END IF;
+END;
+$catalog$;
+
 INSERT INTO auth.users
   (id,aud,role,email,encrypted_password,email_confirmed_at,
    raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
@@ -283,6 +333,24 @@ BEGIN
     );
     RAISE EXCEPTION 'FAIL MUTATION: partial unique index accepted a duplicate reversal';
   EXCEPTION WHEN SQLSTATE '23505' THEN NULL;
+  END;
+
+  -- The immutable trigger itself is exercised as the local migration owner,
+  -- separately from authenticated-role ACL denial above.
+  BEGIN
+    UPDATE rebuild_v2.wallet_ledger
+       SET reason='mutation attempt'
+     WHERE id=v_original;
+    RAISE EXCEPTION 'FAIL MUTATION: owner UPDATE bypassed ledger immutability';
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM <> 'immutable_record: updates and deletes are not allowed' THEN RAISE; END IF;
+  END;
+
+  BEGIN
+    DELETE FROM rebuild_v2.wallet_ledger WHERE id=v_original;
+    RAISE EXCEPTION 'FAIL MUTATION: owner DELETE bypassed ledger immutability';
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM <> 'immutable_record: updates and deletes are not allowed' THEN RAISE; END IF;
   END;
 END;
 $mutation$;
