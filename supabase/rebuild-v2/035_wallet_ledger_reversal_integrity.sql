@@ -27,10 +27,6 @@ CREATE UNIQUE INDEX wallet_ledger_one_reversal_per_original_idx
   ON rebuild_v2.wallet_ledger(reversal_of)
   WHERE reversal_of IS NOT NULL;
 
-CREATE INDEX wallet_ledger_reversal_of_idx
-  ON rebuild_v2.wallet_ledger(reversal_of)
-  WHERE reversal_of IS NOT NULL;
-
 CREATE OR REPLACE FUNCTION rebuild_v2_private.enforce_wallet_reversal_integrity()
 RETURNS trigger
 LANGUAGE plpgsql
