@@ -11,7 +11,7 @@ VALUES
   ('93500000-0000-4000-8000-000000000001','authenticated','authenticated','v2-reversal-financial@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Reversal Financial"}'::jsonb,now(),now()),
   ('93500000-0000-4000-8000-000000000002','authenticated','authenticated','v2-reversal-admin@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Reversal Admin"}'::jsonb,now(),now()),
   ('93500000-0000-4000-8000-000000000003','authenticated','authenticated','v2-reversal-target@example.invalid','',now(),'{"name":"Reversal Target"}'::jsonb,now(),now()),
-  ('93500000-0000-4000-8000-000000000004','authenticated','authenticated','v2-reversal-other@example.invalid','',now(),'{"name":"Other Target"}'::jsonb,now(),now());
+  ('93500000-0000-4000-8000-000000000004','authenticated','authenticated','v2-reversal-other@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Target"}'::jsonb,now(),now());
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
@@ -24,10 +24,8 @@ SET LOCAL ROLE authenticated;
 DO $test$
 DECLARE
   v_original uuid;
-  v_original_other_wallet uuid;
   v_reversal uuid;
   v_retry uuid;
-  v_reversal_of_reversal uuid;
   v_count integer;
   v_balance bigint;
 BEGIN
@@ -271,6 +269,20 @@ BEGIN
     );
     RAISE EXCEPTION 'FAIL MUTATION: trigger accepted reversal of reversal';
   EXCEPTION WHEN SQLSTATE '23514' THEN NULL;
+  END;
+
+  -- The unique partial index is an independent final guard against a second
+  -- valid-shaped reversal inserted outside the posting function.
+  BEGIN
+    INSERT INTO rebuild_v2.wallet_ledger(
+      user_id,wallet_type,amount,entry_type,reversal_of,idempotency_key,reason
+    ) VALUES (
+      '93500000-0000-4000-8000-000000000003',
+      'earned_points',-200,'reversal',v_original,
+      'mutation-duplicate-reversal-001','Mutation duplicate reversal direct insert'
+    );
+    RAISE EXCEPTION 'FAIL MUTATION: partial unique index accepted a duplicate reversal';
+  EXCEPTION WHEN SQLSTATE '23505' THEN NULL;
   END;
 END;
 $mutation$;
