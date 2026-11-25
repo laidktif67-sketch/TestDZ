@@ -21,8 +21,21 @@ BEGIN
      WHERE conrelid='rebuild_v2.wallet_ledger'::regclass
        AND conname='wallet_ledger_reversal_of_fkey'
        AND contype='f'
+       AND confrelid='rebuild_v2.wallet_ledger'::regclass
+       AND confdeltype='r'
   ) THEN
     RAISE EXCEPTION 'FAIL CATALOG: self-referencing reversal foreign key is missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+      FROM pg_constraint
+     WHERE conrelid='rebuild_v2.wallet_ledger'::regclass
+       AND conname='wallet_ledger_reversal_shape_check'
+       AND contype='c'
+       AND convalidated
+  ) THEN
+    RAISE EXCEPTION 'FAIL CATALOG: reversal shape constraint is missing or unvalidated';
   END IF;
 
   IF NOT EXISTS (
