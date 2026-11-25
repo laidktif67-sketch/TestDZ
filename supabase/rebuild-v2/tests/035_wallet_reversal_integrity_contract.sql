@@ -257,6 +257,31 @@ BEGIN
 END;
 $test$;
 
+-- ACL: authenticated clients cannot bypass the financial posting function.
+DO $acl$
+BEGIN
+  BEGIN
+    INSERT INTO rebuild_v2.wallet_ledger(
+      user_id,wallet_type,amount,entry_type,idempotency_key,reason
+    ) VALUES (
+      '93500000-0000-4000-8000-000000000003',
+      'earned_points',1,'adjustment','acl-direct-ledger-insert',
+      'Attempt direct authenticated ledger insert'
+    );
+    RAISE EXCEPTION 'FAIL ACL: authenticated direct ledger INSERT succeeded';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+
+  BEGIN
+    UPDATE rebuild_v2.wallets
+       SET earned_points=earned_points+1
+     WHERE user_id='93500000-0000-4000-8000-000000000003';
+    RAISE EXCEPTION 'FAIL ACL: authenticated direct wallet UPDATE succeeded';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+END;
+$acl$;
+
 -- Owner-level mutation probes exercise the table trigger independently of
 -- post_wallet_entry. They must fail before any invalid reversal row is stored.
 RESET ROLE;
