@@ -58,10 +58,12 @@ SQL
 # Session A holds the original row lock before it posts the reversal.
 psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 >"$tmpdir/session-a.log" 2>&1 <<SQL &
 BEGIN;
+-- The harness holds the row lock as the local database owner, then switches
+-- to the authenticated Financial identity before invoking the real function.
+SELECT id FROM rebuild_v2.wallet_ledger WHERE id='$original_id' FOR UPDATE;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','$actor_a',true);
 SELECT set_config('request.jwt.claims','{"sub":"$actor_a","role":"authenticated"}',true);
-SELECT id FROM rebuild_v2.wallet_ledger WHERE id='$original_id' FOR UPDATE;
 SELECT pg_sleep(3);
 SELECT rebuild_v2_private.post_wallet_entry(
   '$target','earned_points',-100,'reversal','reversal-concurrency-first',
