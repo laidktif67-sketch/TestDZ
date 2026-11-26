@@ -166,7 +166,7 @@ export default function SupportStaffQueuePage() {
                         <td><span className={"ssq-priority " + ticket.priority}>{ticket.priority}</span></td>
                         <td><span className={"ssq-status " + ticket.status}>{statusLabels[ticket.status] || ticket.status}</span></td>
                         <td>{new Date(ticket.updated_at).toLocaleString()}</td>
-                        <td><Link to={"/support/" + ticket.id}>Open <Icon name="arrow" size={14}/></Link></td>
+                        <td><Link to={"/support/queue/" + ticket.id}>Open <Icon name="arrow" size={14}/></Link></td>
                       </tr>
                     ))}</tbody>
                   </table>
