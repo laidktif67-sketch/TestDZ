@@ -278,3 +278,39 @@ The route and API review was followed by a source-level comparison against candi
 - The V2 role/admin/support SQL contracts have source-level alignment and isolated contract coverage; this does not establish hosted deployment, production grants, or end-to-end browser correctness.
 
 No source code, candidate SQL, production data, hosted policies, feature flags, or deployment settings were changed by this review.
+
+
+## Developer, rewards, withdrawal, referral, and leaderboard review — 2026-11-26 (read-only)
+
+Reviewed the Developer tests, monitoring, tester-management/invitations, feedback pages and their shared API against candidate V2 SQL scripts 003, 007–008, 012–016, 030, and 032, plus wallet/referral/withdrawal/leaderboard pages.
+
+### Developer workflow alignment
+
+- App management calls `get_app_limit`, `create_app`, `update_app`, `archive_app`, and `restore_app`; candidate script 003 exposes these exact public V2 RPC names and grants authenticated execution. App reads use the selected data schema and ownership-filtered queries.
+- Developer test authoring calls `create_test`, `update_test`, `save_test_content`, and `submit_test_for_review`; candidate scripts 008 and 011 contain the corresponding lifecycle/content contracts. The API sends the full test input fields, including dates, duration and instructions, matching the V2 create/update function signatures.
+- Cohort UI calls `create_test_cohort`, `update_test_cohort`, and `transition_test_cohort`; scripts 008 and 012 expose matching functions. No legacy `create_cohort`, `add_cohort_test`, or `remove_cohort_test` call was found in the inspected Developer tests page/API.
+- APK builds and test assets use register/finalize RPC pairs and private Storage buckets; scripts 013 and 015 define the matching V2 helpers and Storage policies.
+- Developer feedback UI uses `get_developer_feedback`, `update_developer_feedback_review`, `get_developer_feedback_messages`, and `send_developer_feedback_message`; script 016 exposes these contracts.
+- Developer monitoring uses `get_developer_test_monitoring`; script 030 provides the matching function and privacy-aware aggregate response.
+- Tester invitations use the `developer-invitations` Edge Function, while SQL script 032 defines invitation lifecycle functions. This needs an explicit Edge Function-to-SQL signature/configuration and secret audit; source-level page inspection alone does not prove deployed function compatibility.
+- Developer pages are guarded by the Developer role in the route tree, and the pages additionally check V2 enablement or identity. This is consistent with the current staged rollout design.
+
+### Rewards, wallet, referral, withdrawal, leaderboard findings
+
+- The V2 schema does contain `wallets`, `wallet_ledger`, and `referrals` tables. However, tester workflow script 007 explicitly excludes tester points/rewards and cash withdrawals; the wallet UI deliberately returns no V2 wallet/ledger data and displays zero/empty values while V2 is active.
+- The V2 wallet idempotency contract (test 009) exercises the private `post_wallet_entry` helper. That is not equivalent to an approved public tester reward-earning, redemption, or cash-withdrawal workflow.
+- Withdrawal request UI is explicitly disabled under V2. The withdrawal status page is a static informational placeholder and does not load actual withdrawal records.
+- Referral UI explicitly states tracking is not connected and does not create referral links or post rewards. The referral API has a history read path, but the current referral page does not present verified referral records.
+- Leaderboard UI intentionally suppresses rankings and displays a notice until a secure approved V2 leaderboard service exists.
+- Therefore wallet/rewards, cash withdrawals, referral rewards, and leaderboard are not available V2 beta capabilities despite some related schema tables existing. Do not infer functional readiness from table presence.
+
+### Cutover acceptance requirements
+
+1. Keep wallet balances and earned/purchased credits unavailable in V2 until product rules and public server-side posting/read APIs are approved and tested.
+2. Keep cash withdrawal creation, review, payout, and status tracking disabled until the full ledger-backed workflow, country/payment controls, and Admin operations are implemented and tested.
+3. Keep referral tracking/rewarding and global leaderboard hidden until verified V2 services and privacy-safe access controls exist.
+4. Validate the `developer-invitations` Edge Function end-to-end against script 032, including secrets, idempotency, expiry, redemption, and revocation.
+5. Run browser-level role-separated tests for Developer ownership, Tester participation, and Admin review; source and isolated SQL contracts do not replace end-to-end verification.
+6. The current V2 feature flag remains a whole-app data-schema switch; no flag or application code was changed during this review.
+
+No production data, hosted database objects, feature flags, application source, or deployment settings were changed.
