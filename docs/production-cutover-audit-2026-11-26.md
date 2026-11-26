@@ -345,3 +345,27 @@ No production data, hosted database objects, feature flags, application source, 
 - Isolated SQL contracts and source inspection do not prove Storage upload/download/signed-URL behavior in a deployed V2 environment. Browser tests must cover wrong-owner access, pre-finalization reads, post-finalization participant reads, closed/removed assignments, and MIME/size mismatch rejection.
 
 No hosted Edge Function was deployed, no secrets were changed, no Storage bucket or policy was changed, and no application or database source was modified.
+
+
+## Storage test coverage and final workflow gap review — 2026-11-26 (read-only)
+
+### What the current isolated suite does prove
+
+- `tests/006_test_media_assets_contract.sql` executes actual Storage object INSERT/SELECT RLS for `test-assets`, including owner upload, MIME/extension mismatch, oversized metadata, participant read, and unrelated tester denial; it rolls back synthetic rows.
+- `tests/029_support_attachment_privacy_contract.sql` checks requester, Support, Admin, and unrelated-user access to public-message versus internal-note support attachments, including Storage object visibility.
+- Candidate `final_state_contract.sql` checks the seven expected buckets and the final 48-table / 47-policy table contract.
+- The workflow runs these contracts in a disposable local Supabase stack and shuts that stack down afterwards.
+
+### Remaining test coverage gaps
+
+1. **APK build Storage path:** migration 013 defines a private `test-builds` bucket, owner/status-scoped upload helper, participant read helper, and register/finalize RPCs. The inspected test suite has no dedicated contract that inserts an APK build row, rejects another developer's upload, verifies size/MIME at finalize, and proves participant versus outsider read access. The existing media contract 006 covers `test-assets`, not `test-builds`.
+2. **Tester feedback reply:** migration 034 adds `get_tester_feedback_messages()`, but no dedicated SQL contract file exists and the workflow contract array does not run a migration-034-specific contract. This leaves tester-side reply visibility/role separation without direct isolated contract evidence.
+3. **New cohort delete-safety contract:** the separate Draft PR #170 contains the proposed cohort/assignment deletion safety test, but it is not part of the official branch's current workflow until that PR is reviewed and merged. Its CI success on the PR branch is not evidence that the official branch currently runs it.
+4. **Bucket configuration reconciliation:** migration 006 explicitly leaves existing bucket configuration untouched on conflict, and migration 013 also uses `DO NOTHING` for `test-builds`. Migration 015 updates `test-assets` configuration on conflict, unlike those earlier migrations. A future cutover needs an explicit reviewed reconciliation plan for the pre-existing buckets and the two V2 buckets, including public/private status, size limits, MIME allowlists, and object inventory/retention. Do not silently alter existing production buckets as part of a schema migration.
+5. **Storage runtime semantics:** direct SQL contracts exercise Storage RLS predicates and object metadata, but do not fully substitute for actual Storage API upload/download/signed-URL tests. Those remain a post-deployment V2-environment acceptance requirement, with no production deployment implied.
+
+### Current conclusion
+
+The existing isolated contracts provide meaningful evidence for test assets and support attachments, but do not yet fully certify the APK build bucket or the tester feedback reply path. These are explicit Beta acceptance blockers until covered by isolated contracts and, for Storage API behavior, browser/API integration tests.
+
+No workflow, SQL, application source, hosted bucket, or production setting was changed in this review.
