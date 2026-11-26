@@ -23,8 +23,34 @@ const statusLabels: Record<string, string> = {
 const dateLabel = (value: string | null | undefined) => {
   if (!value) return "غير محدد";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "غير محدد" : date.toLocaleDateString("ar-DZ", { year: "numeric", month: "short", day: "numeric" });
+  return Number.isNaN(date.getTime())
+    ? "غير محدد"
+    : date.toLocaleDateString("ar-DZ", {
+        timeZone: "Africa/Algiers",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
 };
+
+function algiersDateParts(value: Date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Algiers",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(value);
+  return {
+    year: Number(parts.find(part => part.type === "year")?.value),
+    month: Number(parts.find(part => part.type === "month")?.value),
+    day: Number(parts.find(part => part.type === "day")?.value),
+  };
+}
+
+function algiersDateKey(value: Date) {
+  const parts = algiersDateParts(value);
+  return parts.year + "-" + String(parts.month).padStart(2, "0") + "-" + String(parts.day).padStart(2, "0");
+}
 
 function MetricCard({ label, value, detail, symbol }: { label: string; value: string | number; detail: string; symbol: string }) {
   return <article className="dtm2-metric">
@@ -89,11 +115,15 @@ export default function DeveloperTestMonitoringPage() {
   const visibleMetrics = metrics && !metrics.suppressed ? metrics : null;
   const daily = useMemo(() => {
     const indexed = new Map((summary?.dailyActivity ?? []).map(item => [item.date, item.count]));
+    const today = algiersDateParts(new Date());
+    // Noon UTC keeps the calendar date stable while formatting in Africa/Algiers.
+    const algiersToday = new Date(Date.UTC(today.year, today.month - 1, today.day, 12));
     return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - index));
-      const key = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
-      return { date: key, label: date.toLocaleDateString("ar-DZ", { weekday: "short" }), count: indexed.get(key) ?? 0 };
+      const date = new Date(algiersToday);
+      date.setUTCDate(date.getUTCDate() - (6 - index));
+      const key = algiersDateKey(date);
+      const label = date.toLocaleDateString("ar-DZ", { timeZone: "Africa/Algiers", weekday: "short" });
+      return { date: key, label, count: indexed.get(key) ?? 0 };
     });
   }, [summary]);
   const maxDaily = Math.max(1, ...daily.map(item => item.count));
@@ -118,7 +148,8 @@ export default function DeveloperTestMonitoringPage() {
       ["بانتظار البدء", visibleMetrics?.pending ?? 0],
       ["نسبة الإكمال", (visibleMetrics?.completionRate ?? 0) + "%"],
       ["عمليات تسجيل النشاط", visibleMetrics?.checkins ?? 0],
-      ["التقييمات", visibleMetrics?.feedbackCount ?? 0],
+      ["الملاحظات المستلمة", visibleMetrics?.feedbackCount ?? 0],
+      ["التقييمات ذات النجوم", visibleMetrics?.ratingCount ?? 0],
       ["متوسط التقييم", visibleMetrics?.averageRating ?? "—"],
     ];
     const csv = rows.map(row => row.map(value => '"' + String(value).replaceAll('"', '""') + '"').join(",")).join("\n");
@@ -169,7 +200,7 @@ export default function DeveloperTestMonitoringPage() {
           <MetricCard label="إجمالي المشاركات" value={visibleMetrics?.totalAssignments ?? 0} detail={"الهدف: " + summary.test.minTesters + " مختبراً"} symbol="♙" />
           <MetricCard label="نسبة الإكمال" value={(visibleMetrics?.completionRate ?? 0) + "%"} detail={(visibleMetrics?.completed ?? 0) + " مشاركات مكتملة"} symbol="✓" />
           <MetricCard label="المشاركات النشطة" value={visibleMetrics?.active ?? 0} detail={(visibleMetrics?.pending ?? 0) + " بانتظار البدء"} symbol="◷" />
-          <MetricCard label="متوسط التقييم" value={visibleMetrics?.averageRating == null ? "—" : visibleMetrics.averageRating + "/5"} detail={(visibleMetrics?.feedbackCount ?? 0) + " تقييمات مستلمة"} symbol="★" />
+          <MetricCard label="متوسط التقييم" value={visibleMetrics?.averageRating == null ? "—" : visibleMetrics.averageRating + "/5"} detail={(visibleMetrics?.ratingCount ?? 0) + " تقييمات ذات نجوم"} symbol="★" />
         </section>
 
         <section className="dtm2-panels">
@@ -202,7 +233,8 @@ export default function DeveloperTestMonitoringPage() {
           <article className="dtm2-panel">
             <div className="dtm2-panel-heading"><h3>مؤشرات الجودة</h3></div>
             <div className="dtm2-quality-row"><span>تسجيلات النشاط</span><b>{visibleMetrics?.checkins ?? 0}</b></div>
-            <div className="dtm2-quality-row"><span>التقييمات المستلمة</span><b>{visibleMetrics?.feedbackCount ?? 0}</b></div>
+            <div className="dtm2-quality-row"><span>الملاحظات المستلمة</span><b>{visibleMetrics?.feedbackCount ?? 0}</b></div>
+            <div className="dtm2-quality-row"><span>التقييمات ذات النجوم</span><b>{visibleMetrics?.ratingCount ?? 0}</b></div>
             <div className="dtm2-quality-row"><span>تقييمات بانتظار المراجعة</span><b>{visibleMetrics?.feedbackPending ?? 0}</b></div>
             <div className="dtm2-quality-row"><span>تقييمات مقبولة</span><b>{visibleMetrics?.feedbackAccepted ?? 0}</b></div>
             <div className="dtm2-quality-row"><span>تقييمات مرفوضة</span><b>{visibleMetrics?.feedbackRejected ?? 0}</b></div>
