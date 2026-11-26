@@ -10,11 +10,12 @@ export async function getTesterSupportTickets(userId: string) {
 
 /** Create a support ticket using the guarded V2 workflow or legacy fallback. */
 export async function createTesterSupportTicket(input: {
-  userId: string; subject: string; category: string; priority: string; description: string;
+  userId: string; requesterRole: "tester" | "developer"; subject: string; category: string; priority: string; description: string;
 }) {
   const client = getAppDataClient();
   if (isTesterWorkflowV2Enabled) {
-    return client.rpc("create_support_ticket", {
+    return client.rpc("create_support_ticket_for_role", {
+      p_requester_role: input.requesterRole,
       p_subject: input.subject, p_category: input.category,
       p_priority: input.priority, p_description: input.description,
     });
