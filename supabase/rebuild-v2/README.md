@@ -25,14 +25,17 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `019_notification_recipient_roles.sql`: restores tester/developer notification feed separation, role-aware reads, and role-scoped read-state RPCs.
 - `020_notification_event_producers.sql`: adds a private server-owned event enqueue helper, idempotency linkage, and a service-role-only batch dispatcher with `SKIP LOCKED`, retry backoff, and terminal failure after five attempts.
 - `021_feedback_notification_producers.sql`: notifies the owning developer when tester feedback is submitted, and notifies the tester when the developer changes review status or replies; event payloads contain identifiers and status only, never feedback/message bodies.
+- `030_developer_test_monitoring_summary.sql`: owner-checked aggregate-only monitoring; daily activity is suppressed unless at least three distinct testers contributed.
+- `031_role_explicit_support_ticket_creation.sql`: role-explicit support ticket creation for dual-role Tester/Developer accounts.
+- `032_developer_test_invitations.sql`: email-bound, hashed-token invitations with owner-scoped listing, revocation, expiry and atomic Tester redemption.
 - `033_support_tester_data_boundary.sql`: removes Support access to raw tester assignments, check-ins, and feedback while preserving Admin oversight.
 - `034_tester_feedback_reply_access.sql`: exposes developer-authored replies only to the authenticated owner of the feedback.
 
-Migrations 022–032 are intentionally not included in this curated candidate yet. Their features remain under separate review; the numbering gap is deliberate, not a missing-file error.
+Migrations 022–029 remain intentionally excluded pending separate review. Migrations 030–032 are included because monitoring is a documented prerequisite for role-explicit Support (031), which precedes the invitation lifecycle (032).
 
 
 
-## Notification outbox worker
+## Developer invitation function\n\nThe candidate Edge Function source is `supabase/functions/developer-invitations/index.ts`. It verifies the caller with Supabase Auth, derives a 256-bit token using the server-only `DEVELOPER_INVITATION_TOKEN_SECRET`, stores only its SHA-256 hash through the V2 RPCs, and returns the raw token only in the create response. The first release is copy-link only and explicitly reports `Link ready — not emailed`. Configure the secret only in a hosted Edge Function after separate approval; no secret or function deployment is included here.\n\n## Notification outbox worker
 
 The candidate Edge Function source is `supabase/functions/dispatch-notifications/index.ts`. It accepts only server-to-server POST requests carrying the `x-dispatch-secret` header, then invokes the service-role-only `rebuild_v2.process_notification_outbox` RPC. Its configuration disables platform JWT verification only because the function performs its own shared-secret check; never expose the secret to the browser.
 
@@ -42,12 +45,12 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply the 23 selected scripts in numeric order: `001_schema.sql` through `021_feedback_notification_producers.sql`, followed by the separately reviewed `033_support_tester_data_boundary.sql` and `034_tester_feedback_reply_access.sql`. Migrations 022–032 are intentionally excluded from this candidate.
+Apply the 26 selected scripts in numeric order: `001_schema.sql` through `021_feedback_notification_producers.sql`, then `030_developer_test_monitoring_summary.sql` through `034_tester_feedback_reply_access.sql`. Migrations 022–029 remain excluded.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 23 selected scripts, run:
+After all 26 selected scripts, run:
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
@@ -58,10 +61,13 @@ After all 23 selected scripts, run:
 - `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
 - `tests/010_security_definer_boundary_contract.sql` — verifies the V2 schema exposure boundary, restricted schema creation, and SECURITY DEFINER ownership/search-path requirements.
 - `tests/011_notification_recipient_roles_contract.sql` — verifies tester/developer feed isolation and role-scoped read-one/read-all operations.
+- `tests/026_developer_test_monitoring_privacy_contract.sql` — verifies owner-only aggregate monitoring and minimum distinct-tester suppression.
+- `tests/027_role_explicit_support_ticket_creation_contract.sql` — verifies dual-role workspace selection and rejects role spoofing.
+- `tests/028_developer_test_invitations_contract.sql` — verifies hashed-token storage, email-bound redemption, idempotency, revocation and direct-table denial.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 23 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the ten post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 26 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the thirteen post-phase contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
