@@ -138,3 +138,16 @@ Their effects and relationship to later applied changes still need catalog-level
 ### Updated next gate
 
 Recover or conclusively account for the single remaining migration source (`20261115092608`), then perform a catalog-level effect mapping for all recovered historical files. A recovered filename alone is not evidence that the hosted database ran exactly that SQL or that its final effects are all present in V2.
+
+
+### Additional configuration values verified
+
+A second read-only query confirmed:
+- Both legacy profiles currently have `subscription_tier = 'free'`.
+- `payments.enabled = false`.
+- `referral.enabled = false`.
+- `trial.enabled = false`.
+- `fraud.auto_suspend = false`.
+- `cohort.auto_form = true`.
+
+The last value is important: do not blindly copy it into a V2 setting or assume it means the same workflow. Confirm the candidate's intended cohort lifecycle before mapping it. The disabled payment/referral/trial/fraud switches must remain disabled through any migration rehearsal and cutover unless separately approved.
