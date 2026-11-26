@@ -18,6 +18,7 @@ import {
   listApps,
   listDeveloperTests,
   submitDeveloperTestForReview,
+  updateDeveloperTest,
   type DeveloperCohort,
   type DeveloperTestBuild,
   type DeveloperTestAsset,
@@ -30,7 +31,7 @@ type DeveloperTest = {
   id: string; app_id: string; title: string; description: string | null;
   short_summary: string | null; test_type: string; status: string;
   min_testers: number; start_date: string | null; end_date: string | null;
-  estimated_duration_minutes: number | null; created_at: string;
+  estimated_duration_minutes: number | null; tester_instructions: string | null; created_at: string;
 };
 
 const statusLabel: Record<string,string> = {
@@ -64,6 +65,16 @@ export default function DeveloperTestsPage() {
   const [error,setError]=useState("");
   const [notice,setNotice]=useState("");
   const [showCreate,setShowCreate]=useState(false);
+  const [editingTestId,setEditingTestId]=useState<string|null>(null);
+  const [editTitle,setEditTitle]=useState("");
+  const [editDescription,setEditDescription]=useState("");
+  const [editSummary,setEditSummary]=useState("");
+  const [editTestType,setEditTestType]=useState<DeveloperTestInputType>("usability");
+  const [editMinTesters,setEditMinTesters]=useState(12);
+  const [editStartDate,setEditStartDate]=useState("");
+  const [editEndDate,setEditEndDate]=useState("");
+  const [editDuration,setEditDuration]=useState<number|"">(30);
+  const [editInstructions,setEditInstructions]=useState("");
   const [appId,setAppId]=useState("");
   const [title,setTitle]=useState("");
   const [description,setDescription]=useState("");
@@ -135,6 +146,38 @@ export default function DeveloperTestsPage() {
       setShowCreate(false);setTitle("");setDescription("");setSummary("");setInstructions("");
       setSteps([{title:"",description:"",isRequired:true}]);
       setRequirements([{type:"device",title:"",description:"",isMandatory:true}]);
+      if(userId)await load(userId);
+    }
+    setBusy(false);
+  }
+
+  function beginEditTest(test:DeveloperTest){
+    setEditingTestId(test.id);
+    setEditTitle(test.title);
+    setEditDescription(test.description??"");
+    setEditSummary(test.short_summary??"");
+    setEditTestType(test.test_type as DeveloperTestInputType);
+    setEditMinTesters(test.min_testers);
+    setEditStartDate(test.start_date??"");
+    setEditEndDate(test.end_date??"");
+    setEditDuration(test.estimated_duration_minutes??"");
+    setEditInstructions(test.tester_instructions??"");
+    setError("");
+    setNotice("");
+  }
+
+  async function saveTest(event:FormEvent<HTMLFormElement>,testId:string){
+    event.preventDefault();
+    setBusy(true);setError("");setNotice("");
+    const {error:rpcError}=await updateDeveloperTest(testId,{
+      title:editTitle,description:editDescription,shortSummary:editSummary,testType:editTestType,
+      minTesters:editMinTesters,startDate:editStartDate||null,endDate:editEndDate||null,
+      durationMinutes:editDuration===""?null:editDuration,instructions:editInstructions,
+    });
+    if(rpcError)setError("تعذر تحديث الاختبار: "+rpcError.message);
+    else{
+      setNotice("تم حفظ بيانات الاختبار. بقيت خطواته ومتطلباته وإعداداته كما هي.");
+      setEditingTestId(null);
       if(userId)await load(userId);
     }
     setBusy(false);
@@ -268,7 +311,19 @@ export default function DeveloperTestsPage() {
         </section>
         <div className="detail-actions"><button className="button button-primary" disabled={busy}>حفظ كمسودة</button><button type="button" className="button button-quiet" onClick={()=>setShowCreate(false)}>إلغاء</button></div>
       </form>}
-      {loading?<div className="loading-screen">جارٍ تحميل الاختبارات...</div>:tests.length===0?<div className="apps-empty"><h2>لا توجد اختبارات بعد</h2><p>بعد نشر تطبيقك، يمكنك إنشاء أول اختبار وإرساله للمراجعة.</p></div>:<div className="apps-grid">{tests.map(test=><article className="app-tile" key={test.id}><div className="app-tile-main"><span className="app-tile-icon app-tile-placeholder">✓</span><span className="app-tile-copy"><strong>{test.title}</strong><small>{test.test_type} · {test.min_testers} مختبراً</small><em className={"app-status status-"+test.status}>{statusLabel[test.status]??test.status}</em></span></div><div className="app-tile-footer"><span>{test.estimated_duration_minutes?test.estimated_duration_minutes+" دقيقة":"المدة غير محددة"}</span>{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<button onClick={()=>void submitTest(test.id)} disabled={busy||(test.test_type==="apk_testing"&&!testBuilds.some(build=>build.test_id===test.id&&build.status==="uploaded"))}>إرسال للمراجعة</button>}{(test.status==="recruiting"||test.status==="ready")&&<button onClick={()=>{setCohortFor(test.id);setCohortName("مجموعة "+test.title);setCohortCapacity(test.min_testers);}}>إنشاء مجموعة</button>}</div>{test.test_type==="apk_testing"&&<section className="dashboard-card"><h3>ملفات APK الخاصة</h3><p>الملف خاص، ولا يستطيع تنزيله إلا مالك الاختبار والمختبرون المسجلون فيه. الحد الأقصى 50 MB.</p>{testBuilds.filter(build=>build.test_id===test.id).map(build=><p key={build.id}>{build.version_label} · {build.original_filename} · {build.status==="uploaded"?"تم التحقق والرفع":"رفع غير مكتمل"}</p>)}{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<div className="auth-form"><label>رقم الإصدار<input required maxLength={64} value={apkVersions[test.id]??""} onChange={e=>setApkVersions(rows=>({...rows,[test.id]:e.target.value}))}/></label><label>ملف APK<input type="file" accept=".apk,application/vnd.android.package-archive" onChange={e=>setApkFiles(rows=>({...rows,[test.id]:e.target.files?.[0]??null}))}/></label><button type="button" className="button button-primary" disabled={busy||!apkFiles[test.id]} onClick={()=>void uploadBuild(test.id)}>رفع APK والتحقق منه</button></div>}</section>}<section className="dashboard-card"><h3>مواد ومرفقات الاختبار</h3><p>صور توضيحية وفيديوهات ووثائق خاصة. الملفات لا تظهر إلا لك وللإدارة والمختبرين المعيّنين بعد اعتماد الرفع. الحد الأقصى 20 ملفاً، و50 MB للملف الواحد.</p>{testAssets.filter(asset=>asset.test_id===test.id).map(asset=><p key={asset.id}>{asset.title} · {asset.original_filename} · {(asset.size_bytes/1048576).toFixed(1)} MB · {asset.status==="uploaded"?"تم التحقق":"رفع غير مكتمل"}</p>)}{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<div className="auth-form"><label>عنوان المرفق<input required maxLength={120} value={assetTitles[test.id]??""} onChange={e=>setAssetTitles(rows=>({...rows,[test.id]:e.target.value}))}/></label><label>الملف<input type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm,application/pdf,text/plain,.docx,.pptx,.xlsx" onChange={e=>setAssetFiles(rows=>({...rows,[test.id]:e.target.files?.[0]??null}))}/></label><button type="button" className="button button-primary" disabled={busy||!assetFiles[test.id]} onClick={()=>void uploadTestAsset(test.id)}>رفع مرفق خاص</button></div>}</section>{cohortFor===test.id&&<form className="auth-form" onSubmit={e=>void createCohort(e,test.id)}><label>اسم المجموعة<input required minLength={2} maxLength={120} value={cohortName} onChange={e=>setCohortName(e.target.value)}/></label><label>السعة<input type="number" min={test.min_testers} max={500} value={cohortCapacity} onChange={e=>setCohortCapacity(Number(e.target.value))}/></label><label>موعد البداية<input type="datetime-local" value={cohortStartsAt} onChange={e=>setCohortStartsAt(e.target.value)}/></label><label>موعد النهاية<input type="datetime-local" value={cohortEndsAt} onChange={e=>setCohortEndsAt(e.target.value)}/></label><button className="button button-primary" disabled={busy}>إنشاء وربط المجموعة</button></form>}
+      {loading?<div className="loading-screen">جارٍ تحميل الاختبارات...</div>:tests.length===0?<div className="apps-empty"><h2>لا توجد اختبارات بعد</h2><p>بعد نشر تطبيقك، يمكنك إنشاء أول اختبار وإرساله للمراجعة.</p></div>:<div className="apps-grid">{tests.map(test=><article className="app-tile" key={test.id}><div className="app-tile-main"><span className="app-tile-icon app-tile-placeholder">✓</span><span className="app-tile-copy"><strong>{test.title}</strong><small>{test.test_type} · {test.min_testers} مختبراً</small><em className={"app-status status-"+test.status}>{statusLabel[test.status]??test.status}</em></span></div>{editingTestId===test.id&&<form className="dashboard-card auth-form detail-edit" onSubmit={event=>void saveTest(event,test.id)}>
+          <h3>تعديل بيانات الاختبار</h3>
+          <label>عنوان الاختبار<input required minLength={3} maxLength={160} value={editTitle} onChange={e=>setEditTitle(e.target.value)}/></label>
+          <label>الوصف<textarea required minLength={20} maxLength={12000} rows={3} value={editDescription} onChange={e=>setEditDescription(e.target.value)}/></label>
+          <label>ملخص قصير<input maxLength={240} value={editSummary} onChange={e=>setEditSummary(e.target.value)}/></label>
+          <label>نوع الاختبار<select value={editTestType} onChange={e=>setEditTestType(e.target.value as DeveloperTestInputType)}><option value="usability">سهولة الاستخدام</option><option value="bug_discovery">اكتشاف الأخطاء</option><option value="compatibility">التوافق</option><option value="google_play_closed">اختبار مغلق Google Play</option><option value="apk_testing">اختبار APK</option><option value="custom">مخصص</option></select></label>
+          <label>عدد المختبرين المطلوب<input type="number" min={1} max={500} value={editMinTesters} onChange={e=>setEditMinTesters(Number(e.target.value))}/></label>
+          <label>تاريخ البداية<input type="date" value={editStartDate} onChange={e=>setEditStartDate(e.target.value)}/></label>
+          <label>تاريخ النهاية<input type="date" value={editEndDate} onChange={e=>setEditEndDate(e.target.value)}/></label>
+          <label>المدة بالدقائق<input type="number" min={1} max={1440} value={editDuration} onChange={e=>setEditDuration(e.target.value===""?"":Number(e.target.value))}/></label>
+          <label>تعليمات المختبر<textarea rows={3} maxLength={12000} value={editInstructions} onChange={e=>setEditInstructions(e.target.value)}/></label>
+          <div className="detail-actions"><button className="button button-primary" disabled={busy}>حفظ التعديلات</button><button type="button" className="button button-quiet" onClick={()=>setEditingTestId(null)}>إلغاء</button></div>
+        </form>}<div className="app-tile-footer"><span>{test.estimated_duration_minutes?test.estimated_duration_minutes+" دقيقة":"المدة غير محددة"}</span>{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<><button type="button" className="button button-outline" onClick={()=>beginEditTest(test)} disabled={busy}>تعديل</button><button onClick={()=>void submitTest(test.id)} disabled={busy||(test.test_type==="apk_testing"&&!testBuilds.some(build=>build.test_id===test.id&&build.status==="uploaded"))}>إرسال للمراجعة</button></>}{(test.status==="recruiting"||test.status==="ready")&&<button onClick={()=>{setCohortFor(test.id);setCohortName("مجموعة "+test.title);setCohortCapacity(test.min_testers);}}>إنشاء مجموعة</button>}</div>{test.test_type==="apk_testing"&&<section className="dashboard-card"><h3>ملفات APK الخاصة</h3><p>الملف خاص، ولا يستطيع تنزيله إلا مالك الاختبار والمختبرون المسجلون فيه. الحد الأقصى 50 MB.</p>{testBuilds.filter(build=>build.test_id===test.id).map(build=><p key={build.id}>{build.version_label} · {build.original_filename} · {build.status==="uploaded"?"تم التحقق والرفع":"رفع غير مكتمل"}</p>)}{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<div className="auth-form"><label>رقم الإصدار<input required maxLength={64} value={apkVersions[test.id]??""} onChange={e=>setApkVersions(rows=>({...rows,[test.id]:e.target.value}))}/></label><label>ملف APK<input type="file" accept=".apk,application/vnd.android.package-archive" onChange={e=>setApkFiles(rows=>({...rows,[test.id]:e.target.files?.[0]??null}))}/></label><button type="button" className="button button-primary" disabled={busy||!apkFiles[test.id]} onClick={()=>void uploadBuild(test.id)}>رفع APK والتحقق منه</button></div>}</section>}<section className="dashboard-card"><h3>مواد ومرفقات الاختبار</h3><p>صور توضيحية وفيديوهات ووثائق خاصة. الملفات لا تظهر إلا لك وللإدارة والمختبرين المعيّنين بعد اعتماد الرفع. الحد الأقصى 20 ملفاً، و50 MB للملف الواحد.</p>{testAssets.filter(asset=>asset.test_id===test.id).map(asset=><p key={asset.id}>{asset.title} · {asset.original_filename} · {(asset.size_bytes/1048576).toFixed(1)} MB · {asset.status==="uploaded"?"تم التحقق":"رفع غير مكتمل"}</p>)}{(test.status==="draft"||test.status==="failed"||test.status==="cancelled")&&<div className="auth-form"><label>عنوان المرفق<input required maxLength={120} value={assetTitles[test.id]??""} onChange={e=>setAssetTitles(rows=>({...rows,[test.id]:e.target.value}))}/></label><label>الملف<input type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm,application/pdf,text/plain,.docx,.pptx,.xlsx" onChange={e=>setAssetFiles(rows=>({...rows,[test.id]:e.target.files?.[0]??null}))}/></label><button type="button" className="button button-primary" disabled={busy||!assetFiles[test.id]} onClick={()=>void uploadTestAsset(test.id)}>رفع مرفق خاص</button></div>}</section>{cohortFor===test.id&&<form className="auth-form" onSubmit={e=>void createCohort(e,test.id)}><label>اسم المجموعة<input required minLength={2} maxLength={120} value={cohortName} onChange={e=>setCohortName(e.target.value)}/></label><label>السعة<input type="number" min={test.min_testers} max={500} value={cohortCapacity} onChange={e=>setCohortCapacity(Number(e.target.value))}/></label><label>موعد البداية<input type="datetime-local" value={cohortStartsAt} onChange={e=>setCohortStartsAt(e.target.value)}/></label><label>موعد النهاية<input type="datetime-local" value={cohortEndsAt} onChange={e=>setCohortEndsAt(e.target.value)}/></label><button className="button button-primary" disabled={busy}>إنشاء وربط المجموعة</button></form>}
         {cohorts.filter(cohort=>cohort.test_id===test.id).map(cohort=><section className="dashboard-card" key={cohort.id}>
           <div className="apps-heading"><div><h3>{cohort.name}</h3><p>السعة: {cohort.capacity} · الحالة: {({forming:"قيد التكوين",ready:"جاهزة",running:"جارية",completed:"مكتملة",cancelled:"ملغاة"} as Record<string,string>)[cohort.status]}</p><small>{cohort.starts_at?"البداية: "+new Date(cohort.starts_at).toLocaleString():"موعد البداية غير محدد"} · {cohort.ends_at?"النهاية: "+new Date(cohort.ends_at).toLocaleString():"موعد النهاية غير محدد"}</small></div>
           {cohort.status==="forming"&&<button className="button button-outline" type="button" onClick={()=>beginEditCohort(cohort)}>تعديل</button>}</div>
