@@ -10,10 +10,16 @@ BEGIN;
 DO $date_boundary$
 DECLARE
   v_checkin_default text;
+  v_original_timezone text := current_setting('TimeZone');
 BEGIN
-  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:30:00+00'::timestamptz)
+  -- Pin the transition on both sides of Algeria's UTC+1 midnight boundary.
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 22:59:59.999999+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-15' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must not roll over before UTC 23:00';
+  END IF;
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:00:00+00'::timestamptz)
      IS DISTINCT FROM DATE '2026-11-16' THEN
-    RAISE EXCEPTION 'FAIL: Algeria date must roll over at UTC 23:00';
+    RAISE EXCEPTION 'FAIL: Algeria date must roll over exactly at UTC 23:00';
   END IF;
   IF rebuild_v2_private.algeria_local_date('2026-11-16 00:30:00+00'::timestamptz)
      IS DISTINCT FROM DATE '2026-11-16' THEN
@@ -23,6 +29,14 @@ BEGIN
      IS DISTINCT FROM DATE '2026-11-16' THEN
     RAISE EXCEPTION 'FAIL: Algeria date must remain on the current local day';
   END IF;
+
+  -- The helper must be independent of the database/session TimeZone setting.
+  PERFORM set_config('TimeZone','Pacific/Honolulu',true);
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:00:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must not depend on session TimeZone';
+  END IF;
+  PERFORM set_config('TimeZone',v_original_timezone,true);
 
   SELECT pg_get_expr(d.adbin, d.adrelid)
   INTO v_checkin_default
