@@ -30,13 +30,16 @@ export async function createTesterSupportTicket(input: {
 export async function getTesterSupportTicketDetails(ticketId: string) {
   const client = getAppDataClient();
   const ticketResult = await client.from("support_tickets")
-    .select("id,ticket_number,user_id,requester_role,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by")
+    .select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by")
     .eq("id", ticketId).maybeSingle();
   if (ticketResult.error || !ticketResult.data) {
     return { ticketResult, messageResult: null, attachmentResult: null };
   }
+  const messageColumns = isTesterWorkflowV2Enabled
+    ? "id,ticket_id,sender_id,body,internal_note,created_at"
+    : "id,ticket_id,sender_id,body,created_at";
   const [messageResult, attachmentResult] = await Promise.all([
-    client.from("support_ticket_messages").select("id,ticket_id,sender_id,body,internal_note,created_at")
+    client.from("support_ticket_messages").select(messageColumns)
       .eq("ticket_id", ticketId).order("created_at", { ascending: true }),
     client.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at")
       .eq("ticket_id", ticketId).order("created_at", { ascending: true }),
