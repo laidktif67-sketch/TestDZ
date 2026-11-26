@@ -1,5 +1,5 @@
--- Final-state contract for the curated 26-script rebuild_v2 candidate.
--- Run after the selected migrations 001–021 and 030–034.
+-- Final-state contract for the curated 34-script rebuild_v2 candidate.
+-- Run after all numbered candidate scripts, 001–034.
 -- Read-only: this contract does not create or modify application data.
 
 DO $contract$
