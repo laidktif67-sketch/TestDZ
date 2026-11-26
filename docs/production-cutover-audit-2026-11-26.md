@@ -375,12 +375,12 @@ No workflow, SQL, application source, hosted bucket, or production setting was c
 
 A re-check of the official branch's existing `tests/008_developer_feedback_privacy_contract.sql` corrected the earlier gap statement: the existing contract already exercises the tester's own developer reply through `get_tester_feedback_messages()` and rejects a non-tester role. The remaining useful edge case is cross-tester isolation, which is now added to Draft PR #171.
 
-Draft PR #171 (`test/apk-build-storage-contracts`) adds:
+PR #171 (`test/apk-build-storage-contracts`) added:
 - `tests/030_apk_build_storage_contract.sql`: owner-only APK build registration; outsider upload denial; finalization rejection for mismatched size/MIME; successful finalization; assigned-tester read and unrelated-tester denial across metadata and Storage objects.
 - An additional tester fixture and explicit zero-row assertion in test 008, proving a different tester cannot read another tester's developer reply.
 - The new APK contract in `.github/workflows/rebuild-v2-tests.yml`.
 
-PR #171 is Draft / open and targets `rebuild/testdz-v2`; it is not merged. GitHub Actions run 45895473137 was observed in progress at the time of this update; no passing result is claimed yet. The contracts use transaction rollback and disposable local Supabase CI only.
+At the time of the initial review, PR #171 was Draft / open and its CI was still running. It subsequently passed run #397 (ID `45895473137`) and was approved by the project owner, then merged into `rebuild/testdz-v2` with merge commit `66d5ccf96389c1a398b921e3c46fb8eeff33b6bd`. The contract uses transaction rollback and disposable local Supabase CI only.
 
 No production data, hosted Storage buckets, hosted Supabase configuration, migrations, application runtime code, or Vercel deployment were changed.
 
@@ -407,3 +407,18 @@ PR #171 was approved by the project owner and merged into `rebuild/testdz-v2` us
 - The pre-merge CI run #397 was successful. No additional workflow run was returned for the merge commit at verification time.
 
 This merge changes tests and CI only. It does not deploy candidate SQL to hosted Supabase, alter production data/schema/Storage, deploy Edge Functions, or publish to Vercel. Hosted Storage API behavior and production cutover remain unverified.
+
+
+## Production read-only re-verification after PR #171 — 2026-11-26
+
+A fresh read-only query against hosted project `naqjjykcglxiobkmdllj` confirmed:
+- PostgreSQL 17.11.
+- No `rebuild_v2` or `rebuild_v2_private` schema exists.
+- `public` contains 42 base tables.
+- Hosted migration history contains 43 records.
+- Storage contains five buckets: `app-icons`, `avatars`, `developer-feedback-attachments`, `support-attachments`, and `test-evidence`.
+- The Edge Function listing is empty.
+
+The five hosted buckets retain their existing configuration; no V2 buckets are deployed. This is consistent with the V2 candidate remaining isolated from Production. No DDL, data, migration history, bucket configuration, Edge Function, secret, or deployment was changed during this verification.
+
+PR #169 remains Draft / open. Its branch is now four commits behind `rebuild/testdz-v2` after PR #171 was merged. The audit content remains a documentation-only change; synchronize the branch before considering merge, and obtain explicit owner approval before any branch merge.
