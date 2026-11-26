@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   getDeveloperTestMonitoringSummary,
@@ -42,7 +42,22 @@ export default function DeveloperTestMonitoringPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  async function load(isRefresh = false) {
+  const load = useCallback(async (isRefresh = false) => {
+    if (!isTesterWorkflowV2Enabled) {
+      setSummary(null);
+      setError("ميزة V2 غير مفعّلة في هذا الإصدار.");
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    if (!id) {
+      setSummary(null);
+      setError("معرّف الاختبار غير صالح.");
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     setError("");
@@ -57,43 +72,17 @@ export default function DeveloperTestMonitoringPage() {
         setSummary(data as unknown as DeveloperTestMonitoringSummary);
       }
     } catch {
+      setSummary(null);
       setError("حدث خطأ أثناء تحميل بيانات المراقبة.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  }, [id]);
 
   useEffect(() => {
-    let alive = true;
-    async function initialLoad() {
-      if (!isTesterWorkflowV2Enabled) {
-        setError("ميزة V2 غير مفعّلة في هذا الإصدار.");
-        setLoading(false);
-        return;
-      }
-      try {
-        const { data, error: requestError } = await getDeveloperTestMonitoringSummary(id);
-        if (!alive) return;
-        if (requestError || !data) {
-          setError("الاختبار غير موجود أو تعذر تحميل بيانات المراقبة.");
-        } else {
-          setSummary(data as unknown as DeveloperTestMonitoringSummary);
-        }
-      } catch {
-        if (alive) setError("حدث خطأ أثناء تحميل بيانات المراقبة.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    }
-    if (!id) {
-      setError("معرّف الاختبار غير صالح.");
-      setLoading(false);
-    } else {
-      void initialLoad();
-    }
-    return () => { alive = false; };
-  }, [id]);
+    void load();
+  }, [load]);
 
   const metrics = summary?.metrics;
   const metricsSuppressed = metrics?.suppressed === true;
@@ -156,7 +145,7 @@ export default function DeveloperTestMonitoringPage() {
           <p className="dtm2-subtitle">تابع التقدم والنشاط ومؤشرات الجودة من خلال بيانات مجمّعة تحافظ على خصوصية المختبرين.</p>
         </div>
         <div className="dtm2-actions">
-          <button type="button" onClick={() => void load(true)} disabled={loading || refreshing}>{refreshing ? "جارٍ التحديث…" : "↻ تحديث"}</button>
+          <button type="button" onClick={() => void load(true)} disabled={!isTesterWorkflowV2Enabled || loading || refreshing}>{refreshing ? "جارٍ التحديث…" : "↻ تحديث"}</button>
           <button type="button" className="primary" onClick={exportSummary} disabled={!summary || metricsSuppressed}>تصدير الملخص CSV</button>
         </div>
       </div>
