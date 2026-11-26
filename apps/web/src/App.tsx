@@ -25,6 +25,8 @@ import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
 import DeveloperReviewQueuePage from "./modules/developer/pages/DeveloperReviewQueuePage";
 import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
+import SupportQueuePage from "./modules/support/pages/SupportQueuePage";
+import SupportTicketDetailPage from "./modules/support/pages/SupportTicketDetailPage";
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
@@ -106,6 +108,10 @@ export default function App() {
             <Route path="/tester/security-history" element={<LoginActivitySecurityPage />} />
           </Route>
           <Route path="/notifications" element={<NotificationsCenterPage />} />
+          <Route element={<RoleGuard requiredRole="support" />}>
+            <Route path="/support-workspace" element={<SupportQueuePage />} />
+            <Route path="/support-workspace/:id" element={<SupportTicketDetailPage />} />
+          </Route>
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
             <Route path="/admin/developer-reviews" element={<DeveloperReviewQueuePage />} />
