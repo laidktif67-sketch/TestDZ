@@ -19,15 +19,15 @@ const statusLabels: Record<string, string> = {
   completed: "مكتمل", failed: "مرفوض", cancelled: "ملغى",
 };
 
-type SuppressedMetrics = Extract<ResultRow["metrics"], { suppressed: true }>;
-type SuppressedResultRow = Omit<ResultRow, "metrics"> & { metrics: SuppressedMetrics };
+type VisibleMetrics = Extract<ResultRow["metrics"], { totalAssignments: number }>;
+type VisibleResultRow = Omit<ResultRow, "metrics"> & { metrics: VisibleMetrics };
 
-function isSuppressed(row: ResultRow): row is SuppressedResultRow {
-  return row.metrics.suppressed === true;
+function hasVisibleMetrics(row: ResultRow): row is VisibleResultRow {
+  return "totalAssignments" in row.metrics;
 }
 
 function metricValue(row: ResultRow, key: "totalAssignments" | "completionRate" | "averageRating") {
-  if (isSuppressed(row)) return null;
+  if (!hasVisibleMetrics(row)) return null;
   return row.metrics[key];
 }
 
@@ -95,14 +95,13 @@ export default function DeveloperTestResultsPage() {
     });
   }, [rows, query, status, sort]);
 
-  const suppressedCount = visible.filter(isSuppressed).length;
+  const suppressedCount = visible.filter(row => !hasVisibleMetrics(row)).length;
   const exportCsv = () => {
-    const exportable = visible.filter(row => !isSuppressed(row));
+    const exportable = visible.filter(hasVisibleMetrics);
     if (!exportable.length) return;
     const data = [
       ["الاختبار", "التطبيق", "الحالة", "المشاركات", "مكتمل", "نشط", "فشل", "الملاحظات", "التقييمات ذات النجوم", "متوسط التقييم", "نسبة الإكمال"],
       ...exportable.map(row => {
-        if (isSuppressed(row)) return [];
         const metrics = row.metrics;
         return [
           row.test.title, row.test.appName, statusLabels[row.test.status] ?? row.test.status,
@@ -136,7 +135,7 @@ export default function DeveloperTestResultsPage() {
         </div>
         <div className="dres-actions">
           <button onClick={() => void load(true)} disabled={loading || refreshing}>{refreshing ? "جارٍ التحديث…" : "↻ تحديث"}</button>
-          <button className="primary" onClick={exportCsv} disabled={!visible.some(row => !isSuppressed(row))}>تصدير CSV</button>
+          <button className="primary" onClick={exportCsv} disabled={!visible.some(hasVisibleMetrics)}>تصدير CSV</button>
         </div>
       </div>
       {error && <div className="dres-error" role="alert">{error}</div>}
@@ -157,7 +156,7 @@ export default function DeveloperTestResultsPage() {
           <thead><tr><th>الاختبار</th><th>المشاركات</th><th>مكتمل</th><th>فشل</th><th>الملاحظات</th><th>التقييمات ذات النجوم</th><th>متوسط التقييم</th><th>الإكمال</th><th /></tr></thead>
           <tbody>{visible.map(row => <tr key={row.test.id}>
             <td><b>{row.test.title}</b><small>{row.test.appName} · {statusLabels[row.test.status] ?? row.test.status}</small></td>
-            {isSuppressed(row) ? <td colSpan={7}><span className="dres-suppressed">مؤشرات مخفية لحماية خصوصية المختبرين</span></td> : <>
+            {!hasVisibleMetrics(row) ? <td colSpan={7}><span className="dres-suppressed">مؤشرات مخفية لحماية خصوصية المختبرين</span></td> : <>
               <td>{row.metrics.totalAssignments}</td><td>{row.metrics.completed}</td><td>{row.metrics.failed}</td>
               <td>{row.metrics.feedbackCount}</td><td>{row.metrics.ratingCount}</td>
               <td>{row.metrics.averageRating === null ? "—" : row.metrics.averageRating.toFixed(2) + "/5"}</td>
