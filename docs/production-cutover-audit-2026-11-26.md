@@ -230,3 +230,26 @@ The zero counts remove current row-level blockers for these specific relationshi
 2. Compare legacy RPCs create_cohort, add_cohort_test, and remove_cohort_test with V2 cohort-management and tester-join APIs, including report/feedback/check-in retention semantics.
 3. **Completed in isolated CI (PR #170; commit `b14ce1c478bd279a7906ad1af3c1d812b265323f`).** Added `030_cohort_assignment_delete_safety_contract.sql` for all four negative cases: cohort deletion with cohort_tests membership, test deletion with cohort_tests membership, assignment deletion with report history, and cancellation with an active assignment. GitHub Actions run #396 passed on 2026-11-26, including all 34 candidate SQL scripts, the configured contract suite, local PostgREST exposure checks, and disposable-stack teardown. PR #170 remains Draft/unmerged; this closes the test-coverage task only, not the separate legacy RPC/application semantics review.
 4. Do not change hosted foreign keys or functions as part of this audit.
+
+
+## Application route and cross-module integration inventory — 2026-11-26 (read-only)
+
+A second targeted inspection of the official branch `rebuild/testdz-v2` reviewed the application route table and the shared Admin, Support, Wallet, and Notifications data APIs.
+
+### Confirmed findings
+
+- `apps/web/src/App.tsx` exposes Admin routes for the admin home, developer review queue, role requests, and role grants. These routes are nested under `RoleGuard(requiredRole="admin")`.
+- The Support staff queue route `/support/queue` and ticket detail route `/support/:id` are nested under the general `AuthGuard`, not an explicit Support/Admin `RoleGuard`. This is not by itself proof of unauthorized data access: the queue API comment explicitly relies on V2 RLS for row visibility. Before cutover, verify that the database policies/RPCs enforce staff authorization independently of route visibility; client-side route guards must not be the security boundary.
+- `apps/web/src/features/admin/admin-api.ts` routes role-request and role-grant RPC calls through the central `getAppDataClient()`. Therefore the global data-client feature flag changes the schema used by Admin APIs as well as tester/developer workflows; the flag is not a tester-only switch despite its name.
+- `apps/web/src/features/support/support-api.ts` contains explicit V2 RPC paths for ticket creation, messaging, attachment registration, and staff updates, but also retains legacy direct-table insert fallbacks when V2 is disabled. Staff ticket listing reads `support_tickets` and relies on RLS. This dual-mode implementation requires policy and function-contract validation in both schemas before rollout.
+- `apps/web/src/features/wallet/wallet-api.ts` intentionally avoids reading wallet balances and the points ledger when V2 is enabled. Its withdrawal preview remains explicitly legacy-only. The wallet/rewards and withdrawal routes still exist in the route table, so they must be treated as unavailable/disabled product capabilities under V2 until a V2 reward/withdrawal design and UI behavior are separately approved.
+- `apps/web/src/features/notifications/notifications-api.ts` switches to role-scoped notification reads and V2 RPCs when the flag is enabled, while retaining direct legacy update fallbacks when disabled.
+- The inspected tester dashboard API returns no wallet balance under V2 and uses `get_discoverable_tests`; the existing dashboard/discovery UI therefore needs explicit product acceptance of zero/hidden rewards during the V2 phase.
+
+### Cutover implications
+
+1. The feature flag must be treated as a whole-application database-schema switch for all modules that call `getAppDataClient()`, not as an isolated tester workflow toggle.
+2. Verify Admin role-management RPCs, Support staff authorization/RLS, Notifications RPCs, and all shared profile/app APIs against the V2 schema before any flag activation.
+3. Confirm that wallet, rewards, referrals, withdrawals, and other legacy-only capabilities are intentionally hidden or disabled for the V2 beta; route presence alone does not establish functional compatibility.
+4. Inspect every remaining developer/admin/support page and all indirect database callers. This inventory is targeted and not a complete route-by-route certification.
+5. No application code, feature flags, hosted database objects, data, or deployment settings were changed during this review.
