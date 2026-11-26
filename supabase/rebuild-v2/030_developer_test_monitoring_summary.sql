@@ -57,7 +57,7 @@ BEGIN
       'releaseMode',t.test_config #>> '{googlePlay,releaseMode}',
       'releaseAt',t.test_config #>> '{googlePlay,releaseAt}'
     ),
-    'metrics',jsonb_build_object(
+    'metrics',CASE WHEN m.unique_testers >= 3 THEN jsonb_build_object(
       'totalAssignments',m.total_assignments,
       'uniqueTesters',m.unique_testers,
       'pending',m.pending_count,
@@ -75,7 +75,7 @@ BEGIN
       'feedbackPending',m.feedback_pending,
       'feedbackAccepted',m.feedback_accepted,
       'feedbackRejected',m.feedback_rejected
-    ),
+    ) ELSE jsonb_build_object('suppressed',true,'minimumDistinctTesters',3) END,
     'dailyActivity',COALESCE((
       WITH events AS (
         SELECT a.assigned_at AS occurred_at,a.tester_id
