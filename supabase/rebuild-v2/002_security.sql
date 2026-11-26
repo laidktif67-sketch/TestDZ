@@ -301,7 +301,7 @@ CREATE POLICY developer_feedback_reviews_select_participants_v2 ON rebuild_v2.de
 
 CREATE POLICY devices_select_owner_admin_v2 ON rebuild_v2.devices AS PERMISSIVE FOR SELECT TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text])));
 
-CREATE POLICY disputes_select_participants_staff_v2 ON rebuild_v2.disputes AS PERMISSIVE FOR SELECT TO authenticated USING (((opened_by = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'financial'::text, 'support'::text])));
+CREATE POLICY disputes_select_participants_financial_admin_v2 ON rebuild_v2.disputes AS PERMISSIVE FOR SELECT TO authenticated USING (((opened_by = ( SELECT auth.uid() AS uid)) OR rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text, 'financial'::text])));
 
 CREATE POLICY events_select_admin_v2 ON rebuild_v2.events AS PERMISSIVE FOR SELECT TO authenticated USING (rebuild_v2_private.has_role(( SELECT auth.uid() AS uid), ARRAY['admin'::text]));
 
