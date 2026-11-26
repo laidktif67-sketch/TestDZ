@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { grantAdminRole } from "../../../features/admin/admin-api";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
@@ -15,7 +16,7 @@ export default function AdminRoleGrantsPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedId = userId.trim();
     const normalizedReason = reason.trim();
