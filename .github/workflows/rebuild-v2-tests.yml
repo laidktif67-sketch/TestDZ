@@ -171,3 +171,23 @@ jobs:
 
       - name: Type-check notification and invitation Edge Functions
         run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts
+
+
+  frontend-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      - name: Type-check frontend workspace
+        run: npm run typecheck
