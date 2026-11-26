@@ -25,7 +25,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `019_notification_recipient_roles.sql`: restores tester/developer notification feed separation, role-aware reads, and role-scoped read-state RPCs.
 - `020_notification_event_producers.sql`: adds a private server-owned event enqueue helper, idempotency linkage, and a service-role-only batch dispatcher with `SKIP LOCKED`, retry backoff, and terminal failure after five attempts.
 - `021_feedback_notification_producers.sql`: notifies the owning developer when tester feedback is submitted, and notifies the tester when the developer changes review status or replies; event payloads contain identifiers and status only, never feedback/message bodies.
-- `030_developer_test_monitoring_summary.sql`: owner-checked aggregate-only monitoring; daily activity is suppressed unless at least three distinct testers contributed.
+- `030_developer_test_monitoring_summary.sql`: owner-checked aggregate-only monitoring; all campaign metrics and daily activity are suppressed unless at least three distinct testers contributed.
 - `031_role_explicit_support_ticket_creation.sql`: role-explicit support ticket creation for dual-role Tester/Developer accounts.
 - `032_developer_test_invitations.sql`: email-bound, hashed-token invitations with owner-scoped listing, revocation, expiry and atomic Tester redemption.
 - `033_support_tester_data_boundary.sql`: removes Support access to raw tester assignments, check-ins, and feedback while preserving Admin oversight.
