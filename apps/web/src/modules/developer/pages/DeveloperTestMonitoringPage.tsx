@@ -96,7 +96,7 @@ export default function DeveloperTestMonitoringPage() {
   }, [id]);
 
   const metrics = summary?.metrics;
-  const metricsSuppressed = visibleMetrics?.suppressed === true;
+  const metricsSuppressed = metrics?.suppressed === true;
   const visibleMetrics = metrics && !metrics.suppressed ? metrics : null;
   const daily = useMemo(() => {
     const indexed = new Map((summary?.dailyActivity ?? []).map(item => [item.date, item.count]));
