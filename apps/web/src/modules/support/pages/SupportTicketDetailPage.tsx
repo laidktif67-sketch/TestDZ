@@ -13,6 +13,7 @@ import {
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import TesterSidebar from "../../tester/components/TesterSidebar";
+import "./support-queue.css";
 import "./support-ticket-detail.css";
 
 const label = (value: string) => value.replaceAll("_", " ");
