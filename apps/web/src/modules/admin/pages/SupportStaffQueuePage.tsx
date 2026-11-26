@@ -153,7 +153,7 @@ export default function SupportStaffQueuePage() {
             </div>
             {loading ? <div className="ssq-empty">Loading support tickets…</div>
               : !isTesterWorkflowV2Enabled ? null
-              : visibleTickets.length === 0 ? <div className="ssq-empty"><Icon name="inbox" size={34}/><strong>No matching tickets</strong><span>Try another status filter or search term.</span></div>
+              : visibleTickets.length === 0 ? <div className="ssq-empty"><Icon name="receipt" size={34}/><strong>No matching tickets</strong><span>Try another status filter or search term.</span></div>
               : <div className="ssq-table-wrap">
                   <table className="ssq-table">
                     <thead><tr><th>Ticket</th><th>Requester workspace</th><th>Subject</th><th>Category</th><th>Priority</th><th>Status</th><th>Last activity</th><th/></tr></thead>
