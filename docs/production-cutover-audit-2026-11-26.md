@@ -314,3 +314,34 @@ Reviewed the Developer tests, monitoring, tester-management/invitations, feedbac
 6. The current V2 feature flag remains a whole-app data-schema switch; no flag or application code was changed during this review.
 
 No production data, hosted database objects, feature flags, application source, or deployment settings were changed.
+
+
+## Edge Function deployment, Admin review queue, and Storage cutover review — 2026-11-26 (read-only)
+
+### Developer invitation Edge Function
+
+- Reviewed `supabase/functions/developer-invitations/index.ts`, its local `supabase/config.toml` entry (`verify_jwt = true`), the Developer Testers UI, migration 032, and contract test 028.
+- Function authenticates the supplied bearer token with `supabase.auth.getUser(accessToken)`; it does not trust decoded client claims for identity.
+- Create/list/revoke/redeem calls use the exact V2 RPC names and parameter shapes defined by migration 032.
+- The SQL contract covers owner-only creation/listing, idempotent retries, email masking, rejection of a different confirmed email, atomic join + acceptance, revocation, and role denial.
+- The UI explicitly tells the Developer that the link is not emailed and must be copied/shared manually. This matches the function response `delivery_status: not_emailed`; automated email delivery is not implemented.
+- The token is generated deterministically with HMAC-SHA256 over authenticated user ID + idempotency key, with the secret held in Edge Function environment. The raw token is returned only on create; SQL stores only the SHA-256 hash. The code comment in migration 032 says “random token”, which does not precisely describe the current deterministic HMAC implementation and should be corrected for documentation accuracy before release.
+- **Hosted deployment check:** Supabase production Edge Function listing returned an empty functions array. Therefore `developer-invitations` is not currently deployed in the hosted project, and no hosted secret/configuration or live endpoint test can be claimed. This is consistent with V2 not being cut over; do not deploy it to production as part of this audit.
+
+### Admin application/test review queue
+
+- The route `/admin/developer-reviews` is inside the Admin RoleGuard.
+- The page is gated by the V2 feature flag, loads submitted apps/tests, and calls `review_app` / `review_test` with a required decision reason.
+- Candidate migration 008 sets both apps and tests to `submitted` when submitted and only allows Admin review; approval transitions apps to `published` and tests to `recruiting`, while rejection transitions to `rejected` / `failed`.
+- The frontend query filters `status = 'submitted'`, matching the SQL lifecycle state.
+- Candidate admin review RPCs and queue query are source-aligned. Live role-separated browser checks and V2 runtime validation are still required; no hosted V2 review queue exists today.
+
+### Storage bucket and policy reconciliation
+
+- Candidate migration 006 creates/configures five buckets using `ON CONFLICT (id) DO NOTHING`; migration 013 adds private `test-builds`; migration 015 adds private `test-assets` and explicitly updates that bucket's settings on conflict.
+- Existing production currently has five legacy buckets and no V2 schema. Consequently the two V2 buckets are not present as part of the existing production inventory, and the candidate policies are not deployed there.
+- Because migration 006 does not update settings for pre-existing bucket IDs, a future cutover cannot assume that running the candidate SQL over existing buckets will reconcile public/private flags, size limits, or MIME allowlists. A separately reviewed, explicit bucket configuration diff and object migration/retention plan is required before cutover.
+- Candidate Storage policies are path/ownership/status scoped for app icons, support attachments, developer feedback attachments, test evidence, APK builds, and test assets. The APK helper was hardened in migration 014; test asset read policy permits only owner, Admin/Support, or assigned testers after upload.
+- Isolated SQL contracts and source inspection do not prove Storage upload/download/signed-URL behavior in a deployed V2 environment. Browser tests must cover wrong-owner access, pre-finalization reads, post-finalization participant reads, closed/removed assignments, and MIME/size mismatch rejection.
+
+No hosted Edge Function was deployed, no secrets were changed, no Storage bucket or policy was changed, and no application or database source was modified.
