@@ -48,7 +48,7 @@ export default function SupportStaffQueuePage() {
   const [statusFilter, setStatusFilter] = useState("active");
 
   const name = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Support";
-  const firstName = name.split(/[\\s._-]+/)[0] || "Support";
+  const firstName = name.split(/[\s._-]+/)[0] || "Support";
   const nav = [
     { label: "Support Queue", icon: "headset", href: "/support/queue", active: true },
     { label: "Support Center", icon: "receipt", href: "/support" },
