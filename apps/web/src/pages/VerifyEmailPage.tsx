@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Brand } from "../shared/components/Brand";
 import { useLenis } from "../hooks/useLenis";
-import { translateAuthError } from "../lib/auth-routing";
+import { getSafeAuthRedirect, translateAuthError } from "../lib/auth-routing";
 import { identityApi } from "../shared/auth/identity-api";
 import { supabase } from "../lib/supabase";
 
@@ -11,6 +11,8 @@ export default function VerifyEmailPage() {
   useLenis();
   const navigate = useNavigate();
   const [email] = useState(() => new URLSearchParams(window.location.search).get("email") || "");
+  const [nextRoute] = useState(() => getSafeAuthRedirect(new URLSearchParams(window.location.search).get("next")));
+  const callbackUrl = window.location.origin + "/auth/callback" + (nextRoute ? "?next=" + encodeURIComponent(nextRoute) : "");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -91,7 +93,7 @@ export default function VerifyEmailPage() {
     if (!supabase || !email.trim()) { setError("Enter a valid email address first."); return; }
     setBusy(true); setMessage(""); setError("");
     try {
-      const { error: resendError } = await identityApi.resendSignupVerification(email.trim(), window.location.origin + "/auth/callback");
+      const { error: resendError } = await identityApi.resendSignupVerification(email.trim(), callbackUrl);
       if (resendError) throw resendError;
       setMessage("A new verification link has been requested. Check your inbox and spam folder.");
       setSeconds(120);
@@ -103,7 +105,7 @@ export default function VerifyEmailPage() {
   }
 
   function changeEmail() {
-    navigate(`/auth?mode=signup&email=${encodeURIComponent(email.trim())}`);
+    navigate(`/auth?mode=signup&email=${encodeURIComponent(email.trim())}${nextRoute ? "&next=" + encodeURIComponent(nextRoute) : ""}`);
   }
 
   return <main className="verify-page">
@@ -153,7 +155,7 @@ export default function VerifyEmailPage() {
           Change email address
         </button>
         <div className="verify-or"><span>OR</span></div>
-        <button className="verify-secondary verify-back" type="button" onClick={() => navigate("/auth")}>
+        <button className="verify-secondary verify-back" type="button" onClick={() => navigate(nextRoute ? "/auth?next=" + encodeURIComponent(nextRoute) : "/auth")}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 18-6-6 6-6"/><path d="M8 12h12"/></svg>
           Back to sign in
         </button>
