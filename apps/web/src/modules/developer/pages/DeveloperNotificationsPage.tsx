@@ -72,7 +72,7 @@ function formatDate(value: string, language: Language, unknown: string) {
 export default function DeveloperNotificationsPage() {
   const { user } = useIdentity();
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = window.localStorage.getItem("testdz-landing-language");
+    const saved = window.localStorage.getItem("testdz-developer-dashboard-language");
     return saved === "fr" || saved === "ar" ? saved : "en";
   });
   const t = copy[language];
@@ -89,7 +89,7 @@ export default function DeveloperNotificationsPage() {
 
     document.documentElement.lang = language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-    window.localStorage.setItem("testdz-landing-language", language);
+    window.localStorage.setItem("testdz-developer-dashboard-language", language);
 
     return () => {
       document.documentElement.lang = previousLanguage;
