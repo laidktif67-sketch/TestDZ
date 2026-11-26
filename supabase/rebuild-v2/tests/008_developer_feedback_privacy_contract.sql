@@ -10,7 +10,8 @@ VALUES
  ('80000000-0000-4000-8000-000000000002','authenticated','authenticated','v2-feedback-admin@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Feedback Admin"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000003','authenticated','authenticated','v2-feedback-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Feedback Tester"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000004','authenticated','authenticated','v2-feedback-outsider@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Developer"}'::jsonb,now(),now()),
- ('80000000-0000-4000-8000-000000000005','authenticated','authenticated','v2-feedback-support@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Support Agent"}'::jsonb,now(),now());
+ ('80000000-0000-4000-8000-000000000005','authenticated','authenticated','v2-feedback-support@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Support Agent"}'::jsonb,now(),now()),
+ ('80000000-0000-4000-8000-000000000006','authenticated','authenticated','v2-feedback-other-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Tester"}'::jsonb,now(),now());
 
 -- The auth-user trigger grants the default tester role to every new account.
 -- Remove that default from synthetic staff/outsider fixtures before assigning their intended roles.
@@ -197,6 +198,21 @@ BEGIN
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: tester cannot read developer reply for own feedback'; END IF;
 END;
 $tester_reply_access$;
+
+-- A second tester must not see another tester's developer reply.
+SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000006',true);
+SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000006","role":"authenticated"}',true);
+DO $other_tester_reply_isolation$
+DECLARE v_count integer;
+BEGIN
+ SELECT count(*) INTO v_count
+ FROM rebuild_v2.get_tester_feedback_messages()
+ WHERE feedback_id=current_setting('testdz.feedback_id')::uuid;
+ IF v_count<>0 THEN
+  RAISE EXCEPTION 'FAIL: another tester can read a developer reply for someone else feedback';
+ END IF;
+END;
+$other_tester_reply_isolation$;
 
 -- A different developer cannot use the tester-only reply RPC.
 SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000004',true);
