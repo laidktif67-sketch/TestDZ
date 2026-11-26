@@ -19,7 +19,8 @@ const statusLabels: Record<string, string> = {
   completed: "مكتمل", failed: "مرفوض", cancelled: "ملغى",
 };
 
-type SuppressedResultRow = ResultRow & { metrics: { suppressed: true; minimumDistinctTesters: number } };
+type SuppressedMetrics = Extract<ResultRow["metrics"], { suppressed: true }>;
+type SuppressedResultRow = Omit<ResultRow, "metrics"> & { metrics: SuppressedMetrics };
 
 function isSuppressed(row: ResultRow): row is SuppressedResultRow {
   return row.metrics.suppressed === true;
@@ -146,7 +147,7 @@ export default function DeveloperTestResultsPage() {
             <option value="all">كل الحالات</option>
             {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <select value={sort} onChange={event => setSort(event.target.value)} aria-label="ترتيب النتائج">
+          <select value={sort} onChange={event => setSort(event.target.value as SortKey)} aria-label="ترتيب النتائج">
             <option value="assignments">الأكثر مشاركة</option><option value="completion">أعلى إكمال</option><option value="rating">أعلى تقييم</option>
           </select>
           <span>{visible.length} اختبار</span>
