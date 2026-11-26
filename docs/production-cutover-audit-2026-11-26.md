@@ -129,6 +129,17 @@ Recovered source mappings:
 Still unrecovered from the checked historical refs:
 - `reconcile_assignments_cohort_foreign_keys` (hosted version `20261115092608`). Its effect must be established from the current catalog and candidate constraints, but do not invent or reconstruct an original migration body from its name.
 
+### Additional historical Git lead for the unrecovered cohort-FK migration
+
+A search of the repository's historical pull requests found PR #36, still Draft and unmerged, on the legacy branch `fix/week-5-fk-reconciliation`. It adds `supabase/migrations/20261115000100_reconcile_assignments_cohort_foreign_keys.sql`:
+
+- The file's initial commit is `4806ccebf9016fc9b009f1f12d4bbe0b5844bc53` (2026-11-15 08:54:41 UTC), followed by hardening commit `4e1efa4dc6e3aeec3a43c6618be707f01df4b41e` (08:54:52 UTC).
+- Its SQL conditionally removes `assignments_cohort_tester_fk` only if its exact definition is `(cohort_id,tester_id) -> cohort_tests(cohort_id,developer_id)`; it validates or creates `(cohort_id,test_id) -> cohort_tests(cohort_id,test_id) ON DELETE RESTRICT`, failing closed on unexpected definitions or orphan rows.
+- Its regression script explicitly refuses non-local database URLs. PR #36's description says it was not applied to either Supabase project and still required isolated replay.
+- This is a strong *candidate lead* because the migration slug matches the hosted history name and the current catalog lacks the invalid FK while retaining the correct composite FK. It is **not** proof that this exact SQL was applied as hosted version `20261115092608`: the candidate file's version is `20261115000100`, the timestamps differ, PR #36 is Draft/unmerged, and the live catalog also contains additional separate CASCADE/RESTRICT relationships not explained by this file alone.
+
+Therefore keep `20261115092608` classified as **exact hosted SQL body unrecovered**. Use PR #36 only as a provenance lead for effect mapping; do not copy its migration into the V2 active path, mark the hosted version recovered, or apply it to production.
+
 The two files present in the historical migration branch but absent from the current active path also have source available:
 - `20261110193000_onboarding_profile_row_guard.sql`
 - `20261111000400_support_tickets.sql`
