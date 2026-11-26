@@ -10,11 +10,10 @@ VALUES
   ('92800000-0000-4000-8000-000000000003','authenticated','authenticated','support-attachment-admin@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Admin"}'::jsonb,now(),now()),
   ('92800000-0000-4000-8000-000000000004','authenticated','authenticated','support-attachment-outsider@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Outsider"}'::jsonb,now(),now());
 
+-- Auth-user trigger already seeds the default Tester role for requester/outsider.
 INSERT INTO rebuild_v2.user_roles(user_id,role) VALUES
-  ('92800000-0000-4000-8000-000000000001','tester'),
   ('92800000-0000-4000-8000-000000000002','support'),
-  ('92800000-0000-4000-8000-000000000003','admin'),
-  ('92800000-0000-4000-8000-000000000004','tester');
+  ('92800000-0000-4000-8000-000000000003','admin');
 
 INSERT INTO rebuild_v2.support_tickets
   (id,user_id,requester_role,subject,category,description,status)
