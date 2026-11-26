@@ -3,13 +3,15 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
-import { getPostAuthRoute, translateAuthError } from "../lib/auth-routing";
+import { getPostAuthRoute, getSafeAuthRedirect, translateAuthError } from "../lib/auth-routing";
 import { identityApi } from "../shared/auth/identity-api";
 
 function AuthPage() {
   const navigate = useNavigate();
   const authRoot = useRef<HTMLElement | null>(null);
   const params = new URLSearchParams(window.location.search);
+  const nextRoute = getSafeAuthRedirect(params.get("next"));
+  const authCallbackUrl = window.location.origin + "/auth/callback" + (nextRoute ? "?next=" + encodeURIComponent(nextRoute) : "");
   const [mode, setMode] = useState<"signin" | "signup">(params.get("mode") === "signup" ? "signup" : "signin");
   const [email, setEmail] = useState(() => params.get("email") || "");
   const [password, setPassword] = useState("");
@@ -141,15 +143,15 @@ function AuthPage() {
           email: email.trim(),
           password,
           metadata: { full_name: fullName.trim(), phone: phone.trim() || null, account_type: accountType },
-          emailRedirectTo: window.location.origin + "/auth/callback",
+          emailRedirectTo: authCallbackUrl,
         });
         if (authError) throw authError;
-        if (data.session) navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
-        else navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`, { replace: true });
+        if (data.session) navigate(nextRoute ?? await getPostAuthRoute(data.session.user.id), { replace: true });
+        else navigate(`/verify-email?email=${encodeURIComponent(email.trim())}${nextRoute ? "&next=" + encodeURIComponent(nextRoute) : ""}`, { replace: true });
       } else {
         const { data, error: authError } = await identityApi.signInWithPassword(email.trim(), password);
         if (authError) throw authError;
-        if (data.session) navigate(await getPostAuthRoute(data.session.user.id), { replace: true });
+        if (data.session) navigate(nextRoute ?? await getPostAuthRoute(data.session.user.id), { replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? translateAuthError(err.message) : "حدث خطأ غير متوقع. حاول مرة أخرى.");
@@ -166,7 +168,7 @@ function AuthPage() {
     }
     setBusy(true);
     try {
-      const { error: authError } = await identityApi.signInWithOAuth(provider, window.location.origin + "/auth/callback");
+      const { error: authError } = await identityApi.signInWithOAuth(provider, authCallbackUrl);
       if (authError) throw authError;
     } catch (err) {
       setError(err instanceof Error ? translateAuthError(err.message) : "تعذر تسجيل الدخول بهذه الخدمة.");
