@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Brand } from "../shared/components/Brand";
 import { supabase } from "../lib/supabase";
-import { getPostAuthRoute } from "../lib/auth-routing";
+import { getPostAuthRoute, getSafeAuthRedirect } from "../lib/auth-routing";
 import { identityApi } from "../shared/auth/identity-api";
 
 export default function AuthCallbackPage() {
@@ -28,7 +28,8 @@ export default function AuthCallbackPage() {
           setMessage("الرابط غير صالح أو انتهت صلاحيته. ارجع لصفحة الدخول واطلب رابطاً جديداً.");
           return;
         }
-        const route = await getPostAuthRoute(data.session.user.id);
+        const nextRoute = getSafeAuthRedirect(new URLSearchParams(window.location.search).get("next"));
+        const route = nextRoute ?? await getPostAuthRoute(data.session.user.id);
         if (active) navigate(route, { replace: true });
       } catch {
         if (active) setMessage("تعذر إكمال المصادقة أو التحقق من إعداد الحساب. حدّث الصفحة أو حاول مجدداً.");
