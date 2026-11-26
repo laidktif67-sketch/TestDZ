@@ -383,3 +383,16 @@ Draft PR #171 (`test/apk-build-storage-contracts`) adds:
 PR #171 is Draft / open and targets `rebuild/testdz-v2`; it is not merged. GitHub Actions run 45895473137 was observed in progress at the time of this update; no passing result is claimed yet. The contracts use transaction rollback and disposable local Supabase CI only.
 
 No production data, hosted Storage buckets, hosted Supabase configuration, migrations, application runtime code, or Vercel deployment were changed.
+
+
+## PR #171 isolated CI result — 2026-11-26
+
+The GitHub Actions run associated with PR #171 commit `6bc710ac3dc0c4c4cfddea20e25b555383e4b661` completed successfully:
+- Run #397 / run ID `45895473137`: conclusion `success`.
+- `rebuild-v2`: local disposable Supabase stack startup, candidate SQL application, all listed SQL contracts (including new `030_apk_build_storage_contract.sql`), PostgREST checks, and stack shutdown all completed successfully.
+- `frontend-typecheck`: success.
+- `notification-edge-function`: success.
+
+The PR remains Draft / open and unmerged. Its compare against `rebuild/testdz-v2` is 3 commits ahead, 0 behind, with exactly three changed files: the workflow list, feedback privacy contract 008, and new APK build contract 030.
+
+This is passing isolated CI evidence only. It does not establish hosted Storage API upload/download/signed-URL behavior or production cutover readiness. No hosted Supabase changes or Vercel deployment were made.
