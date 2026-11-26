@@ -115,6 +115,31 @@ export function listDeveloperTests(developerId: string) {
     .order("created_at", { ascending: false });
 }
 
+export type DeveloperTestMonitoringSummary = {
+  test: {
+    id: string; title: string; description: string | null; shortSummary: string | null;
+    testType: string; status: string; minTesters: number; startDate: string | null;
+    endDate: string | null; durationMinutes: number | null; instructions: string | null;
+    appName: string; appIconUrl: string | null;
+  };
+  configuration: Record<string, unknown>;
+  metrics:
+    | { suppressed: true; minimumDistinctTesters: number }
+    | {
+        suppressed?: false;
+        totalAssignments: number; uniqueTesters: number; pending: number; active: number;
+        completed: number; failed: number; withdrawn: number; rejected: number;
+        completionRate: number; checkins: number; feedbackCount: number;
+        averageRating: number | null; ratingCount: number; feedbackPending: number; feedbackAccepted: number; feedbackRejected: number;
+      };
+  dailyActivity: Array<{ date: string; count: number }>;
+};
+
+/** Fetch aggregate-only monitoring metrics for a developer-owned test. */
+export function getDeveloperTestMonitoringSummary(testId: string) {
+  return dataClient().rpc("get_developer_test_monitoring", { p_test_id: testId });
+}
+
 export function createDeveloperTest(input: DeveloperTestInput) {
   return dataClient().rpc("create_test", {
     p_app_id: input.appId,
