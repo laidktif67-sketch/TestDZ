@@ -90,6 +90,7 @@ jobs:
             supabase/rebuild-v2/tests/024_report_evidence_metadata_contract.sql
             supabase/rebuild-v2/tests/025_six_step_test_config_contract.sql
             supabase/rebuild-v2/tests/029_support_attachment_privacy_contract.sql
+            supabase/rebuild-v2/tests/030_cohort_assignment_delete_safety_contract.sql
             supabase/rebuild-v2/tests/026_developer_test_monitoring_privacy_contract.sql
             supabase/rebuild-v2/tests/027_role_explicit_support_ticket_creation_contract.sql
             supabase/rebuild-v2/tests/028_developer_test_invitations_contract.sql
