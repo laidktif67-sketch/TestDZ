@@ -16,7 +16,8 @@ VALUES
 INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
   ('30000000-0000-4000-8000-000000000001','developer'),
-  ('30000000-0000-4000-8000-000000000002','tester');
+  ('30000000-0000-4000-8000-000000000002','tester')
+ON CONFLICT (user_id,role) DO NOTHING;
 
 INSERT INTO rebuild_v2.apps(developer_id,name,package_name,description,category,status)
 VALUES (
