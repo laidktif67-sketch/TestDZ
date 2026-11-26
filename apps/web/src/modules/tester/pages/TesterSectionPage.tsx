@@ -22,7 +22,7 @@ const sections: Record<string, { title: string; subtitle: string; icon: string; 
   },
   "/admin": {
     title: "Admin", subtitle: "Administrator workspace.", icon: "shield",
-    items: [{ title: "Developer review queue", description: "Review submitted apps and tests. Approval and rejection decisions require an audit reason.", href: "/admin/developer-reviews" }, { title: "Developer access requests", description: "Approve or reject role requests with a mandatory audit reason.", href: "/admin/role-requests" }]
+    items: [{ title: "Developer review queue", description: "Review submitted apps and tests. Approval and rejection decisions require an audit reason.", href: "/admin/developer-reviews" }, { title: "Developer access requests", description: "Approve or reject role requests with a mandatory audit reason.", href: "/admin/role-requests" }, { title: "Grant account roles", description: "Grant a supported role with a mandatory audit reason and audit event.", href: "/admin/role-grants" }]
   }
 };
 
@@ -43,7 +43,7 @@ export default function TesterSectionPage() {
     { label: "Settings", icon: "settings", href: "/settings", active: location.pathname === "/settings" },
     ...(isDeveloper || isAdmin ? [{ label: "Discover Apps", icon: "search", href: "/apps" }] : []),
     ...(isDeveloper || isAdmin ? [{ label: "Developer Dashboard", icon: "code", href: "/developer-dashboard" }] : []),
-    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin", active: location.pathname === "/admin" }, { label: "Review Queue", icon: "check", href: "/admin/developer-reviews", active: location.pathname === "/admin/developer-reviews" }, { label: "Role Requests", icon: "users", href: "/admin/role-requests", active: location.pathname === "/admin/role-requests" }] : [])
+    ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin", active: location.pathname === "/admin" }, { label: "Review Queue", icon: "check", href: "/admin/developer-reviews", active: location.pathname === "/admin/developer-reviews" }, { label: "Role Requests", icon: "users", href: "/admin/role-requests", active: location.pathname === "/admin/role-requests" }, { label: "Role Grants", icon: "user-check", href: "/admin/role-grants", active: location.pathname === "/admin/role-grants" }] : [])
   ];
   return <main className="tester-profile-page">
     <TesterSidebar nav={nav} name="TestDZ Member" firstName="T" avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={workspaceMenuOpen} setWorkspaceMenuOpen={setWorkspaceMenuOpen} previewMode={false} sidebarClassName="tester-sidebar" />
