@@ -1,5 +1,5 @@
 -- Developer test editing authorization, validation and audit contract.
--- Run ONLY against the disposable V2 CI database after candidate SQL 001..034.
+-- Run ONLY against the disposable V2 CI database after candidate SQL 001..035.
 -- Synthetic auth, role, app and test records are rolled back.
 BEGIN;
 
@@ -25,6 +25,14 @@ DO $test$
 DECLARE
   v_app uuid;
   v_test uuid;
+  v_config_test uuid;
+  v_config jsonb := '{
+    "cohort":{"targetTesters":24,"notes":"Focus on core flows"},
+    "rules":{"androidVersion":"Android 12+","instructions":"Complete the main purchase flow"},
+    "details":{"testingObjective":"stability_bugs","priority":"high","testingScope":["core_flows","performance"],"successCriteria":"No critical bugs","minimumCompletionRate":80},
+    "schedule":{"durationDays":14,"allowMoreTesters":true,"joiningMethod":"google_play_link","collectFeedback":true,"enableBugReports":true},
+    "googlePlay":{"track":"closed","testerMethod":"upload_list","appVersion":"latest_available","releaseMode":"scheduled","releaseAt":"2026-12-01T10:00"}
+  }'::jsonb;
   v_audit_before integer;
   v_audit_after integer;
 BEGIN
@@ -91,8 +99,51 @@ BEGIN
       AND end_date=DATE '2026-12-15'
       AND estimated_duration_minutes=45
       AND tester_instructions='Updated tester instructions.'
+      AND test_config='{}'::jsonb
   ) THEN
     RAISE EXCEPTION 'FAIL: owner update did not persist every editable base field';
+  END IF;
+
+  -- Six-step edits must keep the JSON config's mirrored values in sync with base columns.
+  v_config_test:=rebuild_v2.create_test_with_config(
+    v_app,
+    'Six Step Edit Contract',
+    'A sufficiently long synthetic description for six-step edit synchronization.',
+    'Six-step synchronization',
+    'google_play_closed',
+    24,
+    DATE '2026-12-01',
+    DATE '2026-12-15',
+    30,
+    'Complete the main purchase flow',
+    v_config
+  );
+  PERFORM rebuild_v2.update_test(
+    v_config_test,
+    'Updated Six Step Edit Contract',
+    'An updated sufficiently long description for six-step edit synchronization.',
+    'Updated six-step summary',
+    'google_play_closed',
+    9,
+    DATE '2026-12-02',
+    DATE '2026-12-16',
+    45,
+    'Updated six-step instructions'
+  );
+  IF NOT EXISTS(
+    SELECT 1 FROM rebuild_v2.tests
+    WHERE id=v_config_test
+      AND min_testers=9
+      AND tester_instructions='Updated six-step instructions'
+      AND test_config->'cohort'->>'targetTesters'='9'
+      AND test_config->'cohort'->>'notes'='Focus on core flows'
+      AND test_config->'rules'->>'instructions'='Updated six-step instructions'
+      AND test_config->'rules'->>'androidVersion'='Android 12+'
+      AND test_config->'details'=v_config->'details'
+      AND test_config->'schedule'=v_config->'schedule'
+      AND test_config->'googlePlay'=v_config->'googlePlay'
+  ) THEN
+    RAISE EXCEPTION 'FAIL: six-step edit left the JSON config out of sync or changed unrelated settings';
   END IF;
 
   PERFORM set_config('request.jwt.claim.sub','59000000-0000-4000-8000-000000000002',true);
