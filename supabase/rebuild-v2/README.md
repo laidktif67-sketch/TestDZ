@@ -25,13 +25,21 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `019_notification_recipient_roles.sql`: restores tester/developer notification feed separation, role-aware reads, and role-scoped read-state RPCs.
 - `020_notification_event_producers.sql`: adds a private server-owned event enqueue helper, idempotency linkage, and a service-role-only batch dispatcher with `SKIP LOCKED`, retry backoff, and terminal failure after five attempts.
 - `021_feedback_notification_producers.sql`: notifies the owning developer when tester feedback is submitted, and notifies the tester when the developer changes review status or replies; event payloads contain identifiers and status only, never feedback/message bodies.
+- `022_admin_role_request_management.sql`: Admin-only pending role-request queue and reason-required approval/rejection with self-review prevention.
+- `023_admin_role_grants.sql`: audited Admin role grants; prevents self-grants and client-side Admin-role assignment.
+- `024_audited_support_ticket_workflow.sql`: reason-required Support/Admin ticket transitions and immutable message/status/priority event history.
+- `025_require_report_attachment_metadata.sql`: blocks incident-report evidence uploads until trusted attachment metadata has been registered.
+- `026_align_report_evidence_read_access.sql`: aligns report-evidence object reads with reporter/Support/Admin report visibility.
+- `027_enforce_report_attachment_metadata_integrity.sql`: enforces canonical non-null report-evidence object paths.
+- `028_restrict_support_attachment_reads_to_public_messages.sql`: restricts attachment metadata and Storage reads to public ticket messages for requesters and staff.
+- `029_six_step_test_config.sql`: validates the six-step configuration allowlist and saves it atomically with a test draft; raw tester email lists remain client-local.
 - `030_developer_test_monitoring_summary.sql`: owner-checked aggregate-only monitoring; daily activity is suppressed unless at least three distinct testers contributed.
 - `031_role_explicit_support_ticket_creation.sql`: role-explicit support ticket creation for dual-role Tester/Developer accounts.
 - `032_developer_test_invitations.sql`: email-bound, hashed-token invitations with owner-scoped listing, revocation, expiry and atomic Tester redemption.
 - `033_support_tester_data_boundary.sql`: removes Support access to raw tester assignments, check-ins, and feedback while preserving Admin oversight.
 - `034_tester_feedback_reply_access.sql`: exposes developer-authored replies only to the authenticated owner of the feedback.
 
-Migrations 022–029 remain intentionally excluded pending separate review. Migrations 030–032 are included because monitoring is a documented prerequisite for role-explicit Support (031), which precedes the invitation lifecycle (032).
+Migrations 022–029 are now included as a curated candidate sequence after separate security and contract review. Migrations 030–032 follow them: aggregate monitoring (030), role-explicit Support ticket creation (031), then email-bound developer invitations (032).
 
 
 
@@ -45,12 +53,12 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply the 26 selected scripts in numeric order: `001_schema.sql` through `021_feedback_notification_producers.sql`, then `030_developer_test_monitoring_summary.sql` through `034_tester_feedback_reply_access.sql`. Migrations 022–029 remain excluded.
+Apply all 34 selected scripts in numeric order: `001_schema.sql` through `034_tester_feedback_reply_access.sql`. This is still a candidate-only sequence, separate from `supabase/migrations`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 26 selected scripts, run:
+After all 34 selected scripts, run:
 - `tests/final_state_contract.sql` — checks the final 48-table / seven-bucket candidate, including the forced-RLS invitation table and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
@@ -61,13 +69,19 @@ After all 26 selected scripts, run:
 - `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
 - `tests/010_security_definer_boundary_contract.sql` — verifies the V2 schema exposure boundary, restricted schema creation, and SECURITY DEFINER ownership/search-path requirements.
 - `tests/011_notification_recipient_roles_contract.sql` — verifies tester/developer feed isolation and role-scoped read-one/read-all operations.
+- `tests/015_admin_role_request_management_contract.sql` — verifies Admin-only request review, reason requirements, and audited approval.
+- `tests/016_admin_role_grant_contract.sql` — verifies the guarded role-grant boundary, no self-grant/Admin grant, and idempotent audit behavior.
+- `tests/020_support_ticket_audited_workflow_contract.sql` — verifies role-bound status transitions, immutable events, and body-free staff audit metadata.
+- `tests/024_report_evidence_metadata_contract.sql` — verifies pre-registered report evidence uploads and reporter/Support/Admin read boundaries.
+- `tests/025_six_step_test_config_contract.sql` — verifies atomic config persistence, target-count consistency, no raw email list, and role authorization.
+- `tests/029_support_attachment_privacy_contract.sql` — verifies requester/Support/Admin can read public-message attachments but not internal-note attachments; unrelated users see neither.
 - `tests/026_developer_test_monitoring_privacy_contract.sql` — verifies owner-only aggregate monitoring and minimum distinct-tester suppression.
 - `tests/027_role_explicit_support_ticket_creation_contract.sql` — verifies dual-role workspace selection and rejects role spoofing.
 - `tests/028_developer_test_invitations_contract.sql` — verifies hashed-token storage, email-bound redemption, idempotency, revocation and direct-table denial.
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 26 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the thirteen post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 34 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the nineteen post-phase contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
