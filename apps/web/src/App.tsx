@@ -24,6 +24,7 @@ import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTest
 import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
 import DeveloperReviewQueuePage from "./modules/developer/pages/DeveloperReviewQueuePage";
+import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
@@ -108,6 +109,7 @@ export default function App() {
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
             <Route path="/admin/developer-reviews" element={<DeveloperReviewQueuePage />} />
+            <Route path="/admin/role-requests" element={<AdminRoleRequestsPage />} />
           </Route>
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
           <Route element={<RoleGuard requiredRole="tester" />}>
