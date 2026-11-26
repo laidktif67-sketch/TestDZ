@@ -369,3 +369,17 @@ No hosted Edge Function was deployed, no secrets were changed, no Storage bucket
 The existing isolated contracts provide meaningful evidence for test assets and support attachments, but do not yet fully certify the APK build bucket or the tester feedback reply path. These are explicit Beta acceptance blockers until covered by isolated contracts and, for Storage API behavior, browser/API integration tests.
 
 No workflow, SQL, application source, hosted bucket, or production setting was changed in this review.
+
+
+## Correction and follow-up — feedback reply coverage, plus APK build contract PR — 2026-11-26
+
+A re-check of the official branch's existing `tests/008_developer_feedback_privacy_contract.sql` corrected the earlier gap statement: the existing contract already exercises the tester's own developer reply through `get_tester_feedback_messages()` and rejects a non-tester role. The remaining useful edge case is cross-tester isolation, which is now added to Draft PR #171.
+
+Draft PR #171 (`test/apk-build-storage-contracts`) adds:
+- `tests/030_apk_build_storage_contract.sql`: owner-only APK build registration; outsider upload denial; finalization rejection for mismatched size/MIME; successful finalization; assigned-tester read and unrelated-tester denial across metadata and Storage objects.
+- An additional tester fixture and explicit zero-row assertion in test 008, proving a different tester cannot read another tester's developer reply.
+- The new APK contract in `.github/workflows/rebuild-v2-tests.yml`.
+
+PR #171 is Draft / open and targets `rebuild/testdz-v2`; it is not merged. GitHub Actions run 45895473137 was observed in progress at the time of this update; no passing result is claimed yet. The contracts use transaction rollback and disposable local Supabase CI only.
+
+No production data, hosted Storage buckets, hosted Supabase configuration, migrations, application runtime code, or Vercel deployment were changed.
