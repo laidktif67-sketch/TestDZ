@@ -19,6 +19,7 @@ import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
 import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import DeveloperTestsPage from "./modules/developer/pages/DeveloperTestsPage";
+import DeveloperCreateTestSixStepPage from "./modules/developer/pages/DeveloperCreateTestSixStepPage";
 import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTestMonitoringPage";
 import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
@@ -131,6 +132,7 @@ export default function App() {
             <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
             <Route path="/developer-notifications" element={<DeveloperNotificationsPage />} />
             <Route path="/developer-tests" element={<DeveloperTestsPage />} />
+            <Route path="/developer/tests/new" element={<DeveloperCreateTestSixStepPage />} />
             <Route path="/developer/tests/:id/monitoring" element={<DeveloperTestMonitoringPage />} />
             <Route path="/developer/testers" element={<DeveloperTestersPage />} />
             <Route path="/developer-feedback" element={<DeveloperFeedbackPage />} />

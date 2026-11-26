@@ -497,3 +497,29 @@ export async function getAdminReviewQueue() {
   return { apps, tests };
 }
 
+
+
+export type SixStepTestConfig = {
+  cohort: { targetTesters: number; notes: string | null };
+  rules: { androidVersion: string; instructions: string | null };
+  details: { testingObjective: string; priority: "low" | "medium" | "high"; testingScope: string[]; successCriteria: string | null; minimumCompletionRate: number };
+  schedule: { durationDays: number | null; allowMoreTesters: boolean; joiningMethod: "google_play_link" | "closed_group" | "upload_list" | "open_testing"; collectFeedback: boolean; enableBugReports: boolean };
+  googlePlay: { track: "internal" | "closed" | "open"; testerMethod: "join_link" | "google_groups" | "upload_list"; appVersion: "latest_available" | "to_be_uploaded"; releaseMode: "immediately" | "scheduled"; releaseAt: string | null };
+};
+
+/** Create the draft and its allowlisted six-step configuration atomically through the V2 RPC. */
+export function createDeveloperTestWithConfig(input: DeveloperTestInput & { testConfig: SixStepTestConfig }) {
+  return dataClient().rpc("create_test_with_config", {
+    p_app_id: input.appId,
+    p_title: input.title,
+    p_description: input.description,
+    p_short_summary: input.shortSummary ?? null,
+    p_test_type: input.testType,
+    p_min_testers: input.minTesters,
+    p_start_date: input.startDate ?? null,
+    p_end_date: input.endDate ?? null,
+    p_duration: input.durationMinutes ?? null,
+    p_instructions: input.instructions ?? null,
+    p_test_config: input.testConfig,
+  });
+}
