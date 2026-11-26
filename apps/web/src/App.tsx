@@ -56,6 +56,7 @@ import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import SupportCenterPage from "./modules/tester/pages/SupportCenterPage";
 import SupportTicketDetailsPage from "./modules/tester/pages/SupportTicketDetailsPage";
 import SupportStaffQueuePage from "./modules/admin/pages/SupportStaffQueuePage";
+import SupportTicketDetailPage from "./modules/support/pages/SupportTicketDetailPage";
 import LiveChatPage from "./modules/tester/pages/LiveChatPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
@@ -99,6 +100,9 @@ export default function App() {
           <Route path="/help" element={<HelpSupportPage />} />
           <Route path="/support" element={<SupportCenterPage />} />
           <Route path="/support/queue" element={<SupportStaffQueuePage />} />
+          <Route element={<RoleGuard requiredRole="support" />}>
+            <Route path="/support/queue/:id" element={<SupportTicketDetailPage />} />
+          </Route>
           <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
           <Route path="/live-chat" element={<LiveChatPage />} />
           <Route path="/help-support" element={<Navigate to="/help" replace />} />
