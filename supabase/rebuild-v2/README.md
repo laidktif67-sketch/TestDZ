@@ -28,8 +28,8 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `022_admin_role_request_management.sql`: Admin-only pending role-request queue and reason-required approval/rejection with self-review prevention.
 - `023_admin_role_grants.sql`: audited Admin role grants; prevents self-grants and client-side Admin-role assignment.
 - `024_audited_support_ticket_workflow.sql`: reason-required Support/Admin ticket transitions and immutable message/status/priority event history.
-- `025_require_report_attachment_metadata.sql`: blocks incident-report evidence uploads until trusted attachment metadata has been registered.
-- `026_align_report_evidence_read_access.sql`: aligns report-evidence object reads with reporter/Support/Admin report visibility.
+- `025_require_report_attachment_metadata.sql`: blocks incident-report evidence uploads until trusted attachment metadata has been registered, while preserving the existing four-segment assignment-submission evidence path.
+- `026_align_report_evidence_read_access.sql`: aligns report-evidence object reads with reporter/Support/Admin report visibility while preserving assignment-submission evidence reads.
 - `027_enforce_report_attachment_metadata_integrity.sql`: enforces canonical non-null report-evidence object paths.
 - `028_restrict_support_attachment_reads_to_public_messages.sql`: restricts attachment metadata and Storage reads to public ticket messages for requesters and staff.
 - `029_six_step_test_config.sql`: validates the six-step configuration allowlist and saves it atomically with a test draft; raw tester email lists remain client-local.
