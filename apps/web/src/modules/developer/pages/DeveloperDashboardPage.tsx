@@ -218,7 +218,7 @@ export default function DeveloperDashboardPage() {
         <Link to="/developer-tests" className="dd-nav-link"><Icon name="tests"/><span>{t.tests}</span></Link>
         <Link to="/developer-feedback" className="dd-nav-link"><Icon name="file"/><span>{t.feedback}</span></Link>
         <Link to="/developer-notifications" className="dd-nav-link"><Icon name="bell"/><span>{t.notifications}</span></Link>
-        <span className="dd-nav-link dd-disabled"><Icon name="chart"/><span>{t.analytics}</span><em>{t.soon}</em></span>
+        <Link to="/developer-analytics" className="dd-nav-link"><Icon name="chart"/><span>{t.analytics}</span></Link>
         <span className="dd-nav-label">DISCOVER & ACCOUNT</span>
         {canTester&&<Link to="/tester-dashboard" className="dd-nav-link"><Icon name="search"/><span>{t.discover}</span></Link>}
         <Link to="/profile" className="dd-nav-link"><Icon name="wallet"/><span>{t.billing}</span></Link>
