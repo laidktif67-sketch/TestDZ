@@ -358,11 +358,11 @@ No hosted Edge Function was deployed, no secrets were changed, no Storage bucket
 
 ### Remaining test coverage gaps
 
-1. **APK build Storage path:** migration 013 defines a private `test-builds` bucket, owner/status-scoped upload helper, participant read helper, and register/finalize RPCs. The inspected test suite has no dedicated contract that inserts an APK build row, rejects another developer's upload, verifies size/MIME at finalize, and proves participant versus outsider read access. The existing media contract 006 covers `test-assets`, not `test-builds`.
-2. **Tester feedback reply:** migration 034 adds `get_tester_feedback_messages()`, but no dedicated SQL contract file exists and the workflow contract array does not run a migration-034-specific contract. This leaves tester-side reply visibility/role separation without direct isolated contract evidence.
-3. **New cohort delete-safety contract:** the separate Draft PR #170 contains the proposed cohort/assignment deletion safety test, but it is not part of the official branch's current workflow until that PR is reviewed and merged. Its CI success on the PR branch is not evidence that the official branch currently runs it.
-4. **Bucket configuration reconciliation:** migration 006 explicitly leaves existing bucket configuration untouched on conflict, and migration 013 also uses `DO NOTHING` for `test-builds`. Migration 015 updates `test-assets` configuration on conflict, unlike those earlier migrations. A future cutover needs an explicit reviewed reconciliation plan for the pre-existing buckets and the two V2 buckets, including public/private status, size limits, MIME allowlists, and object inventory/retention. Do not silently alter existing production buckets as part of a schema migration.
-5. **Storage runtime semantics:** direct SQL contracts exercise Storage RLS predicates and object metadata, but do not fully substitute for actual Storage API upload/download/signed-URL tests. Those remain a post-deployment V2-environment acceptance requirement, with no production deployment implied.
+1. **Storage API runtime semantics:** isolated SQL contracts exercise Storage RLS predicates and object metadata, but do not fully substitute for actual Storage API upload/download/signed-URL tests. These remain post-deployment V2-environment acceptance requirements.
+2. **Bucket configuration reconciliation:** migration 006 leaves existing bucket configuration untouched on conflict, and migration 013 also uses `DO NOTHING` for `test-builds`. A future cutover still needs an explicit reviewed reconciliation plan for existing and V2 buckets, including public/private status, size limits, MIME allowlists, and object inventory/retention.
+3. **Browser/API acceptance:** verify wrong-owner access, pre-finalization reads, post-finalization participant reads, closed/removed assignments, and MIME/size mismatch rejection against a deployed non-production V2 environment.
+
+The earlier APK build SQL-contract gap is closed by PR #171 / contract `030_apk_build_storage_contract.sql`. The earlier tester-feedback-reply coverage concern was corrected by the existing contract `008_developer_feedback_privacy_contract.sql`, with cross-tester isolation added in PR #171. Cohort/assignment delete-safety coverage was subsequently added by PR #170. These contracts run in isolated local CI and do not prove hosted Storage API behavior.
 
 ### Current conclusion
 
@@ -393,7 +393,7 @@ The GitHub Actions run associated with PR #171 commit `6bc710ac3dc0c4c4cfddea20e
 - `frontend-typecheck`: success.
 - `notification-edge-function`: success.
 
-The PR remains Draft / open and unmerged. Its compare against `rebuild/testdz-v2` is 3 commits ahead, 0 behind, with exactly three changed files: the workflow list, feedback privacy contract 008, and new APK build contract 030.
+PR #171 was subsequently approved and merged into `rebuild/testdz-v2` with merge commit `66d5ccf96389c1a398b921e3c46fb8eeff33b6bd`. Its three-file change is now part of the official branch. The successful pre-merge CI run remains evidence for the PR head; no separate run was returned for that merge commit.
 
 This is passing isolated CI evidence only. It does not establish hosted Storage API upload/download/signed-URL behavior or production cutover readiness. No hosted Supabase changes or Vercel deployment were made.
 
@@ -421,7 +421,7 @@ A fresh read-only query against hosted project `naqjjykcglxiobkmdllj` confirmed:
 
 The five hosted buckets retain their existing configuration; no V2 buckets are deployed. This is consistent with the V2 candidate remaining isolated from Production. No DDL, data, migration history, bucket configuration, Edge Function, secret, or deployment was changed during this verification.
 
-PR #169 remains Draft / open. Its branch is now four commits behind `rebuild/testdz-v2` after PR #171 was merged. The audit content remains a documentation-only change; synchronize the branch before considering merge, and obtain explicit owner approval before any branch merge.
+PR #169 remains Draft / open. Its audit branch was later synchronized with the official branch after PR #170 merged; see the synchronization record near the end of this document. The audit content remains documentation-only, and PR #169 is not authorization for Production cutover.
 
 
 ## Follow-up verification — cohort FK catalog and PR #170 — 2026-11-26
@@ -440,7 +440,7 @@ This supports that the intended composite assignment-to-cohort-test relationship
 
 PR #170's workflow run `45893146158` was independently rechecked: all three jobs completed successfully (`rebuild-v2`, `frontend-typecheck`, and `notification-edge-function`). Its SQL contract covers cohort deletion, test deletion, report-retained assignment deletion, and rejection of cancellation while an active assignment exists. The contract uses synthetic fixtures and transaction rollback in disposable local Supabase CI only.
 
-PR #170 remains Draft/open and unmerged. Its branch is four commits behind the current official branch and three commits ahead, so it needs a reviewed synchronization and a fresh CI run before any merge decision. No merge or deletion was performed.
+PR #170 was subsequently synchronized with the official branch, its isolated CI passed on the synchronized PR head, and it was merged with commit `19f43a7a2916997bd20a781e883132350dc826f0`. See the later merge-disposition section. This paragraph records the earlier state only.
 
 ### Current official CI note
 
