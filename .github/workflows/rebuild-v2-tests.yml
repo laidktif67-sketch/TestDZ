@@ -90,6 +90,7 @@ jobs:
             supabase/rebuild-v2/tests/016_admin_role_grant_contract.sql
             supabase/rebuild-v2/tests/020_support_ticket_audited_workflow_contract.sql
             supabase/rebuild-v2/tests/024_report_evidence_metadata_contract.sql
+            supabase/rebuild-v2/tests/022_reports_disputes_fail_closed_contract.sql
             supabase/rebuild-v2/tests/025_six_step_test_config_contract.sql
             supabase/rebuild-v2/tests/029_support_attachment_privacy_contract.sql
             supabase/rebuild-v2/tests/026_developer_test_monitoring_privacy_contract.sql
