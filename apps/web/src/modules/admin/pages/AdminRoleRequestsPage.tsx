@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAppDataClient } from "../../../lib/supabase-data";
-
-type RoleRequest = {
-  request_id: string;
-  user_id: string;
-  requested_role: "tester" | "developer";
-  request_reason: string;
-  created_at: string;
-  display_name: string | null;
-};
+import {
+  listPendingRoleRequests,
+  reviewRoleRequest,
+  type AdminRoleRequest,
+} from "../../../features/admin/admin-api";
+import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 
 export default function AdminRoleRequestsPage() {
-  const [requests, setRequests] = useState<RoleRequest[]>([]);
+  const [requests, setRequests] = useState<AdminRoleRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
@@ -20,35 +16,42 @@ export default function AdminRoleRequestsPage() {
   const [notice, setNotice] = useState("");
 
   const load = useCallback(async () => {
+    if (!isTesterWorkflowV2Enabled) {
+      setRequests([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
-      const { data, error: queryError } = await getAppDataClient().rpc("admin_list_pending_role_requests");
-      if (queryError) setError("Could not load pending role requests. Check the Admin workspace permissions.");
-      else setRequests((data ?? []) as RoleRequest[]);
+      const { data, error: queryError } = await listPendingRoleRequests();
+      if (queryError) throw queryError;
+      setRequests((data ?? []) as AdminRoleRequest[]);
     } catch {
-      setError("Could not load pending role requests. Check your connection and Admin permissions.");
+      setRequests([]);
+      setError("Could not load pending role requests. Check the Admin workspace permissions.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => { void load(); }, [load]);
 
-  async function decide(request: RoleRequest, decision: "approved" | "rejected") {
+  async function decide(request: AdminRoleRequest, decision: "approved" | "rejected") {
     const reviewNote = (notes[request.request_id] ?? "").trim();
-    if (reviewNote.length < 10) {
-      setError("Add a clear review reason of at least 10 characters.");
+    if (reviewNote.length < 10 || reviewNote.length > 1000) {
+      setError("Enter a review reason between 10 and 1000 characters.");
       return;
     }
     setBusyId(request.request_id);
     setError("");
     setNotice("");
     try {
-      const { error: reviewError } = await getAppDataClient().rpc("admin_review_role_request", {
-        p_request_id: request.request_id,
-        p_decision: decision,
-        p_review_note: reviewNote,
-      });
+      const { error: reviewError } = await reviewRoleRequest(
+        request.request_id,
+        decision,
+        reviewNote,
+      );
       if (reviewError) {
         setError("The role request could not be reviewed. It may already have been processed.");
       } else {
@@ -58,8 +61,20 @@ export default function AdminRoleRequestsPage() {
       }
     } catch {
       setError("The role request could not be reviewed. Please retry.");
+    } finally {
+      setBusyId("");
     }
-    setBusyId("");
+  }
+
+  if (!isTesterWorkflowV2Enabled) {
+    return (
+      <main className="dashboard-shell">
+        <section className="dashboard-welcome container">
+          <h1>Role requests</h1>
+          <p>V2 is not enabled in this environment. No V2 role-request data was loaded.</p>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -89,7 +104,6 @@ export default function AdminRoleRequestsPage() {
                   <strong>{request.display_name?.trim() || "TestDZ member"}</strong>
                   <small>{request.requested_role.toUpperCase()} access · {new Date(request.created_at).toLocaleString()}</small>
                   <p>{request.request_reason}</p>
-                  <small>User ID: {request.user_id}</small>
                 </div>
                 <label>
                   Audit reason
