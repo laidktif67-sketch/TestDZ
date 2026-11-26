@@ -96,7 +96,8 @@ export default function DeveloperTestMonitoringPage() {
   }, [id]);
 
   const metrics = summary?.metrics;
-  const metricsSuppressed = metrics?.suppressed === true;
+  const metricsSuppressed = visibleMetrics?.suppressed === true;
+  const visibleMetrics = metrics && !metrics.suppressed ? metrics : null;
   const daily = useMemo(() => {
     const indexed = new Map((summary?.dailyActivity ?? []).map(item => [item.date, item.count]));
     return Array.from({ length: 7 }, (_, index) => {
@@ -108,12 +109,12 @@ export default function DeveloperTestMonitoringPage() {
   }, [summary]);
   const maxDaily = Math.max(1, ...daily.map(item => item.count));
   const statuses = [
-    { key: "completed", label: "مكتمل", value: metrics?.completed ?? 0 },
-    { key: "active", label: "نشط", value: metrics?.active ?? 0 },
-    { key: "pending", label: "بانتظار البدء", value: metrics?.pending ?? 0 },
-    { key: "failed", label: "فشل", value: metrics?.failed ?? 0 },
-    { key: "withdrawn", label: "منسحب", value: metrics?.withdrawn ?? 0 },
-    { key: "rejected", label: "مرفوض", value: metrics?.rejected ?? 0 },
+    { key: "completed", label: "مكتمل", value: visibleMetrics?.completed ?? 0 },
+    { key: "active", label: "نشط", value: visibleMetrics?.active ?? 0 },
+    { key: "pending", label: "بانتظار البدء", value: visibleMetrics?.pending ?? 0 },
+    { key: "failed", label: "فشل", value: visibleMetrics?.failed ?? 0 },
+    { key: "withdrawn", label: "منسحب", value: visibleMetrics?.withdrawn ?? 0 },
+    { key: "rejected", label: "مرفوض", value: visibleMetrics?.rejected ?? 0 },
   ];
   const exportSummary = () => {
     if (!summary || metricsSuppressed) return;
@@ -121,15 +122,15 @@ export default function DeveloperTestMonitoringPage() {
       ["المؤشر", "القيمة"],
       ["الاختبار", summary.test.title],
       ["حالة الاختبار", statusLabels[summary.test.status] ?? summary.test.status],
-      ["إجمالي المشاركات", metrics?.totalAssignments ?? 0],
-      ["عدد المختبرين (إجمالي)", metrics?.uniqueTesters ?? 0],
-      ["مكتمل", metrics?.completed ?? 0],
-      ["نشط", metrics?.active ?? 0],
-      ["بانتظار البدء", metrics?.pending ?? 0],
-      ["نسبة الإكمال", (metrics?.completionRate ?? 0) + "%"],
-      ["عمليات تسجيل النشاط", metrics?.checkins ?? 0],
-      ["التقييمات", metrics?.feedbackCount ?? 0],
-      ["متوسط التقييم", metrics?.averageRating ?? "—"],
+      ["إجمالي المشاركات", visibleMetrics?.totalAssignments ?? 0],
+      ["عدد المختبرين (إجمالي)", visibleMetrics?.uniqueTesters ?? 0],
+      ["مكتمل", visibleMetrics?.completed ?? 0],
+      ["نشط", visibleMetrics?.active ?? 0],
+      ["بانتظار البدء", visibleMetrics?.pending ?? 0],
+      ["نسبة الإكمال", (visibleMetrics?.completionRate ?? 0) + "%"],
+      ["عمليات تسجيل النشاط", visibleMetrics?.checkins ?? 0],
+      ["التقييمات", visibleMetrics?.feedbackCount ?? 0],
+      ["متوسط التقييم", visibleMetrics?.averageRating ?? "—"],
     ];
     const csv = rows.map(row => row.map(value => '"' + String(value).replaceAll('"', '""') + '"').join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
@@ -176,17 +177,17 @@ export default function DeveloperTestMonitoringPage() {
 
         {metricsSuppressed ? <section className="dtm2-privacy-suppressed" role="status"><strong>تم إخفاء مؤشرات هذا الاختبار لحماية خصوصية المختبرين.</strong><p>تُعرض الإحصاءات الإجمالية فقط عندما يشارك ثلاثة مختبرين مختلفين على الأقل. لن نعرض أرقاماً لمجموعة صغيرة.</p></section> : <>
         <section className="dtm2-metrics-grid">
-          <MetricCard label="إجمالي المشاركات" value={metrics?.totalAssignments ?? 0} detail={"الهدف: " + summary.test.minTesters + " مختبراً"} symbol="♙" />
-          <MetricCard label="نسبة الإكمال" value={(metrics?.completionRate ?? 0) + "%"} detail={(metrics?.completed ?? 0) + " مشاركات مكتملة"} symbol="✓" />
-          <MetricCard label="المشاركات النشطة" value={metrics?.active ?? 0} detail={(metrics?.pending ?? 0) + " بانتظار البدء"} symbol="◷" />
-          <MetricCard label="متوسط التقييم" value={metrics?.averageRating == null ? "—" : metrics.averageRating + "/5"} detail={(metrics?.feedbackCount ?? 0) + " تقييمات مستلمة"} symbol="★" />
+          <MetricCard label="إجمالي المشاركات" value={visibleMetrics?.totalAssignments ?? 0} detail={"الهدف: " + summary.test.minTesters + " مختبراً"} symbol="♙" />
+          <MetricCard label="نسبة الإكمال" value={(visibleMetrics?.completionRate ?? 0) + "%"} detail={(visibleMetrics?.completed ?? 0) + " مشاركات مكتملة"} symbol="✓" />
+          <MetricCard label="المشاركات النشطة" value={visibleMetrics?.active ?? 0} detail={(visibleMetrics?.pending ?? 0) + " بانتظار البدء"} symbol="◷" />
+          <MetricCard label="متوسط التقييم" value={visibleMetrics?.averageRating == null ? "—" : metrics.averageRating + "/5"} detail={(visibleMetrics?.feedbackCount ?? 0) + " تقييمات مستلمة"} symbol="★" />
         </section>
 
         <section className="dtm2-panels">
           <article className="dtm2-panel">
-            <div className="dtm2-panel-heading"><h3>توزيع حالات المشاركات</h3><span>{metrics?.totalAssignments ?? 0} إجمالي</span></div>
+            <div className="dtm2-panel-heading"><h3>توزيع حالات المشاركات</h3><span>{visibleMetrics?.totalAssignments ?? 0} إجمالي</span></div>
             {statuses.map(item => {
-              const width = metrics?.totalAssignments ? item.value / metrics.totalAssignments * 100 : 0;
+              const width = visibleMetrics?.totalAssignments ? item.value / metrics.totalAssignments * 100 : 0;
               return <div className="dtm2-status-row" key={item.key}>
                 <div><span>{item.label}</span><b>{item.value}</b></div>
                 <div className="dtm2-track"><i className={"fill-" + item.key} style={{ width: width + "%" }} /></div>
@@ -211,11 +212,11 @@ export default function DeveloperTestMonitoringPage() {
         <section className="dtm2-bottom-grid">
           <article className="dtm2-panel">
             <div className="dtm2-panel-heading"><h3>مؤشرات الجودة</h3></div>
-            <div className="dtm2-quality-row"><span>تسجيلات النشاط</span><b>{metrics?.checkins ?? 0}</b></div>
-            <div className="dtm2-quality-row"><span>التقييمات المستلمة</span><b>{metrics?.feedbackCount ?? 0}</b></div>
-            <div className="dtm2-quality-row"><span>تقييمات بانتظار المراجعة</span><b>{metrics?.feedbackPending ?? 0}</b></div>
-            <div className="dtm2-quality-row"><span>تقييمات مقبولة</span><b>{metrics?.feedbackAccepted ?? 0}</b></div>
-            <div className="dtm2-quality-row"><span>تقييمات مرفوضة</span><b>{metrics?.feedbackRejected ?? 0}</b></div>
+            <div className="dtm2-quality-row"><span>تسجيلات النشاط</span><b>{visibleMetrics?.checkins ?? 0}</b></div>
+            <div className="dtm2-quality-row"><span>التقييمات المستلمة</span><b>{visibleMetrics?.feedbackCount ?? 0}</b></div>
+            <div className="dtm2-quality-row"><span>تقييمات بانتظار المراجعة</span><b>{visibleMetrics?.feedbackPending ?? 0}</b></div>
+            <div className="dtm2-quality-row"><span>تقييمات مقبولة</span><b>{visibleMetrics?.feedbackAccepted ?? 0}</b></div>
+            <div className="dtm2-quality-row"><span>تقييمات مرفوضة</span><b>{visibleMetrics?.feedbackRejected ?? 0}</b></div>
           </article>
           <article className="dtm2-panel">
             <div className="dtm2-panel-heading"><h3>إعدادات الاختبار</h3></div>
