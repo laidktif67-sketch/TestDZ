@@ -1,0 +1,104 @@
+# TestDZ Production-to-Rebuild V2 audit
+
+Audit date: 2026-11-26  
+Official application reference: `rebuild/testdz-v2`  
+Official commit at audit start: `9aa553126cfd553fc78534e62c1fa2122965d5d2`  
+Hosted Supabase project: TestDZ (`naqjjykcglxiobkmdllj`), `eu-west-3`, PostgreSQL 17.11  
+Mode: read-only inventory. No production schema, data, migration history, Auth settings, Storage objects, or Edge Functions were changed.
+
+## Executive decision
+
+The Rebuild V2 candidate is the approved application architecture, but the hosted TestDZ database is still the legacy `public` schema. Do not apply the candidate scripts to the hosted project yet.
+
+The 34 scripts in `supabase/rebuild-v2/` are explicitly candidate-only. The final-state contract expects 48 tables, RLS + FORCE RLS on all 48, policy coverage on 47, and seven Storage buckets. The README and final-state contract are the current candidate references; older prose in `docs/database-rebuild-v2.md` still mentions an earlier 18-script / 47-table state and must be treated as historical/stale.
+
+## Hosted database inventory
+
+Observed through Supabase read-only APIs and SQL on 2026-11-26:
+
+- Project status: ACTIVE_HEALTHY; PostgreSQL 17.11; region eu-west-3.
+- Schemas containing application tables: `public` (42 tables) and `supabase_migrations` (history table). Neither `rebuild_v2` nor `rebuild_v2_private` exists in this hosted project.
+- Auth users: 2; public profiles: 2; user_roles: 3.
+- Role distribution: admin 1, developer 1, tester 1. There is no existing Financial or Support role assignment.
+- Wallets: 2; aggregate earned points = 0; aggregate purchased credits = 0; legacy points_ledger rows = 0.
+- Plans: 3 active plans (Free, Plus, Pro).
+- platform_config: 15 keys. Preserve the keys and their values through an explicit mapping; do not silently replace with candidate defaults.
+- Applications/tests/cohorts/assignments/check-ins/feedback/payments/subscriptions/refunds/reports/disputes/notifications/support tickets and conversation records were observed at zero rows in the queried tables.
+- All five existing Storage buckets were observed with zero objects: `app-icons` (public), `avatars` (public), `developer-feedback-attachments` (private), `support-attachments` (private), `test-evidence` (private).
+
+The zero-row observations are point-in-time inventory results, not a promise that no new data will arrive. Recheck immediately before any cutover.
+
+## Migration-history reconciliation
+
+The hosted project reports 43 applied migration records. The official Git branch contains 31 files under `supabase/migrations/`.
+
+A normalized filename/name comparison found:
+- 29 applied records with a matching repository migration name.
+- 14 applied records without a matching filename in the current active migration directory.
+- 2 repository migration files without an applied record matching their filename:
+  - `20261110193000_onboarding_profile_row_guard.sql`
+  - `20261111000400_support_tickets.sql`
+
+This comparison is provenance evidence only. It does not prove SQL-body equivalence, nor does it authorize editing the hosted migration ledger. Several hosted names correspond conceptually to changes now represented in the V2 candidate scripts, but those relationships need a reviewed, explicit mapping.
+
+Unmatched applied history names requiring source recovery/provenance mapping:
+- `test_details_and_medical_exceptions`
+- `developer_feedback_reviews`
+- `developer_notification_archive`
+- `separate_notification_recipient_roles`
+- `separate_support_ticket_requester_roles`
+- `support_ticket_priority_activity`
+- `audit_support_ticket_priority_changes`
+- `developer_feedback_conversation_and_priority`
+- `developer_feedback_details_conversations_attachments_events`
+- `app_distribution_schema_and_rpc`
+- `align_app_distribution_method`
+- `test_type_and_config`
+- `allow_test_drafts`
+- `reconcile_assignments_cohort_foreign_keys`
+
+The Supabase migration-list API provides version/name records, not the original SQL bodies. Recover those SQL definitions from Git history, historical PR refs, or a trusted backup before claiming a complete migration archive. Never reset or rewrite `supabase_migrations.schema_migrations` just to align counts.
+
+## Initial data mapping decisions
+
+| Legacy public data | Rebuild V2 target | Current observation / rule |
+|---|---|---|
+| `profiles` | `rebuild_v2.profiles` | 2 rows. Preserve identity/profile fields. Legacy `subscription_tier` is not a canonical V2 profile field; derive subscription state from the canonical plan/subscription relation. |
+| `user_roles` | `rebuild_v2.user_roles` | 3 assignments: admin, developer, tester. Preserve exactly; do not auto-grant Financial or Support. |
+| `wallets` | `rebuild_v2.wallets` | 2 rows; both aggregate balances are zero. Preserve the wallet rows and verify per-user balance equality. |
+| `points_ledger` | `rebuild_v2.wallet_ledger` | 0 legacy rows observed. Keep earned points and purchased credits as separate ledger types; never synthesize ledger entries from balance fields. |
+| `plans` / `subscriptions` | V2 plan/subscription model | 3 active plans, 0 subscription rows. Preserve plan semantics and identifiers through an explicit mapping. |
+| `platform_config` | `rebuild_v2.platform_config` | 15 keys. Preserve and review values individually; feature flags and payment/referral/trial switches must not be activated accidentally. |
+| `audit_logs` | `rebuild_v2.audit_events` | 0 rows observed. Keep append-only audit semantics; map event vocabulary deliberately. |
+| `notifications` | `rebuild_v2.notifications` | 0 rows observed. Candidate migration 019's non-empty-table guard is expected to pass only if the table is still empty at cutover time. |
+| Support / developer feedback tables | V2 support and feedback tables | 0 rows observed. Verify metadata and private-attachment semantics before moving bucket policies. |
+| Existing Storage buckets | V2 seven-bucket layout | Five current buckets are empty. Preserve bucket identity/configuration until V2 paths and signed access are verified; do not delete or make private/public as a shortcut. |
+
+## Security and performance observations
+
+- RLS is enabled on all 42 public application tables; no public table without an RLS policy was found in the catalog query.
+- Supabase Security Advisor reports six authenticated-callable SECURITY DEFINER functions. The reviewed definitions set an empty search_path and contain explicit authorization/ownership checks. These findings require function-by-function review, but are not by themselves proof of an exploitable vulnerability.
+- Leaked-password protection is disabled. Enabling it is recommended, but it is an Auth behavior change and must be tested against sign-in/sign-up flows before enabling.
+- Performance Advisor reports nine unindexed foreign keys, three tables with multiple permissive SELECT policies, and 33 unused indexes. Do not drop unused indexes based on low-traffic statistics. Decide whether to fix legacy indexes only if the legacy schema will remain active during the transition; candidate V2 has its own index set.
+
+## Required work before hosted cutover
+
+1. Recover the original SQL bodies/provenance for all 14 unmatched applied history entries; map each to a specific V2 script or explicitly mark it retired with evidence.
+2. Explain the two checked-in-but-unmatched migration files; verify whether their effects are already present in the live catalog and whether the V2 candidate supersedes them.
+3. Produce a column/constraint/index/trigger/function/grant/RLS/Storage mapping from the current `public` catalog to the final 48-table V2 catalog.
+4. Explicitly map the 15 `platform_config` keys and the three plans. Keep payment, referral, trial, reward, and withdrawal behavior disabled unless separately approved.
+5. Verify the two Auth users, their exact role sets, two wallet rows, and profile mappings in a non-production rehearsal. Do not copy Auth passwords or secrets into a data migration.
+6. Rehearse V2 candidate replay and PostgREST exposure on an isolated Supabase branch or disposable database. Creating a Supabase branch may incur cost and requires cost confirmation.
+7. Verify backup restoration and rollback. A backup's existence is insufficient; prove it can be restored.
+8. Complete route/API compatibility and production build gates. The current application must not be switched to V2 merely because the schema exists.
+9. Obtain a final, explicit cutover approval before applying any V2 DDL, data movement, migration-history operation, Auth setting change, Storage policy change, Edge Function deployment, or Vercel deployment.
+
+## Changes performed
+
+- Read-only catalog, row-count, migration-history, Storage inventory, and Advisor queries only.
+- No production database writes or DDL.
+- No migration history repair.
+- No Supabase Auth settings changes.
+- No Storage object/policy changes.
+- No Edge Function or cron deployment.
+- No Vercel deployment.
