@@ -162,3 +162,31 @@ The remaining hosted history name `reconcile_assignments_cohort_foreign_keys` ha
 - V2 baseline `001_schema.sql` instead models `assignments` through the composite `(cohort_id,test_id) → cohort_tests` RESTRICT reference, and `cohort_tests` through the composite `(test_id,developer_id) → tests(id,developer_id)` RESTRICT reference plus the cohort reference. This makes the cohort/test ownership relationship explicit and avoids relying on the legacy single-column cascade edges.
 
 The candidate captures a coherent target relationship, but this is not proof of what the unrecovered hosted migration did. Before cutover, validate that no legacy row violates the composite ownership relationship (current row counts for both tables are zero), then verify the final candidate constraints and negative delete behavior in the isolated replay. Do not remove or alter live foreign keys now merely because the V2 baseline differs.
+
+
+## Cohort/assignment follow-up — 2026-11-26 (read-only)
+
+The historical source comparison adds an important detail to the unrecovered migration investigation:
+
+- The retained 20261107000200_assignments_feedback_constraints.sql source (present on feat/tester-assignment-report-submission and test/developer-cohort-transition-contract) creates two composite foreign keys on assignments: (cohort_id,test_id) to cohort_tests(cohort_id,test_id) ON DELETE RESTRICT, and (cohort_id,tester_id) to cohort_tests(cohort_id,developer_id) ON DELETE RESTRICT.
+- The current hosted catalog has the first FK but does not have assignments_cohort_tester_fk. It instead has separate assignments.cohort_id to cohorts.id ON DELETE CASCADE and assignments.test_id to tests.id ON DELETE CASCADE constraints alongside the composite cohort/test FK.
+- This indicates that the hosted schema evolved beyond the recovered 070002 source. It is consistent with a later reconciliation/removal of the tester-to-developer composite FK, but does not prove the missing migration's exact SQL or intent. Do not recreate that FK: it equates assignments.tester_id with cohort_tests.developer_id, which may be an invalid assumption for tester/developer identities.
+- The retained 20261109203006_restrict_report_assignment_deletion.sql source adds reports.assignment_id to assignments.id ON DELETE RESTRICT and makes the legacy remove_cohort_test RPC reject removal if related assignments have reports, feedback, check-ins, play-opt-in events, or non-pending activity. The live catalog confirms the reports FK is currently ON DELETE RESTRICT.
+- V2 baseline 001_schema.sql keeps the assignment-to-cohort-test composite RESTRICT FK and cohort-test-to-test/developer composite RESTRICT FK. V2 cohort lifecycle code in 012_cohort_management.sql updates status and withdraws pending assignments on cancellation; it does not reproduce the legacy remove_cohort_test deletion RPC. Treat this as an API/workflow difference needing application-route and business-rule sign-off, not merely a DDL mapping.
+
+Fresh exact row counts from the hosted database (read-only, 2026-11-26):
+- assignments: 0
+- cohort_tests: 0
+- cohorts: 0
+- tests: 0
+- reports: 0
+- report_attachments: 0
+
+The zero counts remove current row-level blockers for these specific relationships at the time of this query, but do not validate the missing migration body, prove future data will remain empty, or remove the need for a final pre-cutover recheck.
+
+### Required follow-up
+
+1. Keep original migration 20261115092608 marked unrecovered until its source is located or a trusted database backup provides the exact body.
+2. Compare legacy RPCs create_cohort, add_cohort_test, and remove_cohort_test with V2 cohort-management and tester-join APIs, including report/feedback/check-in retention semantics.
+3. Add explicit negative tests to the isolated V2 replay for deleting a cohort referenced by cohort_tests, deleting a test referenced by cohort_tests, deleting an assignment referenced by a report, and cancelling a cohort with active assignments.
+4. Do not change hosted foreign keys or functions as part of this audit.
