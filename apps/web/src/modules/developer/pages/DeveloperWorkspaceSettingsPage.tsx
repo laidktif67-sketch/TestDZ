@@ -91,26 +91,34 @@ export default function DeveloperWorkspaceSettingsPage() {
     }
     setLoading(true);
     setError(false);
-    const [apps, tests, plan] = await Promise.all([
-      listApps(user.id),
-      listDeveloperTests(user.id),
-      getAppLimit()
-    ]);
-    if (apps.error || tests.error) {
+    try {
+      const [apps, tests, plan] = await Promise.all([
+        listApps(user.id),
+        listDeveloperTests(user.id),
+        getAppLimit()
+      ]);
+      if (apps.error || tests.error) {
+        setError(true);
+        setAppCount(null);
+        setTestCount(null);
+      } else {
+        setAppCount((apps.data ?? []).length);
+        setTestCount((tests.data ?? []).length);
+      }
+      if (!plan.error) {
+        const value = Array.isArray(plan.data) ? plan.data[0] : plan.data;
+        setLimit((value ?? null) as PlanUsage | null);
+      } else {
+        setLimit(null);
+      }
+    } catch {
       setError(true);
       setAppCount(null);
       setTestCount(null);
-    } else {
-      setAppCount((apps.data ?? []).length);
-      setTestCount((tests.data ?? []).length);
-    }
-    if (!plan.error) {
-      const value = Array.isArray(plan.data) ? plan.data[0] : plan.data;
-      setLimit((value ?? null) as PlanUsage | null);
-    } else {
       setLimit(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [user?.id]);
 
   useEffect(() => {
