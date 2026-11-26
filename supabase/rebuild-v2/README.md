@@ -38,6 +38,7 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `032_developer_test_invitations.sql`: email-bound, hashed-token invitations with owner-scoped listing, revocation, expiry and atomic Tester redemption.
 - `033_support_tester_data_boundary.sql`: removes Support access to raw tester assignments, check-ins, and feedback while preserving Admin oversight.
 - `034_tester_feedback_reply_access.sql`: exposes developer-authored replies only to the authenticated owner of the feedback.
+- `035_sync_six_step_config_on_test_edit.sql`: keeps the persisted six-step target tester count and tester instructions synchronized when the developer edits the corresponding test fields.
 
 Migrations 022–029 are now included as a curated candidate sequence after separate security and contract review. Migrations 030–032 follow them: aggregate monitoring (030), role-explicit Support ticket creation (031), then email-bound developer invitations (032).
 
@@ -53,17 +54,21 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 34 selected scripts in numeric order: `001_schema.sql` through `034_tester_feedback_reply_access.sql`. This is still a candidate-only sequence, separate from `supabase/migrations`.
+Apply all 35 selected scripts in numeric order: `001_schema.sql` through `035_sync_six_step_config_on_test_edit.sql`. This is still a candidate-only sequence, separate from `supabase/migrations`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 34 selected scripts, run:
+After all 35 selected scripts, run:
 - `tests/final_state_contract.sql` — checks the final 48-table / seven-bucket candidate, including the forced-RLS invitation table and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
 - `tests/005_developer_lifecycle_contract.sql`
 - `tests/006_test_media_assets_contract.sql`
+- `tests/030_apk_build_storage_contract.sql` — verifies private APK build ownership, upload verification, and assigned-tester read boundaries.
+- `tests/030_cohort_assignment_delete_safety_contract.sql` — verifies cohort deletion cannot cascade into active or historical assignment records.
+- `tests/031_developer_test_edit_contract.sql` — verifies owner-only test editing, validation, audit behavior, and synchronization of six-step configuration fields.
+- `tests/022_reports_disputes_fail_closed_contract.sql` — verifies report/dispute access remains role-scoped and fails closed.
 - `tests/007_tester_workflow_contract.sql`
 - `tests/008_developer_feedback_privacy_contract.sql`
 - `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
@@ -81,7 +86,7 @@ After all 34 selected scripts, run:
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 34 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the nineteen post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 35 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the 23 post-phase contracts, including the final-state contract. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
