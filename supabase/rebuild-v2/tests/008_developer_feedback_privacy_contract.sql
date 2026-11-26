@@ -1,5 +1,5 @@
 -- Developer feedback privacy and ownership contract.
--- Run ONLY against isolated TestDZ-FixLab after candidate SQL 001..016.
+-- Run ONLY against isolated TestDZ-FixLab after all candidate Rebuild V2 SQL migrations.
 -- Synthetic users, feedback, review rows, messages and events are rolled back.
 
 BEGIN;
@@ -9,14 +9,26 @@ VALUES
  ('80000000-0000-4000-8000-000000000001','authenticated','authenticated','v2-feedback-dev@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Feedback Owner"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000002','authenticated','authenticated','v2-feedback-admin@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Feedback Admin"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000003','authenticated','authenticated','v2-feedback-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Feedback Tester"}'::jsonb,now(),now()),
- ('80000000-0000-4000-8000-000000000004','authenticated','authenticated','v2-feedback-outsider@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Developer"}'::jsonb,now(),now());
+ ('80000000-0000-4000-8000-000000000004','authenticated','authenticated','v2-feedback-outsider@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Developer"}'::jsonb,now(),now()),
+ ('80000000-0000-4000-8000-000000000005','authenticated','authenticated','v2-feedback-support@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Support Agent"}'::jsonb,now(),now());
+
+-- The auth-user trigger grants the default tester role to every new account.
+-- Remove that default from synthetic staff/outsider fixtures before assigning their intended roles.
+DELETE FROM rebuild_v2.user_roles
+WHERE user_id IN (
+ '80000000-0000-4000-8000-000000000001',
+ '80000000-0000-4000-8000-000000000002',
+ '80000000-0000-4000-8000-000000000004',
+ '80000000-0000-4000-8000-000000000005'
+) AND role='tester';
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
  ('80000000-0000-4000-8000-000000000001','developer'),
  ('80000000-0000-4000-8000-000000000002','admin'),
  ('80000000-0000-4000-8000-000000000003','tester'),
- ('80000000-0000-4000-8000-000000000004','developer')
+ ('80000000-0000-4000-8000-000000000004','developer'),
+ ('80000000-0000-4000-8000-000000000005','support')
 ON CONFLICT(user_id,role) DO NOTHING;
 
 SET LOCAL ROLE authenticated;
@@ -70,6 +82,7 @@ BEGIN
  PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000003',true);
  PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
  PERFORM rebuild_v2.start_assignment(v_assignment);
+ PERFORM rebuild_v2.submit_checkin(v_assignment,'Synthetic private check-in note for Support boundary verification.');
  v_feedback:=rebuild_v2.submit_tester_feedback(
   v_assignment,'usability',
   'The app navigation is confusing and the settings control is difficult to locate during the test.',
@@ -92,6 +105,36 @@ BEGIN
  END IF;
 END;
 $tester_access$;
+
+-- Support handles support tickets, not raw tester assignments, check-in notes or feedback.
+SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000005',true);
+SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000005","role":"authenticated"}',true);
+DO $support_tester_data_boundary$
+DECLARE v_count integer;
+BEGIN
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignments WHERE id=current_setting('testdz.assignment_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read a raw tester assignment'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.checkins WHERE assignment_id=current_setting('testdz.assignment_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read private tester check-in notes'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester feedback'; END IF;
+END;
+$support_tester_data_boundary$;
+
+-- Admin retains the audited staff access needed for platform oversight.
+SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000002',true);
+SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+DO $admin_tester_data_access$
+DECLARE v_count integer;
+BEGIN
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignments WHERE id=current_setting('testdz.assignment_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost assignment oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.checkins WHERE assignment_id=current_setting('testdz.assignment_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost check-in oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost feedback oversight access'; END IF;
+END;
+$admin_tester_data_access$;
 
 -- Developer may see the feedback through a sanitized RPC, but not raw tester records.
 SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000001',true);
@@ -141,6 +184,34 @@ BEGIN
 END;
 $owner_privacy$;
 
+-- The tester can read only developer-authored replies to their own feedback.
+SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000003',true);
+SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
+DO $tester_reply_access$
+DECLARE v_count integer;
+BEGIN
+ SELECT count(*) INTO v_count
+ FROM rebuild_v2.get_tester_feedback_messages()
+ WHERE feedback_id=current_setting('testdz.feedback_id')::uuid
+   AND body='We are reviewing the navigation issue for the next release.';
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: tester cannot read developer reply for own feedback'; END IF;
+END;
+$tester_reply_access$;
+
+-- A different developer cannot use the tester-only reply RPC.
+SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000004',true);
+SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
+DO $outsider_tester_reply_boundary$
+DECLARE v_count integer;
+BEGIN
+ BEGIN
+  SELECT count(*) INTO v_count FROM rebuild_v2.get_tester_feedback_messages();
+  RAISE EXCEPTION 'FAIL: non-tester role accessed tester feedback replies';
+ EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
+ END;
+END;
+$outsider_tester_reply_boundary$;
+
 -- A different developer sees no rows and cannot update or message this feedback.
 SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000004',true);
 SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
@@ -170,7 +241,7 @@ RESET ROLE;
 ROLLBACK;
 
 SELECT jsonb_build_object(
- 'auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id BETWEEN '80000000-0000-4000-8000-000000000001'::uuid AND '80000000-0000-4000-8000-000000000004'::uuid),
+ 'auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id BETWEEN '80000000-0000-4000-8000-000000000001'::uuid AND '80000000-0000-4000-8000-000000000005'::uuid),
  'feedback_after_rollback',(SELECT count(*) FROM rebuild_v2.feedback WHERE body LIKE 'The app navigation is confusing%'),
  'developer_reviews_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_reviews WHERE resolution_note='Not my test'),
  'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%')

@@ -1,5 +1,5 @@
 -- Tester workflow V2 contract smoke test.
--- Run only against an isolated disposable database after all candidate scripts through 018. The checks below exercise behavior introduced by scripts 017 and 018.
+-- Run only against an isolated disposable database after the complete candidate replay through 021. The checks below cover tester workflow, evidence protection, and role-scoped notification producers/dispatch.
 -- All synthetic Auth users, rows, and Storage metadata are created inside one
 -- transaction and rolled back at the end. Never run against Production.
 
@@ -10,10 +10,16 @@ BEGIN;
 DO $date_boundary$
 DECLARE
   v_checkin_default text;
+  v_original_timezone text := current_setting('TimeZone');
 BEGIN
-  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:30:00+00'::timestamptz)
+  -- Pin the transition on both sides of Algeria's UTC+1 midnight boundary.
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 22:59:59.999999+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-15' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must not roll over before UTC 23:00';
+  END IF;
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:00:00+00'::timestamptz)
      IS DISTINCT FROM DATE '2026-11-16' THEN
-    RAISE EXCEPTION 'FAIL: Algeria date must roll over at UTC 23:00';
+    RAISE EXCEPTION 'FAIL: Algeria date must roll over exactly at UTC 23:00';
   END IF;
   IF rebuild_v2_private.algeria_local_date('2026-11-16 00:30:00+00'::timestamptz)
      IS DISTINCT FROM DATE '2026-11-16' THEN
@@ -23,6 +29,14 @@ BEGIN
      IS DISTINCT FROM DATE '2026-11-16' THEN
     RAISE EXCEPTION 'FAIL: Algeria date must remain on the current local day';
   END IF;
+
+  -- The helper must be independent of the database/session TimeZone setting.
+  PERFORM set_config('TimeZone','Pacific/Honolulu',true);
+  IF rebuild_v2_private.algeria_local_date('2026-11-15 23:00:00+00'::timestamptz)
+     IS DISTINCT FROM DATE '2026-11-16' THEN
+    RAISE EXCEPTION 'FAIL: Algeria date must not depend on session TimeZone';
+  END IF;
+  PERFORM set_config('TimeZone',v_original_timezone,true);
 
   SELECT pg_get_expr(d.adbin, d.adrelid)
   INTO v_checkin_default
@@ -92,6 +106,12 @@ DECLARE
   v_feedback uuid;
   v_submission uuid;
   v_submission_again uuid;
+  v_join_event_id uuid;
+  v_feedback_created_event_id uuid;
+  v_feedback_status_event_id uuid;
+  v_feedback_reply_event_id uuid;
+  v_submit_event_id uuid;
+  v_processed integer;
   v_path text;
   v_capacity_error text;
   v_start_error text;
@@ -118,6 +138,23 @@ BEGIN
   IF v_assignment IS NULL OR v_assignment_again <> v_assignment THEN
     RAISE EXCEPTION 'FAIL: join idempotency';
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.events e
+    WHERE e.event_type='notification.requested'
+      AND e.aggregate_type='assignment'
+      AND e.aggregate_id=v_assignment
+      AND e.payload->>'user_id'='10000000-0000-4000-8000-000000000001'
+      AND e.payload->>'recipient_role'='developer'
+      AND e.payload->>'type'='assignment.joined'
+      AND e.payload->'data'->>'test_id'=v_test::text
+  ) THEN
+    RAISE EXCEPTION 'FAIL: joining a test must enqueue one developer notification event';
+  END IF;
+  SELECT e.id INTO v_join_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested' AND e.aggregate_type='assignment'
+    AND e.aggregate_id=v_assignment AND e.payload->>'type'='assignment.joined';
 
   UPDATE rebuild_v2.tests SET status='ready' WHERE id=v_test;
   UPDATE rebuild_v2.cohorts SET status='ready' WHERE name='V2 Synthetic Cohort';
@@ -173,6 +210,54 @@ BEGIN
   );
   IF v_feedback IS NULL THEN
     RAISE EXCEPTION 'FAIL: tester feedback';
+  END IF;
+
+  SELECT e.id INTO v_feedback_created_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='feedback'
+    AND e.aggregate_id=v_feedback
+    AND e.payload->>'type'='feedback.created'
+    AND e.payload->>'user_id'='10000000-0000-4000-8000-000000000001'
+    AND e.payload->>'recipient_role'='developer';
+  IF v_feedback_created_event_id IS NULL THEN
+    RAISE EXCEPTION 'FAIL: tester feedback must notify its owning developer';
+  END IF;
+
+  -- The owning developer reviews the feedback and replies; both events target the tester.
+  PERFORM set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub','10000000-0000-4000-8000-000000000001','role','authenticated')::text,true
+  );
+  PERFORM rebuild_v2.update_developer_feedback_review(v_feedback,'under_review','normal',NULL);
+  PERFORM rebuild_v2.send_developer_feedback_message(
+    v_feedback,'Synthetic developer reply for the notification contract.'
+  );
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true
+  );
+
+  SELECT e.id INTO v_feedback_status_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='feedback'
+    AND e.aggregate_id=v_feedback
+    AND e.payload->>'type'='feedback.status_updated'
+    AND e.payload->>'user_id'=v_tester::text
+    AND e.payload->>'recipient_role'='tester';
+  SELECT e.id INTO v_feedback_reply_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='feedback'
+    AND e.aggregate_id=v_feedback
+    AND e.payload->>'type'='feedback.developer_replied'
+    AND e.payload->>'user_id'=v_tester::text
+    AND e.payload->>'recipient_role'='tester';
+  IF v_feedback_status_event_id IS NULL OR v_feedback_reply_event_id IS NULL THEN
+    RAISE EXCEPTION 'FAIL: developer review and reply must notify the tester';
   END IF;
 
   v_submission := rebuild_v2.create_assignment_submission(
@@ -289,6 +374,71 @@ BEGIN
   IF NOT rebuild_v2.finalize_assignment_submission(v_submission) THEN
     RAISE EXCEPTION 'FAIL: finalization idempotency';
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.events e
+    WHERE e.event_type='notification.requested'
+      AND e.aggregate_type='assignment_submission'
+      AND e.aggregate_id=v_submission
+      AND e.payload->>'user_id'='10000000-0000-4000-8000-000000000001'
+      AND e.payload->>'recipient_role'='developer'
+      AND e.payload->>'type'='assignment.submitted'
+      AND e.payload->'data'->>'assignment_id'=v_assignment::text
+  ) THEN
+    RAISE EXCEPTION
+      'FAIL: final submission event missing; submission=%, assignment=%, matching_events=%',
+      v_submission, v_assignment,
+      COALESCE((
+        SELECT jsonb_agg(jsonb_build_object(
+          'event_type',e.event_type,'aggregate_type',e.aggregate_type,
+          'aggregate_id',e.aggregate_id,'payload',e.payload
+        ))
+        FROM rebuild_v2.events e
+        WHERE e.event_type='notification.requested'
+          AND e.payload->>'type'='assignment.submitted'
+      ),'[]'::jsonb);
+  END IF;
+  SELECT e.id INTO v_submit_event_id
+  FROM rebuild_v2.events e
+  WHERE e.event_type='notification.requested'
+    AND e.aggregate_type='assignment_submission'
+    AND e.aggregate_id=v_submission
+    AND e.payload->>'type'='assignment.submitted';
+
+  -- Only a service-role JWT may drain the outbox. Delivery is idempotent.
+  IF has_function_privilege('authenticated','rebuild_v2.process_notification_outbox(integer)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: authenticated must not execute the outbox dispatcher';
+  END IF;
+  PERFORM set_config('request.jwt.claims',jsonb_build_object('role','service_role')::text,true);
+  v_processed := rebuild_v2.process_notification_outbox(20);
+  IF v_processed <> 5 THEN
+    RAISE EXCEPTION 'FAIL: expected five outbox events delivered, got %',v_processed;
+  END IF;
+  IF (SELECT count(*) FROM rebuild_v2.notifications n
+      WHERE n.source_event_id IN (v_join_event_id,v_feedback_created_event_id)
+        AND n.user_id='10000000-0000-4000-8000-000000000001'
+        AND n.recipient_role='developer') <> 2 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher must create two developer inbox rows';
+  END IF;
+  IF (SELECT count(*) FROM rebuild_v2.notifications n
+      WHERE n.source_event_id IN (v_feedback_status_event_id,v_feedback_reply_event_id)
+        AND n.user_id=v_tester AND n.recipient_role='tester') <> 2 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher must create two tester inbox rows';
+  END IF;
+  IF rebuild_v2.process_notification_outbox(20) <> 0 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher retry must not redeliver completed events';
+  END IF;
+  IF (SELECT count(*) FROM rebuild_v2.notifications n
+      WHERE n.source_event_id IN (
+        v_join_event_id,v_feedback_created_event_id,
+        v_feedback_status_event_id,v_feedback_reply_event_id,v_submit_event_id
+      )) <> 5 THEN
+    RAISE EXCEPTION 'FAIL: dispatcher retry created duplicate inbox rows';
+  END IF;
+  PERFORM set_config(
+    'request.jwt.claims',
+    jsonb_build_object('sub',v_other,'role','authenticated')::text,true
+  );
   IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'completed' THEN
     RAISE EXCEPTION 'FAIL: assignment completion transition';
   END IF;

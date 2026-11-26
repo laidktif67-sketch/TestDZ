@@ -79,3 +79,12 @@
  .fh-tabs::-webkit-scrollbar-thumb{border-radius:8px;background:#9bb8df}
  .fh-tabs::-webkit-scrollbar-track{background:transparent}
 }
+
+/* Tester-visible replies are rendered as a separate, full-width conversation section. */
+.fh-response-detail{grid-column:1/-1;margin-top:16px;padding-top:16px;border-top:1px solid #d9e4f4}
+.fh-response-detail h3{margin:0 0 10px;color:#0e2b5d;font-size:13px}
+.fh-response-detail article{padding:12px 14px;border:1px solid #c9dcf7;border-radius:11px;background:#eef5ff}
+.fh-response-detail article+article{margin-top:8px}
+.fh-response-detail article p{margin:0;color:#14345f;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.fh-response-detail article small,.fh-no-response{display:block;margin:8px 0 0;color:#647b99;font-size:10px}
+@media(max-width:650px){.fh-response-detail{padding:14px 8px 0}.fh-response-detail h3{font-size:11px}.fh-response-detail article p{font-size:10px}}

@@ -19,8 +19,14 @@ import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
 import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
 import DeveloperTestsPage from "./modules/developer/pages/DeveloperTestsPage";
+import DeveloperCreateTestSixStepPage from "./modules/developer/pages/DeveloperCreateTestSixStepPage";
+import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTestMonitoringPage";
+import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
 import DeveloperReviewQueuePage from "./modules/developer/pages/DeveloperReviewQueuePage";
+import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
+import AdminRoleGrantsPage from "./modules/admin/pages/AdminRoleGrantsPage";
+import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
 import NotificationPreferencesPage from "./modules/tester/pages/NotificationPreferencesPage";
@@ -49,6 +55,7 @@ import ReferralHistoryPage from "./modules/tester/pages/ReferralHistoryPage";
 import HelpSupportPage from "./modules/tester/pages/HelpSupportPage";
 import SupportCenterPage from "./modules/tester/pages/SupportCenterPage";
 import SupportTicketDetailsPage from "./modules/tester/pages/SupportTicketDetailsPage";
+import SupportStaffQueuePage from "./modules/admin/pages/SupportStaffQueuePage";
 import LiveChatPage from "./modules/tester/pages/LiveChatPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import { IdentityProvider } from "./shared/auth/identity-provider";
@@ -91,6 +98,7 @@ export default function App() {
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
           <Route path="/help" element={<HelpSupportPage />} />
           <Route path="/support" element={<SupportCenterPage />} />
+          <Route path="/support/queue" element={<SupportStaffQueuePage />} />
           <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
           <Route path="/live-chat" element={<LiveChatPage />} />
           <Route path="/help-support" element={<Navigate to="/help" replace />} />
@@ -104,6 +112,8 @@ export default function App() {
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
             <Route path="/admin/developer-reviews" element={<DeveloperReviewQueuePage />} />
+            <Route path="/admin/role-requests" element={<AdminRoleRequestsPage />} />
+            <Route path="/admin/role-grants" element={<AdminRoleGrantsPage />} />
           </Route>
           <Route path="/dashboard" element={<RoleHomeRedirect />} />
           <Route element={<RoleGuard requiredRole="tester" />}>
@@ -122,7 +132,11 @@ export default function App() {
           </Route>
           <Route element={<RoleGuard requiredRole="developer" />}>
             <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
+            <Route path="/developer-notifications" element={<DeveloperNotificationsPage />} />
             <Route path="/developer-tests" element={<DeveloperTestsPage />} />
+            <Route path="/developer/tests/new" element={<DeveloperCreateTestSixStepPage />} />
+            <Route path="/developer/tests/:id/monitoring" element={<DeveloperTestMonitoringPage />} />
+            <Route path="/developer/testers" element={<DeveloperTestersPage />} />
             <Route path="/developer-feedback" element={<DeveloperFeedbackPage />} />
             <Route path="/apps" element={<AppsPage />} />
             <Route path="/apps/:id" element={<AppDetailPage />} />

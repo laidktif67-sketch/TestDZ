@@ -1,5 +1,5 @@
 -- Wallet posting idempotency regression contract.
--- Run after candidate scripts 001..018 on a disposable Supabase database.
+-- Run after candidate scripts 001..019 on a disposable Supabase database.
 -- Synthetic users, wallet rows, ledger entries and audit events are rolled back.
 
 BEGIN;

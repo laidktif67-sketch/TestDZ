@@ -7,7 +7,7 @@ export async function getWalletRewardsPageData(userId: string) {
   const client = getAppDataClient();
   const profileRes = await client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle();
   const noticeRes = await client.from("notifications").select("id", { count: "exact", head: true })
-    .eq("user_id", userId).is("read_at", null);
+    .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null);
   if (isTesterWorkflowV2Enabled) {
     return {
       isV2: true as const, profileRes, walletRes: null, ledgerRes: null, noticeRes,

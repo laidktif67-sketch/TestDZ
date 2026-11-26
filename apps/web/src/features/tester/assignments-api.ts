@@ -70,7 +70,7 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
   const [profile, notice, checkins, feedback] = await Promise.all([
     client.from("profiles").select("display_name,avatar_url").eq("id", userId).maybeSingle(),
     client.from("notifications").select("id", { count: "exact", head: true })
-      .eq("user_id", userId).is("read_at", null),
+      .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null),
     client.from("checkins").select(isTesterWorkflowV2Enabled ? "id,checkin_date" : "id,checkin_date,evidence_url")
       .eq("assignment_id", assignmentId).eq("tester_id", userId).order("checkin_date"),
     client.from("feedback").select("id", { count: "exact", head: true })

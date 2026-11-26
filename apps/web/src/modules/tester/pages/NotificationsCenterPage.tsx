@@ -10,6 +10,7 @@ import "../styles/notifications-center.css";
 
 type NotificationRow = {
   id: string;
+  recipient_role?: "tester" | "developer";
   type: string;
   title: string;
   body: string;
@@ -91,7 +92,7 @@ export default function NotificationsCenterPage() {
     async function load() {
       if (!supabase || !user?.id) { setLoading(false); return; }
       setLoading(true); setError("");
-      const result = await getNotificationsCenterPageData(user.id);
+      const result = await getNotificationsCenterPageData(user.id, "tester");
       if (!alive) return;
       const { notificationResult, assignmentResult } = result;
       if (notificationResult.error) setError("Could not load your notifications. Please refresh and try again.");
@@ -125,7 +126,7 @@ export default function NotificationsCenterPage() {
     if (row.read_at || !supabase || !user?.id) return;
     setBusyId(row.id); setNotice(""); setError("");
     const readAt = new Date().toISOString();
-    const result = await markTesterNotificationRead(user.id, row.id, readAt);
+    const result = await markTesterNotificationRead(user.id, row.id, readAt, "tester");
     setBusyId("");
     if (result.error) { setError("Could not update this notification. Please try again."); return; }
     setRows(current => current.map(item => item.id === row.id ? { ...item, read_at: readAt } : item));
@@ -134,7 +135,7 @@ export default function NotificationsCenterPage() {
     if (!supabase || !user?.id || unread === 0) return;
     setSaving(true); setNotice(""); setError("");
     const readAt = new Date().toISOString();
-    const result = await markAllTesterNotificationsRead(user.id, readAt);
+    const result = await markAllTesterNotificationsRead(user.id, readAt, "tester");
     setSaving(false);
     if (result.error) { setError("Could not mark all notifications as read. Please try again."); return; }
     setRows(current => current.map(item => item.read_at ? item : { ...item, read_at: readAt }));

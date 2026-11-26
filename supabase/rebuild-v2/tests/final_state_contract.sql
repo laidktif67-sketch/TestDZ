@@ -1,5 +1,5 @@
--- Final-state contract for the complete 18-script rebuild_v2 candidate.
--- Run only after 001_schema.sql through 018_verify_submission_evidence_metadata.sql.
+-- Final-state contract for the curated 34-script rebuild_v2 candidate.
+-- Run after all numbered candidate scripts, 001–034.
 -- Read-only: this contract does not create or modify application data.
 
 DO $contract$
@@ -14,8 +14,8 @@ BEGIN
   JOIN pg_namespace n ON n.oid = c.relnamespace
   WHERE n.nspname = 'rebuild_v2' AND c.relkind = 'r';
 
-  IF v_tables <> 47 THEN
-    RAISE EXCEPTION 'expected 47 rebuild_v2 tables, got %', v_tables;
+  IF v_tables <> 48 THEN
+    RAISE EXCEPTION 'expected 48 rebuild_v2 tables, got %', v_tables;
   END IF;
 
   SELECT count(*) INTO v_rls_tables
@@ -26,8 +26,8 @@ BEGIN
     AND c.relrowsecurity
     AND c.relforcerowsecurity;
 
-  IF v_rls_tables <> 47 THEN
-    RAISE EXCEPTION 'expected RLS and FORCE RLS on all 47 tables, got %', v_rls_tables;
+  IF v_rls_tables <> 48 THEN
+    RAISE EXCEPTION 'expected RLS and FORCE RLS on all 48 tables, got %', v_rls_tables;
   END IF;
 
   SELECT count(DISTINCT tablename) INTO v_policy_tables
@@ -52,6 +52,27 @@ BEGIN
 
   IF v_buckets <> 7 THEN
     RAISE EXCEPTION 'expected seven candidate Storage buckets, got %', v_buckets;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema='rebuild_v2'
+      AND table_name='notifications'
+      AND column_name='recipient_role'
+      AND is_nullable='NO'
+  ) OR NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid='rebuild_v2.notifications'::regclass
+      AND conname='notifications_recipient_role_check'
+  ) THEN
+    RAISE EXCEPTION 'role-separated notification recipient contract is missing';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2.mark_notification_read(uuid,text)') IS NULL
+     OR to_regprocedure('rebuild_v2.mark_all_notifications_read(text)') IS NULL THEN
+    RAISE EXCEPTION 'role-scoped notification read RPCs are missing';
   END IF;
 
   IF NOT EXISTS (
