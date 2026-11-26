@@ -3,7 +3,7 @@ import type { AccountRole } from "@testdz/types";
 import { useIdentity } from "../auth/hooks/useIdentity";
 import "./route-guards.css";
 
-type WorkspaceRole = Extract<AccountRole, "tester" | "developer" | "admin">;
+type WorkspaceRole = Extract<AccountRole, "tester" | "developer" | "admin" | "support">;
 
 export function getHomePath(roles: AccountRole[]): string {
   if (roles.includes("admin") || roles.includes("tester")) return "/tester-dashboard";
@@ -54,7 +54,9 @@ export default function RoleGuard({ requiredRole }: { requiredRole: WorkspaceRol
       state={{
         accessNotice: requiredRole === "tester"
           ? "This workspace requires tester access. We opened a workspace available to your account."
-          : "This workspace requires developer access. We opened a workspace available to your account.",
+          : requiredRole === "support"
+            ? "This workspace requires Support access. We opened a workspace available to your account."
+            : "This workspace requires developer access. We opened a workspace available to your account.",
       }}
     />
   );
