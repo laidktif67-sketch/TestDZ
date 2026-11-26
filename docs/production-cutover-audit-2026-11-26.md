@@ -177,6 +177,17 @@ The candidate captures a coherent target relationship, but this is not proof of 
 
 
 
+### Application integration check for the V2 cohort model
+
+A targeted read-only check of the official branch's application entry points confirms the main developer/tester paths are wired to the V2 API names:
+
+- `apps/web/src/modules/developer/pages/DeveloperTestsPage.tsx` calls the developer cohort API for create, edit and status transitions. `apps/web/src/features/apps/apps-api.ts` maps these to `create_test_cohort`, `update_test_cohort`, and `transition_test_cohort`; cohort listing reads `cohort_tests` joined to `cohorts` and filters by developer ownership.
+- `apps/web/src/features/tester/dashboard-api.ts` reads `get_discoverable_tests`; `apps/web/src/features/tester/test-preview-api.ts` maps joining to `join_test`; `apps/web/src/features/tester/assignments-api.ts` maps start/check-in/final submission to `start_assignment`, `submit_checkin`, `create_assignment_submission`, `register_assignment_submission_attachment`, and `finalize_assignment_submission`.
+- `apps/web/src/lib/supabase-data.ts` centralizes table/RPC routing: it selects schema `rebuild_v2` only when `VITE_TESTER_WORKFLOW_V2_ENABLED === "true"`; otherwise it returns the legacy public client. `apps/web/src/lib/supabase-v2.ts` explicitly says to keep the flag disabled in Production until the V2 cutover is approved. Auth and Storage remain on the base client.
+
+This supports the conclusion that the checked developer/tester cohort workflows are intentionally V2-shaped and that production remains behind an explicit feature flag. It is a targeted integration check, not a complete route-by-route certification: remaining developer/admin/support routes and any indirect RPC callers still need a full pre-cutover inventory. Do not enable the flag before the hosted V2 schemas and all prerequisites are deployed and separately approved.
+
+
 ## Legacy cohort RPCs versus Rebuild V2 product model — 2026-11-26
 
 A direct source comparison was completed between legacy `20261108000100_cohort_rpcs.sql` / `20261109203006_restrict_report_assignment_deletion.sql` (historical branch `feat/tester-assignment-report-submission`) and V2 `008_developer_lifecycle.sql`, `010_guard_test_cohort_capacity.sql`, `012_cohort_management.sql`, and `007_tester_workflow.sql` on the official Rebuild V2 branch.
@@ -191,7 +202,7 @@ A direct source comparison was completed between legacy `20261108000100_cohort_r
 
 This is a material business-model/API change, not a mechanical schema translation: the legacy 13-developer round-robin cohort is replaced by a developer-owned, single-test cohort filled by tester opt-ins. The V2 implementation has explicit ownership, tester-role, capacity, lifecycle and retention controls, but the product owner must confirm that the new one-test cohort model intentionally supersedes the legacy 13-test matrix and that no user-facing feature still promises add/remove cohort membership.
 
-**Still required before cutover:** inspect the current application routes/services for cohort creation, tester joining, cohort editing/cancellation, and any remaining calls to legacy RPC names; map each to the V2 RPCs and confirm no UI/API contract expects the old 13-test matrix or add/remove behavior. No hosted functions, FKs, or data were changed during this comparison.
+**Follow-up status:** the primary developer/tester cohort paths have now been traced to the V2 API names and the central feature-flag selector (details above). A complete route-by-route inventory of remaining modules and indirect RPC callers is still required before cutover. No hosted functions, FKs, data, or feature flags were changed during this comparison.
 
 ## Cohort/assignment follow-up — 2026-11-26 (read-only)
 
