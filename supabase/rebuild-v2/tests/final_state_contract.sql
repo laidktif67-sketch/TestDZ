@@ -1,5 +1,5 @@
--- Final-state contract for the complete 18-script rebuild_v2 candidate.
--- Run only after 001_schema.sql through 018_verify_submission_evidence_metadata.sql.
+-- Final-state contract for the curated 26-script rebuild_v2 candidate.
+-- Run after the selected migrations 001–021 and 030–034.
 -- Read-only: this contract does not create or modify application data.
 
 DO $contract$
@@ -14,8 +14,8 @@ BEGIN
   JOIN pg_namespace n ON n.oid = c.relnamespace
   WHERE n.nspname = 'rebuild_v2' AND c.relkind = 'r';
 
-  IF v_tables <> 47 THEN
-    RAISE EXCEPTION 'expected 47 rebuild_v2 tables, got %', v_tables;
+  IF v_tables <> 48 THEN
+    RAISE EXCEPTION 'expected 48 rebuild_v2 tables, got %', v_tables;
   END IF;
 
   SELECT count(*) INTO v_rls_tables
@@ -26,8 +26,8 @@ BEGIN
     AND c.relrowsecurity
     AND c.relforcerowsecurity;
 
-  IF v_rls_tables <> 47 THEN
-    RAISE EXCEPTION 'expected RLS and FORCE RLS on all 47 tables, got %', v_rls_tables;
+  IF v_rls_tables <> 48 THEN
+    RAISE EXCEPTION 'expected RLS and FORCE RLS on all 48 tables, got %', v_rls_tables;
   END IF;
 
   SELECT count(DISTINCT tablename) INTO v_policy_tables
