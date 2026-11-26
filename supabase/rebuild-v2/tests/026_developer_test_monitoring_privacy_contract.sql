@@ -20,7 +20,7 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000001',true);
 SELECT set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 DO $test$
-DECLARE v_app uuid; v_test uuid;
+DECLARE v_app uuid; v_test uuid; v_small_test uuid;
 BEGIN
   v_app:=rebuild_v2.create_app('Monitoring Contract App','dz.testdz.monitoring','Synthetic app for the privacy-safe monitoring contract.','tools');
   PERFORM rebuild_v2.submit_app_for_review(v_app);
@@ -30,7 +30,9 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
   v_test:=rebuild_v2.create_test(v_app,'Monitoring Privacy Contract','Synthetic test used to verify aggregate-only monitoring access.','Monitoring contract','custom',3,NULL,NULL,30,'Complete the main test flow');
+  v_small_test:=rebuild_v2.create_test(v_app,'Monitoring Small Cohort Privacy Contract','Synthetic single-tester test used to verify aggregate suppression.','Small cohort contract','custom',1,NULL,NULL,30,'Complete the main test flow');
   PERFORM set_config('testdz.monitoring_test_id',v_test::text,true);
+  PERFORM set_config('testdz.monitoring_small_test_id',v_small_test::text,true);
 END;
 $test$;
 RESET ROLE;
@@ -39,12 +41,15 @@ RESET ROLE;
 INSERT INTO rebuild_v2.cohorts(id,name,capacity,status,created_by)
 VALUES('53100000-0000-4000-8000-000000000001','Monitoring Contract Cohort',10,'running','53000000-0000-4000-8000-000000000001');
 INSERT INTO rebuild_v2.cohort_tests(cohort_id,test_id,developer_id)
-VALUES('53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000001');
+VALUES
+('53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000001'),
+('53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_small_test_id')::uuid,'53000000-0000-4000-8000-000000000001');
 INSERT INTO rebuild_v2.assignments(id,cohort_id,test_id,tester_id,status,assigned_at,started_at,completed_at)
 VALUES
 ('53200000-0000-4000-8000-000000000001','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000003','completed',now(),now(),now()),
 ('53200000-0000-4000-8000-000000000002','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000004','active',now(),now(),NULL),
-('53200000-0000-4000-8000-000000000003','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000005','pending',now(),NULL,NULL);
+('53200000-0000-4000-8000-000000000003','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_test_id')::uuid,'53000000-0000-4000-8000-000000000005','pending',now(),NULL,NULL),
+('53200000-0000-4000-8000-000000000004','53100000-0000-4000-8000-000000000001',current_setting('testdz.monitoring_small_test_id')::uuid,'53000000-0000-4000-8000-000000000003','completed',now(),now(),now());
 INSERT INTO rebuild_v2.checkins(assignment_id,tester_id,checkin_date,note,evidence_path,created_at)
 VALUES
 ('53200000-0000-4000-8000-000000000001','53000000-0000-4000-8000-000000000003',current_date,'PRIVATE_CHECKIN_NOTE_DO_NOT_EXPOSE','private/evidence/secret-one.png',now()),
@@ -68,7 +73,7 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000001',true);
 SELECT set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 DO $assert$
-DECLARE v_test uuid:=current_setting('testdz.monitoring_test_id')::uuid; v_payload jsonb; v_count integer; v_text text;
+DECLARE v_test uuid:=current_setting('testdz.monitoring_test_id')::uuid; v_small_test uuid:=current_setting('testdz.monitoring_small_test_id')::uuid; v_payload jsonb; v_small_payload jsonb; v_count integer; v_text text;
 BEGIN
   v_payload:=rebuild_v2.get_developer_test_monitoring(v_test);
   IF v_payload->'metrics'->>'totalAssignments'<>'3'
@@ -86,6 +91,12 @@ BEGIN
      OR (v_payload->'dailyActivity'->0->>'count')::integer<3
      OR v_payload->'dailyActivity'->0->>'date'<>(now() AT TIME ZONE 'Africa/Algiers')::date::text THEN
     RAISE EXCEPTION 'FAIL: daily activity must include only dates with at least three distinct testers';
+  END IF;
+  v_small_payload:=rebuild_v2.get_developer_test_monitoring(v_small_test);
+  IF v_small_payload->'metrics'->>'suppressed'<>'true'
+     OR v_small_payload->'metrics' ? 'totalAssignments'
+     OR jsonb_array_length(v_small_payload->'dailyActivity')<>0 THEN
+    RAISE EXCEPTION 'FAIL: aggregate metrics must be suppressed below three distinct testers';
   END IF;
   v_text:=v_payload::text;
   IF position('53000000-0000-4000-8000-000000000003' IN v_text)>0
