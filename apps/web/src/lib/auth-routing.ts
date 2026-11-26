@@ -15,3 +15,10 @@ export async function getPostAuthRoute(userId: string): Promise<"/tester-dashboa
   if (error) throw error;
   return profile?.onboarding_completed_at ? "/tester-dashboard" : "/onboarding";
 }
+
+/** Accept only same-app tester preview paths; never allow external or arbitrary redirects. */
+export function getSafeAuthRedirect(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const safeTestRoute = /^\/tests\/[A-Za-z0-9-]+(?:\?invite=[A-Za-z0-9_-]{43})?$/;
+  return safeTestRoute.test(value) ? value : null;
+}
