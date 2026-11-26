@@ -1,0 +1,19 @@
+.admin-role-grants{max-width:820px;margin:0 auto;padding:clamp(20px,4vw,40px);color:var(--color-text,#172033)}
+.admin-role-grants__back{display:inline-block;margin-bottom:18px;color:#475569;text-decoration:none;font-size:13px;font-weight:700}
+.admin-role-grants__back:hover{text-decoration:underline}
+.admin-role-grants header{margin-bottom:24px}
+.admin-role-grants__eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;color:#64748b}
+.admin-role-grants h1{font-size:clamp(25px,4vw,36px);margin:8px 0}
+.admin-role-grants header p:last-child{max-width:650px;color:#64748b;line-height:1.6}
+.admin-role-grants__form{display:grid;gap:18px;padding:22px;border:1px solid #e2e8f0;border-radius:16px;background:#fff}
+.admin-role-grants__form label{display:grid;gap:7px;font-size:13px;font-weight:750}
+.admin-role-grants__form input,.admin-role-grants__form select,.admin-role-grants__form textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;padding:12px;background:#fff;color:#172033;font:inherit;font-size:13px}
+.admin-role-grants__form input{font-family:ui-monospace,monospace}
+.admin-role-grants__form textarea{resize:vertical;line-height:1.5}
+.admin-role-grants__form small{font-size:11px;font-weight:500;color:#64748b}
+.admin-role-grants__form button{justify-self:start;border:0;border-radius:10px;padding:12px 18px;background:#1759a8;color:#fff;font-weight:800;cursor:pointer}
+.admin-role-grants__form button:disabled{opacity:.5;cursor:not-allowed}
+.admin-role-grants__alert,.admin-role-grants__notice{padding:12px 14px;border-radius:10px;margin:14px 0;line-height:1.5}
+.admin-role-grants__alert{background:#fef2f2;color:#991b1b}
+.admin-role-grants__notice{background:#f0fdf4;color:#166534}
+.admin-role-grants__privacy{margin-top:16px;padding:14px 16px;border:1px solid #d8e6fb;border-radius:12px;background:#edf4ff;color:#38577d;font-size:12px;line-height:1.6}

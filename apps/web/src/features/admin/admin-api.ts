@@ -24,3 +24,13 @@ export function reviewRoleRequest(
     p_review_note: reviewNote,
   });
 }
+
+
+/** Grant one supported non-Admin role through the audited Admin RPC. */
+export function grantAdminRole(userId: string, role: "tester" | "developer" | "financial" | "support", reason: string) {
+  return getAppDataClient().rpc("admin_grant_role", {
+    p_user_id: userId,
+    p_role: role,
+    p_reason: reason,
+  });
+}
