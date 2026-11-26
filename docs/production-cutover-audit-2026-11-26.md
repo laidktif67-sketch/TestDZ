@@ -253,3 +253,28 @@ A second targeted inspection of the official branch `rebuild/testdz-v2` reviewed
 3. Confirm that wallet, rewards, referrals, withdrawals, and other legacy-only capabilities are intentionally hidden or disabled for the V2 beta; route presence alone does not establish functional compatibility.
 4. Inspect every remaining developer/admin/support page and all indirect database callers. This inventory is targeted and not a complete route-by-route certification.
 5. No application code, feature flags, hosted database objects, data, or deployment settings were changed during this review.
+
+
+## Admin and Support SQL-to-UI contract review — 2026-11-26 (read-only)
+
+The route and API review was followed by a source-level comparison against candidate SQL scripts 019, 022–024, 028, 031, and 033, plus the corresponding contract tests.
+
+### Confirmed compatible contracts
+
+- Admin role-request UI calls `admin_list_pending_role_requests()` and `admin_review_role_request(uuid,text,text)`; candidate script 022 exposes those exact signatures. The UI enforces a 10–1000 character review reason, matching the database requirement. SQL additionally checks Admin role, rejects self-review, locks the pending request, and records the decision.
+- Admin role-grant UI calls `admin_grant_role(uuid,text,text)`; candidate script 023 exposes that signature and enforces Admin role, no self-grant, allowed non-Admin roles, a valid target profile, and a 10–1000 character audit reason. Existing-role grants are idempotent and do not create a duplicate audit event.
+- Notification UI calls `mark_notification_read(uuid,text)` and `mark_all_notifications_read(text)`; candidate script 019 exposes those exact role-scoped signatures and checks the caller's corresponding Tester or Developer/Admin role. This removes the earlier unscoped RPC signatures.
+- Support ticket creation calls `create_support_ticket_for_role(text,text,text,text,text)`; candidate script 031 exposes that exact signature and verifies the requested Tester/Developer role is actually assigned to the caller. This protects dual-role accounts from creating a ticket under a role they do not hold.
+- Staff ticket updates call `update_support_ticket(uuid,text,text,text)`; candidate script 024 checks Support/Admin authorization, allowed lifecycle transitions, and records an audit event with the reason.
+- Candidate RLS in 002 grants ticket and conversation visibility to the ticket owner or Support/Admin. Requesters see only public messages; Support/Admin can see internal notes. Attachment visibility is further constrained to attachments on public messages, including for staff, by scripts 028/029.
+- The apparent absence of a route-level Support RoleGuard is not an authorization bypass in the inspected component: `SupportStaffQueuePage` checks the identity roles and redirects non-staff users. Database RLS and RPC authorization remain the actual security boundary.
+- Script 033 deliberately removes Support's broad SELECT access to raw assignments, check-ins, and feedback; Admin retains that visibility. This is a meaningful privacy restriction and should remain part of the beta acceptance criteria.
+
+### Remaining risks / scope limits
+
+- `/support/:id` is a shared customer/staff page. It requests `internal_note` in the V2 message query, but requester visibility relies on RLS filtering; this is consistent with the candidate policy and contract tests, but a browser-level check with separate requester, Support, and Admin accounts is still required to validate rendering and ensure internal-note labels/content never leak through client state.
+- The support page uploads file bytes through the base Supabase Storage client and then registers metadata through the V2 RPC. This split is intentional, but requires end-to-end Storage bucket policy and signed-URL testing after a V2 environment exists.
+- `getTesterSupportTicketDetails` uses one data path for requesters and staff. Confirm that the UI does not expose staff-only controls or internal notes to requesters even when a response is cached or the current identity changes.
+- The V2 role/admin/support SQL contracts have source-level alignment and isolated contract coverage; this does not establish hosted deployment, production grants, or end-to-end browser correctness.
+
+No source code, candidate SQL, production data, hosted policies, feature flags, or deployment settings were changed by this review.
