@@ -447,3 +447,31 @@ PR #170 remains Draft/open and unmerged. Its branch is four commits behind the c
 The PR #171 pre-merge CI run passed, but the GitHub workflow/status lookup for merge commit `66d5ccf96389c1a398b921e3c46fb8eeff33b6bd` returned no associated runs or status checks. Do not describe the merge commit itself as having a fresh passing CI run; the passing evidence is the PR head run recorded above.
 
 No Production SQL, schema, data, migration history, Storage, Auth, Edge Functions, or Vercel settings were changed during this follow-up.
+
+
+
+## Official branch synchronization and PR #170 disposition — 2026-11-26
+
+The audit branch was synchronized with the official `rebuild/testdz-v2` branch after PR #170 was merged.
+
+- Official merge commit: `19f43a7a2916997bd20a781e883132350dc826f0`.
+- Audit branch synchronization merge commit: `c9cb752a2941bffc7dd4073d55c68d40b7770a6f`.
+- The synchronization used a normal two-parent merge commit; no force push was used.
+- The audit document remains the only PR #169 change. No application, migration, workflow, or production database files were added by PR #169.
+
+### PR #170 cohort/assignment delete-safety contract — merged
+
+PR #170 was approved by the project owner and merged into the official branch:
+
+- PR #170: closed / merged.
+- Merge commit: `19f43a7a2916997bd20a781e883132350dc826f0`.
+- Its isolated CI run `45896559702` completed successfully on PR head `025fe3ca9b3bb689e3460ee8f1edf92805795edd`; all three jobs passed: `rebuild-v2`, `frontend-typecheck`, and `notification-edge-function`.
+- The merged change adds the cohort/assignment deletion-safety SQL contract and registers it in the local disposable-database workflow. It does not modify production SQL, application runtime code, or hosted resources.
+
+This supersedes earlier statements in this audit that PR #170 was Draft/unmerged or awaiting synchronization. The successful run is evidence for the PR head before merge; a separate workflow run on the merge commit was not returned at verification time.
+
+### Current audit branch state
+
+The audit branch now contains the official PR #170 merge and remains a documentation-only branch intended for PR #169 review. The PR must still be reviewed as documentation and must not be treated as authorization for Production cutover. Exact hosted SQL source for migration version `20261115092608` remains unrecovered; no new evidence changes that classification.
+
+No Supabase Production schema, data, migration history, Auth settings, Storage configuration, Edge Functions, secrets, or Vercel deployments were changed by this synchronization or audit update.
