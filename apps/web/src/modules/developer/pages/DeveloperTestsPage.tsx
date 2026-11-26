@@ -228,7 +228,7 @@ export default function DeveloperTestsPage() {
   return <main className="dashboard-shell">
     <header className="site-header container"><Brand/><nav className="header-actions"><Link to="/developer-dashboard">لوحة المطوّر</Link><Link to="/apps">تطبيقاتي</Link></nav></header>
     <section className="dashboard-welcome container">
-      <div className="apps-heading"><div><span className="eyebrow">مساحة المطوّر · V2</span><h1>إدارة الاختبارات</h1><p>أنشئ اختباراً لتطبيق منشور، أرسله للمراجعة، ثم جهّز مجموعة المختبرين بعد اعتماده.</p></div><button className="button button-primary" onClick={()=>setShowCreate(v=>!v)} disabled={!publishedApps.length}>＋ إنشاء اختبار</button></div>
+      <div className="apps-heading"><div><span className="eyebrow">مساحة المطوّر · V2</span><h1>إدارة الاختبارات</h1><p>أنشئ اختباراً لتطبيق منشور، أرسله للمراجعة، ثم جهّز مجموعة المختبرين بعد اعتماده.</p></div><div className="apps-heading-actions"><button className="button button-primary" onClick={()=>setShowCreate(v=>!v)} disabled={!publishedApps.length}>＋ إنشاء سريع</button><button className="button button-outline" type="button" onClick={()=>navigate("/developer/tests/new")} disabled={!publishedApps.length}>المعالج المتقدم · 6 خطوات</button></div></div>
       {!publishedApps.length&&<div className="notice">يلزم نشر تطبيق واحد على الأقل قبل إنشاء اختبار. يمكنك إرسال مسودة التطبيق للمراجعة من صفحة تفاصيله.</div>}
       {notice&&<div className="notice notice-success">{notice}</div>}{error&&<div className="notice notice-error">{error}</div>}
       {showCreate&&<form className="dashboard-card auth-form" onSubmit={createTest}>
