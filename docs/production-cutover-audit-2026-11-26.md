@@ -396,3 +396,14 @@ The GitHub Actions run associated with PR #171 commit `6bc710ac3dc0c4c4cfddea20e
 The PR remains Draft / open and unmerged. Its compare against `rebuild/testdz-v2` is 3 commits ahead, 0 behind, with exactly three changed files: the workflow list, feedback privacy contract 008, and new APK build contract 030.
 
 This is passing isolated CI evidence only. It does not establish hosted Storage API upload/download/signed-URL behavior or production cutover readiness. No hosted Supabase changes or Vercel deployment were made.
+
+
+## PR #171 merge disposition — 2026-11-26
+
+PR #171 was approved by the project owner and merged into `rebuild/testdz-v2` using a merge commit:
+- Merge commit: `66d5ccf96389c1a398b921e3c46fb8eeff33b6bd`.
+- PR #171 is closed / merged.
+- The merged changes are limited to the isolated CI workflow contract list, feedback privacy contract 008, and APK build Storage contract 030.
+- The pre-merge CI run #397 was successful. No additional workflow run was returned for the merge commit at verification time.
+
+This merge changes tests and CI only. It does not deploy candidate SQL to hosted Supabase, alter production data/schema/Storage, deploy Edge Functions, or publish to Vercel. Hosted Storage API behavior and production cutover remain unverified.
