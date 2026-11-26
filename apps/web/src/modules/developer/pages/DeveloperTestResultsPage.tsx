@@ -19,7 +19,9 @@ const statusLabels: Record<string, string> = {
   completed: "مكتمل", failed: "مرفوض", cancelled: "ملغى",
 };
 
-function isSuppressed(row: ResultRow) {
+type SuppressedResultRow = ResultRow & { metrics: { suppressed: true; minimumDistinctTesters: number } };
+
+function isSuppressed(row: ResultRow): row is SuppressedResultRow {
   return row.metrics.suppressed === true;
 }
 
@@ -76,7 +78,7 @@ export default function DeveloperTestResultsPage() {
       return;
     }
     void load();
-  }, [user, rolesLoading, load]);
+  }, [user?.id, rolesLoading, load]);
 
   const visible = useMemo(() => {
     const filtered = rows.filter(row =>
