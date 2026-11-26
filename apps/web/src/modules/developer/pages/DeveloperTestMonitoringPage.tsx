@@ -180,14 +180,14 @@ export default function DeveloperTestMonitoringPage() {
           <MetricCard label="إجمالي المشاركات" value={visibleMetrics?.totalAssignments ?? 0} detail={"الهدف: " + summary.test.minTesters + " مختبراً"} symbol="♙" />
           <MetricCard label="نسبة الإكمال" value={(visibleMetrics?.completionRate ?? 0) + "%"} detail={(visibleMetrics?.completed ?? 0) + " مشاركات مكتملة"} symbol="✓" />
           <MetricCard label="المشاركات النشطة" value={visibleMetrics?.active ?? 0} detail={(visibleMetrics?.pending ?? 0) + " بانتظار البدء"} symbol="◷" />
-          <MetricCard label="متوسط التقييم" value={visibleMetrics?.averageRating == null ? "—" : metrics.averageRating + "/5"} detail={(visibleMetrics?.feedbackCount ?? 0) + " تقييمات مستلمة"} symbol="★" />
+          <MetricCard label="متوسط التقييم" value={visibleMetrics?.averageRating == null ? "—" : visibleMetrics.averageRating + "/5"} detail={(visibleMetrics?.feedbackCount ?? 0) + " تقييمات مستلمة"} symbol="★" />
         </section>
 
         <section className="dtm2-panels">
           <article className="dtm2-panel">
             <div className="dtm2-panel-heading"><h3>توزيع حالات المشاركات</h3><span>{visibleMetrics?.totalAssignments ?? 0} إجمالي</span></div>
             {statuses.map(item => {
-              const width = visibleMetrics?.totalAssignments ? item.value / metrics.totalAssignments * 100 : 0;
+              const width = visibleMetrics?.totalAssignments ? item.value / visibleMetrics.totalAssignments * 100 : 0;
               return <div className="dtm2-status-row" key={item.key}>
                 <div><span>{item.label}</span><b>{item.value}</b></div>
                 <div className="dtm2-track"><i className={"fill-" + item.key} style={{ width: width + "%" }} /></div>
