@@ -151,3 +151,14 @@ A second read-only query confirmed:
 - `cohort.auto_form = true`.
 
 The last value is important: do not blindly copy it into a V2 setting or assume it means the same workflow. Confirm the candidate's intended cohort lifecycle before mapping it. The disabled payment/referral/trial/fraud switches must remain disabled through any migration rehearsal and cutover unless separately approved.
+
+
+## Cohort/assignment foreign-key reconciliation detail
+
+The remaining hosted history name `reconcile_assignments_cohort_foreign_keys` has not been recovered as an original SQL file from the historical refs inspected so far. A catalog comparison does show a concrete relationship difference that must be reviewed:
+
+- Live `public.assignments` has separate `cohort_id → cohorts(id) ON DELETE CASCADE` and `test_id → tests(id) ON DELETE CASCADE` foreign keys, plus a composite `(cohort_id,test_id) → cohort_tests(cohort_id,test_id) ON DELETE RESTRICT` foreign key.
+- Live `public.cohort_tests` has `cohort_id → cohorts(id) ON DELETE RESTRICT`, `developer_id → profiles(id) ON DELETE RESTRICT`, a composite `(test_id,developer_id) → tests(id,developer_id)` reference, and a separate `test_id → tests(id) ON DELETE RESTRICT` reference.
+- V2 baseline `001_schema.sql` instead models `assignments` through the composite `(cohort_id,test_id) → cohort_tests` RESTRICT reference, and `cohort_tests` through the composite `(test_id,developer_id) → tests(id,developer_id)` RESTRICT reference plus the cohort reference. This makes the cohort/test ownership relationship explicit and avoids relying on the legacy single-column cascade edges.
+
+The candidate captures a coherent target relationship, but this is not proof of what the unrecovered hosted migration did. Before cutover, validate that no legacy row violates the composite ownership relationship (current row counts for both tables are zero), then verify the final candidate constraints and negative delete behavior in the isolated replay. Do not remove or alter live foreign keys now merely because the V2 baseline differs.
