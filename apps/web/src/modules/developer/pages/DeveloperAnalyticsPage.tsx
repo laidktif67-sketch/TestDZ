@@ -20,7 +20,7 @@ const copy = {
     running: "Running", at_risk: "Needs attention", completedStatus: "Completed",
     failedStatus: "Failed", cancelled: "Cancelled", other: "Other",
     privacy: "Privacy by design", privacyText: "This overview uses only your own test records and their lifecycle statuses. It does not combine tester-level activity, feedback, ratings, or suppressed metrics across tests.",
-    open: "Open monitoring", created: "Created"
+    open: "Open monitoring", created: "Created", status: "Status"
   },
   fr: {
     back: "Espace développeur", eyebrow: "ANALYSE DE L’ESPACE", title: "Aperçu de l’activité des tests",
@@ -34,7 +34,7 @@ const copy = {
     running: "En cours", at_risk: "À surveiller", completedStatus: "Terminé",
     failedStatus: "Échoué", cancelled: "Annulé", other: "Autre",
     privacy: "Confidentialité intégrée", privacyText: "Cet aperçu utilise uniquement vos propres tests et leur état. Il ne regroupe pas l’activité, les retours, les notes des testeurs ni les indicateurs masqués entre plusieurs tests.",
-    open: "Ouvrir le suivi", created: "Créé"
+    open: "Ouvrir le suivi", created: "Créé", status: "État"
   },
   ar: {
     back: "مساحة المطوّر", eyebrow: "تحليلات مساحة العمل", title: "نظرة عامة على نشاط الاختبارات",
@@ -48,7 +48,7 @@ const copy = {
     running: "قيد التنفيذ", at_risk: "تحتاج متابعة", completedStatus: "مكتملة",
     failedStatus: "فشلت", cancelled: "ملغاة", other: "أخرى",
     privacy: "الخصوصية أولاً", privacyText: "يعتمد هذا الملخص على اختباراتك وحالاتها فقط. لا نجمع نشاط المختبرين أو الملاحظات أو التقييمات أو المؤشرات المخفية من اختبارات متعددة في إحصائية واحدة.",
-    open: "فتح المراقبة", created: "تاريخ الإنشاء"
+    open: "فتح المراقبة", created: "تاريخ الإنشاء", status: "الحالة"
   }
 } as const;
 
@@ -90,7 +90,7 @@ export default function DeveloperAnalyticsPage() {
         setTests([]);
         setError(true);
       } else {
-        setTests((result.data ?? []) as TestRow[]);
+        setTests((result.data ?? []) as unknown as TestRow[]);
       }
     } catch {
       setTests([]);
@@ -165,7 +165,7 @@ export default function DeveloperAnalyticsPage() {
           <Link to="/developer/tests/new" className="da2-create">{t.create}</Link>
         </div>
         {tests.length === 0 ? <div className="da2-empty"><strong>{t.noTests}</strong><p>{t.noTestsText}</p><Link to="/developer/tests/new">{t.create}</Link></div> :
-          <div className="da2-table-wrap"><table><thead><tr><th>{t.recent}</th><th>{t.created}</th><th>{t.other}</th></tr></thead>
+          <div className="da2-table-wrap"><table><thead><tr><th>{t.recent}</th><th>{t.created}</th><th>{t.status}</th></tr></thead>
             <tbody>{tests.slice(0, 8).map(test => <tr key={test.id}>
               <td><strong>{test.title}</strong></td>
               <td>{test.created_at ? new Date(test.created_at).toLocaleDateString(language === "ar" ? "ar-DZ" : language === "fr" ? "fr-FR" : "en-US", { timeZone: "Africa/Algiers" }) : "—"}</td>
