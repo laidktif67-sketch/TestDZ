@@ -102,3 +102,39 @@ The Supabase migration-list API provides version/name records, not the original 
 - No Storage object/policy changes.
 - No Edge Function or cron deployment.
 - No Vercel deployment.
+
+
+## Historical migration source recovery — follow-up on 2026-11-26
+
+A search of retained historical branch refs recovered SQL sources for 13 of the 14 applied records that do not have a matching file in the current active migration directory. These are provenance matches only; the source files are not being reintroduced into the active migration path, and their bodies have not been proven byte-for-byte identical to the hosted execution.
+
+Useful retained source refs:
+- `audit/supabase-remediation-plan` at `fa23deb0faa6f67735d56c2e3fba075c59922624`
+- `feat/test-details-medical-exceptions` at `bc737fee2fb41593b10dc8854775fec655e131dc`
+
+Recovered source mappings:
+- `test_details_and_medical_exceptions` → `20261110114224_test_details_and_medical_exceptions.sql` on `feat/test-details-medical-exceptions`.
+- `developer_feedback_reviews` → `20261112184901_developer_feedback_reviews.sql`.
+- `developer_notification_archive` → `20261112200100_developer_notification_archive.sql`.
+- `separate_notification_recipient_roles` → `20261112191021_separate_notification_recipient_roles.sql`.
+- `separate_support_ticket_requester_roles` → `20261112224000_support_ticket_requester_role.sql` and `20261112225000_support_ticket_requester_role_policy.sql`.
+- `support_ticket_priority_activity` / `audit_support_ticket_priority_changes` → priority grant and audit-forward sources `20261113000100_support_ticket_priority_grant.sql` and `20261113000200_support_ticket_priority_audit_forward.sql`. Exact one-to-one mapping between the two hosted names and the two source files remains to be verified.
+- `developer_feedback_conversation_and_priority` → `20261112213000_developer_feedback_review_priority.sql`, `20261112220000_developer_feedback_conversations.sql`, and `20261112223000_developer_feedback_review_priority_grant.sql`.
+- `developer_feedback_details_conversations_attachments_events` → conversation/attachment/event source `20261112220000_developer_feedback_conversations.sql`, with later audit hardening in `20261112230000_developer_feedback_audit_integrity.sql`.
+- `app_distribution_schema_and_rpc` → `20261114222735_app_distribution_schema_and_rpc.sql`.
+- `align_app_distribution_method` → `20261114222820_align_app_distribution_method.sql`.
+- `test_type_and_config` → `20261114222912_test_type_and_config.sql`.
+- `allow_test_drafts` → `20261114222935_allow_test_drafts.sql`.
+
+Still unrecovered from the checked historical refs:
+- `reconcile_assignments_cohort_foreign_keys` (hosted version `20261115092608`). Its effect must be established from the current catalog and candidate constraints, but do not invent or reconstruct an original migration body from its name.
+
+The two files present in the historical migration branch but absent from the current active path also have source available:
+- `20261110193000_onboarding_profile_row_guard.sql`
+- `20261111000400_support_tickets.sql`
+
+Their effects and relationship to later applied changes still need catalog-level confirmation. In particular, the current project has support ticket tables, but the hosted migration history does not expose a matching migration name for the standalone support-ticket base migration.
+
+### Updated next gate
+
+Recover or conclusively account for the single remaining migration source (`20261115092608`), then perform a catalog-level effect mapping for all recovered historical files. A recovered filename alone is not evidence that the hosted database ran exactly that SQL or that its final effects are all present in V2.
