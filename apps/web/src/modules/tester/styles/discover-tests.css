@@ -16,3 +16,11 @@
 .dt-detail-actions a.secondary{background:#fff;color:#075de0;border-color:#d7e4f7}
 .dt-detail-action{margin-top:14px}
 @media(max-width:620px){.dt-detail-layout{padding:9px}.dt-detail-meta{grid-template-columns:1fr}.dt-detail-card{padding:13px}.dt-detail-description{font-size:12px}}
+
+/* App icons follow the category values used by DiscoverTestsPage. */
+.dt-app-icon.games{background:linear-gradient(145deg,#ddf8ed,#c4f0dc);color:#128653}
+.dt-app-icon.tools{background:linear-gradient(145deg,#eee5ff,#ded0ff);color:#7545c7}
+.dt-app-icon.education{background:linear-gradient(145deg,#fff3d6,#ffe4a3);color:#98610a}
+.dt-app-icon.social{background:linear-gradient(145deg,#ffe4f0,#ffcde4);color:#b83280}
+.dt-app-icon.health{background:linear-gradient(145deg,#d9f8f1,#bcefe4);color:#0f766e}
+.dt-app-icon.other{background:linear-gradient(145deg,#e0f4ff,#c7e9fa);color:#0960d9}
