@@ -175,6 +175,24 @@ The remaining hosted history name `reconcile_assignments_cohort_foreign_keys` ha
 The candidate captures a coherent target relationship, but this is not proof of what the unrecovered hosted migration did. Before cutover, validate that no legacy row violates the composite ownership relationship (current row counts for both tables are zero), then verify the final candidate constraints and negative delete behavior in the isolated replay. Do not remove or alter live foreign keys now merely because the V2 baseline differs.
 
 
+
+
+## Legacy cohort RPCs versus Rebuild V2 product model — 2026-11-26
+
+A direct source comparison was completed between legacy `20261108000100_cohort_rpcs.sql` / `20261109203006_restrict_report_assignment_deletion.sql` (historical branch `feat/tester-assignment-report-submission`) and V2 `008_developer_lifecycle.sql`, `010_guard_test_cohort_capacity.sql`, `012_cohort_management.sql`, and `007_tester_workflow.sql` on the official Rebuild V2 branch.
+
+| Area | Legacy RPC model | Rebuild V2 candidate |
+|---|---|---|
+| Cohort creation | Admin-only `create_cohort`; exactly 13 tests from 13 distinct developers, capacity 13, and 156 cross-developer assignments created atomically | Developer/admin creates a cohort for one owned recruiting/ready test and published app; capacity 1–500 but not below the test minimum; one cohort_tests membership is created |
+| Joining | Admin's cohort-creation/add-test operations prebuild the tester assignment matrix | A tester with tester role calls `join_test`; V2 locks capacity, creates one pending assignment, and returns an existing pending/active assignment idempotently |
+| Add/remove cohort tests | Admin-only `add_cohort_test` expands the round-robin matrix; `remove_cohort_test` removes a test only from a forming cohort and only if all affected assignments have no feedback, check-ins, play-opt-in events, non-pending status, or (after the report-hardening migration) reports | No equivalent add/remove cohort-test RPC is present in the inspected V2 candidate. Cohort editing changes metadata/capacity while forming; lifecycle transition is handled separately |
+| Cancellation | Legacy status triggers allow forming/ready/running → cancelled; membership removal is a separate forming-only operation with guarded deletion | V2 cancellation is allowed from forming/ready only, rejects if any assignment is active, withdraws pending assignments, then marks the cohort cancelled; it does not delete assignments or cohort_tests membership |
+| Retention | Legacy adds `reports.assignment_id → assignments.id ON DELETE RESTRICT` and explicit `HAS_REPORTS` rejection in `remove_cohort_test` | V2 keeps assignment→cohort_tests and report→assignment RESTRICT FKs; cancellation retains assignment rows and changes pending rows to withdrawn |
+
+This is a material business-model/API change, not a mechanical schema translation: the legacy 13-developer round-robin cohort is replaced by a developer-owned, single-test cohort filled by tester opt-ins. The V2 implementation has explicit ownership, tester-role, capacity, lifecycle and retention controls, but the product owner must confirm that the new one-test cohort model intentionally supersedes the legacy 13-test matrix and that no user-facing feature still promises add/remove cohort membership.
+
+**Still required before cutover:** inspect the current application routes/services for cohort creation, tester joining, cohort editing/cancellation, and any remaining calls to legacy RPC names; map each to the V2 RPCs and confirm no UI/API contract expects the old 13-test matrix or add/remove behavior. No hosted functions, FKs, or data were changed during this comparison.
+
 ## Cohort/assignment follow-up — 2026-11-26 (read-only)
 
 The historical source comparison adds an important detail to the unrecovered migration investigation:
