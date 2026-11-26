@@ -22,17 +22,28 @@ These scripts describe the isolated TestDZ rebuild candidate. They are a candida
 - `016_private_developer_feedback.sql`: owner-scoped developer feedback RPCs, sanitized tester labels, and removal of developer access to raw assignments, check-ins and feedback.
 - `017_enforce_assignment_schedule.sql`: enforces test/cohort schedule windows when starting an assignment while preserving safe idempotent retries.
 - `018_verify_submission_evidence_metadata.sql`: verifies evidence object ownership, MIME type, and size before final submission completion.
+- `019_notification_recipient_roles.sql`: restores tester/developer notification feed separation, role-aware reads, and role-scoped read-state RPCs.
+- `020_notification_event_producers.sql`: adds a private server-owned event enqueue helper, idempotency linkage, and a service-role-only batch dispatcher with `SKIP LOCKED`, retry backoff, and terminal failure after five attempts.
+- `021_feedback_notification_producers.sql`: notifies the owning developer when tester feedback is submitted, and notifies the tester when the developer changes review status or replies; event payloads contain identifiers and status only, never feedback/message bodies.
+
+
+
+## Notification outbox worker
+
+The candidate Edge Function source is `supabase/functions/dispatch-notifications/index.ts`. It accepts only server-to-server POST requests carrying the `x-dispatch-secret` header, then invokes the service-role-only `rebuild_v2.process_notification_outbox` RPC. Its configuration disables platform JWT verification only because the function performs its own shared-secret check; never expose the secret to the browser.
+
+Before enabling it in any hosted environment, deploy the Edge Function only after the V2 schema is approved and applied to the intended project, set `NOTIFICATION_DISPATCH_SECRET` as an Edge Function secret, verify the standard server-side Supabase credentials are available, and configure a scheduled invocation using Supabase Vault/pg_cron. The repository contains the worker source only; no Edge Function or cron job has been deployed or scheduled in the hosted TestDZ or FixLab projects.
 
 ## Apply and test order
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 18 scripts in numeric order, from `001_schema.sql` through `018_verify_submission_evidence_metadata.sql`.
+Apply all 21 scripts in numeric order, from `001_schema.sql` through `021_feedback_notification_producers.sql`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 18 scripts, run:
+After all 21 scripts, run:
 - `tests/final_state_contract.sql` — checks the final 47-table / seven-bucket candidate and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
@@ -41,16 +52,18 @@ After all 18 scripts, run:
 - `tests/007_tester_workflow_contract.sql`
 - `tests/008_developer_feedback_privacy_contract.sql`
 - `tests/009_wallet_idempotency_contract.sql` — verifies exact retries return the original ledger entry and reused keys with changed operation, reference, reason, or financial actor are rejected without a second balance change.
+- `tests/010_security_definer_boundary_contract.sql` — verifies the V2 schema exposure boundary, restricted schema creation, and SECURITY DEFINER ownership/search-path requirements.
+- `tests/011_notification_recipient_roles_contract.sql` — verifies tester/developer feed isolation and role-scoped read-one/read-all operations.
 
-The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. All contract tests use rolled-back transactions; the final-state contract is read-only.
+The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 18 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the eight post-phase contracts. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 21 candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the ten post-phase contracts. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
 - GitHub Actions run [#8](https://github.com/laidktif67-sketch/TestDZ/actions/runs/43944382982), commit `665ea461430c958132108c2310d5c11a59469d6c`, completed successfully.
-- CI applied all 18 scripts to a disposable empty local Supabase stack.
-- CI passed all nine contracts: the phase-one security contract plus the eight post-phase contracts.
+- Historical run #8 applied the then-current 18-script candidate to a disposable empty local Supabase stack.
+- The current PR #49 validation run [#44138645785](https://github.com/laidktif67-sketch/TestDZ/actions/runs/44138645785), commit `f86f6de87155d1a576b572263cc76e2fdd95ced0`, passed the 19-script replay and all 11 contracts (phase-one security plus ten post-phase contracts).
 - The wallet idempotency contract explicitly returned `rebuild_v2_wallet_idempotency_contract: PASS`.
 - Contract fixtures were rolled back; the final-state contract's cleanup check reported zero remaining app, profile, and auth-user fixtures.
 - The disposable local Supabase stack stopped successfully.

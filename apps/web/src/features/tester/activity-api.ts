@@ -12,7 +12,7 @@ export async function getActivityHistoryPageData(userId: string) {
     isTesterWorkflowV2Enabled
       ? Promise.resolve({ data: [], error: null })
       : client.from("points_ledger").select("amount,reference_id,wallet_type").eq("user_id", userId).eq("wallet_type", "earned_points"),
-    client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).is("read_at", null),
+    client.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null),
   ]);
 
   const assignments = isTesterWorkflowV2Enabled
@@ -52,7 +52,7 @@ export async function getCheckInHistoryPageData(userId: string): Promise<any> {
         .select("id,assignment_id,checkin_date,created_at,note,evidence_path,assignment:assignments(id,status,test:tests(id,title,status,app:apps(name,icon_url)))")
         .eq("tester_id", userId).order("checkin_date", { ascending: false }),
       client.from("notifications").select("id", { count: "exact", head: true })
-        .eq("user_id", userId).is("read_at", null),
+        .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null),
     ]);
     return { profile, checkins, notice, ledger: null, isV2: true as const };
   }
@@ -63,7 +63,7 @@ export async function getCheckInHistoryPageData(userId: string): Promise<any> {
       .select("id,assignment_id,checkin_date,created_at,note,evidence_url,assignment:assignments(id,status,test:tests(id,title,status,app:apps(name,icon_url)))")
       .eq("tester_id", userId).order("checkin_date", { ascending: false }),
     client.from("notifications").select("id", { count: "exact", head: true })
-      .eq("user_id", userId).is("read_at", null),
+      .eq("user_id", userId).eq("recipient_role", "tester").is("read_at", null),
   ]);
   let ledger: any = null;
   const ids = (checkins.data ?? []).map((row: { id: string }) => row.id);
