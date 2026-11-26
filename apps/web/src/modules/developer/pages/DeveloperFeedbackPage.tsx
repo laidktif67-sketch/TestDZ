@@ -107,7 +107,7 @@ export default function DeveloperFeedbackPage(){
       setMessageDraft("");
       const refreshed=await listDeveloperFeedbackMessages(selected.feedback_id);
       if(!refreshed.error)setMessages((refreshed.data??[]) as DeveloperFeedbackMessage[]);
-      setNotice("Private note added.");
+      setNotice("Response saved; a notification is queued for the tester.");
     }
     setBusy(false);
   }
@@ -146,9 +146,9 @@ export default function DeveloperFeedbackPage(){
             <label className="df-wide">Resolution note<textarea rows={3} maxLength={2000} value={resolutionNote} onChange={e=>setResolutionNote(e.target.value)} placeholder="Record the action taken or why this will not be fixed…"/></label>
             <button type="button" onClick={()=>void saveReview()} disabled={busy}>Save review</button>
           </div>
-          <section className="df-conversation"><div className="df-conversation-heading"><h3>Internal notes</h3><span>Only visible to you</span></div>
-            {messages.length===0?<p className="df-empty-small">No internal notes yet.</p>:messages.map((message,index)=><article className={"df-chat-message"+(message.sender_label==="You"?" own":"")} key={index}><div><strong>{message.sender_label==="You"?"You":"Team"}</strong><time>{dateLabel(message.created_at)}</time></div><p>{message.body}</p></article>)}
-            <div className="df-reply"><textarea rows={2} maxLength={5000} value={messageDraft} onChange={e=>setMessageDraft(e.target.value)} placeholder="Add a private note…"/><button type="button" onClick={()=>void sendMessage()} disabled={busy||!messageDraft.trim()}>Add note</button></div>
+          <section className="df-conversation"><div className="df-conversation-heading"><h3>Response history</h3><span>A notification is queued for the tester when you add a response</span></div>
+            {messages.length===0?<p className="df-empty-small">No messages in this conversation yet.</p>:messages.map((message,index)=><article className={"df-chat-message"+(message.sender_label==="You"?" own":"")} key={index}><div><strong>{message.sender_label==="You"?"You":"Tester"}</strong><time>{dateLabel(message.created_at)}</time></div><p>{message.body}</p></article>)}
+            <div className="df-reply"><textarea rows={2} maxLength={5000} value={messageDraft} onChange={e=>setMessageDraft(e.target.value)} placeholder="Write a response…"/><button type="button" onClick={()=>void sendMessage()} disabled={busy||!messageDraft.trim()}>Save response</button></div>
           </section>
         </>}
       </section>
