@@ -422,3 +422,28 @@ A fresh read-only query against hosted project `naqjjykcglxiobkmdllj` confirmed:
 The five hosted buckets retain their existing configuration; no V2 buckets are deployed. This is consistent with the V2 candidate remaining isolated from Production. No DDL, data, migration history, bucket configuration, Edge Function, secret, or deployment was changed during this verification.
 
 PR #169 remains Draft / open. Its branch is now four commits behind `rebuild/testdz-v2` after PR #171 was merged. The audit content remains a documentation-only change; synchronize the branch before considering merge, and obtain explicit owner approval before any branch merge.
+
+
+## Follow-up verification — cohort FK catalog and PR #170 — 2026-11-26
+
+A fresh read-only query against hosted Production confirmed the applied migration history still contains 43 records, including the exact hosted history entry `20261115092608 / reconcile_assignments_cohort_foreign_keys`. This confirms the version/name record exists, but the migration-list API does not expose its original SQL body.
+
+The current hosted FK catalog was queried directly:
+- `public.assignments` has validated `(cohort_id,test_id) -> cohort_tests(cohort_id,test_id) ON DELETE RESTRICT`.
+- It also retains separate validated `cohort_id -> cohorts(id) ON DELETE CASCADE` and `test_id -> tests(id) ON DELETE CASCADE` FKs, plus tester/profile and medical-exception reviewer references.
+- `public.cohort_tests` has validated cohort and developer RESTRICT references, a composite `(test_id,developer_id) -> tests(id,developer_id)` reference, and a separate `test_id -> tests(id) ON DELETE RESTRICT` reference.
+- Both `assignments` and `cohort_tests` currently contain zero rows.
+
+This supports that the intended composite assignment-to-cohort-test relationship is present in Production. It does **not** prove that PR #36's candidate file is the exact SQL body executed under hosted version `20261115092608`; the candidate file version is `20261115000100`, and the live catalog contains additional FK edges. Keep exact SQL provenance classified as unrecovered.
+
+### PR #170 cohort deletion-safety contract
+
+PR #170's workflow run `45893146158` was independently rechecked: all three jobs completed successfully (`rebuild-v2`, `frontend-typecheck`, and `notification-edge-function`). Its SQL contract covers cohort deletion, test deletion, report-retained assignment deletion, and rejection of cancellation while an active assignment exists. The contract uses synthetic fixtures and transaction rollback in disposable local Supabase CI only.
+
+PR #170 remains Draft/open and unmerged. Its branch is four commits behind the current official branch and three commits ahead, so it needs a reviewed synchronization and a fresh CI run before any merge decision. No merge or deletion was performed.
+
+### Current official CI note
+
+The PR #171 pre-merge CI run passed, but the GitHub workflow/status lookup for merge commit `66d5ccf96389c1a398b921e3c46fb8eeff33b6bd` returned no associated runs or status checks. Do not describe the merge commit itself as having a fresh passing CI run; the passing evidence is the PR head run recorded above.
+
+No Production SQL, schema, data, migration history, Storage, Auth, Edge Functions, or Vercel settings were changed during this follow-up.
