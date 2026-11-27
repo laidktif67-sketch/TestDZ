@@ -15,6 +15,55 @@ function respond(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), { status, headers: jsonHeaders });
 }
 
+const MAX_REQUEST_BODY_BYTES = 4096;
+
+async function readBoundedBody(
+  request: Request,
+): Promise<{ tooLarge: boolean; text: string }> {
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength !== null) {
+    const parsedLength = Number(declaredLength);
+    if (!Number.isSafeInteger(parsedLength) || parsedLength < 0) {
+      return { tooLarge: true, text: "" };
+    }
+    if (parsedLength > MAX_REQUEST_BODY_BYTES) {
+      return { tooLarge: true, text: "" };
+    }
+  }
+
+  if (!request.body) return { tooLarge: false, text: "" };
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_REQUEST_BODY_BYTES) {
+        await reader.cancel();
+        return { tooLarge: true, text: "" };
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return { tooLarge: false, text: new TextDecoder("utf-8", { fatal: true }).decode(bytes) };
+  } catch {
+    return { tooLarge: false, text: "\\u0000" };
+  }
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return respond(405, { error: "METHOD_NOT_ALLOWED" });
@@ -38,7 +87,14 @@ Deno.serve(async (request: Request) => {
   }
 
   let limit = 50;
-  const rawBody = await request.text();
+  const boundedBody = await readBoundedBody(request);
+  if (boundedBody.tooLarge) {
+    return respond(413, { error: "REQUEST_BODY_TOO_LARGE" });
+  }
+  const rawBody = boundedBody.text;
+  if (rawBody.includes("\\u0000")) {
+    return respond(400, { error: "INVALID_JSON" });
+  }
   if (rawBody.trim()) {
     let body: unknown;
     try {
