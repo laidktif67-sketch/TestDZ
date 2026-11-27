@@ -699,3 +699,51 @@
 - لم يظهر mismatch ساكن بين واجهة إشعارات V2 والتوقيعات النهائية للـRPC.
 - تصميم outbox وعمليات الدعم والهوية يتضمن ضوابط خادمية واختبارات عقود، لكن حالة النشر والتشغيل الحي غير مثبتة.
 - لا توجد تغييرات كود أو قاعدة بيانات أو إعدادات مستضافة في هذه المرحلة.
+
+
+## 16. مراجعة مصفوفة المسارات والهوية وتدفقات Tester — 2026-11-27
+
+### مصفوفة حماية المسارات في App.tsx
+
+تمت مراجعة شجرة المسارات في `apps/web/src/App.tsx` ومكونات `AuthGuard` و`RoleGuard` و`OnboardingGuard`:
+
+- المسارات العامة تشمل Landing/legal/auth/callback/verification/password reset.
+- المسارات المحمية بـ `AuthGuard` تشمل الملف الشخصي، الدعم، الإشعارات، إعدادات الحساب، المحفظة، السحب، وسجل الإحالات.
+- مسارات Tester الأساسية (Dashboard، discovery، tests، history، privacy، leaderboard) تقع تحت `RoleGuard requiredRole="tester"`.
+- مسارات Developer (apps/tests/analytics/feedback/monitoring/assets) تقع تحت `RoleGuard requiredRole="developer"`.
+- مسارات Admin (review queue/role requests/role grants) تقع تحت `RoleGuard requiredRole="admin"`.
+- `/support/queue/:id` لديه RoleGuard على المسار، بينما `/support/queue` يعتمد على فحص الدور داخل الصفحة. هذا يكرر الملاحظة السابقة `ARCH-ROLE-002` ولا يثبت تجاوزاً للخادم.
+- صفحات assignment details/progress/submit/summary ليست مغلفة بـAuthGuard في شجرة المسارات، لكن الصفحات نفسها تتحقق من session، وصفحاتها تقيد بيانات المهمة بـ`tester_id = userId`، كما أن RPCs في SQL تستمد المستخدم من `auth.uid()`. يبقى اختبار runtime للمستخدم غير المالك مطلوباً.
+- `RoleGuard` يسمح لـAdmin بدخول مساحات Tester/Developer/Support؛ هذا سلوك تفويض مقصود في الكود، ويحتاج تأكيداً من سياسة المنتج لا اعتباره ثغرة تلقائياً.
+
+### ملاحظات الهوية
+
+- `AuthGuard` لا يوجّه المستخدم إلى صفحة الدخول عند فشل قراءة الجلسة؛ يعرض خطأ ويطلب إعادة المحاولة، وهو fail-closed على مستوى الواجهة.
+- `IdentityProvider` يلغي طلبات تحميل الأدوار السابقة عند تغير الجلسة، ويمسح الأدوار عند sign-out، ويعرض خطأ عند فشل التحقق من الأدوار بدلاً من السماح الافتراضي.
+- `OnboardingGuard` يعزل حالة التحميل حسب userId ويتجاهل نتائج الطلبات بعد unmount؛ عند فشل قراءة حالة onboarding لا يسمح بالمرور ويعرض retry.
+- `getUserRoles` يقرأ جدول الأدوار من Data Client ويصفي القيم إلى قائمة الأدوار المعروفة؛ لا يعتمد على user_metadata لمنح الدور.
+- **حد الإثبات:** لم يتم اختبار refresh-token expiry، تبديل الحسابات في نفس التبويب، OAuth callback، أو إلغاء الجلسات على متصفح فعلي في هذه الجولة.
+
+### مطابقة واجهات Tester مع نموذج V2
+
+- `assignments-api.ts` يفلتر assignment/checkins/feedback بمعرّف المستخدم في استعلامات الصفحات، ويمرر عمليات بدء المهمة والتسجيل اليومي وإنشاء/تثبيت التسليم عبر RPCs مخصصة.
+- `007_tester_workflow.sql` يعرّف نموذجاً مستقلاً لـ`assignment_submissions` ومرفقاته مع مفاتيح أجنبية مركبة تربط submission بالـassignment/test/tester، وسياسات قراءة للمشارك والمطوّر وSupport/Admin.
+- `018_verify_submission_evidence_metadata.sql` لا يسمح بإكمال التسليم إلا إذا تطابق عدد المرفقات المسجلة مع كائنات Storage الفعلية ومالكها وحجمها وMIME، ثم يغيّر حالة assignment إلى completed ضمن نفس العملية ويضيف حدثاً للمطوّر.
+- واجهة رفع الأدلة تقيّد الملفات إلى PNG/JPG/WebP/PDF، بحد 10MB للملف وخمسة ملفات، وتستخدم بصمة SHA-256 للمطابقة عند إعادة المحاولة؛ الخادم يعيد التحقق من الامتداد وMIME والحجم وملكية الكائن.
+- في V2، بيانات الرصيد/المكافآت لا تُقرأ من جداول legacy؛ API يعيد wallet/ledger بقيمة null ويعرض earned=0 في بعض صفحات التقدم/النشاط. هذا يتسق مع كون نشر المكافآت معطلاً، ويجب إبقاء ذلك واضحاً للمستخدم وعدم تقديم الأرقام كأرصدة نهائية.
+- `ReferralHistoryPage` يقرأ جدول `rebuild_v2.referrals` عند تفعيل V2 ويعرض هوية المدعو بشكل عام ("Referred tester") بدلاً من البريد. جدول referrals موجود في المخطط المرشح وسياسة القراءة تقصره على referrer/referred/Admin. صفحة Referral Program نفسها تصرح أن تتبع الدعوات غير موصول بعد؛ لا يوجد دليل على اكتمال برنامج المكافآت.
+
+### ملاحظات النطاق والقبول
+
+- لا أضيف finding أمنياً جديداً من مجرد غياب RoleGuard على assignment routes؛ يلزم إثبات سلوك مستخدم غير مصرح له على الواجهة وPostgREST/RPC/Storage.
+- لا أعد wallet/referral flows مكتملة في V2: reward posting والسحب غير مفعّلين، وبرنامج referral يعلن صراحة أن tracking غير موصول. تبقى ضمن قيود النطاق الوظيفي المسجلة سابقاً `FUNC-001`.
+- اختبارات قبول لازمة قبل إغلاق هذه المحاور:
+  1. مستخدم مجهول، Tester آخر، Developer، Support، وAdmin يحاولون فتح assignment UUID لا يملكونه؛ تحقق من UI وPostgREST وRPC وsigned Storage URLs.
+  2. تبديل الحسابات وتجديد الجلسة وفشل تحميل الأدوار أثناء وجود صفحة محمية مفتوحة.
+  3. إعادة محاولة final submission بعد انقطاع الشبكة أثناء الرفع، مع ملف مفقود أو metadata غير مطابقة.
+  4. التحقق من أن واجهات V2 لا تعرض مكافآت أو سحباً كأنها مفعلة قبل إطلاق نظام ledger/reward.
+
+### حالة التنفيذ
+
+- هذه مراجعة ساكنة على ملفات الفرع الرسمي عند `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`.
+- لم يتم تشغيل متصفح أو اختبارات runtime جديدة، ولم يتم تعديل كود التطبيق أو SQL أو إعدادات مستضافة.
