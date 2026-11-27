@@ -1285,3 +1285,38 @@
 - `tests/027_role_explicit_support_ticket_creation_contract.sql` يختبر أن المطور يستطيع إنشاء تذكرة بدور Developer، وأن Tester لا يستطيع تزوير دور Developer، وأن الكتابة المباشرة على جدول التذاكر غير متاحة.
 - `tests/029_support_attachment_privacy_contract.sql` يختبر حدود metadata وStorage بين صاحب التذكرة وSupport وAdmin والمستخدم الخارجي، ويمنع قراءة مرفقات الملاحظات الداخلية حتى من Admin ضمن هذا العقد.
 - وجود هذه العقود لا يعني تشغيلها في هذه الجولة. لم يتم تشغيل Supabase local stack أو أي عقد SQL هنا، ولا تغيير أي كود أو SQL أو إعدادات مستضافة أو نشر. لا دمج أو حذف فروع.
+
+
+## 37. مراجعة CI وحدود عقود Storage Evidence — 2026-11-27
+
+### `CI-001` — إعادة تثبيت فجوة تشغيل فحص Edge Functions
+
+- **الملف:** `.github/workflows/rebuild-v2-tests.yml`.
+- **الدليل:** يوجد job باسم `notification-edge-function` يشغل `deno check` على `dispatch-notifications/index.ts` و`developer-invitations/index.ts`. لكن قوائم `paths` على مستوى workflow في كل من `push` و`pull_request` لا تتضمن `supabase/functions/**`.
+- **النتيجة التشغيلية:** لأن path filters موضوعة على مستوى workflow كله، فإن تغييراً محصوراً في ملفات Edge Functions لا يطلق هذا الـworkflow أصلاً؛ وبالتالي لا يعمل فحص Deno في هذا المسار لذلك التغيير. هذا تأكيد مباشر للملاحظة السابقة وليس finding جديداً.
+- **الحل المقترح بعد اعتماد التدقيق:** إضافة `supabase/functions/**` إلى path filters أو نقل فحص Deno إلى workflow مستقل يطلق عند تغير ملفات الدوال.
+- **اختبار القبول:** commit اختبار في فرع مؤقت يغيّر ملفاً تحت `supabase/functions/` فقط؛ يجب أن يبدأ workflow، ويظهر job Deno، ويثبت سجل الخطوات تنفيذ `deno check`. لا يلزم تعديل فرع V2 الرسمي لإثبات ذلك.
+- **الحالة:** Confirmed static CI trigger gap؛ لم ننشئ commit اختبارياً ولم نغيّر workflow.
+
+### نتائج إيجابية — حماية رفع وقراءة أدلة البلاغات
+
+- `025_require_report_attachment_metadata.sql` يقسم مسارات `test-evidence` إلى مسار أدلة البلاغ `v2/<test>/<tester>/<report>/<file>.<ext>` ومسار تسليم المهمة legacy-compatible ذي أربعة أجزاء. مسار البلاغ لا يقبل الرفع إلا إذا وجد metadata مطابقاً تماماً للمسار والملف والاختبار والمختبر والبلاغ، وكان صاحب الجلسة هو المبلّغ ومختبر المهمة النشطة، والبلاغ مفتوحاً.
+- `027_enforce_report_attachment_metadata_integrity.sql` يفرض `storage_path NOT NULL` وقيداً يطابق المسار القانوني المبني من test_id/tester_id/report_id/file_id/extension، ما يقلل خطر اختلاف metadata عن اسم الكائن.
+- `026_align_report_evidence_read_access.sql` يقصر قراءة دليل البلاغ على المبلّغ أو Support/Admin بعد مطابقة البلاغ والمهمة والاختبار والمختبر؛ أما أدلة تسليم المهمة فتبقى متاحة للمختبر وصاحب الاختبار وSupport/Admin وفق العلاقة المحددة.
+- `tests/024_report_evidence_metadata_contract.sql` يتضمن حالات رفض قبل تسجيل metadata، ومحاولات لمسار ملف مختلف عن file UUID، وامتداد غير مسموح، وstorage_path فارغ، إضافة إلى فحوص ملكية/مسارات. `tests/022_reports_disputes_fail_closed_contract.sql` يختبر نطاق القراءة بين Reporter وOutsider وSupport وFinancial وAdmin، ويمنع الكتابة المباشرة على جداول reports/disputes/attachments.
+- هذه العقود والقيود تقدم دليلاً ساكناً جيداً على fail-closed design، لكنها لم تُشغّل في هذه الجولة. كما أن إدراج object في `storage.objects` داخل اختبار SQL لا يثبت وحده نجاح دورة HTTP كاملة عبر Storage API أو سلوك تنزيل/رفع من متصفحات حقيقية.
+
+### `SEC-VALIDATION-GAP-001` — Medium (فجوة إثبات، لا ثغرة مثبتة) — لا يوجد تحقق حي من مسار Storage API في هذه الجولة
+
+- **النطاق:** `test-evidence`, `support-attachments`, `developer-feedback-attachments`, وملفات APK/assets الخاصة.
+- **الدليل:** عقود SQL تراجع RLS وmetadata وقراءة/كتابة صفوف `storage.objects` ومساعدات الصلاحيات؛ لكنها لا تستدعي Storage HTTP endpoints برموز JWT فعلية عبر upload/download، ولا تختبر انتهاء signed URLs أو إعادة استخدام المسار أو التلاعب بمحتوى الملف مقارنةً بـMIME المعلن.
+- **الأثر:** لا نستطيع حالياً تحويل نجاح تصميم السياسات إلى استنتاج بأن تدفق الرفع والتنزيل الفعلي آمن من طرف إلى طرف. هذا نقص في مستوى الإثبات المتاح، وليس دليلاً على أن Storage يسمح بالوصول غير المصرح.
+- **التحقق المطلوب:** في Supabase local stack مع حسابات منفصلة، جرّب HTTP upload/download لمستخدم مالك، ومستخدم آخر، وSupport/Admin، ومختبر معيّن وغير معيّن؛ بدّل path IDs وmetadata وMIME والحجم، واختبر public/internal support messages، وكرر باستخدام signed URL بعد انتهاء صلاحيتها.
+- **اختبار القبول:** جميع الحالات المسموحة تنجح فقط ضمن الدور/الملكية المقصودة؛ outsider وwrong-owner وinternal-note attachment وunregistered evidence وwrong-path/wrong-MIME/oversize تُرفض؛ ولا تبقى كائنات يتيمة بعد فشل finalize أو إعادة المحاولة.
+- **الحالة:** Evidence gap confirmed؛ لم يتم تشغيل Supabase local stack أو Storage HTTP tests في هذه الجولة. لا تغيير على Supabase المستضافة.
+
+### حالة تشغيل الاختبارات في هذه الجولة
+
+- تمت قراءة Workflow ومصفوفة العقود وملفات SQL ذات الصلة على SHA الرسمي `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`.
+- لم نشغّل Workflow جديداً، ولم نعد تشغيل أي GitHub Actions run، ولم ننشئ موارد أو فروع اختبار. لذلك لا نضيف أي PASS جديد إلى سجل الاختبارات.
+- لا تعديلات على التطبيق أو SQL أو Workflow أو Supabase المستضافة أو Vercel؛ لا دمج أو حذف فروع.
