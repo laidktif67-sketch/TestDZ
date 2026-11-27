@@ -8,12 +8,14 @@ INSERT INTO auth.users
 VALUES
   ('37000000-0000-4000-8000-000000000001','authenticated','authenticated','medical-tester@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Medical Tester"}'::jsonb,now(),now()),
   ('37000000-0000-4000-8000-000000000002','authenticated','authenticated','medical-admin@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Medical Admin"}'::jsonb,now(),now()),
-  ('37000000-0000-4000-8000-000000000003','authenticated','authenticated','medical-support@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Medical Support"}'::jsonb,now(),now());
+  ('37000000-0000-4000-8000-000000000003','authenticated','authenticated','medical-support@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Medical Support"}'::jsonb,now(),now()),
+  ('37000000-0000-4000-8000-000000000004','authenticated','authenticated','medical-partial-tester@example.invalid','',now(),'{ "provider":"email","providers":["email"] }'::jsonb,'{"name":"Medical Partial Tester"}'::jsonb,now(),now());
 
 INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
   ('37000000-0000-4000-8000-000000000002','admin'),
-  ('37000000-0000-4000-8000-000000000003','support')
+  ('37000000-0000-4000-8000-000000000003','support'),
+  ('37000000-0000-4000-8000-000000000004','tester')
 ON CONFLICT (user_id,role) DO NOTHING;
 
 INSERT INTO rebuild_v2.apps(developer_id,name,package_name,description,category,status)
@@ -84,6 +86,7 @@ DECLARE
   v_tester constant uuid := '37000000-0000-4000-8000-000000000001';
   v_admin constant uuid := '37000000-0000-4000-8000-000000000002';
   v_support constant uuid := '37000000-0000-4000-8000-000000000003';
+  v_partial_tester constant uuid := '37000000-0000-4000-8000-000000000004';
   v_assignment uuid;
   v_feedback uuid;
   v_request uuid;
@@ -259,6 +262,9 @@ BEGIN
 
   -- Rejection still adds no extension and fails an active assignment when the
   -- requested current required date remains unchecked.
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
   v_rejected_request := rebuild_v2.create_medical_exception_request(
     v_assignment,
     'A separate sufficiently detailed reason for a rejection contract.',
@@ -279,19 +285,19 @@ BEGIN
   INSERT INTO rebuild_v2.assignments(
     cohort_id,test_id,tester_id,status,started_at,due_at
   )
-  SELECT cohort_id,test_id,v_tester,'active',
+  SELECT cohort_id,test_id,v_partial_tester,'active',
     (v_today-5)::timestamp AT TIME ZONE 'Africa/Algiers',
     now()+interval '10 days'
   FROM rebuild_v2.assignments WHERE id=v_assignment
   RETURNING id INTO v_partial_assignment;
 
   INSERT INTO rebuild_v2.checkins(assignment_id,tester_id,checkin_date,note)
-  SELECT v_partial_assignment,v_tester,g.day::date,'Partial recovery fixture check-in'
+  SELECT v_partial_assignment,v_partial_tester,g.day::date,'Partial recovery fixture check-in'
   FROM generate_series(v_today-5,v_today-3,interval '1 day') g(day);
 
-  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claim.sub',v_partial_tester::text,true);
   PERFORM set_config('request.jwt.claims',
-    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+    jsonb_build_object('sub',v_partial_tester,'role','authenticated')::text,true);
   v_partial_request := rebuild_v2.create_medical_exception_request(
     v_partial_assignment,
     'A detailed medical reason for one of two missed dates in the partial recovery test.',
@@ -323,9 +329,9 @@ BEGIN
 
   -- The tester can submit a second request after failure. Once every missed
   -- date is explicitly approved, the assignment can be reactivated.
-  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claim.sub',v_partial_tester::text,true);
   PERFORM set_config('request.jwt.claims',
-    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+    jsonb_build_object('sub',v_partial_tester,'role','authenticated')::text,true);
   v_after_failure_request := rebuild_v2.create_medical_exception_request(
     v_partial_assignment,
     'A detailed reason for the remaining missed date submitted after failure.',
