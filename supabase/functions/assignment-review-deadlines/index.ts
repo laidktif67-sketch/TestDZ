@@ -1,45 +1,61 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-assignment-review-secret",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const jsonHeaders = { "content-type": "application/json; charset=utf-8" };
 
-const json = (status: number, body: Record<string, unknown>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+function constantTimeEqual(left: string, right: string): boolean {
+  if (left.length !== right.length) return false;
+  let mismatch = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+  return mismatch === 0;
+}
+
+function respond(status: number, body: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(body), { status, headers: jsonHeaders });
+}
 
 Deno.serve(async (request: Request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (request.method !== "POST") return json(405, { error: "METHOD_NOT_ALLOWED" });
-
-  const expectedSecret = Deno.env.get("ASSIGNMENT_REVIEW_DISPATCH_SECRET");
-  const suppliedSecret = request.headers.get("x-assignment-review-secret");
-  if (!expectedSecret || !suppliedSecret || suppliedSecret !== expectedSecret) {
-    return json(401, { error: "DISPATCH_SECRET_INVALID" });
+  if (request.method !== "POST") {
+    return respond(405, { error: "METHOD_NOT_ALLOWED" });
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const expectedSecret = Deno.env.get("ASSIGNMENT_REVIEW_DISPATCH_SECRET") ?? "";
+  const suppliedSecret = request.headers.get("x-assignment-review-secret") ?? "";
+  if (!expectedSecret) {
+    console.error("Assignment review deadline worker is missing its dispatch secret.");
+    return respond(503, { error: "WORKER_NOT_CONFIGURED" });
+  }
+  if (!constantTimeEqual(suppliedSecret, expectedSecret)) {
+    return respond(401, { error: "UNAUTHORIZED" });
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   if (!supabaseUrl || !serviceRoleKey) {
-    return json(500, { error: "SERVER_CONFIGURATION_MISSING" });
+    console.error("Assignment review deadline worker is missing Supabase server credentials.");
+    return respond(503, { error: "WORKER_NOT_CONFIGURED" });
   }
 
   let limit = 50;
-  try {
-    const body = await request.json().catch(() => ({}));
-    if (body && body.limit !== undefined) {
-      const parsed = Number(body.limit);
+  const rawBody = await request.text();
+  if (rawBody.trim()) {
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return respond(400, { error: "INVALID_JSON" });
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return respond(400, { error: "INVALID_REQUEST_BODY" });
+    }
+    if ("limit" in body) {
+      const parsed = Number((body as { limit: unknown }).limit);
       if (!Number.isInteger(parsed) || parsed < 1 || parsed > 100) {
-        return json(400, { error: "BATCH_SIZE_INVALID" });
+        return respond(400, { error: "BATCH_SIZE_INVALID" });
       }
       limit = parsed;
     }
-  } catch {
-    return json(400, { error: "REQUEST_BODY_INVALID" });
   }
 
   const client = createClient(supabaseUrl, serviceRoleKey, {
@@ -51,8 +67,16 @@ Deno.serve(async (request: Request) => {
     .rpc("process_assignment_review_deadlines", { p_limit: limit });
 
   if (error) {
-    return json(500, { error: "DEADLINE_PROCESSING_FAILED", detail: error.message });
+    console.error("Assignment review deadline processing failed:", error.code ?? "unknown");
+    return respond(500, { error: "DEADLINE_PROCESSING_FAILED" });
   }
 
-  return json(200, { ok: true, result: data ?? { reminders_sent: 0, auto_approved: 0, blocked_by_prerequisites: 0 } });
+  return respond(200, {
+    ok: true,
+    result: data ?? {
+      reminders_sent: 0,
+      auto_approved: 0,
+      blocked_by_prerequisites: 0,
+    },
+  });
 });
