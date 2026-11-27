@@ -73,6 +73,7 @@ DECLARE
   v_short_submission uuid;
   v_blocked_submission uuid;
   v_result jsonb;
+  v_dispatch_count integer;
   v_error text;
 BEGIN
   SELECT t.id INTO v_test FROM rebuild_v2.tests t
@@ -139,17 +140,17 @@ BEGIN
 
   UPDATE rebuild_v2.assignment_submissions
   SET status='submitted',submitted_at=now()-interval '73 hours',
-      review_due_at=now()-interval '1 hour',reminder_sent_at=now()-interval '25 hours'
+      review_due_at=now()-interval '1 hour',reminder_sent_at=NULL,reminder_event_id=NULL
   WHERE id=v_auto_submission;
 
   UPDATE rebuild_v2.assignment_submissions
   SET status='submitted',submitted_at=now()-interval '50 hours',
-      review_due_at=now()+interval '22 hours',reminder_sent_at=NULL
+      review_due_at=now()+interval '22 hours',reminder_sent_at=NULL,reminder_event_id=NULL
   WHERE id=v_reminder_submission;
 
   UPDATE rebuild_v2.assignment_submissions
   SET status='submitted',submitted_at=now()-interval '73 hours',
-      review_due_at=now()-interval '1 hour',reminder_sent_at=now()-interval '2 hours'
+      review_due_at=now()-interval '1 hour',reminder_sent_at=NULL,reminder_event_id=NULL
   WHERE id=v_short_submission;
 
   UPDATE rebuild_v2.assignment_submissions
@@ -172,10 +173,44 @@ BEGIN
   PERFORM set_config('request.jwt.claim.role','service_role',true);
   v_result:=rebuild_v2.process_assignment_review_deadlines(50);
 
-  IF (v_result->>'reminders_sent')::integer<>1
+  IF (v_result->>'reminders_queued')::integer<>4
+     OR (v_result->>'auto_approved')::integer<>0
+     OR (v_result->>'blocked_by_prerequisites')::integer<>0 THEN
+    RAISE EXCEPTION 'FAIL: reminder enqueue must not count as delivery or auto-approve: %',v_result;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM rebuild_v2.assignment_submissions s
+    WHERE s.id IN (v_auto_submission,v_reminder_submission,v_short_submission,v_blocked_submission)
+      AND (s.reminder_event_id IS NULL OR s.reminder_sent_at IS NOT NULL)
+  ) THEN
+    RAISE EXCEPTION 'FAIL: queued reminder must have an event id but no delivered timestamp';
+  END IF;
+
+  -- Deliver the in-app notifications through the real outbox dispatcher.
+  v_dispatch_count:=rebuild_v2.process_notification_outbox(100);
+  IF NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.assignment_submissions s
+    JOIN rebuild_v2.events e ON e.id=s.reminder_event_id
+    WHERE s.id=v_auto_submission AND e.status='delivered' AND e.processed_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'FAIL: reminder event was not delivered to the in-app notification queue';
+  END IF;
+
+  -- Model delivery timestamps for the 24h policy boundary after real dispatch.
+  UPDATE rebuild_v2.events e
+  SET processed_at=CASE
+    WHEN s.id IN (v_auto_submission,v_blocked_submission) THEN now()-interval '25 hours'
+    ELSE now()-interval '2 hours'
+  END
+  FROM rebuild_v2.assignment_submissions s
+  WHERE s.reminder_event_id=e.id
+    AND e.payload->>'type'='assignment.review_reminder';
+
+  v_result:=rebuild_v2.process_assignment_review_deadlines(50);
+  IF (v_result->>'reminders_queued')::integer<>0
      OR (v_result->>'auto_approved')::integer<>1
      OR (v_result->>'blocked_by_prerequisites')::integer<>1 THEN
-    RAISE EXCEPTION 'FAIL: unexpected deadline processor counts: %',v_result;
+    RAISE EXCEPTION 'FAIL: delivered reminder timing or prerequisite gate failed: %',v_result;
   END IF;
 
   IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_auto_submission)<>'auto_approved'
@@ -204,7 +239,7 @@ BEGIN
 
   IF (SELECT reminder_sent_at FROM rebuild_v2.assignment_submissions WHERE id=v_reminder_submission) IS NULL
      OR (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_reminder_submission)<>'submitted' THEN
-    RAISE EXCEPTION 'FAIL: 48-hour reminder was not sent without prematurely auto-approving';
+    RAISE EXCEPTION 'FAIL: delivered 48-hour reminder was not recorded without prematurely auto-approving';
   END IF;
   IF (SELECT count(*) FROM rebuild_v2.events
       WHERE event_type='notification.requested'
