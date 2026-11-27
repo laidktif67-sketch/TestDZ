@@ -77,6 +77,7 @@ DECLARE
   v_retry_iteration integer;
   v_error text;
   v_report_id uuid;
+  v_dispute_id uuid;
 BEGIN
   SELECT t.id INTO v_test FROM rebuild_v2.tests t
   WHERE t.title='Deadline Processor Contract Test';
@@ -326,13 +327,29 @@ BEGIN
     RAISE EXCEPTION 'FAIL: open assignment report did not block automatic approval: %',v_result;
   END IF;
 
+  -- The second active report state must be independently fail-closed too.
+  UPDATE rebuild_v2.reports
+  SET status='under_review'
+  WHERE id=v_report_id;
+
+  v_result:=rebuild_v2.process_assignment_review_deadlines(50);
+  IF (v_result->>'auto_approved')::integer<>0
+     OR (v_result->>'blocked_by_prerequisites')::integer<>1
+     OR (SELECT status FROM rebuild_v2.assignment_submissions
+         WHERE id=v_blocked_submission)<>'submitted'
+     OR (SELECT status FROM rebuild_v2.assignments
+         WHERE id=v_blocked_assignment)<>'active' THEN
+    RAISE EXCEPTION 'FAIL: under-review assignment report did not block automatic approval: %',v_result;
+  END IF;
+
   -- A dispute remains blocking independently after its linked report is resolved.
   UPDATE rebuild_v2.reports
   SET status='resolved',reviewed_by=v_admin,reviewed_at=now()
   WHERE id=v_report_id;
 
   INSERT INTO rebuild_v2.disputes(opened_by,report_id,status)
-  VALUES(v_blocked_tester,v_report_id,'opened');
+  VALUES(v_blocked_tester,v_report_id,'opened')
+  RETURNING id INTO v_dispute_id;
 
   v_result:=rebuild_v2.process_assignment_review_deadlines(50);
   IF (v_result->>'auto_approved')::integer<>0
@@ -342,6 +359,28 @@ BEGIN
      OR (SELECT status FROM rebuild_v2.assignments
          WHERE id=v_blocked_assignment)<>'active' THEN
     RAISE EXCEPTION 'FAIL: open dispute linked to a resolved report did not block automatic approval: %',v_result;
+  END IF;
+
+  UPDATE rebuild_v2.disputes SET status='under_review' WHERE id=v_dispute_id;
+  v_result:=rebuild_v2.process_assignment_review_deadlines(50);
+  IF (v_result->>'auto_approved')::integer<>0
+     OR (v_result->>'blocked_by_prerequisites')::integer<>1
+     OR (SELECT status FROM rebuild_v2.assignment_submissions
+         WHERE id=v_blocked_submission)<>'submitted'
+     OR (SELECT status FROM rebuild_v2.assignments
+         WHERE id=v_blocked_assignment)<>'active' THEN
+    RAISE EXCEPTION 'FAIL: under-review dispute did not block automatic approval: %',v_result;
+  END IF;
+
+  UPDATE rebuild_v2.disputes SET status='escalated' WHERE id=v_dispute_id;
+  v_result:=rebuild_v2.process_assignment_review_deadlines(50);
+  IF (v_result->>'auto_approved')::integer<>0
+     OR (v_result->>'blocked_by_prerequisites')::integer<>1
+     OR (SELECT status FROM rebuild_v2.assignment_submissions
+         WHERE id=v_blocked_submission)<>'submitted'
+     OR (SELECT status FROM rebuild_v2.assignments
+         WHERE id=v_blocked_assignment)<>'active' THEN
+    RAISE EXCEPTION 'FAIL: escalated dispute did not block automatic approval: %',v_result;
   END IF;
 
   -- A medical request cannot be added after the report has been submitted.
