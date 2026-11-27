@@ -144,3 +144,11 @@ implemented in a later migration.
   disposable PostgreSQL/Supabase database. No claim of passing SQL execution is made.
 - No hosted Supabase database, feature flag, production branch, PR, or deployment was
   changed.
+
+
+A focused integration contract was also added at
+`supabase/rebuild-v2/tests/036_assignment_review_lifecycle_contract.sql`. It covers
+non-owning developer denial, mandatory revision reason, immutable attempt history,
+attempt-number increment, owning-developer approval, single-decision enforcement,
+audit records, and notification enqueueing. It has not yet been executed against
+PostgreSQL; source-level inspection is not a passing test result.
