@@ -429,3 +429,11 @@ Candidate migration `042_retry_failed_review_reminder_delivery.sql` adds a bound
 The 040 contract now forces a terminal delivery failure, checks that a replacement event is queued and the retry counter increments, then dispatches the replacement through the actual notification outbox. CI now expects 42 numbered candidate SQL migrations. The previous successful run 46061176450 predates this retry addition; the new commit requires a fresh complete CI run before it is considered verified.
 
 No hosted scheduler, hosted database write, deployment, merge, or production feature-flag change was performed.
+
+### First-14-required-days completion boundary — 2026-11-27
+
+A lifecycle edge-case review found that the original 038 evaluator required the total number of check-ins for the entire assignment to equal exactly 14. If a tester completed the first 14 required days but submitted a later daily check-in before finalizing, the extra check-in incorrectly blocked completion.
+
+The candidate evaluator now requires all 14 check-ins across the first 14 non-excused required dates, with no missing required date and no check-in on an approved medical-exception date. Additional check-ins after that first 14-day required window no longer invalidate completion. The 038 contract fixture now spans 16 calendar dates with one excused date and 15 check-ins, proving that the 15th required-day check-in does not block completion.
+
+This is a candidate-only change to migration 038 and its contract. It requires the current CI run to complete before verification can be claimed.
