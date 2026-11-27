@@ -987,3 +987,42 @@
 
 - لم يتم إجراء اختبار متصفح أو تبديل حسابات فعلي. لم يتم تعديل صفحة التفاصيل أو API.
 - لا تغييرات على Supabase المستضافة أو Vercel، ولا دمج أو حذف فروع.
+
+
+## 27. مراجعة حراسة مسارات Assignment ومصفوفة ملكية القراءة — 2026-11-27
+
+### ROUTE-ASSIGNMENT-001 — ملاحظة معمارية Medium — مسارات Assignment لا تستخدم AuthGuard مشتركاً، وتعتمد على حراسة داخل كل صفحة
+
+- **الملفات:** apps/web/src/App.tsx؛ صفحات AssignmentDetailsPage.tsx وActiveAssignmentProgressPage.tsx وAssignmentSubmissionPage.tsx وTestCompletionSummaryPage.tsx.
+- **الدليل:** المسارات /assignments/:id و/progress و/submit و/summary معرفة خارج مجموعة AuthGuard. الصفحات الأربع تستدعي useIdentity() وتعيد التوجيه إلى /auth عند غياب session، كما تتحقق من دور Tester بعد التحميل (مع استثناء preview محلي مشروط بـ import.meta.env.DEV). توجد حراسة فعلية داخل الصفحات، لكنها مكررة وليست موحدة في شجرة التوجيه.
+- **ملاحظة داعمة:** /support/queue يقع داخل AuthGuard فقط، وتنفذ SupportStaffQueuePage فحصاً داخلياً لـAdmin/Support قبل عرض الطابور؛ أما /support/queue/:id فيحمل RoleGuard لدور Support. هذا تفاوت في موضع الحراسة وليس دليلاً بذاته على وصول غير مصرح.
+- **الأثر المحتمل:** زيادة احتمال نسيان فحص الجلسة/الدور عند إضافة صفحة Assignment جديدة، وصعوبة تدقيق الوصول من شجرة المسارات وحدها. لا يوجد في هذه القراءة دليل على تجاوز صلاحيات الخادم.
+- **الحل المقترح بعد اعتماد التدقيق:** توحيد AuthGuard وRoleGuard حول المسارات التي تتطلب هوية/دوراً، والإبقاء على تحقق الخادم/RLS/RPC كحد أمني مستقل. إذا بقيت حراسة الصفحة لسبب تقني، أضف مصفوفة موحدة واختبارات route لكل حالة.
+- **اختبار القبول:** لكل مسار: زائر بلا جلسة، حساب Tester، حساب Developer فقط، حساب Support فقط، حساب Admin، ومستخدم Tester آخر يفتح UUID لا يملكه. تحقق من redirect/denial في الواجهة ومن رفض قراءة/تعديل البيانات على API/RPC/Storage حتى عند تجاوز الواجهة.
+- **الحالة:** Confirmed static route-guard inconsistency؛ لا دليل على ثغرة runtime. Medium مبدئي من زاوية قابلية الصيانة/خطر regression. لا إصلاح أثناء التدقيق.
+
+### ROUTE-ASSIGNMENT-002 — نتيجة إيجابية — استعلامات واجهة Assignment تضيف نطاق ملكية المستخدم
+
+- **الملف:** apps/web/src/features/tester/assignments-api.ts.
+- **الدليل:** عمليات تحميل تفاصيل Assignment، والتقدم، وبيانات التسليم تضيف .eq("tester_id", userId) إلى استعلام assignment، كما تقيد check-ins وfeedback بـtester_id نفسه. تحميل تفاصيل التسليم يستخرج test_id من assignment المملوك أولاً، ثم يجلب بيانات الاختبار والتطبيق. عمليات بدء المهمة والتسجيل النهائي/check-in تستخدم RPCs بدلاً من تعديل الجداول الحساسة مباشرة.
+- **الأثر:** هذا يقلل خطر أن يؤدي تمرير UUID لمهمة مستخدم آخر إلى إظهار بياناتها عبر مسار الواجهة. كما أن مرشحات العميل ليست بديلاً عن RLS.
+- **الحدود:** لم يتم تشغيل حسابات منفصلة أو محاولة UUID لمستخدم آخر على API/Storage، ولم تُنفذ اختبارات RLS runtime في هذه الجولة؛ لذلك هذه نتيجة مراجعة ساكنة فقط وليست إثباتاً نهائياً للعزل.
+
+### مصفوفة مسارات مختصرة — حالة المراجعة الساكنة
+
+| المسار | حراسة التوجيه | فحص داخل الصفحة | ملاحظة |
+|---|---|---|---|
+| /assignments/:id | لا يوجد AuthGuard مشترك | Session + Tester role | حراسة موزعة |
+| /assignments/:id/progress | لا يوجد AuthGuard مشترك | Session + Tester role | حراسة موزعة |
+| /assignments/:id/submit | لا يوجد AuthGuard مشترك | Session + Tester role | حراسة موزعة |
+| /assignments/:id/summary | لا يوجد AuthGuard مشترك | Session + Tester role | V2 يحول إلى المحفظة |
+| /support/queue | AuthGuard فقط | Admin/Support | Role check داخل الصفحة |
+| /support/queue/:id | AuthGuard + RoleGuard Support | تدفق تفاصيل الدعم | حراسة التوجيه أوضح |
+| /admin/* | AuthGuard + RoleGuard Admin | RPCs إدارية تفرض Admin | نتيجة ساكنة؛ runtime مطلوب |
+| /developer/* و/apps/* | AuthGuard + RoleGuard Developer | تحقق إضافي بحسب التدفق | نتيجة ساكنة؛ runtime مطلوب |
+| /tester/* | AuthGuard + RoleGuard Tester | تحقق إضافي بحسب التدفق | نتيجة ساكنة؛ runtime مطلوب |
+
+### حدود الإثبات
+
+- هذه المراجعة لا تشمل حتى الآن كل route وكل RPC وكل سياسة RLS؛ الجدول عينة موثقة من المسارات التي تمت مراجعتها.
+- لم يتم تعديل App.tsx أو صفحات Assignment أو SQL. لا تغييرات على Supabase المستضافة أو Vercel، ولا دمج أو حذف فروع.
