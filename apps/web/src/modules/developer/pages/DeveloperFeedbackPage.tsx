@@ -44,14 +44,20 @@ export default function DeveloperFeedbackPage(){
 
   const load=useCallback(async()=>{
     setLoading(true);setError("");
-    const result=await listDeveloperFeedback();
-    if(result.error){setError("Could not load feedback for your tests: "+result.error.message);setRows([]);}
-    else{
-      const next=(result.data??[]) as DeveloperFeedbackRecord[];
-      setRows(next);
-      setSelectedId(current=>current&&next.some(row=>row.feedback_id===current)?current:(next[0]?.feedback_id??""));
+    try {
+      const result=await listDeveloperFeedback();
+      if(result.error){setError("Could not load feedback for your tests: "+result.error.message);setRows([]);}
+      else{
+        const next=(result.data??[]) as DeveloperFeedbackRecord[];
+        setRows(next);
+        setSelectedId(current=>current&&next.some(row=>row.feedback_id===current)?current:(next[0]?.feedback_id??""));
+      }
+    } catch {
+      setError("Could not load feedback for your tests. Please try again.");
+      setRows([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   },[]);
 
   useEffect(()=>{
@@ -73,6 +79,10 @@ export default function DeveloperFeedbackPage(){
       if(!alive)return;
       if(result.error){setError("Could not load the feedback conversation.");setMessages([]);}
       else setMessages((result.data??[]) as DeveloperFeedbackMessage[]);
+    }).catch(()=>{
+      if(!alive)return;
+      setError("Could not load the feedback conversation. Please try again.");
+      setMessages([]);
     });
     return()=>{alive=false;};
   },[selectedId,selected?.feedback_id]);
@@ -89,27 +99,40 @@ export default function DeveloperFeedbackPage(){
       setError("Add a resolution note of at least 5 characters before closing this feedback.");return;
     }
     setBusy(true);setError("");setNotice("");
-    const result=await updateDeveloperFeedbackReview({
-      feedbackId:selected.feedback_id,status,priority,
-      resolutionNote:resolutionNote.trim()||null
-    });
-    if(result.error)setError("Could not save the review: "+result.error.message);
-    else{setNotice("Review status saved.");await load();}
-    setBusy(false);
+    try {
+      const result=await updateDeveloperFeedbackReview({
+        feedbackId:selected.feedback_id,status,priority,
+        resolutionNote:resolutionNote.trim()||null
+      });
+      if(result.error)setError("Could not save the review: "+result.error.message);
+      else{setNotice("Review status saved.");await load();}
+    } catch {
+      setError("Could not save the review. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function sendMessage(){
     if(!selected||!messageDraft.trim())return;
     setBusy(true);setError("");setNotice("");
-    const result=await sendDeveloperFeedbackMessage(selected.feedback_id,messageDraft.trim());
-    if(result.error)setError("Could not send the message: "+result.error.message);
-    else{
+    try {
+      const result=await sendDeveloperFeedbackMessage(selected.feedback_id,messageDraft.trim());
+      if(result.error){setError("Could not send the message: "+result.error.message);return;}
       setMessageDraft("");
-      const refreshed=await listDeveloperFeedbackMessages(selected.feedback_id);
-      if(!refreshed.error)setMessages((refreshed.data??[]) as DeveloperFeedbackMessage[]);
       setNotice("Response saved; a notification is queued for the tester.");
+      try {
+        const refreshed=await listDeveloperFeedbackMessages(selected.feedback_id);
+        if(refreshed.error)setError("Response saved, but the conversation could not be refreshed.");
+        else setMessages((refreshed.data??[]) as DeveloperFeedbackMessage[]);
+      } catch {
+        setError("Response saved, but the conversation could not be refreshed.");
+      }
+    } catch {
+      setError("Could not send the message. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   if(!identityLoading&&!session)return <Navigate to="/auth" replace/>;
