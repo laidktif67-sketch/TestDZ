@@ -217,17 +217,6 @@ BEGIN
     RAISE EXCEPTION 'CHECKIN_BEFORE_ASSIGNMENT_START' USING errcode='22023';
   END IF;
 
-  IF EXISTS (
-    SELECT 1
-    FROM rebuild_v2.medical_exception_requests r
-    CROSS JOIN LATERAL unnest(r.requested_dates) AS x(excused_date)
-    WHERE r.assignment_id=p_assignment_id
-      AND r.status='approved'
-      AND x.excused_date=v_checkin_date
-  ) THEN
-    RAISE EXCEPTION 'MEDICAL_EXCEPTION_DAY_EXCUSED' USING errcode='55000';
-  END IF;
-
   SELECT c.id INTO v_checkin_id
   FROM rebuild_v2.checkins c
   WHERE c.assignment_id=p_assignment_id AND c.checkin_date=v_checkin_date;
@@ -278,6 +267,17 @@ BEGIN
       jsonb_build_object('assignment_id',p_assignment_id,'missed_required_days',v_missed_days)
     );
     RETURN NULL;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM rebuild_v2.medical_exception_requests r
+    CROSS JOIN LATERAL unnest(r.requested_dates) AS x(excused_date)
+    WHERE r.assignment_id=p_assignment_id
+      AND r.status='approved'
+      AND x.excused_date=v_checkin_date
+  ) THEN
+    RAISE EXCEPTION 'MEDICAL_EXCEPTION_DAY_EXCUSED' USING errcode='55000';
   END IF;
 
   IF (
