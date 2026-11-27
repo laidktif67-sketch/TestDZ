@@ -82,7 +82,15 @@ export default function DeveloperTestResultsPage() {
   });
   const t = copy[language];
   const direction = language === "ar" ? "rtl" : "ltr";
-  const statusLabels = t.statuses;
+  const statusLabels: Record<string, string> = t.statuses;
+  useEffect(() => {
+    const syncLanguage = () => {
+      const saved = window.localStorage.getItem("testdz-developer-dashboard-language");
+      setLanguage(saved === "fr" || saved === "ar" ? saved : "en");
+    };
+    window.addEventListener("storage", syncLanguage);
+    return () => window.removeEventListener("storage", syncLanguage);
+  }, []);
   const [rows, setRows] = useState<ResultRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
