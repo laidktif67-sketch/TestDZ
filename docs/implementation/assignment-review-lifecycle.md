@@ -384,3 +384,13 @@ The follow-up workflow [46056107092](https://github.com/laidktif67-sketch/TestDZ
 - The full migration suite and local PostgREST schema-exposure checks completed successfully.
 
 This is candidate-branch CI evidence only. Hosted scheduling and production rollout remain intentionally disabled pending a separately approved operational change.
+
+### Request validation and final CI coverage — 2026-11-27
+
+The deadline worker request boundary is now isolated in `request-validation.ts` and covered by Deno tests for constant-time secret comparison behavior, bounded valid UTF-8 input, declared and streamed body-size limits, and invalid UTF-8 rejection. The endpoint rejects missing server secret configuration, invalid secrets, malformed JSON, invalid limits, and oversized payloads without logging secret values.
+
+The latest candidate workflow [46059714815](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46059714815) completed successfully on `1495a4c31327e1835b7798bff0fefd76119a77a9`: Edge Function typecheck and request-validation tests, frontend typecheck, and the full disposable local Supabase migration/contract/schema-exposure suite all passed.
+
+The production frontend build also passed in [46050204033](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46050204033), including the tester-page data-boundary check and TypeScript typecheck. A GitHub compare from that build's source commit `34b5a70e81a285521136bd531f3c3540a46d4e53` to the latest candidate commit shows 26 subsequent commits and no changes under `apps/web/**`, `packages/**`, or frontend package manifests; subsequent changes were limited to server-side worker validation/tests, workflow configuration, and documentation. Thus the current frontend source is covered by the successful production build, while the latest overall commit is covered by the successful server/database CI run.
+
+No hosted scheduler, hosted Supabase write, deployment, merge, or production feature-flag change was performed. The deadline automation remains non-operational until the documented scheduler runbook is separately approved and executed.
