@@ -105,11 +105,15 @@ export default function AdminAssignmentLifecycleReviewsPage() {
 
   async function openEvidence(path: string) {
     setError("");
+    const popup = window.open("about:blank", "_blank");
+    if (popup) popup.opener = null;
     try {
       const result = await getMedicalExceptionEvidenceUrl(path);
       if (result.error || !result.data?.signedUrl) throw result.error || new Error("SIGNED_URL_UNAVAILABLE");
-      window.open(result.data.signedUrl, "_blank", "noopener,noreferrer");
+      if (popup) popup.location.href = result.data.signedUrl;
+      else window.location.assign(result.data.signedUrl);
     } catch {
+      popup?.close();
       setError("Private medical evidence could not be opened. Access is restricted to Admin and the requesting tester.");
     }
   }
