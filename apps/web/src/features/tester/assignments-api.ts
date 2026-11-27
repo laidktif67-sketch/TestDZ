@@ -17,8 +17,8 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
       client.from("medical_exception_requests").select("status,requested_dates")
         .eq("assignment_id", assignmentId)
         .in("status", ["approved", "pending"]),
-      client.from("assignment_submissions").select("id,status")
-        .eq("assignment_id", assignmentId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      client.from("assignment_submissions").select("id,status,attempt_number")
+        .eq("assignment_id", assignmentId).order("attempt_number", { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (assignmentResult.error || !assignmentResult.data) {
       return { error: assignmentResult.error?.message || "This assignment could not be found.", assignment: null, checkins: [], feedbackCount: 0, feedback: null, medicalExceptions: [], submission: null };
@@ -189,8 +189,8 @@ export async function submitTesterDailyCheckin(assignmentId: string) {
 /** Read the current submission state for the signed-in tester's assignment. */
 export async function getTesterAssignmentSubmission(assignmentId: string) {
   return getAppDataClient().from("assignment_submissions")
-    .select("id,status").eq("assignment_id", assignmentId)
-    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    .select("id,status,attempt_number").eq("assignment_id", assignmentId)
+    .order("attempt_number", { ascending: false }).limit(1).maybeSingle();
 }
 
 /** Create or retrieve the server-managed submission draft. */
