@@ -95,10 +95,10 @@ export default function SubmitFeedbackPage() {
       if (!existing) return;
       setFeedbackQualityStatus(existing.quality_status);
       if (existing.quality_status === "rejected") {
-        const titleMatch = existing.body.match(/(?:^|\\n\\n)Title: ([^\\n]*)/);
-        const severityMatch = existing.body.match(/(?:^|\\n\\n)Severity: ([^\\n]*)/);
-        const descriptionMatch = existing.body.match(/(?:^|\\n\\n)Description: ([\\s\\S]*?)(?:\\n\\nSteps to reproduce: |$)/);
-        const stepsMatch = existing.body.match(/(?:^|\\n\\n)Steps to reproduce: ([\\s\\S]*)$/);
+        const titleMatch = existing.body.match(/(?:^|\n\n)Title: ([^\n]*)/);
+        const severityMatch = existing.body.match(/(?:^|\n\n)Severity: ([^\n]*)/);
+        const descriptionMatch = existing.body.match(/(?:^|\n\n)Description: ([\s\S]*?)(?:\n\nSteps to reproduce: |$)/);
+        const stepsMatch = existing.body.match(/(?:^|\n\n)Steps to reproduce: ([\s\S]*)$/);
         setTitle(titleMatch?.[1] || "Feedback revision");
         setSeverity((["Critical", "High", "Medium", "Low"].includes(severityMatch?.[1] || "") ? severityMatch?.[1] : "Medium") as Severity);
         setDescription(descriptionMatch?.[1] || existing.body);
