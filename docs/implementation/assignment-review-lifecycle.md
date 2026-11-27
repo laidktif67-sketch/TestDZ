@@ -183,3 +183,51 @@ A second isolated run, `46044714103`, is checking this correction. At the latest
 inspection, frontend TypeScript and Edge Function checks passed; the disposable
 database stack was still starting, so the second SQL replay and the new lifecycle
 contract have not yet reported a result.
+
+
+## Verified policy decisions and validation — 2026-11-27
+
+This section supersedes the earlier in-progress validation notes above.
+
+### Binding medical-exception policy
+
+The Master Blueprint is authoritative:
+
+- Only a user with the 'admin' role may approve or reject a medical exception. 'support' is not an approver.
+- A tester submits one or more specific dates (1–14), a reason (20–4000 characters), and optional evidence. A pending request does not pause the assignment and does not change its due date.
+- Every approved requested date adds exactly one calendar day to the assignment schedule. An approved date is an excused calendar day, not a check-in and not reward-bearing activity.
+- An approved date must not overlap an existing check-in or another approved exception date for the same assignment. Duplicate/overlapping dates must never add a second extension.
+- Rejection adds no extension. Both decisions must retain reviewer identity, timestamp and decision note, audit before/after state, and notify the tester.
+- The existing 'assignments.medical_extension_days' and 'medical_exception_requests' schema are the source structures; do not create a parallel exception model.
+- Medical evidence is sensitive. Keep request/review operations behind narrow RPCs and admin-only access. Do not broaden Support access to raw check-ins, feedback, or medical evidence. The V2 support boundary migration deliberately removed Support from direct SELECT access to assignments, check-ins and feedback.
+
+### 14-day completion interpretation
+
+- Completion requires 14 valid TestDZ check-ins on 14 required, non-excused calendar dates.
+- Every required date must have exactly one check-in. The unique key on '(assignment_id, checkin_date)' remains the duplicate guard.
+- Approved excused dates are skipped when evaluating required check-in dates and extend the calendar window by exactly one day each; they do not increment the 14-check-in count.
+- Any non-excused missed required date is an interruption and fails the assignment. A pending exception is not an approved excuse and cannot suppress that failure.
+- All date calculations use 'Africa/Algiers' local dates, independent of database session timezone.
+- The feedback-quality gate is separate from developer feedback triage. Only 'feedback.quality_status = accepted' satisfies it; 'pending' or 'rejected' does not.
+- Developer approval remains a separate final confirmation after the tester has met the 14-day and feedback-quality gates.
+
+### Current migration and test state
+
+- Migration '036_assignment_review_lifecycle.sql' is present on 'work/assignment-review-lifecycle'. It adds attempt history, one-open-attempt enforcement, immutable review decisions, owner-developer review authorization, audit/outbox writes, and a fail-closed finalization/approval gate.
+- The approval and finalization gates intentionally return 'SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED' until the complete 14-day, feedback-quality, medical-exception and evidence checks are implemented together. This branch is not launch-ready.
+- The first full SQL replay found a contract-fixture defect: the second attempt was still a 'draft' when the test tried to review it. The test now explicitly transitions its synthetic fixture to 'submitted', matching the state expected by the review RPC.
+- GitHub Actions run 46045865794 (commit 4c9ddad96180cfbea32d21cec2642586eefd6579) completed successfully: isolated Supabase migration/contracts, frontend typecheck, and notification/invitation Edge Function typecheck all passed.
+- The successful run validates migration 036 and the current SQL contracts only. It does not validate the still-unimplemented completion gates, scheduler, or hosted Supabase state.
+
+### Next implementation boundary
+
+Migration 037 must implement and test the remaining prerequisites as one fail-closed unit before either finalization or approval can be enabled:
+
+1. Admin-only medical-exception review RPCs and tester request RPC, with date-range validation, overlap protection, idempotent schedule extension, audit, and outbox notification.
+2. Explicit feedback-quality review RPC and audit/notification path, without reusing developer feedback triage.
+3. Database-enforced check-in sequence and 14 valid required dates using Algeria-local dates and approved-exception exclusions.
+4. One shared prerequisite function used by both finalization and developer approval, including attachment metadata/Storage ownership verification.
+5. Contract tests for pending/approved/rejected/overlapping exceptions, missed dates, duplicate dates, 14/14, feedback quality, role boundaries, concurrency and idempotency.
+6. Keep 48-hour reminders and 72-hour auto-approval server-only and disabled until a verified scheduler invocation exists. Auto-approval must re-check every prerequisite and must never create wallet/reward entries.
+
+No hosted Supabase writes, merge, PR, feature-flag change, or deployment is authorized by this validation.
