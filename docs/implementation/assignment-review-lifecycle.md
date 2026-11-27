@@ -453,15 +453,21 @@ The candidate evaluator now requires all 14 check-ins across the first 14 non-ex
 
 This is a candidate-only change to migration 038 and its contract. It requires the current CI run to complete before verification can be claimed.
 
-### Pending medical exception grace and rejection — 2026-11-27
+### Strict pending medical exception policy and post-failure recovery — 2026-11-27
 
-A further race-condition review found that a tester could submit a medical exception request for a missed day, but the next daily check-in could mark the assignment failed before Admin had time to review the pending request.
+The binding Master Blueprint policy is strict: a pending medical request does not pause the assignment, does not suppress a missed-day interruption, and does not change the due date. Only an explicit Admin approval excuses its requested dates and adds one calendar day per approved date.
 
-The candidate now treats pending medical dates as provisional exclusions only for the missed-day interruption calculation. This does not grant an extension or satisfy completion: the submission prerequisite still blocks while any medical request is pending. When Admin rejects a pending request, the review transaction checks whether a requested date still lacks a check-in and falls within the first 14 non-excused required days; if so, it marks the assignment failed and records an interruption audit event and tester notification. A rejected request for a date beyond the first 14 required days does not invalidate an already completed 14-day run. If the tester submitted a check-in for the date while the request was pending, rejection does not fail the assignment for that date.
+Migration `045_strict_medical_exception_recovery.sql` makes the implementation match that policy:
 
-The 037 contract now creates a pending request for a missed date, submits the next daily check-in while Admin review is pending, confirms the assignment remains active during review, and then verifies that rejection fails the assignment with an audit event and notification. Locking remains assignment-first for both check-in and Admin review to serialize the decision.
+- The daily check-in evaluator skips only `approved` medical dates. Pending and rejected dates remain required dates.
+- A pending request can coexist with an assignment interruption; the assignment is marked `failed` when a required date is missed.
+- Testers may create a request and attach private evidence while the assignment is `active` or `failed`, and Admin may review a pending request in either state.
+- An approval extends the due date only by the number of approved dates. If the assignment had failed, the RPC checks every elapsed required date before today. It reactivates the assignment only when every such date is either checked in or explicitly approved as an exception.
+- If any other elapsed required date remains unexcused, the assignment stays `failed`. Approval does not erase unrelated interruptions.
+- Rejection adds no extension. If a requested required date remains unchecked, an active assignment is failed; an already failed assignment remains failed.
+- The Admin decision, assignment state transition, extension values, recovery result, audit events and tester notification are written in the same database transaction.
 
-This candidate change is included in the latest CI run and is not considered verified until all jobs pass.
+The medical contract now covers: pending does not pause or extend; a missed day can fail the assignment while the request remains pending; late approval can safely reactivate when all missed dates are covered; approval does not reactivate when another missed day remains; and rejection adds no extension.
 
 ### Latest complete validation — 2026-11-27
 
