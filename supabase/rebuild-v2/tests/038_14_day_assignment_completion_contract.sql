@@ -71,9 +71,10 @@ BEGIN
   SELECT c.id INTO v_cohort
   FROM rebuild_v2.cohorts c WHERE c.name='14 Day Completion Contract Cohort';
 
-  -- 15 calendar dates, with one Admin-approved medical date skipped, produce
-  -- exactly 14 required check-ins. The excused date is not a check-in.
-  v_start_date := v_today-14;
+  -- 16 calendar dates, with one Admin-approved medical date skipped, produce
+  -- 15 required check-ins. The first 14 required days satisfy completion;
+  -- the extra later check-in must not invalidate an otherwise complete run.
+  v_start_date := v_today-15;
   v_excused_date := v_today-7;
 
   INSERT INTO rebuild_v2.assignments(
@@ -107,8 +108,8 @@ BEGIN
   FROM generate_series(v_start_date::timestamp,v_today::timestamp,interval '1 day') g(day)
   WHERE g.day::date<>v_excused_date;
 
-  IF (SELECT count(*) FROM rebuild_v2.checkins WHERE assignment_id=v_assignment)<>14 THEN
-    RAISE EXCEPTION 'FAIL: fixture must contain exactly 14 check-ins';
+  IF (SELECT count(*) FROM rebuild_v2.checkins WHERE assignment_id=v_assignment)<>15 THEN
+    RAISE EXCEPTION 'FAIL: fixture must contain 15 check-ins including one after the first 14 required days';
   END IF;
   IF EXISTS (
     SELECT 1 FROM rebuild_v2.checkins
