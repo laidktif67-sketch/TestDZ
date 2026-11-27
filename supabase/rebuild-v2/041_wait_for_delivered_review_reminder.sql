@@ -23,6 +23,16 @@ WHERE e.aggregate_id=s.id
   AND s.reminder_event_id IS NULL
   AND s.status='submitted';
 
+-- Legacy timestamps recorded at enqueue time are not proof of delivery.
+UPDATE rebuild_v2.assignment_submissions
+SET reminder_sent_at=NULL
+WHERE reminder_event_id IS NULL
+  AND reminder_sent_at IS NOT NULL;
+
+ALTER TABLE rebuild_v2.assignment_submissions
+  ADD CONSTRAINT assignment_submissions_reminder_delivery_requires_event_check
+  CHECK (reminder_sent_at IS NULL OR reminder_event_id IS NOT NULL);
+
 CREATE INDEX assignment_submissions_reminder_event_idx
   ON rebuild_v2.assignment_submissions(reminder_event_id)
   WHERE reminder_event_id IS NOT NULL;
