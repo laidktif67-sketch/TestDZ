@@ -463,3 +463,13 @@
 | 10 — تقرير التدقيق | جارٍ | النتائج أعلاه أولية وغير نهائية |
 | 11 — الإصلاح | محظور حتى اعتماد التقرير | لا تغييرات تطبيقية أثناء التدقيق |
 | 12 — Release readiness | لم تبدأ | — |
+
+
+### متابعة مطابقة دورة التطبيق وإعداد الاختبار ذي الخطوات الست
+
+- تمت مطابقة create_app وupdate_app وarchive_app وrestore_app وget_app_limit في apps-api.ts مع wrappers المقابلة في 003_app_lifecycle.sql؛ أسماء المعاملات وترتيبها متوافق في الاستدعاءات المقروءة.
+- create_app في SQL يفرض تحققاً خادمياً من اسم التطبيق ووصفه وصيغة package name والتصنيف وحدود خطة المستخدم. update_app يقيّد التعديل بمالك التطبيق وحالتي draft/rejected، ويتحقق من icon URL إن أُرسل.
+- صفحة DeveloperCreateTestSixStepPage.tsx تستدعي createDeveloperTestWithConfig، والواجهة ترسل p_test_config عبر create_test_with_config. تمت مطابقة ذلك مع 029_six_step_test_config.sql الذي يتحقق من allowlist للحقول والقيم ويشترط اتساق targetTesters مع p_min_testers وتعليمات الاختبار.
+- 035_sync_six_step_config_on_test_edit.sql يعيد مزامنة حقول الهدف والتعليمات داخل test_config عند تحديث بيانات الاختبار الأساسية. لم يظهر mismatch ساكن في هذه النقطة.
+- SupportStaffQueuePage.tsx يفحص أدوار Admin/Support داخل الصفحة قبل عرض الطابور، رغم أن route نفسه لا يحمل RoleGuard مستقلاً في App.tsx؛ هذا يدعم تصنيف ARCH-ROLE-002 كملاحظة توزيع حراسة لا كدليل اختراق.
+- لم يتم تنفيذ اختبارات runtime أو تعديل أي كود. يجب اختبار ملكية التطبيق/الاختبار بحسابات منفصلة قبل اعتماد صلاحيات هذه التدفقات.
