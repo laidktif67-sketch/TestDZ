@@ -35,6 +35,19 @@ function dateTime(value: string | null) {
   if (!value) return "Not submitted";
   return new Date(value).toLocaleString(undefined, { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
+function algeriaDate(value: string | Date) {
+  if (typeof value === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return value;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Algiers", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date(value));
+  const part = (type: string) => parts.find(item => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+function nextCalendarDate(value: string) {
+  const date = new Date(`${value}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
+}
 function Step({ n, children }: { n: number; children: ReactNode }) {
   return <h3 className="as-step-title"><span>{n}</span>{children}</h3>;
 }
@@ -48,6 +61,9 @@ export default function AssignmentSubmissionPage() {
   const [assignment, setAssignment] = useState<AssignmentRow | null>(null);
   const [checkins, setCheckins] = useState<{ id: string; checkin_date: string }[]>([]);
   const [feedbackCount, setFeedbackCount] = useState(0);
+  const [feedbackQuality, setFeedbackQuality] = useState<{ quality_status: string; reviewed_at: string | null; reviewed_by: string | null } | null>(null);
+  const [medicalExceptions, setMedicalExceptions] = useState<{ status: string; requested_dates: string[] }[]>([]);
+  const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [report, setReport] = useState("");
@@ -73,7 +89,11 @@ export default function AssignmentSubmissionPage() {
         test: { id: "preview-test", title: "Performance Testing", status: "running", start_date: "2026-11-07", end_date: "2026-11-14", app: { name: "PlayStore App", icon_url: null } }
       });
       setCheckins([{ id: "1", checkin_date: "2026-11-07" }, { id: "2", checkin_date: "2026-11-08" }]);
-      setFeedbackCount(1); setLoading(false); return;
+      setFeedbackCount(1);
+      setFeedbackQuality({ quality_status: "pending", reviewed_at: null, reviewed_by: null });
+      setMedicalExceptions([]);
+      setSubmissionStatus(null);
+      setLoading(false); return;
     }
     if (!session?.user?.id || !id) { setLoading(false); return; }
     let alive = true;
@@ -86,6 +106,9 @@ export default function AssignmentSubmissionPage() {
       else if (result.assignment) setAssignment(result.assignment as AssignmentRow);
       setCheckins(result.checkins || []);
       setFeedbackCount(result.feedbackCount || 0);
+      setFeedbackQuality(result.feedback || null);
+      setMedicalExceptions(result.medicalExceptions || []);
+      setSubmissionStatus(result.submission?.status || null);
       if (result.error) setLoadError(result.error);
       setLoading(false);
     })().catch(() => {
@@ -94,7 +117,23 @@ export default function AssignmentSubmissionPage() {
     return () => { alive = false; };
   }, [id, session?.user?.id, previewMode]);
 
-  const progress = assignment?.status === "completed" ? 100 : Math.min(100, Math.round(((Math.min(checkins.length, 14) / 14) * 70) + (feedbackCount > 0 ? 15 : 0) + (evidence.length > 0 ? 15 : 0)));
+  const todayInAlgeria = algeriaDate(new Date());
+  const startDateInAlgeria = assignment?.start_date ? algeriaDate(assignment.start_date) : "";
+  const approvedMedicalDates = new Set(medicalExceptions.filter(item => item.status === "approved").flatMap(item => item.requested_dates || []));
+  const pendingMedicalException = medicalExceptions.some(item => item.status === "pending");
+  const checkedInDates = new Set(checkins.map(item => item.checkin_date));
+  const requiredDates: string[] = [];
+  if (startDateInAlgeria && startDateInAlgeria <= todayInAlgeria) {
+    for (let day = startDateInAlgeria; day <= todayInAlgeria && requiredDates.length < 14; day = nextCalendarDate(day)) {
+      if (!approvedMedicalDates.has(day)) requiredDates.push(day);
+    }
+  }
+  const completedRequiredDays = requiredDates.filter(day => checkedInDates.has(day)).length;
+  const checkinsReady = requiredDates.length === 14 && completedRequiredDays === 14;
+  const feedbackAccepted = feedbackQuality?.quality_status === "accepted" && Boolean(feedbackQuality.reviewed_at) && Boolean(feedbackQuality.reviewed_by);
+  const reportReady = report.trim().length >= 20;
+  const reviewPrerequisitesReady = checkinsReady && feedbackAccepted && !pendingMedicalException && reportReady;
+  const progress = assignment?.status === "completed" ? 100 : Math.min(100, Math.round(((completedRequiredDays / 14) * 70) + (feedbackAccepted ? 20 : 0) + (reportReady ? 10 : 0)));
   const points = assignment?.points_awarded ?? null;
   const draftKey = `testdz:assignment-submission:${session?.user?.id || "preview"}:${id}`;
   const appName = assignment?.test?.app?.name || "Assigned app";
@@ -102,12 +141,12 @@ export default function AssignmentSubmissionPage() {
     ? `${new Date(assignment.test.start_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "2-digit" })} – ${new Date(assignment.test.end_date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" })}`
     : "Dates not set";
   const completedLabel = assignment?.status === "completed" ? "Completed" : assignment?.status === "active" ? "Active" : assignment?.status || "Pending";
-  const canSubmit = assignment?.status === "active";
+  const canSubmit = assignment?.status === "active" && submissionStatus !== "submitted" && submissionStatus !== "approved";
   const checklist = [
-    { label: "14 daily check-ins", done: checkins.length >= 14 },
-    { label: "Feedback submitted", done: feedbackCount > 0 },
-    { label: "Evidence attached", done: evidence.length > 0 },
-    { label: "Assignment ready for review", done: assignment?.status === "completed" },
+    { label: "14 required check-in days", done: checkinsReady },
+    { label: "Feedback quality accepted by Admin", done: feedbackAccepted },
+    { label: "No pending medical exception", done: !pendingMedicalException },
+    { label: "Final report has at least 20 characters", done: reportReady },
   ];
   const totalSize = useMemo(() => evidence.reduce((sum, item) => sum + item.file.size, 0), [evidence]);
   const handleFinalSubmit = async () => {
@@ -126,8 +165,8 @@ export default function AssignmentSubmissionPage() {
       const existing = await getTesterAssignmentSubmission(id);
       if (existing.error) throw existing.error;
       if (existing.data?.status === "submitted") {
-        setNotice("This assignment has already been submitted.");
-        setAssignment(current => current ? { ...current, status: "completed" } : current);
+        setSubmissionStatus("submitted");
+        setNotice("Your final report is already awaiting developer review.");
         return;
       }
 
@@ -171,8 +210,8 @@ export default function AssignmentSubmissionPage() {
       window.localStorage.removeItem(draftKey);
       evidence.forEach(item => URL.revokeObjectURL(item.url));
       setEvidence([]);
-      setAssignment(current => current ? { ...current, status: "completed", completed_at: new Date().toISOString() } : current);
-      setNotice("Your final report and evidence were submitted successfully.");
+      setSubmissionStatus("submitted");
+      setNotice("Your final report and evidence were submitted successfully and are awaiting developer review.");
     } catch {
       setNotice("Submission could not be completed. Your draft and uploaded evidence remain available; check your connection and try again.");
     } finally {
@@ -254,8 +293,8 @@ export default function AssignmentSubmissionPage() {
             <section className="as-form-card">
               <h2 className="as-card-heading"><Icon name="check" size={24}/>Submission Form</h2>
               <div className="as-section"><Step n={1}>Your Results Summary</Step><div className="as-summary">
-                <div><Icon name="chart" size={28}/><span>Check-ins Completed</span><strong>{checkins.length}<small> / 14</small></strong></div>
-                <div><Icon name="receipt" size={28}/><span>Feedback Submitted</span><strong>{feedbackCount}</strong></div>
+                <div><Icon name="chart" size={28}/><span>Required Days Completed</span><strong>{completedRequiredDays}<small> / 14</small></strong></div>
+                <div><Icon name="receipt" size={28}/><span>Feedback Quality</span><strong className="as-status-text">{feedbackQuality?.quality_status || (feedbackCount ? "Pending review" : "Not submitted")}</strong></div>
                 <div><Icon name="clock" size={28}/><span>Assignment Status</span><strong className="as-status-text">{completedLabel}</strong></div>
                 <div><Icon name="star" size={28}/><span>Points Awarded</span><strong className="as-points">{points===null?"Not available":"+"+points}</strong></div>
               </div></div>
@@ -273,12 +312,12 @@ export default function AssignmentSubmissionPage() {
               </div>
               <div className="as-section"><Step n={4}>Additional Comments <small>(Optional)</small></Step><textarea className="as-comments" maxLength={500} value={comments} onChange={event => setComments(event.target.value)} placeholder="Add any additional notes about your test..."/><div className="as-char-count">{comments.length} / 500</div></div>
               {notice && <p className="as-notice" role="status" aria-live="polite">{notice}</p>}
-              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ Make sure your assignment requirements are complete.</p><p>✓ Review your results and evidence before sending.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => { if (previewMode || !session?.user?.id) { setNotice("Draft saving is unavailable in preview mode."); return; } try { window.localStorage.setItem(draftKey, JSON.stringify({ report, comments, savedAt: new Date().toISOString() })); setNotice("Draft saved on this device. Attached files are not saved and must be selected again."); } catch { setNotice("Could not save the draft on this device. Check available browser storage."); } }}><Icon name="file" size={19}/>Save as Draft</button><button type="button" className="as-submit-btn" disabled={!canSubmit || !report.trim() || (isTesterWorkflowV2Enabled && submitting)} onClick={() => { if (isTesterWorkflowV2Enabled) void handleFinalSubmit(); else setNotice("Your report is ready, but secure final submission is not enabled in this environment. No report or files have been sent."); }}><Icon name="send" size={19}/>{submitting ? "Submitting…" : canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
+              <div className="as-form-footer"><div className="as-guidance"><Icon name="info" size={20}/><div><p>✓ All 14 required days and accepted feedback are checked against the workflow rules.</p><p>✓ Evidence is optional; any uploaded files are verified securely before finalization.</p></div></div><div className="as-actions"><button type="button" className="as-preview-btn" onClick={() => { if (previewMode || !session?.user?.id) { setNotice("Draft saving is unavailable in preview mode."); return; } try { window.localStorage.setItem(draftKey, JSON.stringify({ report, comments, savedAt: new Date().toISOString() })); setNotice("Draft saved on this device. Attached files are not saved and must be selected again."); } catch { setNotice("Could not save the draft on this device. Check available browser storage."); } }}><Icon name="file" size={19}/>Save as Draft</button><button type="button" className="as-submit-btn" disabled={!canSubmit || (isTesterWorkflowV2Enabled && (!reviewPrerequisitesReady || submitting)) || (!isTesterWorkflowV2Enabled && !report.trim())} onClick={() => { if (isTesterWorkflowV2Enabled) void handleFinalSubmit(); else setNotice("Your report is ready, but secure final submission is not enabled in this environment. No report or files have been sent."); }}><Icon name="send" size={19}/>{submitting ? "Submitting…" : submissionStatus === "submitted" ? "Awaiting Developer Review" : canSubmit ? "Submit Assignment" : "Submission unavailable"}</button></div></div>
             </section>
             <aside className="as-side">
               <section className="as-side-card as-progress-card"><h2><Icon name="chart" size={22}/>Submission Readiness</h2><div className="as-progress-content"><div className="as-progress-ring" style={{"--progress": progress} as CSSProperties}><strong>{progress}%</strong></div><div className="as-checklist">{checklist.map(item => <span className={item.done ? "is-done" : "is-pending"} key={item.label}><i>{item.done ? "✓" : "·"}</i>{item.label}</span>)}<b><Icon name="trophy" size={22}/> {points===null?"Reward pending":"+"+points+" Points"}</b></div></div></section>
               <section className="as-side-card as-details-card"><h2><Icon name="receipt" size={22}/>Submission Details</h2><div><Icon name="calendar" size={20}/><span>Assignment Started<strong>{dateTime(assignment.start_date)}</strong></span></div><div><Icon name="calendar" size={20}/><span>Last Updated<strong>{dateTime(assignment.completed_at || assignment.created_at)}</strong></span></div><div><Icon name="clock" size={20}/><span>Status<strong className="as-detail-status">{completedLabel}</strong></span></div><div><Icon name="info" size={20}/><span>Assignment ID<strong className="as-id">{assignment.id.slice(0, 13)}…</strong></span></div></section>
-              <section className="as-success-card"><span>✓</span><div><strong>{assignment.status === "completed" ? "Assignment completed" : "You're making progress!"}</strong><p>{assignment.status === "completed" ? "Your assignment is marked as completed." : "Keep your evidence and comments ready before final submission."}</p></div></section>
+              <section className="as-success-card"><span>✓</span><div><strong>{submissionStatus === "submitted" ? "Awaiting developer review" : assignment.status === "completed" ? "Assignment completed" : "You're making progress!"}</strong><p>{submissionStatus === "submitted" ? "Your report was submitted. The assignment remains active until the developer approves it." : assignment.status === "completed" ? "Your assignment has been approved and completed." : pendingMedicalException ? "A medical exception is awaiting Admin review; final submission is paused." : feedbackCount && !feedbackAccepted ? "Your feedback must pass the Admin quality review before final submission." : "Complete the required days, accepted feedback and report before submitting."}</p></div></section>
             </aside>
           </div>
         </> : null}
