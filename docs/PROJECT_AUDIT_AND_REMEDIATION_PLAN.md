@@ -247,3 +247,77 @@
 | 12 — Release readiness | لم تبدأ | لا إعلان جاهزية دون أدلة |
 
 حدّث هذا السجل فقط بعد تنفيذ عمل فعلي موثق. لا تغيّر الحالة إلى مكتمل اعتماداً على التخمين أو على وجود ملفات فقط.
+
+
+## 7. نتائج تدقيق موثقة — تحديث 2026-11-27
+
+نطاق هذه النتائج: قراءة ملفات commit المرجعي `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`. لم يتم تشغيل قاعدة محلية في هذه الجولة، ولم تُجرَ أي تغييرات على الفرع الرسمي أو Supabase المستضافة.
+
+### نتائج أولية
+
+#### `CI-001` — Medium — Type-check لـ Edge Functions لا يعمل عند تغيير ملفات الدوال وحدها
+
+- **الحالة:** Confirmed (ملاحظة على إعداد CI، وليست دليلاً على خطأ داخل الدالة).
+- **الدليل:** `.github/workflows/rebuild-v2-tests.yml` يحتوي على job باسم `notification-edge-function` ينفذ `deno check` على:
+  - `supabase/functions/dispatch-notifications/index.ts`
+  - `supabase/functions/developer-invitations/index.ts`
+- **المشكلة:** قوائم `paths` في محفزات `push` و`pull_request` لهذا الـworkflow تشمل `supabase/rebuild-v2/**` و`supabase/seed.sql` و`supabase/config.toml` وملف workflow نفسه، لكنها لا تشمل `supabase/functions/**`.
+- **الأثر:** إذا تغيرت Edge Function وحدها، فلن يكون هذا الـworkflow مضمون التشغيل، وبالتالي قد لا يعمل فحص Deno لهذه التغييرات عبر هذا المسار.
+- **الإصلاح المقترح:** إضافة `supabase/functions/**` إلى مسارات `push` و`pull_request`، أو إنشاء workflow مستقل للدوال مع محفز مسارات صريح.
+- **اختبار القبول:** تعديل تجريبي في فرع اختبار داخل `supabase/functions/**` يجب أن يطلق workflow ويشغّل خطوة Deno؛ وتغيير خارج النطاق لا يجب أن يطلقه بلا داعٍ.
+- **ملاحظة:** لم يتم إجراء الإصلاح في مرحلة التدقيق.
+
+#### `SEC-OBS-001` — لا تُصنف كاجتياز أمني حتى الآن
+
+- **الحالة:** Needs runtime validation.
+- **الدليل الثابت في المستودع:** `002_security.sql` ينشئ سياسات SELECT للأدوار والجداول الحساسة، ويمنح authenticated صلاحية SELECT على جداول مخطط V2. ويقيّد صلاحيات تعديل بعض أعمدة الملف الشخصي، كما يسحب صلاحيات تنفيذ عدة دوال خاصة من PUBLIC وanon.
+- **الاختبارات المكتوبة:** `tests/security_contract.sql` يفحص 43 جدولاً عند نقطة ما بعد migration 006، ويتحقق من FORCE RLS وتغطية السياسات وحدود grants؛ و`tests/010_security_definer_boundary_contract.sql` يفحص search_path وملكية دوال SECURITY DEFINER وحدود إنشاء المخططات.
+- **الحد:** لم نشغّل هذه العقود في قاعدة محلية في هذه الجولة؛ وجود الاختبار لا يثبت نجاحه على البيئة الفعلية أو الحالية.
+- **الخطوة المطلوبة:** تشغيل workflow المحلي على SHA محدد، مراجعة logs لكل عقد، ثم اختبار حالات المستخدمين المتقاطعة بحسابات منفصلة.
+
+#### `INT-OBS-001` — الوظائف الطرفية موجودة كمصدر، لكن نشرها وتشغيلها الحي غير مثبتين
+
+- **الحالة:** Not verifiable from repository alone.
+- **الدليل:** يوجد مصدر `developer-invitations` ويتحقق من JWT عبر `supabase.auth.getUser(accessToken)`، ويستخدم HMAC لتوليد رمز دعوة، ويخزن بصمة SHA-256، ويعيد حالة `not_emailed` بوضوح. ويوجد مصدر `dispatch-notifications` يتحقق من سر `x-dispatch-secret` قبل استخدام service-role client.
+- **الحد:** وثائق `supabase/rebuild-v2/README.md` تنص على أن الدوال لم تُنشر ولم تُجدول في بيئة TestDZ أو FixLab المستضافة ضمن هذا المسار. لا يمكن استنتاج حالتها الحية من ملفات المصدر.
+- **الخطوة المطلوبة:** مراجعة إعدادات الاستضافة والأسرار والجدولة لاحقاً، فقط بعد موافقة مستقلة؛ لا تنشر أو تضبط أسراراً أثناء التدقيق.
+
+### ما تم فحصه في هذه الجولة
+
+- `supabase/rebuild-v2/002_security.sql`
+- `supabase/rebuild-v2/006_storage_policies.sql`
+- `supabase/rebuild-v2/028_restrict_support_attachment_reads_to_public_messages.sql`
+- `supabase/rebuild-v2/033_support_tester_data_boundary.sql`
+- `supabase/rebuild-v2/034_tester_feedback_reply_access.sql`
+- `supabase/rebuild-v2/tests/security_contract.sql`
+- `supabase/rebuild-v2/tests/010_security_definer_boundary_contract.sql`
+- `supabase/rebuild-v2/tests/030_apk_build_storage_contract.sql`
+- `supabase/functions/developer-invitations/index.ts`
+- `supabase/functions/dispatch-notifications/index.ts`
+- `.github/workflows/rebuild-v2-tests.yml`
+- `.github/workflows/ci.yml`
+- `.github/workflows/frontend-ci.yml`
+- `apps/web/src/lib/supabase-v2.ts`
+- `apps/web/src/lib/supabase-data.ts`
+- `apps/web/src/features/wallet/wallet-api.ts`
+- `apps/web/src/features/tester/assignments-api.ts`
+- `apps/web/src/features/apps/apps-api.ts`
+- `apps/web/src/features/support/support-api.ts`
+
+### تحديث سجل التقدم
+
+| المرحلة | الحالة | ملاحظات |
+|---|---|---|
+| 0 — الجرد الأولي | جزئي | إحصاء شجرة المستودع والتمييز بين SQL candidate وlegacy |
+| 1 — Architecture | جزئي | تأكدنا من وجود selector مركزي بين `public` و`rebuild_v2`؛ لم تكتمل مطابقة كل routes وAPI modules |
+| 2 — Database & Security | جزئي | قراءة عينة أمنية واختبارات عقود؛ يلزم تحليل جميع migrations وRPCs وتشغيل الاختبارات محلياً |
+| 3 — Auth & Identity | لم تكتمل | لم تُراجع كل تدفقات Auth والـcallbacks |
+| 4 — Tester | لم تكتمل | تمت قراءة عينات من assignment/support APIs فقط |
+| 5 — Developer | لم تكتمل | تمت قراءة عينات من apps/tests APIs فقط |
+| 6 — Admin & Support | جزئي | تمت قراءة عينات support وrole-management وسياسات المرفقات |
+| 7 — Integrations | جزئي | فحص مصدري Edge Functions وCI؛ حالة الاستضافة الحية غير مثبتة |
+| 8 — UI/UX | لم تبدأ | — |
+| 9 — Performance | لم تبدأ | — |
+| 10 — تقرير التدقيق | جارٍ | سجل النتائج الأولية أعلاه، وليس التقرير النهائي |
+| 11 — الإصلاح | محظور حتى اعتماد التقرير | لا تغييرات على التطبيق أثناء التدقيق |
+| 12 — Release readiness | لم تبدأ | لا إعلان جاهزية دون أدلة |
