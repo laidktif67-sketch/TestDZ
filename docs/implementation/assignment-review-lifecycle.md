@@ -344,3 +344,31 @@ The first local contract run exposed a constraint mismatch: system approval inte
 Migration 039 also closes the rejected-feedback recovery gap. The tester form parses the structured feedback body using actual newline delimiters, prefills the rejected content, and allows revision only after an Admin rejection; pending and accepted feedback remain locked.
 
 **Operational launch gate:** the processor is server-only and no hosted scheduler/cron invocation has been configured. Therefore the 48-hour reminders and 72-hour auto-approval are implemented but are not operational until a controlled scheduler is configured and monitored. GitHub Actions run [46053471779](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46053471779) completed successfully on commit `9d1ab5d4ea832fe6ef041466f5b2ed79d65188ee`: all 40 numbered SQL migrations applied to disposable local Supabase, all SQL contracts including 040 passed, local PostgREST schema-exposure checks passed, frontend typecheck passed, and notification/invitation Edge Function typechecks passed.
+
+
+## CI and scheduler operations hardening — 2026-11-27
+
+The complete candidate workflow [46053815266](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46053815266) completed successfully on commit `4d71e11a03b2ca6a4aa0dcf196cedf21dde27cd6`:
+
+- All 40 numbered SQL migrations applied to a disposable local Supabase stack.
+- All SQL contract scripts passed, including the assignment review deadline processor contract.
+- Local PostgREST exposed `rebuild_v2` and correctly kept `rebuild_v2_private` unexposed.
+- Frontend TypeScript check passed.
+- Deno typecheck passed for notification dispatch, developer invitations, and assignment review deadlines Edge Functions.
+
+A CI trigger gap was then corrected on this work branch: pull requests changing `supabase/functions/**` now trigger the Edge Function typecheck job, and the step name explicitly reflects that all Edge Functions are checked. The follow-up run [46056107092](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46056107092) is validating this workflow-only change.
+
+### Scheduler enablement runbook (not activated)
+
+The deadline worker is intentionally an authenticated server-to-server endpoint:
+
+- Deploy the `assignment-review-deadlines` Edge Function only after the database migrations are approved and applied to the intended environment.
+- Set `ASSIGNMENT_REVIEW_DISPATCH_SECRET` as an Edge Function secret. Generate a high-entropy random value; never commit it, put it in a migration, or print it in logs.
+- The function also requires the platform-provided `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The service-role key must remain server-side.
+- Configure a managed scheduler (for example, Supabase Cron with an HTTP request extension or an external secret-capable scheduler) to send an HTTPS POST to `/functions/v1/assignment-review-deadlines` at least hourly. Store the dispatch secret in a managed secret store and send it only as the `x-assignment-review-secret` header.
+- An empty POST body uses the default batch size of 50. An optional JSON body may set `{"limit":50}`; the accepted range is 1–100.
+- Monitor HTTP success/failure and the returned `reminders_sent`, `auto_approved`, and `blocked_by_prerequisites` counts. Alert on repeated non-2xx responses, missing runs, or sustained backlog. Keep request headers and secrets out of logs.
+- Before enabling automatic decisions, run a controlled staging rehearsal covering a 48-hour reminder, delayed first invocation, 72-hour approval eligibility, developer decision precedence, failed prerequisites, idempotent retries, and absence of wallet/reward/payment side effects. Verify the audit and notification records.
+- Rotate the dispatch secret through the managed secret store and Edge Function configuration together; verify the new value before retiring the old one.
+
+This runbook is documentation only. No hosted Edge Function deployment, secret creation, cron job, hosted database write, merge, or production feature-flag change was performed. Until these steps are explicitly approved and completed, reminders and automatic approvals remain non-operational.
