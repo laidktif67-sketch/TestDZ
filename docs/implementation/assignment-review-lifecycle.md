@@ -360,18 +360,33 @@ A CI trigger gap was then corrected on this work branch: pull requests changing 
 
 ### Scheduler enablement runbook (not activated)
 
-The deadline worker is intentionally an authenticated server-to-server endpoint:
+The review lifecycle depends on **two separate server-to-server workers**. The deadline processor only enqueues reminders; it does not create inbox notifications. The notification dispatcher must run independently or reminder delivery will remain pending and automatic approval will correctly stay blocked.
+
+#### 1. Notification outbox dispatcher
+
+- Deploy the `dispatch-notifications` Edge Function only after the V2 database migrations are approved and applied to the intended environment.
+- Set `NOTIFICATION_DISPATCH_SECRET` as an Edge Function secret. Generate a high-entropy random value; never commit it, put it in a migration, or print it in logs.
+- The function also requires the platform-provided `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Keep the service-role key server-side.
+- Configure a managed scheduler to POST to `/functions/v1/dispatch-notifications` frequently (recommended every 1–5 minutes) using the `x-dispatch-secret` header. Keep the secret in a managed secret store.
+- An empty JSON object uses the default batch size of 50. The optional JSON body may set `{"limit":50}`; the accepted range is 1–100.
+- Monitor HTTP success/failure and the returned `processed` count. Alert on repeated non-2xx responses, missing runs, or a growing pending/failed outbox backlog.
+
+#### 2. Assignment review deadline processor
 
 - Deploy the `assignment-review-deadlines` Edge Function only after the database migrations are approved and applied to the intended environment.
-- Set `ASSIGNMENT_REVIEW_DISPATCH_SECRET` as an Edge Function secret. Generate a high-entropy random value; never commit it, put it in a migration, or print it in logs.
-- The function also requires the platform-provided `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The service-role key must remain server-side.
+- Set `ASSIGNMENT_REVIEW_DISPATCH_SECRET` as an Edge Function secret. Generate a separate high-entropy random value; never reuse the notification dispatch secret.
 - Configure a managed scheduler (for example, Supabase Cron with an HTTP request extension or an external secret-capable scheduler) to send an HTTPS POST to `/functions/v1/assignment-review-deadlines` at least hourly. Store the dispatch secret in a managed secret store and send it only as the `x-assignment-review-secret` header.
 - An empty POST body uses the default batch size of 50. An optional JSON body may set `{"limit":50}`; the accepted range is 1–100.
-- Monitor HTTP success/failure and the returned `reminders_queued`, `auto_approved`, and `blocked_by_prerequisites` counts. Alert on repeated non-2xx responses, missing runs, or sustained backlog. Keep request headers and secrets out of logs.
-- Before enabling automatic decisions, run a controlled staging rehearsal covering a 48-hour reminder, delayed first invocation, 72-hour approval eligibility, developer decision precedence, failed prerequisites, idempotent retries, and absence of wallet/reward/payment side effects. Verify the audit and notification records.
-- Rotate the dispatch secret through the managed secret store and Edge Function configuration together; verify the new value before retiring the old one.
+- Monitor HTTP success/failure and the returned `reminders_queued`, `auto_approved`, and `blocked_by_prerequisites` counts. Alert on repeated non-2xx responses, missing runs, or sustained backlog.
 
-This runbook is documentation only. No hosted Edge Function deployment, secret creation, cron job, hosted database write, merge, or production feature-flag change was performed. Until these steps are explicitly approved and completed, reminders and automatic approvals remain non-operational.
+#### 3. Staging rehearsal and secret rotation
+
+- Verify that the dispatcher turns a queued reminder event into a delivered in-app notification and records the outbox event as `delivered` with `processed_at`.
+- Verify the deadline worker does not start the 24-hour waiting period from enqueue time, does start it only from the delivered event timestamp, and does not auto-approve before the 72-hour deadline.
+- Run a controlled staging rehearsal covering delayed first invocation, developer decision precedence, failed prerequisites, bounded delivery retries, idempotent invocations, and absence of wallet/reward/payment side effects. Verify the audit, review-history, outbox, and notification records.
+- Rotate each dispatch secret through its managed secret store and matching Edge Function configuration together; verify the new value before retiring the old one. Never log request headers or secrets.
+
+This runbook is documentation only. No hosted Edge Function deployment, secret creation, cron job, hosted database write, merge, or production feature-flag change was performed. Until **both** workers are deployed, securely configured, scheduled, and monitored in an explicitly approved environment, reminders and automatic approvals remain non-operational.
 
 
 ### Final verification — 2026-11-27
