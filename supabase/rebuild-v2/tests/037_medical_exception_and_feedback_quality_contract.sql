@@ -87,7 +87,7 @@ DECLARE
   v_assignment uuid;
   v_feedback uuid;
   v_request uuid;
-  v_rejected_request uuid;
+  v_rejected_request uuid;\n  v_partial_assignment uuid;\n  v_partial_request uuid;
   v_today date := rebuild_v2_private.algeria_local_date();
   v_due_before timestamptz;
   v_due_after timestamptz;
@@ -216,45 +216,106 @@ BEGIN
   EXCEPTION WHEN SQLSTATE '55000' THEN NULL;
   END;
 
-  -- A separate request can be rejected; rejection never extends the schedule.
+  -- A pending request does not pause the schedule. The missed date fails the
+  -- assignment, but Admin can still review the pending request afterward.
   PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
   v_rejected_request := rebuild_v2.create_medical_exception_request(
     v_assignment,
-    'Another sufficiently detailed synthetic reason for a rejection test.',
+    'Another sufficiently detailed synthetic reason for a late approval test.',
     ARRAY[v_today-5]::date[]
   );
 
-  -- The pending request provisionally pauses interruption while Admin reviews.
   v_checkin:=rebuild_v2.submit_checkin(
-    v_assignment,'Current-day check-in while the prior medical date is pending review.'
+    v_assignment,'Current-day check-in after an earlier date was missed.'
   );
-  IF v_checkin IS NULL
-     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'active' THEN
-    RAISE EXCEPTION 'FAIL: pending medical request did not pause missed-day interruption';
+  IF v_checkin IS NOT NULL
+     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'failed' THEN
+    RAISE EXCEPTION 'FAIL: pending medical request incorrectly paused the missed-day interruption';
+  END IF;
+  IF (SELECT due_at FROM rebuild_v2.assignments WHERE id=v_assignment)<>v_due_after THEN
+    RAISE EXCEPTION 'FAIL: pending medical request changed the assignment due date';
   END IF;
 
   PERFORM set_config('request.jwt.claim.sub',v_admin::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
   IF NOT rebuild_v2.review_medical_exception(
+    v_rejected_request,'approved','Approved after the assignment was interrupted.'
+  ) THEN
+    RAISE EXCEPTION 'FAIL: Admin could not approve a pending request after assignment failure';
+  END IF;
+  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'active'
+     OR (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_assignment)<>v_extension_before+3
+     OR (SELECT due_at FROM rebuild_v2.assignments WHERE id=v_assignment)<>v_due_after+interval '1 day'
+     OR (SELECT count(*) FROM rebuild_v2.audit_events
+         WHERE action='assignment.reactivated_after_medical_approval' AND target_id=v_assignment)<>1 THEN
+    RAISE EXCEPTION 'FAIL: valid late medical approval did not extend and safely reactivate the assignment';
+  END IF;
+
+  -- Rejection still adds no extension and fails an active assignment when the
+  -- requested current required date remains unchecked.
+  v_rejected_request := rebuild_v2.create_medical_exception_request(
+    v_assignment,
+    'A separate sufficiently detailed reason for a rejection contract.',
+    ARRAY[v_today]::date[]
+  );
+  IF NOT rebuild_v2.review_medical_exception(
     v_rejected_request,'rejected','Rejected after administrative review.'
   ) THEN
     RAISE EXCEPTION 'FAIL: Admin could not reject a valid medical request';
   END IF;
-  IF (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_assignment)<>v_extension_before+2 THEN
-    RAISE EXCEPTION 'FAIL: rejected request changed the extension counter';
+  IF (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_assignment)<>v_extension_before+3
+     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'failed' THEN
+    RAISE EXCEPTION 'FAIL: rejected request changed extension days or failed to interrupt the assignment';
   END IF;
-  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'failed'
+
+  -- A late approval must not revive an assignment if another elapsed required
+  -- day remains unexcused.
+  INSERT INTO rebuild_v2.assignments(
+    cohort_id,test_id,tester_id,status,started_at,due_at
+  )
+  SELECT cohort_id,test_id,v_tester,'active',
+    (v_today-5)::timestamp AT TIME ZONE 'Africa/Algiers',
+    now()+interval '10 days'
+  FROM rebuild_v2.assignments WHERE id=v_assignment
+  RETURNING id INTO v_partial_assignment;
+
+  INSERT INTO rebuild_v2.checkins(assignment_id,tester_id,checkin_date,note)
+  SELECT v_partial_assignment,v_tester,g.day::date,'Partial recovery fixture check-in'
+  FROM generate_series(v_today-5,v_today-3,interval '1 day') g(day);
+
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+  v_partial_request := rebuild_v2.create_medical_exception_request(
+    v_partial_assignment,
+    'A detailed medical reason for one of two missed dates in the partial recovery test.',
+    ARRAY[v_today-1]::date[]
+  );
+  v_checkin := rebuild_v2.submit_checkin(
+    v_partial_assignment,'Attempt after two prior dates were missed.'
+  );
+  IF v_checkin IS NOT NULL
+     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>'failed' THEN
+    RAISE EXCEPTION 'FAIL: partial-recovery fixture did not fail on the unexcused date';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub',v_admin::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
+  IF NOT rebuild_v2.review_medical_exception(
+    v_partial_request,'approved','Approved only the requested date; another missed day remains.'
+  ) THEN
+    RAISE EXCEPTION 'FAIL: Admin could not adjudicate the partial recovery request';
+  END IF;
+  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>'failed'
      OR (SELECT count(*) FROM rebuild_v2.audit_events
-         WHERE action='assignment.interrupted' AND target_id=v_assignment
-           AND metadata->>'interruption_reason'='medical_exception_rejected')<>1
-     OR (SELECT count(*) FROM rebuild_v2.events
-         WHERE event_type='notification.requested'
-           AND aggregate_type='assignment' AND aggregate_id=v_assignment
-           AND payload->>'type'='assignment.interrupted')<>1 THEN
-    RAISE EXCEPTION 'FAIL: rejecting an unexcused pending medical date did not fail and notify the assignment';
+         WHERE action='medical_exception.approved'
+           AND target_id=v_partial_request
+           AND (metadata->>'remaining_unexcused_missed_days')::integer=1)<>1 THEN
+    RAISE EXCEPTION 'FAIL: approval revived an assignment with another unexcused missed date';
   END IF;
 
   -- Feedback quality is an Admin-only gate, separate from developer triage.
