@@ -74,6 +74,7 @@ DECLARE
   v_blocked_submission uuid;
   v_result jsonb;
   v_dispatch_count integer;
+  v_retry_iteration integer;
   v_error text;
 BEGIN
   SELECT t.id INTO v_test FROM rebuild_v2.tests t
@@ -202,6 +203,36 @@ BEGIN
          WHERE id=(SELECT reminder_event_id FROM rebuild_v2.assignment_submissions
                    WHERE id=v_reminder_submission))<>'pending' THEN
     RAISE EXCEPTION 'FAIL: terminal reminder delivery failure was not safely retried';
+  END IF;
+
+  -- Exercise the bounded retry cap on a separate overdue report.
+  FOR v_retry_iteration IN 1..4 LOOP
+    UPDATE rebuild_v2.events
+    SET status='failed',attempts=5,last_error='Synthetic repeated terminal delivery failure'
+    WHERE id=(SELECT reminder_event_id FROM rebuild_v2.assignment_submissions
+              WHERE id=v_short_submission);
+    v_result:=rebuild_v2.process_assignment_review_deadlines(50);
+    IF v_retry_iteration<=3 THEN
+      IF (v_result->>'reminders_queued')::integer<>1
+         OR (SELECT reminder_delivery_retries FROM rebuild_v2.assignment_submissions
+             WHERE id=v_short_submission)<>v_retry_iteration THEN
+        RAISE EXCEPTION 'FAIL: reminder retry % was not queued within the bounded retry policy',v_retry_iteration;
+      END IF;
+    ELSE
+      IF (v_result->>'reminders_queued')::integer<>0
+         OR (SELECT reminder_delivery_retries FROM rebuild_v2.assignment_submissions
+             WHERE id=v_short_submission)<>3
+         OR (SELECT status FROM rebuild_v2.assignment_submissions
+             WHERE id=v_short_submission)<>'submitted' THEN
+        RAISE EXCEPTION 'FAIL: exhausted reminder retries did not remain fail-closed';
+      END IF;
+    END IF;
+  END LOOP;
+  IF (SELECT count(*) FROM rebuild_v2.events
+      WHERE aggregate_type='assignment_submission'
+        AND aggregate_id=v_short_submission
+        AND payload->>'type'='assignment.review_reminder')<>4 THEN
+    RAISE EXCEPTION 'FAIL: reminder delivery retry cap created an unexpected number of events';
   END IF;
 
   -- Deliver the in-app notifications through the real outbox dispatcher.
