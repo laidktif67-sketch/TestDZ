@@ -270,6 +270,9 @@ BEGIN
     'A separate sufficiently detailed reason for a rejection contract.',
     ARRAY[v_today]::date[]
   );
+  PERFORM set_config('request.jwt.claim.sub',v_admin::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
   IF NOT rebuild_v2.review_medical_exception(
     v_rejected_request,'rejected','Rejected after administrative review.'
   ) THEN
