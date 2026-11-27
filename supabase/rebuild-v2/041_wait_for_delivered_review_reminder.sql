@@ -55,6 +55,7 @@ DECLARE
   v_reminder_event_id uuid;
   v_reminder_status text;
   v_reminder_processed_at timestamptz;
+  v_reminder_attempts integer;
   v_reminders integer := 0;
   v_auto_approved integer := 0;
   v_blocked integer := 0;
@@ -101,14 +102,42 @@ BEGIN
     -- from enqueue time. Pending/failed reminders fail closed.
     IF v_submission.reminder_event_id IS NOT NULL
        AND v_submission.reminder_sent_at IS NULL THEN
-      SELECT e.status,e.processed_at
-      INTO v_reminder_status,v_reminder_processed_at
+      SELECT e.status,e.processed_at,e.attempts
+      INTO v_reminder_status,v_reminder_processed_at,v_reminder_attempts
       FROM rebuild_v2.events e
       WHERE e.id=v_submission.reminder_event_id
         AND e.event_type='notification.requested'
         AND e.aggregate_type='assignment_submission'
         AND e.aggregate_id=v_submission.id
         AND e.payload->>'type'='assignment.review_reminder';
+
+      IF v_reminder_status='failed'
+         AND v_submission.reminder_delivery_retries<3 THEN
+        -- A terminal outbox failure is retried with a new idempotent event.
+        -- Keep the old failed event for audit; only move the active pointer.
+        SELECT t.developer_id,t.title INTO v_developer_id,v_test_title
+        FROM rebuild_v2.tests t WHERE t.id=v_assignment.test_id;
+        v_reminder_event_id:=rebuild_v2_private.enqueue_notification_event(
+          v_developer_id,'developer','assignment.review_reminder',
+          'Tester report awaiting review',
+          'A tester report for '||COALESCE(v_test_title,'your test')||' has been waiting for review. Please review it.',
+          'assignment_submission',v_submission.id,
+          jsonb_build_object(
+            'assignment_id',v_assignment.id,
+            'submission_id',v_submission.id,
+            'review_due_at',v_submission.review_due_at,
+            'delivery_retry',v_submission.reminder_delivery_retries+1
+          )
+        );
+        UPDATE rebuild_v2.assignment_submissions
+        SET reminder_event_id=v_reminder_event_id,
+            reminder_delivery_retries=reminder_delivery_retries+1,
+            reminder_sent_at=NULL,
+            updated_at=now()
+        WHERE id=v_submission.id;
+        v_reminders:=v_reminders+1;
+        CONTINUE;
+      END IF;
 
       IF v_reminder_status IS DISTINCT FROM 'delivered'
          OR v_reminder_processed_at IS NULL THEN
