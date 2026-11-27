@@ -41,7 +41,7 @@ const copy = {
     test: "Test", participation: "Participations", completed: "Terminés", failed: "Échecs", feedback: "Retours", ratings: "Notes étoilées", average: "Note moyenne", completionCol: "Complétion",
     hidden: "Indicateurs masqués pour protéger la vie privée", details: "Voir les détails →", noMatch: "Aucun résultat correspondant", changeFilters: "Modifiez votre recherche ou vos filtres.", noResults: "Les résultats apparaîtront lorsque les tests recevront des participations.",
     privacyTitle: "🔒 Données agrégées uniquement", privacy: "Cette page n’affiche ni noms ou identifiants de testeurs, ni participations individuelles, ni contenu des retours. Le masquage est appliqué séparément à chaque test.",
-    footer: "TestDZ · Build · Test · Improve"
+    footer: "{t.footer}"
   },
   ar: {
     statuses: { draft: "مسودة", submitted: "قيد المراجعة", recruiting: "يستقبل المختبرين", ready: "جاهز", running: "جارٍ التنفيذ", at_risk: "يحتاج متابعة", completed: "مكتمل", failed: "مرفوض", cancelled: "ملغى" },
@@ -116,7 +116,7 @@ export default function DeveloperTestResultsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user?.id]);
+  }, [user?.id, language]);
 
   useEffect(() => {
     if (rolesLoading) return;
@@ -147,7 +147,7 @@ export default function DeveloperTestResultsPage() {
     const exportable = visible.filter(hasVisibleMetrics);
     if (!exportable.length) return;
     const data = [
-      [t.test, "App", t.statusLabel, t.participation, t.completed, "Active", t.failed, t.feedback, t.ratings, t.average, t.completionCol],
+      [t.test, t.app, t.statusLabel, t.participation, t.completed, t.active, t.failed, t.feedback, t.ratings, t.average, t.completionCol],
       ...exportable.map(row => {
         const metrics = row.metrics;
         return [
@@ -175,10 +175,10 @@ export default function DeveloperTestResultsPage() {
     </nav></header>
     <section className="dres-content">
       <div className="dres-heading">
-        <div><Link className="dres-back" to="/developer-tests">← العودة إلى الاختبارات</Link>
-          <span className="dres-eyebrow">مساحة المطوّر · النتائج</span>
+        <div><Link className="dres-back" to="/developer-tests">{t.back}</Link>
+          <span className="dres-eyebrow">{t.eyebrow}</span>
           <h1>{t.title}</h1>
-          <p>ملخصات مجمّعة لكل اختبار تملكه، دون عرض بيانات المشاركين الفردية.</p>
+          <p>{t.intro}</p>
         </div>
         <div className="dres-actions">
           <button onClick={() => void load(true)} disabled={loading || refreshing}>{refreshing ? t.refreshing : t.refresh}</button>
@@ -203,7 +203,7 @@ export default function DeveloperTestResultsPage() {
           <thead><tr><th>{t.test}</th><th>{t.participation}</th><th>{t.completed}</th><th>{t.failed}</th><th>{t.feedback}</th><th>{t.ratings}</th><th>{t.average}</th><th>{t.completionCol}</th><th /></tr></thead>
           <tbody>{visible.map(row => <tr key={row.test.id}>
             <td><b>{row.test.title}</b><small>{row.test.appName} · {statusLabels[row.test.status] ?? row.test.status}</small></td>
-            {!hasVisibleMetrics(row) ? <td colSpan={7}><span className="dres-suppressed">مؤشرات مخفية لحماية خصوصية المختبرين</span></td> : <>
+            {!hasVisibleMetrics(row) ? <td colSpan={7}><span className="dres-suppressed">{t.hidden}</span></td> : <>
               <td>{row.metrics.totalAssignments}</td><td>{row.metrics.completed}</td><td>{row.metrics.failed}</td>
               <td>{row.metrics.feedbackCount}</td><td>{row.metrics.ratingCount}</td>
               <td>{row.metrics.averageRating === null ? "—" : row.metrics.averageRating.toFixed(2) + "/5"}</td>
