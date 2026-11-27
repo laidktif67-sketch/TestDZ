@@ -6,10 +6,12 @@ import {
   getDeveloperSubmissionEvidenceUrl,
   listDeveloperAssignmentSubmissions,
   listDeveloperSubmissionAttachments,
+  listDeveloperSubmissionHistory,
   listDeveloperSubmissionTests,
   reviewDeveloperAssignmentSubmission,
   type DeveloperAssignmentSubmission,
   type DeveloperSubmissionAttachment,
+  type DeveloperSubmissionHistoryItem,
   type DeveloperSubmissionTest,
 } from "../../../features/developer/assignment-review-api";
 import "../styles/developer-dashboard.css";
@@ -20,6 +22,8 @@ export default function DeveloperAssignmentReviewsPage() {
   const [submissions, setSubmissions] = useState<DeveloperAssignmentSubmission[]>([]);
   const [tests, setTests] = useState<Record<string, string>>({});
   const [attachments, setAttachments] = useState<DeveloperSubmissionAttachment[]>([]);
+  const [history, setHistory] = useState<DeveloperSubmissionHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [selected, setSelected] = useState<DeveloperAssignmentSubmission | null>(null);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
@@ -62,6 +66,29 @@ export default function DeveloperAssignmentReviewsPage() {
     if (!identityLoading && session && roles.includes("developer")) void load();
     else if (!identityLoading) setLoading(false);
   }, [identityLoading, session, roles, load]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadHistory() {
+      if (!selected || !isTesterWorkflowV2Enabled) {
+        setHistory([]);
+        return;
+      }
+      setHistoryLoading(true);
+      const result = await listDeveloperSubmissionHistory(selected.assignment_id);
+      if (active) {
+        if (result.error) {
+          setHistory([]);
+          setError("Previous report attempts could not be loaded.");
+        } else {
+          setHistory((result.data ?? []) as DeveloperSubmissionHistoryItem[]);
+        }
+        setHistoryLoading(false);
+      }
+    }
+    void loadHistory();
+    return () => { active = false; };
+  }, [selected?.assignment_id]);
 
   useEffect(() => {
     let active = true;
@@ -157,6 +184,17 @@ export default function DeveloperAssignmentReviewsPage() {
           <div className="dar-heading"><div><span className="dar-kicker">SUBMISSION · ATTEMPT {selected.attempt_number}</span><h2>{tests[selected.test_id] || "Test report"}</h2><p>Submitted {new Date(selected.submitted_at).toLocaleString()}</p></div><span className="dar-pending">Submitted</span></div>
           <div className="dar-summary"><h3>Tester summary</h3><p>{selected.summary}</p></div>
           {selected.comments && <div className="dar-summary"><h3>Additional comments</h3><p>{selected.comments}</p></div>}
+          <section className="dar-history" aria-label="Submission attempt history">
+            <h3>Previous attempts</h3>
+            {historyLoading ? <p>Loading attempt history…</p> : history.length <= 1 ? <p>This is the first submission attempt.</p> : <ol>
+              {history.map(attempt => <li key={attempt.id}>
+                <div><strong>Attempt {attempt.attempt_number}</strong><span className={"dar-history-status " + attempt.status}>{attempt.status.replaceAll("_", " ")}</span></div>
+                <small>{attempt.submitted_at ? "Submitted " + new Date(attempt.submitted_at).toLocaleString() : "Draft not submitted"}</small>
+                {attempt.reviewed_at && <small>Reviewed {new Date(attempt.reviewed_at).toLocaleString()}</small>}
+                {attempt.review_note && <p>{attempt.review_note}</p>}
+              </li>)}
+            </ol>}
+          </section>
           <div className="dar-attachments"><h3>Supporting evidence</h3>
             {attachmentsLoading ? <p>Loading attachments…</p> : attachments.length === 0 ? <p>No supporting files attached.</p> : attachments.map(file => <div className="dar-file" key={file.id}><span>▣</span><div><strong>{file.original_filename}</strong><small>{file.mime_type} · {(file.size_bytes/1024/1024).toFixed(2)} MiB</small></div><button type="button" onClick={() => void openEvidence(file.storage_path)}>Open file</button></div>)}
           </div>
