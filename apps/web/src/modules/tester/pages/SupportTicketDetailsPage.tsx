@@ -139,7 +139,24 @@ export default function SupportTicketDetailsPage(){
      </div><aside className="std-side-column">
       <section className="std-info-card"><h2><Icon name="info" size={22}/> Ticket Information</h2><dl><div><dt>Ticket ID:</dt><dd>SUP-{new Date(ticket.created_at).getFullYear()}-{String(ticket.ticket_number).padStart(4,"0")}</dd></div><div><dt>Subject:</dt><dd>{ticket.subject}</dd></div><div><dt>Category:</dt><dd>{categoryLabel[ticket.category]||ticket.category}</dd></div><div><dt>Priority:</dt><dd className={"std-priority "+ticket.priority}>{ticket.priority}</dd></div><div><dt>Status:</dt><dd><span className={"std-status mini "+ticket.status}>{statusLabel[ticket.status]||ticket.status}</span></dd></div><div><dt>Submitted:</dt><dd>{dateTime(ticket.created_at)}</dd></div><div><dt>Resolved:</dt><dd>{ticket.resolved_at?dateTime(ticket.resolved_at):"—"}</dd></div><div><dt>Handled By:</dt><dd>{ticket.resolved_by?"Support Team":"Not assigned"}</dd></div></dl></section>
       <section className="std-quick-card"><h2><Icon name="bolt" size={21}/> Quick Actions</h2><Link to="/support?new=1"><Icon name="send" size={17}/> Create New Ticket</Link><Link to="/help"><Icon name="book" size={17}/> Back to Help Center</Link></section>
-      <section className="std-guides-card"><h2><Icon name="book" size={21}/> Helpful Resources</h2>{ticket.requester_role==="developer"?<><Link to="/developer-dashboard">Developer Workspace <Icon name="chevron" size={15}/></Link><Link to="/developer-settings">Developer Settings <Icon name="chevron" size={15}/></Link><Link to="/developer-analytics">Developer Analytics <Icon name="chevron" size={15}/></Link><Link to="/help">Help Center <Icon name="chevron" size={15}/></Link></>:<><Link to="/help">Tester Quick Start Guide <Icon name="chevron" size={15}/></Link><Link to="/help">Rewards System Guide <Icon name="chevron" size={15}/></Link><Link to="/help">Testing Best Practices <Icon name="chevron" size={15}/></Link><Link to="/help">Privacy & Data Management <Icon name="chevron" size={15}/></>}</section>
+      <section className="std-guides-card">
+       <h2><Icon name="book" size={21}/> Helpful Resources</h2>
+       {ticket.requester_role==="developer" ? (
+        <div>
+         <Link to="/developer-dashboard">Developer Workspace <Icon name="chevron" size={15}/></Link>
+         <Link to="/developer-settings">Developer Settings <Icon name="chevron" size={15}/></Link>
+         <Link to="/developer-analytics">Developer Analytics <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Help Center <Icon name="chevron" size={15}/></Link>
+        </div>
+       ) : (
+        <div>
+         <Link to="/help">Tester Quick Start Guide <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Rewards System Guide <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Testing Best Practices <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Privacy & Data Management <Icon name="chevron" size={15}/></Link>
+        </div>
+       )}
+      </section>
      </aside></div>
      <section className="std-bottom-banners"><article className="std-banner help"><Icon name="book" size={31}/><div><h3>Help Center Shortcut</h3><p>Find answers in our Help Center for common questions.</p><Link to="/help">Go to Help Center <Icon name="arrow" size={14}/></Link></div></article><article className="std-banner live"><span className="std-live-avatar"><Icon name="headset" size={34}/></span><div><h3>Live Support</h3><p>Chat with our support team for instant help.</p><Link to="/live-chat" className="std-live-cta"><Icon name="message" size={14}/> Start Live Chat <Icon name="arrow" size={13}/></Link></div></article><article className="std-banner report"><Icon name="alert" size={31}/><div><h3>Report a Problem</h3><p>Found a bug or security issue? Let us know.</p><Link to="/report-problem">Report Issue <Icon name="arrow" size={14}/></Link></div></article><article className="std-banner guides"><Icon name="book" size={31}/><div><h3>Helpful Guides</h3><p>Explore our guides and tutorials.</p><Link to="/help">View Guides <Icon name="arrow" size={14}/></Link></div></article></section>
     </>}
