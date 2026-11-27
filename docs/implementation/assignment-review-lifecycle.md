@@ -413,3 +413,19 @@ The deadline processor response now reports `reminders_queued` rather than imply
 The candidate CI workflow now expects and replays 41 numbered SQL scripts. Run [46060967902](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46060967902) is the validation run for the delivered-reminder change; its final database/contract result must be checked before this change is considered CI-verified.
 
 This remains isolated to `work/assignment-review-lifecycle`. No merge, hosted database write, hosted scheduler, Edge Function deployment, or production feature-flag change was performed.
+
+### Bounded reminder delivery recovery — 2026-11-27
+
+A second reliability review found that migration 041 correctly failed closed on a terminally failed outbox event, but did not recover delivery automatically. A terminal failure could therefore leave a report waiting indefinitely even if the notification service recovered.
+
+Candidate migration `042_retry_failed_review_reminder_delivery.sql` adds a bounded recovery path:
+
+- After the outbox marks a reminder event terminally failed, the deadline processor can enqueue a replacement event.
+- The failed event remains in the outbox for audit; the submission points to the new active event.
+- A per-submission retry counter is capped at three replacement events.
+- Pending events are not duplicated, and the 24-hour auto-approval clock still starts only from the `processed_at` timestamp of a delivered in-app notification.
+- If all bounded retries fail, automatic approval remains blocked; the worker does not infer delivery or bypass the reminder prerequisite.
+
+The 040 contract now forces a terminal delivery failure, checks that a replacement event is queued and the retry counter increments, then dispatches the replacement through the actual notification outbox. CI now expects 42 numbered candidate SQL migrations. The previous successful run 46061176450 predates this retry addition; the new commit requires a fresh complete CI run before it is considered verified.
+
+No hosted scheduler, hosted database write, deployment, merge, or production feature-flag change was performed.
