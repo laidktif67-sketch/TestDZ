@@ -2,6 +2,10 @@
 -- Candidate-only migration; no hosted database is changed by this commit.
 BEGIN;
 
+-- Define the rowtype field before the replacement PL/pgSQL worker is compiled.
+ALTER TABLE rebuild_v2.assignment_submissions
+  ADD COLUMN reminder_delivery_retries smallint NOT NULL DEFAULT 0;
+
 ALTER TABLE rebuild_v2.assignment_submissions
   ADD COLUMN reminder_event_id uuid
     REFERENCES rebuild_v2.events(id) ON DELETE RESTRICT;
