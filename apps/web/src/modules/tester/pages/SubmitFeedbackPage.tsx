@@ -85,7 +85,7 @@ export default function SubmitFeedbackPage() {
     if (!isTesterWorkflowV2Enabled || !session?.user?.id || !assignmentId) return;
     let active = true;
     setFeedbackLoading(true);
-    getTesterFeedbackForAssignment(assignmentId, session.user.id).then(result => {
+    getTesterFeedbackForAssignment(assignmentId, session.user.id).then((result: { data: { category: string; body: string; quality_status: "pending" | "accepted" | "rejected" } | null; error: { message: string } | null }) => {
       if (!active) return;
       if (result.error) {
         setMessage("The current feedback quality status could not be checked. Refresh before submitting.");
