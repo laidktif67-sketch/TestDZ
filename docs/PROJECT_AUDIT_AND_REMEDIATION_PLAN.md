@@ -561,3 +561,18 @@
 | 10 — تقرير التدقيق | جارٍ | سجل مخاطر أولي؛ ليس تقرير اعتماد نهائي |
 | 11 — الإصلاح | محظور حتى اعتماد التقرير | لا تغييرات تطبيقية أثناء التدقيق |
 | 12 — Release readiness | لم تبدأ | — |
+
+
+### `PERF-DEV-002` — Medium (مبدئي) — صفحات التطبيق مستوردة بشكل eager من App.tsx
+
+- **الملف:** `apps/web/src/App.tsx`، الأسطر 2–64 تقريباً.
+- **الدليل:** صفحات Landing/Auth وTester وDeveloper وAdmin وSupport كلها مستوردة باستيرادات static عادية؛ لا يظهر استخدام React.lazy أو dynamic import على مستوى route في الملف.
+- **الأثر المحتمل:** تحميل JavaScript الخاص بمساحات لا يحتاجها المستخدم في أول زيارة (مثل Developer/Support/Admin) مع مسارات التطبيق العامة، ما قد يزيد حجم/زمن التحميل الأول خصوصاً على الهاتف والشبكات الضعيفة.
+- **الحل المقترح بعد اعتماد التدقيق:** قياس bundle الفعلي أولاً، ثم التفكير في route-level lazy loading مع Suspense وحدود تحميل/أخطاء مناسبة، مع التأكد من عدم تأخير الحماية أو تغيير سلوك deep links.
+- **اختبار القبول:** تقرير bundle يثبت تقسيم صفحات Tester/Developer/Admin إلى chunks؛ فتح الصفحة العامة لا يجلب chunks لمساحات غير مطلوبة، وفتح deep link لكل route يعمل مباشرة، مع عدم تراجع LCP/INP وعدم ظهور أخطاء تحميل chunk.
+- **الحالة:** static finding confirmed؛ حجم الأثر غير مقاس، لذلك التصنيف مبدئي Medium.
+
+### ملاحظة إيجابية في الفهارس
+
+- `001_schema.sql` ينشئ فهرساً مركباً `apps_developer_created_v2` على `(developer_id, created_at DESC)`، وفهرس `tests_developer_status_v2` على `(developer_id, status, created_at DESC)`، وهما متوافقان مبدئياً مع فلاتر/ترتيب قوائم Developer التي تمت مراجعتها.
+- لا يكفي وجود هذه الفهارس لإثبات جودة خطط التنفيذ؛ ما زال مطلوباً EXPLAIN (ANALYZE, BUFFERS) على بيانات اصطناعية ممثلة، ومراجعة فهارس قوائم builds/assets/cohorts.
