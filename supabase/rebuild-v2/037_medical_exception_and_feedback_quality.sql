@@ -297,6 +297,7 @@ BEGIN
     RAISE EXCEPTION 'ADMIN_REQUIRED' USING errcode='42501';
   END IF;
   IF p_request_id IS NULL
+     OR p_decision IS NULL
      OR p_decision NOT IN ('approved','rejected')
      OR p_review_note IS NULL
      OR char_length(btrim(p_review_note)) NOT BETWEEN 10 AND 2000 THEN
@@ -324,6 +325,10 @@ BEGIN
   FOR UPDATE;
   IF NOT FOUND OR v_request.status<>'pending' THEN
     RAISE EXCEPTION 'MEDICAL_EXCEPTION_REQUEST_NOT_PENDING' USING errcode='55000';
+  END IF;
+
+  IF v_request.tester_id=v_actor THEN
+    RAISE EXCEPTION 'SELF_REVIEW_NOT_ALLOWED' USING errcode='42501';
   END IF;
 
   IF p_decision='approved' THEN
@@ -456,6 +461,7 @@ BEGIN
     RAISE EXCEPTION 'ADMIN_REQUIRED' USING errcode='42501';
   END IF;
   IF p_feedback_id IS NULL
+     OR p_decision IS NULL
      OR p_decision NOT IN ('accepted','rejected')
      OR p_review_note IS NULL
      OR char_length(btrim(p_review_note)) NOT BETWEEN 10 AND 2000 THEN
