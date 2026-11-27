@@ -19,19 +19,19 @@ const MAX_REQUEST_BODY_BYTES = 4096;
 
 async function readBoundedBody(
   request: Request,
-): Promise<{ tooLarge: boolean; text: string }> {
+): Promise<{ tooLarge: boolean; invalidUtf8: boolean; text: string }> {
   const declaredLength = request.headers.get("content-length");
   if (declaredLength !== null) {
     const parsedLength = Number(declaredLength);
     if (!Number.isSafeInteger(parsedLength) || parsedLength < 0) {
-      return { tooLarge: true, text: "" };
+      return { tooLarge: true, invalidUtf8: false, text: "" };
     }
     if (parsedLength > MAX_REQUEST_BODY_BYTES) {
-      return { tooLarge: true, text: "" };
+      return { tooLarge: true, invalidUtf8: false, text: "" };
     }
   }
 
-  if (!request.body) return { tooLarge: false, text: "" };
+  if (!request.body) return { tooLarge: false, invalidUtf8: false, text: "" };
 
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -43,7 +43,7 @@ async function readBoundedBody(
       totalBytes += value.byteLength;
       if (totalBytes > MAX_REQUEST_BODY_BYTES) {
         await reader.cancel();
-        return { tooLarge: true, text: "" };
+        return { tooLarge: true, invalidUtf8: false, text: "" };
       }
       chunks.push(value);
     }
@@ -58,9 +58,9 @@ async function readBoundedBody(
     offset += chunk.byteLength;
   }
   try {
-    return { tooLarge: false, text: new TextDecoder("utf-8", { fatal: true }).decode(bytes) };
+    return { tooLarge: false, invalidUtf8: false, text: new TextDecoder("utf-8", { fatal: true }).decode(bytes) };
   } catch {
-    return { tooLarge: false, text: "\\u0000" };
+    return { tooLarge: false, invalidUtf8: true, text: "" };
   }
 }
 
@@ -92,7 +92,7 @@ Deno.serve(async (request: Request) => {
     return respond(413, { error: "REQUEST_BODY_TOO_LARGE" });
   }
   const rawBody = boundedBody.text;
-  if (rawBody.includes("\\u0000")) {
+  if (boundedBody.invalidUtf8) {
     return respond(400, { error: "INVALID_JSON" });
   }
   if (rawBody.trim()) {
