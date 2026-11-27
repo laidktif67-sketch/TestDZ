@@ -55,7 +55,6 @@ DECLARE
   v_reminder_event_id uuid;
   v_reminder_status text;
   v_reminder_processed_at timestamptz;
-  v_reminder_attempts integer;
   v_reminders integer := 0;
   v_auto_approved integer := 0;
   v_blocked integer := 0;
@@ -102,8 +101,8 @@ BEGIN
     -- from enqueue time. Pending/failed reminders fail closed.
     IF v_submission.reminder_event_id IS NOT NULL
        AND v_submission.reminder_sent_at IS NULL THEN
-      SELECT e.status,e.processed_at,e.attempts
-      INTO v_reminder_status,v_reminder_processed_at,v_reminder_attempts
+      SELECT e.status,e.processed_at
+      INTO v_reminder_status,v_reminder_processed_at
       FROM rebuild_v2.events e
       WHERE e.id=v_submission.reminder_event_id
         AND e.event_type='notification.requested'
