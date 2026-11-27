@@ -495,3 +495,14 @@ The candidate CI workflow replays 44 numbered SQL scripts. On 2026-11-27, run 46
 ### Fair deadline-processor batching — 2026-11-27
 
 Migration `044_fair_deadline_processor_batches.sql` adds a rotating inspection timestamp to submitted reports. Each worker pass records which submission it inspected and orders never-inspected/least-recently-inspected rows first. This prevents a permanently blocked or undelivered old submission from monopolizing every bounded batch. The 040 contract now exercises a one-row batch with an older blocked report followed by a later eligible report and verifies that the second invocation progresses to the eligible work. The full 44-migration replay and contract suite must pass on the resulting commit before this change is accepted.
+
+### Strict medical policy CI verification — 2026-11-27
+
+GitHub Actions run [46077744257](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46077744257) completed successfully on candidate commit `525bf26e473df2affeef1cf7a611fd91162ffc0c`:
+
+- All 45 numbered candidate SQL migrations applied to disposable local Supabase, including migration 045.
+- The medical-exception/feedback-quality contract passed, including pending-not-pausing, unchanged pending due date, failure followed by late approval, no revival with another missed date, post-failure request creation, private evidence-upload authorization, Support denial, and final recovery after all missed dates are approved.
+- All remaining SQL contracts and local PostgREST exposure checks passed; `rebuild_v2` remained exposed and `rebuild_v2_private` remained unexposed.
+- Frontend TypeScript and all Edge Function checks/tests passed.
+
+This verifies only the isolated candidate branch and disposable local database. No hosted Supabase writes, scheduler setup, feature-flag change, PR, merge, or deployment occurred.
