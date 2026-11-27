@@ -137,7 +137,7 @@ export default function DeveloperDashboardPage() {
   const { roles: identityRoles } = useIdentity();
   const roles = previewMode ? ["tester", "developer"] : identityRoles;
   const canTester = roles.includes("tester") || roles.includes("admin");
-  const [language,setLanguage]=useState<Language>(()=>{const saved=window.localStorage.getItem("testdz-landing-language");return saved==="fr"||saved==="ar"?saved:"en";});
+  const [language,setLanguage]=useState<Language>(()=>{const saved=window.localStorage.getItem("testdz-developer-dashboard-language");return saved==="fr"||saved==="ar"?saved:"en";});
   const [workspaceMenuOpen,setWorkspaceMenuOpen]=useState(false);
   const [name,setName]=useState("Developer");
   const [avatar,setAvatar]=useState("");
@@ -151,7 +151,7 @@ export default function DeveloperDashboardPage() {
   const t=copy[language];
   const dir=language==="ar"?"rtl":"ltr";
 
-  useEffect(()=>{document.documentElement.lang=language;document.documentElement.dir=dir;window.localStorage.setItem("testdz-landing-language",language);},[language,dir]);
+  useEffect(()=>{document.documentElement.lang=language;document.documentElement.dir=dir;window.localStorage.setItem("testdz-developer-dashboard-language",language);},[language,dir]);
 
   useEffect(()=>{
     if(previewMode){
