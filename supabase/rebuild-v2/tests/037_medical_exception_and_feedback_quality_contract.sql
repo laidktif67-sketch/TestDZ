@@ -88,7 +88,8 @@ DECLARE
   v_feedback uuid;
   v_request uuid;
   v_rejected_request uuid;
-  v_partial_assignment uuid;\n  v_partial_request uuid;
+  v_partial_assignment uuid;
+  v_partial_request uuid;
   v_today date := rebuild_v2_private.algeria_local_date();
   v_due_before timestamptz;
   v_due_after timestamptz;
