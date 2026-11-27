@@ -87,7 +87,7 @@ export default function MedicalExceptionRequestPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!session?.user?.id || !isTesterWorkflowV2Enabled || assignmentStatus !== "active" || busy) return;
+    if (!session?.user?.id || !isTesterWorkflowV2Enabled || !["active", "failed"].includes(assignmentStatus) || busy) return;
     const normalizedDates = dates.map(value => value.trim()).filter(Boolean);
     const normalizedReason = reason.trim();
     if (normalizedDates.length < 1 || normalizedDates.length > 14 || new Set(normalizedDates).size !== normalizedDates.length) {
@@ -170,7 +170,7 @@ export default function MedicalExceptionRequestPage() {
     {error && <p className="mer-alert error" role="alert">{error}</p>}
     {notice && <p className="mer-alert success" role="status">{notice}</p>}
     {loading ? <section className="mer-card">Loading assignment and request history…</section> : <>
-      {assignmentStatus !== "active" && <section className="mer-card mer-warning"><strong>Requests are available only while an assignment is active.</strong><p>Current assignment status: {assignmentStatus || "Unavailable"}</p></section>}
+      {!["active", "failed"].includes(assignmentStatus) && <section className="mer-card mer-warning"><strong>Medical requests are unavailable for this assignment state.</strong><p>Current assignment status: {assignmentStatus || "Unavailable"}</p></section>}{assignmentStatus === "failed" && <section className="mer-card mer-warning"><strong>Your assignment was interrupted, but you can still submit or complete a pending medical request.</strong><p>Admin can review it after failure. Approval restores the assignment only if no other required day remains unexcused.</p></section>}
       <form className="mer-card mer-form" onSubmit={event => void submit(event)}>
         <div className="mer-card-heading"><div><h2>Request details</h2><p>Choose the dates that need to be excused.</p></div><span>1–14 dates</span></div>
         <div className="mer-date-list">
@@ -191,7 +191,7 @@ export default function MedicalExceptionRequestPage() {
           <small>JPEG, PNG, WebP or PDF · maximum 5 MiB. Evidence is private and visible only to you and Admin.</small>
         </label>
         <div className="mer-policy"><strong>Important</strong><p>Approval adds one calendar day per approved date. Excused dates do not count as check-ins or rewards. A pending or rejected request does not excuse a missed day.</p></div>
-        <button className="mer-submit" type="submit" disabled={busy || assignmentStatus !== "active" || dates.some(value => !value) || reason.trim().length < 20}>{busy ? "Submitting…" : "Submit request for Admin review"}</button>
+        <button className="mer-submit" type="submit" disabled={busy || !["active", "failed"].includes(assignmentStatus) || dates.some(value => !value) || reason.trim().length < 20}>{busy ? "Submitting…" : "Submit request for Admin review"}</button>
       </form>
 
       <section className="mer-card">
