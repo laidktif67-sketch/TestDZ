@@ -91,6 +91,10 @@ BEGIN
     RAISE EXCEPTION 'final assignment schedule/evidence RPC wrappers are missing';
   END IF;
 
+  IF to_regprocedure('rebuild_v2.revise_tester_feedback(uuid,text,text,smallint)') IS NULL THEN
+    RAISE EXCEPTION 'tester feedback quality revision RPC is missing';
+  END IF;
+
   IF to_regprocedure('rebuild_v2_private.assignment_has_14_valid_checkins(uuid)') IS NULL
      OR to_regprocedure('rebuild_v2_private.assignment_submission_prerequisites_met(uuid)') IS NULL THEN
     RAISE EXCEPTION '14-day check-in or shared submission prerequisite evaluator is missing';
