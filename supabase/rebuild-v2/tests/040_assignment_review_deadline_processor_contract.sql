@@ -86,9 +86,10 @@ BEGIN
     (v_cohort,v_test,v_auto_tester,'active',v_start::timestamp AT TIME ZONE 'Africa/Algiers',now()+interval '2 days'),
     (v_cohort,v_test,v_reminder_tester,'active',v_start::timestamp AT TIME ZONE 'Africa/Algiers',now()+interval '2 days'),
     (v_cohort,v_test,v_short_tester,'active',v_start::timestamp AT TIME ZONE 'Africa/Algiers',now()+interval '2 days'),
-    (v_cohort,v_test,v_blocked_tester,'active',v_start::timestamp AT TIME ZONE 'Africa/Algiers',now()+interval '2 days')
-  RETURNING id INTO v_auto_assignment;
+    (v_cohort,v_test,v_blocked_tester,'active',v_start::timestamp AT TIME ZONE 'Africa/Algiers',now()+interval '2 days');
 
+  SELECT id INTO v_auto_assignment FROM rebuild_v2.assignments
+  WHERE tester_id=v_auto_tester AND test_id=v_test;
   SELECT id INTO v_reminder_assignment FROM rebuild_v2.assignments
   WHERE tester_id=v_reminder_tester AND test_id=v_test;
   SELECT id INTO v_short_assignment FROM rebuild_v2.assignments
@@ -109,9 +110,9 @@ BEGIN
     (v_auto_assignment,v_auto_tester,'general','Accepted feedback for automatic approval contract.',5,'accepted',v_admin,now()),
     (v_reminder_assignment,v_reminder_tester,'general','Accepted feedback for reminder contract.',5,'accepted',v_admin,now()),
     (v_short_assignment,v_short_tester,'general','Accepted feedback for short reminder contract.',5,'accepted',v_admin,now()),
-    (v_blocked_assignment,v_blocked_tester,'general','Pending feedback blocks automatic approval contract.',5,'pending',NULL,NULL)
-  RETURNING id INTO v_auto_feedback;
+    (v_blocked_assignment,v_blocked_tester,'general','Pending feedback blocks automatic approval contract.',5,'pending',NULL,NULL);
 
+  SELECT id INTO v_auto_feedback FROM rebuild_v2.feedback WHERE assignment_id=v_auto_assignment;
   SELECT id INTO v_reminder_feedback FROM rebuild_v2.feedback WHERE assignment_id=v_reminder_assignment;
   SELECT id INTO v_short_feedback FROM rebuild_v2.feedback WHERE assignment_id=v_short_assignment;
   SELECT id INTO v_blocked_feedback FROM rebuild_v2.feedback WHERE assignment_id=v_blocked_assignment;
