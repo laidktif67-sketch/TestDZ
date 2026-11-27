@@ -469,7 +469,7 @@ The candidate head `2866c3a824b7c8a0a4994b0b2d3c3932d0cc2eb7` passed GitHub Acti
 
 - `frontend-typecheck`: workspace TypeScript check passed.
 - `notification-edge-function`: all Edge Functions passed Deno type-checking and the deadline request-validation tests passed.
-- `rebuild-v2`: all 42 numbered candidate SQL scripts applied to a disposable local Supabase stack; the complete SQL contract list and local PostgREST exposed/private-schema checks passed.
+- `rebuild-v2`: all 43 numbered candidate SQL scripts applied to a disposable local Supabase stack; the complete SQL contract list and local PostgREST exposed/private-schema checks passed.
 
 The work branch remains based directly on the pinned official reference `rebuild/testdz-v2@9a973cfb2d970f37c2bd8523584d29c9c1622ea0`; GitHub compare reports 149 commits ahead and zero behind. This confirms ancestry only, not production readiness.
 
@@ -479,8 +479,8 @@ Operational boundary remains unchanged: the deadline Edge Function is source-con
 
 A final policy audit found that the original deadline processor revalidated check-ins, feedback quality, medical exceptions, and evidence, but did not consult the V2 `reports` / `disputes` records before system auto-approval. That left the documented “open dispute blocks automatic approval” rule unenforced.
 
-Candidate migration `043_block_auto_approval_on_open_assignment_disputes.sql` now blocks automatic approval when the assignment has a report in `open` or `under_review`, or a linked dispute in `opened`, `under_review`, or `escalated`. It deliberately leaves the normal explicit developer review RPC separate; this system-approval guard does not silently resolve or hide reports. The 040 deadline contract now promotes its blocked fixture to otherwise-complete prerequisites, creates an open assignment report and dispute, and asserts that the deadline processor leaves the submission and assignment active.
+Candidate migration `043_block_auto_approval_on_open_assignment_disputes.sql` now blocks automatic approval when the assignment has a report in `open` or `under_review`, or a linked dispute in `opened`, `under_review`, or `escalated`. It deliberately leaves the normal explicit developer review RPC separate; this system-approval guard does not silently resolve or hide reports. The 040 deadline contract promotes its blocked fixture to otherwise-complete prerequisites and tests the two guards independently: an open assignment report blocks approval; after that report is resolved, an independently opened dispute linked to it still blocks approval. Both assertions verify that the submission remains submitted and the assignment remains active.
 
 The current V2 schema has no dedicated appeal table or appeal-to-assignment relation. Therefore migration 043 covers the existing report/dispute model only; any future appeal workflow must add an explicit relation and a corresponding auto-approval guard before automatic approval is enabled. This remains a rollout gate, not an inferred feature.
 
-The candidate CI workflow now replays 43 numbered SQL scripts. The new migration, contract change, and workflow count update are being validated together on the current work-branch head; no SQL pass is claimed until that run completes.
+The candidate CI workflow replays 43 numbered SQL scripts. On 2026-11-27, run 46070760881 passed all three jobs at commit ccddd087d25fa4367dde9a46154ce4f27a66a87b: frontend typecheck, notification Edge Function checks, and the full disposable-Supabase migration/contract/PostgREST job. The subsequent independent report/dispute contract refinement is a newer commit and must pass a fresh CI run before it is considered validated.
