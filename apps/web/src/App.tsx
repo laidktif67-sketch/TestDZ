@@ -29,6 +29,7 @@ import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPa
 import DeveloperReviewQueuePage from "./modules/developer/pages/DeveloperReviewQueuePage";
 import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
 import AdminRoleGrantsPage from "./modules/admin/pages/AdminRoleGrantsPage";
+import AdminAssignmentLifecycleReviewsPage from "./modules/admin/pages/AdminAssignmentLifecycleReviewsPage";
 import DeveloperNotificationsPage from "./modules/developer/pages/DeveloperNotificationsPage";
 import TesterProfilePage from "./modules/tester/pages/TesterProfilePage";
 import SettingsSecurityPage from "./modules/tester/pages/SettingsSecurityPage";
@@ -41,6 +42,7 @@ import NotificationsCenterPage from "./modules/tester/pages/NotificationsCenterP
 import AssignmentSubmissionPage from "./modules/tester/pages/AssignmentSubmissionPage";
 import AssignmentDetailsPage from "./modules/tester/pages/AssignmentDetailsPage";
 import ActiveAssignmentProgressPage from "./modules/tester/pages/ActiveAssignmentProgressPage";
+import MedicalExceptionRequestPage from "./modules/tester/pages/MedicalExceptionRequestPage";
 import TestCompletionSummaryPage from "./modules/tester/pages/TestCompletionSummaryPage";
 import TestCompletionRewardPage from "./modules/tester/pages/TestCompletionRewardPage";
 import TesterLeaderboardPage from "./modules/tester/pages/TesterLeaderboardPage";
@@ -84,6 +86,7 @@ export default function App() {
         <Route path="/invalid-otp" element={<InvalidOtpPage />} />
         <Route path="/assignments/:id" element={<AssignmentDetailsPage />} />
         <Route path="/assignments/:id/progress" element={<ActiveAssignmentProgressPage />} />
+        <Route path="/assignments/:id/medical-exception" element={<MedicalExceptionRequestPage />} />
         <Route path="/assignments/:id/submit" element={<AssignmentSubmissionPage />} />
         <Route path="/assignments/:id/summary" element={<TestCompletionSummaryPage />} />
 
@@ -119,6 +122,7 @@ export default function App() {
           <Route element={<RoleGuard requiredRole="admin" />}>
             <Route path="/admin" element={<TesterSectionPage />} />
             <Route path="/admin/developer-reviews" element={<DeveloperReviewQueuePage />} />
+            <Route path="/admin/assignment-lifecycle-reviews" element={<AdminAssignmentLifecycleReviewsPage />} />
             <Route path="/admin/role-requests" element={<AdminRoleRequestsPage />} />
             <Route path="/admin/role-grants" element={<AdminRoleGrantsPage />} />
           </Route>
