@@ -258,3 +258,28 @@ Important remaining boundaries:
 - Migration 036's finalization and developer approval remain deliberately fail-closed.
 - No reward, points, wallet, or payment is issued by these review RPCs.
 - Medical evidence access is limited to the request's tester and Admin; Support and developers are not granted access.
+
+
+## Migration 038 validation — 2026-11-27
+
+Migration `038_enforce_14_day_assignment_completion.sql` is now in the candidate chain.
+
+GitHub Actions run [46048012009](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46048012009) completed successfully on the current branch:
+- All 38 numbered candidate SQL migrations applied to disposable local Supabase.
+- The final-state contract passed.
+- The updated legacy tester workflow and assignment-review contracts passed against the live prerequisite evaluator.
+- Medical exception/feedback quality contract 037 passed.
+- The new `038_14_day_assignment_completion_contract.sql` passed.
+- All remaining SQL contracts and local PostgREST schema-exposure checks passed.
+- Frontend TypeScript and notification/invitation Edge Function typechecks passed.
+
+Migration 038 now enforces:
+- Exactly 14 valid check-ins across required Algeria-local dates; only approved medical dates are skipped.
+- A missed non-excused prior day marks the assignment failed, writes audit metadata and enqueues a tester notification. The RPC returns NULL after committing this state rather than raising and rolling it back.
+- The missed-day evaluator stops at the fourteenth required day; it does not punish a tester for not checking in after the 14-day requirement has already been met.
+- Finalization requires 14 valid check-ins, accepted feedback quality, no pending medical exception, and verified attachment metadata/Storage ownership.
+- Tester finalization moves only the report to submitted; the assignment stays active.
+- Developer approval re-runs the same prerequisite evaluator and only then completes the assignment.
+- A 72-hour review deadline is recorded; no automatic approval, reminder scheduler, wallet credit, or payment is activated.
+
+The first run after the 038 addition caught one stale assertion in the older 007 contract that still expected the previous fail-closed error code. The assertion was updated to the current prerequisite error; the subsequent complete run above passed. No production database was modified, and no merge, PR, or deployment was performed.
