@@ -348,7 +348,7 @@ BEGIN
     PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
     RAISE EXCEPTION 'FAIL: finalization unexpectedly passed with valid evidence but incomplete prerequisites';
   EXCEPTION WHEN SQLSTATE '55000' THEN
-    IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED' THEN
+    IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_MET' THEN
       RAISE EXCEPTION 'FAIL: unexpected fail-closed response: %',SQLERRM;
     END IF;
   END;
