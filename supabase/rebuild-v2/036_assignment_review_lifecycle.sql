@@ -178,6 +178,12 @@ BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
   END IF;
+  -- Never permit an approval to complete an assignment until every required
+  -- submission gate has a V2 implementation and an executable contract.
+  IF p_decision = 'approved' THEN
+    RAISE EXCEPTION 'SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED'
+      USING errcode = '55000';
+  END IF;
   IF p_submission_id IS NULL
      OR p_decision IS NULL
      OR p_decision NOT IN ('approved','changes_requested')
