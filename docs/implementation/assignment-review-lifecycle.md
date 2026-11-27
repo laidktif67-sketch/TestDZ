@@ -102,3 +102,45 @@ The current V2 candidate does not yet provide the complete medical-exception dec
 - Add focused contracts for developer review, attempt history, scheduler idempotency, and concurrency.
 - Run typecheck, build, all SQL contracts, and Storage/RLS contracts against the same commit.
 - Do not apply candidate SQL to hosted Supabase, change feature flags, merge, or deploy until the reviewed PR is explicitly approved.
+
+
+## Implementation progress on the work branch
+
+The first candidate migration is now present as
+`supabase/rebuild-v2/036_assignment_review_lifecycle.sql`.
+
+It currently:
+- Converts the existing report into attempt 1 and adds attempt numbering.
+- Allows only one open draft/submitted attempt per assignment while preserving prior
+  `changes_requested` attempts and their evidence.
+- Adds review metadata and an append-only, one-decision-per-attempt review history.
+- Adds an owning-developer-only review RPC for `approved` and
+  `changes_requested`; approval completes the assignment, while a requested revision
+  leaves it active.
+- Writes an audit event and queues an idempotently dispatchable notification event.
+- Replaces the unsafe immediate-completion finalizer with a fail-closed response.
+
+### Deliberate incomplete state
+
+The finalizer currently raises
+`SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED` for every authenticated call. This is
+intentional: the 14-day consecutive check-in rule, explicit Feedback quality decision,
+V2 medical-exception review and date accounting, and full evidence verification have
+not yet been implemented together. It is safer to temporarily block finalization on
+this candidate branch than to preserve the old behavior that marked an assignment
+completed before review.
+
+The existing `007_tester_workflow_contract.sql` has been updated to assert this
+fail-closed behavior and that the assignment remains active. Its previous successful
+finalization and evidence-mismatch assertions are deferred until the complete gate is
+implemented in a later migration.
+
+### Validation status
+
+- Git diff was checked against the pinned base; the branch is four commits ahead and
+  has no divergence from the base.
+- SQL was reviewed statically from the repository source.
+- The candidate migration and SQL contract have **not** yet been replayed against a
+  disposable PostgreSQL/Supabase database. No claim of passing SQL execution is made.
+- No hosted Supabase database, feature flag, production branch, PR, or deployment was
+  changed.
