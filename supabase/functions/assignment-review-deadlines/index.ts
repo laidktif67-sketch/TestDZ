@@ -73,7 +73,7 @@ Deno.serve(async (request: Request) => {
   return respond(200, {
     ok: true,
     result: data ?? {
-      reminders_sent: 0,
+      reminders_queued: 0,
       auto_approved: 0,
       blocked_by_prerequisites: 0,
     },
