@@ -5,18 +5,26 @@ import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
 export async function getAssignmentSubmissionPageData(assignmentId: string, userId: string) {
   const client = getAppDataClient();
   if (isTesterWorkflowV2Enabled) {
-    const [assignmentResult, checkinsResult, feedbackResult] = await Promise.all([
+    const [assignmentResult, checkinsResult, feedbackResult, medicalResult, submissionResult] = await Promise.all([
       client.from("assignments")
         .select("id,status,test_id,assigned_at,started_at,completed_at")
         .eq("id", assignmentId).eq("tester_id", userId).maybeSingle(),
       client.from("checkins").select("id,checkin_date")
         .eq("assignment_id", assignmentId).eq("tester_id", userId)
         .order("checkin_date", { ascending: true }),
-      client.from("feedback").select("id", { count: "exact", head: true })
-        .eq("assignment_id", assignmentId).eq("tester_id", userId),
+      client.from("feedback").select("id,quality_status,reviewed_at")
+        .eq("assignment_id", assignmentId).eq("tester_id", userId).maybeSingle(),
+      client.from("medical_exception_requests").select("status,requested_dates")
+        .eq("assignment_id", assignmentId)
+        .in("status", ["approved", "pending"]),
+      client.from("assignment_submissions").select("id,status")
+        .eq("assignment_id", assignmentId).maybeSingle(),
     ]);
     if (assignmentResult.error || !assignmentResult.data) {
-      return { error: assignmentResult.error?.message || "This assignment could not be found.", assignment: null, checkins: [], feedbackCount: 0 };
+      return { error: assignmentResult.error?.message || "This assignment could not be found.", assignment: null, checkins: [], feedbackCount: 0, feedback: null, medicalExceptions: [], submission: null };
+    }
+    if (checkinsResult.error || feedbackResult.error || medicalResult.error || submissionResult.error) {
+      return { error: "Some submission requirements could not be verified. Refresh and try again.", assignment: null, checkins: [], feedbackCount: 0, feedback: null, medicalExceptions: [], submission: null };
     }
     const testResult = await client.from("tests")
       .select("id,title,status,start_date,end_date,app_id")
@@ -42,7 +50,10 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
         },
       },
       checkins: checkinsResult.data || [],
-      feedbackCount: feedbackResult.count || 0,
+      feedbackCount: feedbackResult.data ? 1 : 0,
+      feedback: feedbackResult.data || null,
+      medicalExceptions: medicalResult.data || [],
+      submission: submissionResult.data || null,
     };
   }
 
