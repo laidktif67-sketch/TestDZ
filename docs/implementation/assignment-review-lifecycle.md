@@ -372,3 +372,15 @@ The deadline worker is intentionally an authenticated server-to-server endpoint:
 - Rotate the dispatch secret through the managed secret store and Edge Function configuration together; verify the new value before retiring the old one.
 
 This runbook is documentation only. No hosted Edge Function deployment, secret creation, cron job, hosted database write, merge, or production feature-flag change was performed. Until these steps are explicitly approved and completed, reminders and automatic approvals remain non-operational.
+
+
+### Final verification — 2026-11-27
+
+The follow-up workflow [46056107092](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46056107092) completed successfully on candidate commit `d0bb4a2cb170e2ea3e4e9de1a3395e303fccc9a8`.
+
+- All workflow jobs passed: Edge Function typecheck, frontend typecheck, and disposable local Supabase integration/contracts.
+- The deadline processor contract explicitly reported `rebuild_v2_assignment_review_deadline_processor_contract: PASS`.
+- The contract covers service-role-only invocation, 48-hour reminder behavior, the 24-hour post-reminder waiting interval, eligible 72-hour auto-approval, blocking when prerequisites are incomplete, system audit/history attribution, notifications, and rejection of retroactive medical requests after submission.
+- The full migration suite and local PostgREST schema-exposure checks completed successfully.
+
+This is candidate-branch CI evidence only. Hosted scheduling and production rollout remain intentionally disabled pending a separately approved operational change.
