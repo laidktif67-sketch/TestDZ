@@ -415,6 +415,49 @@ BEGIN
   SELECT t.title INTO v_test_title
   FROM rebuild_v2.tests t WHERE t.id=v_assignment.test_id;
 
+  -- Pending medical dates provisionally pause interruption checks. If Admin
+  -- rejects a request and a requested date still has no check-in, the missed
+  -- day becomes unexcused and the assignment is failed atomically.
+  IF p_decision='rejected' AND EXISTS (
+    SELECT 1
+    FROM unnest(v_request.requested_dates) AS dates(requested_date)
+    WHERE requested_date<=rebuild_v2_private.algeria_local_date()
+      AND NOT EXISTS (
+        SELECT 1 FROM rebuild_v2.checkins c
+        WHERE c.assignment_id=v_assignment.id
+          AND c.checkin_date=dates.requested_date
+      )
+  ) THEN
+    UPDATE rebuild_v2.assignments
+    SET status='failed'
+    WHERE id=v_assignment.id AND status='active';
+    IF FOUND THEN
+      INSERT INTO rebuild_v2.audit_events(
+        actor_id,action,target_type,target_id,reason,metadata
+      )
+      VALUES(
+        v_actor,'assignment.interrupted','assignment',v_assignment.id,
+        'A pending medical exception was rejected and its missed required day remained without a check-in.',
+        jsonb_build_object(
+          'medical_exception_request_id',v_request.id,
+          'requested_dates',v_request.requested_dates,
+          'interruption_reason','medical_exception_rejected'
+        )
+      );
+      PERFORM rebuild_v2_private.enqueue_notification_event(
+        v_request.tester_id,'tester','assignment.interrupted',
+        'Testing assignment interrupted',
+        'The medical exception was rejected and the missed required day was not excused. The assignment is now marked as failed.',
+        'assignment',v_assignment.id,
+        jsonb_build_object(
+          'assignment_id',v_assignment.id,
+          'medical_exception_request_id',v_request.id,
+          'reason','medical_exception_rejected'
+        )
+      );
+    END IF;
+  END IF;
+
   PERFORM rebuild_v2_private.enqueue_notification_event(
     v_request.tester_id,
     'tester',
