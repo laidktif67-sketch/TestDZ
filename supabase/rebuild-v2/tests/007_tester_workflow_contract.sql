@@ -325,42 +325,20 @@ BEGIN
     jsonb_build_object('sub',v_tester,'role','authenticated')::text,true
   );
 
-  -- An object at the right path is not enough: owner, size and MIME must match metadata.
+  -- The lifecycle foundation deliberately fails closed until the complete
+  -- 14-day, feedback-quality, medical-exception and evidence gates land.
+  -- A metadata mismatch and a valid object are both blocked at this stage;
+  -- the later gate migration restores detailed evidence assertions.
   UPDATE storage.objects
-  SET metadata=jsonb_build_object('mimetype','application/pdf','size',1023)
-  WHERE bucket_id='test-evidence' AND name=v_path;
-  BEGIN
-    PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
-    RAISE EXCEPTION 'FAIL: submission finalized with mismatched evidence size';
-  EXCEPTION WHEN SQLSTATE '55000' THEN
-    IF SQLERRM <> 'ATTACHMENT_UPLOAD_INCOMPLETE' THEN
-      RAISE EXCEPTION 'FAIL: unexpected metadata rejection: %',SQLERRM;
-    END IF;
-  END;
-
-  UPDATE storage.objects
-  SET metadata=jsonb_build_object('mimetype','image/jpeg','size',1024),
+  SET metadata=jsonb_build_object('mimetype','application/pdf','size',1023),
       owner_id=v_tester::text
   WHERE bucket_id='test-evidence' AND name=v_path;
   BEGIN
     PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
-    RAISE EXCEPTION 'FAIL: submission finalized with mismatched evidence MIME';
+    RAISE EXCEPTION 'FAIL: finalization unexpectedly passed before prerequisites were implemented';
   EXCEPTION WHEN SQLSTATE '55000' THEN
-    IF SQLERRM <> 'ATTACHMENT_UPLOAD_INCOMPLETE' THEN
-      RAISE EXCEPTION 'FAIL: unexpected MIME rejection: %',SQLERRM;
-    END IF;
-  END;
-
-  UPDATE storage.objects
-  SET metadata=jsonb_build_object('mimetype','application/pdf','size',1024),
-      owner_id=v_other::text
-  WHERE bucket_id='test-evidence' AND name=v_path;
-  BEGIN
-    PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
-    RAISE EXCEPTION 'FAIL: submission finalized with another uploader owner';
-  EXCEPTION WHEN SQLSTATE '55000' THEN
-    IF SQLERRM <> 'ATTACHMENT_UPLOAD_INCOMPLETE' THEN
-      RAISE EXCEPTION 'FAIL: unexpected owner rejection: %',SQLERRM;
+    IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED' THEN
+      RAISE EXCEPTION 'FAIL: unexpected fail-closed response: %',SQLERRM;
     END IF;
   END;
 
@@ -368,42 +346,34 @@ BEGIN
   SET metadata=jsonb_build_object('mimetype','application/pdf','size',1024),
       owner_id=v_tester::text
   WHERE bucket_id='test-evidence' AND name=v_path;
-  IF NOT rebuild_v2.finalize_assignment_submission(v_submission) THEN
-    RAISE EXCEPTION 'FAIL: finalize submission';
+  BEGIN
+    PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
+    RAISE EXCEPTION 'FAIL: finalization unexpectedly passed with valid evidence but missing gates';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED' THEN
+      RAISE EXCEPTION 'FAIL: unexpected fail-closed response: %',SQLERRM;
+    END IF;
+  END;
+
+  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'active' THEN
+    RAISE EXCEPTION 'FAIL: blocked finalization must leave assignment active';
   END IF;
-  IF NOT rebuild_v2.finalize_assignment_submission(v_submission) THEN
-    RAISE EXCEPTION 'FAIL: finalization idempotency';
+  IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_submission) <> 'draft' THEN
+    RAISE EXCEPTION 'FAIL: blocked finalization must leave report editable';
   END IF;
 
-  IF NOT EXISTS (
+  -- There must be no submitted-event notification while finalization is blocked.
+  IF EXISTS (
     SELECT 1 FROM rebuild_v2.events e
     WHERE e.event_type='notification.requested'
       AND e.aggregate_type='assignment_submission'
       AND e.aggregate_id=v_submission
-      AND e.payload->>'user_id'='10000000-0000-4000-8000-000000000001'
-      AND e.payload->>'recipient_role'='developer'
       AND e.payload->>'type'='assignment.submitted'
-      AND e.payload->'data'->>'assignment_id'=v_assignment::text
   ) THEN
-    RAISE EXCEPTION
-      'FAIL: final submission event missing; submission=%, assignment=%, matching_events=%',
-      v_submission, v_assignment,
-      COALESCE((
-        SELECT jsonb_agg(jsonb_build_object(
-          'event_type',e.event_type,'aggregate_type',e.aggregate_type,
-          'aggregate_id',e.aggregate_id,'payload',e.payload
-        ))
-        FROM rebuild_v2.events e
-        WHERE e.event_type='notification.requested'
-          AND e.payload->>'type'='assignment.submitted'
-      ),'[]'::jsonb);
+    RAISE EXCEPTION 'FAIL: blocked finalization must not notify the developer';
   END IF;
-  SELECT e.id INTO v_submit_event_id
-  FROM rebuild_v2.events e
-  WHERE e.event_type='notification.requested'
-    AND e.aggregate_type='assignment_submission'
-    AND e.aggregate_id=v_submission
-    AND e.payload->>'type'='assignment.submitted';
+
+  v_submit_event_id := NULL;
 
   -- Only a service-role JWT may drain the outbox. Delivery is idempotent.
   IF has_function_privilege('authenticated','rebuild_v2.process_notification_outbox(integer)','EXECUTE') THEN
@@ -411,8 +381,8 @@ BEGIN
   END IF;
   PERFORM set_config('request.jwt.claims',jsonb_build_object('role','service_role')::text,true);
   v_processed := rebuild_v2.process_notification_outbox(20);
-  IF v_processed <> 5 THEN
-    RAISE EXCEPTION 'FAIL: expected five outbox events delivered, got %',v_processed;
+  IF v_processed <> 4 THEN
+    RAISE EXCEPTION 'FAIL: expected four outbox events delivered, got %',v_processed;
   END IF;
   IF (SELECT count(*) FROM rebuild_v2.notifications n
       WHERE n.source_event_id IN (v_join_event_id,v_feedback_created_event_id)
@@ -431,25 +401,25 @@ BEGIN
   IF (SELECT count(*) FROM rebuild_v2.notifications n
       WHERE n.source_event_id IN (
         v_join_event_id,v_feedback_created_event_id,
-        v_feedback_status_event_id,v_feedback_reply_event_id,v_submit_event_id
-      )) <> 5 THEN
+        v_feedback_status_event_id,v_feedback_reply_event_id
+      )) <> 4 THEN
     RAISE EXCEPTION 'FAIL: dispatcher retry created duplicate inbox rows';
   END IF;
   PERFORM set_config(
     'request.jwt.claims',
     jsonb_build_object('sub',v_other,'role','authenticated')::text,true
   );
-  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'completed' THEN
-    RAISE EXCEPTION 'FAIL: assignment completion transition';
+  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'active' THEN
+    RAISE EXCEPTION 'FAIL: assignment must remain active before developer approval';
   END IF;
-  IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_submission) <> 'submitted' THEN
-    RAISE EXCEPTION 'FAIL: final submission state';
+  IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_submission) <> 'draft' THEN
+    RAISE EXCEPTION 'FAIL: submission must remain draft while finalization is fail-closed';
   END IF;
   IF NOT rebuild_v2_private.can_read_test_evidence(v_path) THEN
     RAISE EXCEPTION 'FAIL: evidence read policy helper';
   END IF;
-  IF rebuild_v2_private.can_upload_test_evidence(v_path) THEN
-    RAISE EXCEPTION 'FAIL: upload must close after finalization';
+  IF NOT rebuild_v2_private.can_upload_test_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: upload must remain available while report is a draft';
   END IF;
 
   PERFORM set_config('request.jwt.claim.sub',v_other::text,true);
