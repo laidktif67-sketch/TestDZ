@@ -91,6 +91,10 @@ BEGIN
     RAISE EXCEPTION 'final assignment schedule/evidence RPC wrappers are missing';
   END IF;
 
+  IF to_regprocedure('rebuild_v2.process_assignment_review_deadlines(integer)') IS NULL THEN
+    RAISE EXCEPTION 'service-only assignment review deadline processor is missing';
+  END IF;
+
   IF to_regprocedure('rebuild_v2.revise_tester_feedback(uuid,text,text,smallint)') IS NULL THEN
     RAISE EXCEPTION 'tester feedback quality revision RPC is missing';
   END IF;
