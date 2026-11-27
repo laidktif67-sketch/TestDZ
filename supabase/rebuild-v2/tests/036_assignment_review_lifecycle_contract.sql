@@ -157,16 +157,18 @@ BEGIN
     RAISE EXCEPTION 'FAIL: second attempt fixture could not enter submitted state';
   END IF;
 
-  -- Approval remains fail-closed until the full 14-day, feedback-quality,
-  -- medical-exception and evidence prerequisites are implemented and tested.
+  -- Approval remains blocked for this fixture because it lacks 14 valid check-ins
+  -- and accepted feedback; the live prerequisite evaluator must reject it.
   PERFORM set_config('request.jwt.claim.sub','36000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub','36000000-0000-4000-8000-000000000001','role','authenticated')::text,true);
   BEGIN
     PERFORM rebuild_v2.review_assignment_submission(v_second_submission,'approved',NULL);
-    RAISE EXCEPTION 'FAIL: approval bypassed unimplemented submission prerequisites';
+    RAISE EXCEPTION 'FAIL: approval bypassed missing 14-day and accepted-feedback prerequisites';
   EXCEPTION WHEN SQLSTATE '55000' THEN
-    NULL;
+    IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_MET' THEN
+      RAISE EXCEPTION 'FAIL: unexpected approval gate response: %',SQLERRM;
+    END IF;
   END;
   IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'active' THEN
     RAISE EXCEPTION 'FAIL: blocked approval must keep assignment active';
