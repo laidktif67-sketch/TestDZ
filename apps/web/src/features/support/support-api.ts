@@ -4,7 +4,7 @@ import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
 /** List the signed-in tester's support tickets. */
 export async function getTesterSupportTickets(userId: string) {
   return getAppDataClient().from("support_tickets")
-    .select("id,ticket_number,subject,category,priority,status,created_at")
+    .select("id,ticket_number,requester_role,subject,category,priority,status,created_at")
     .eq("user_id", userId).order("created_at", { ascending: false }).limit(30);
 }
 
