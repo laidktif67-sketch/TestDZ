@@ -24,10 +24,39 @@ export default function SupportCenterPage() {
   const name=user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Tester";
   const firstName=name.split(/[\s._-]+/)[0] || "Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
   const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(roles.includes("support")||isAdmin?[{label:"Support Queue",icon:"headset",href:"/support/queue"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
-  async function loadTickets(){if(!user){setLoading(false);return;}setLoading(true);setError("");const {data,error}=await getTesterSupportTickets(user.id);if(error)setError("Could not load your support tickets. Please refresh.");else setTickets((data||[]) as Ticket[]);setLoading(false);}
+  async function loadTickets(){
+    if(!user){setLoading(false);return;}
+    setLoading(true);setError("");
+    try {
+      const {data,error}=await getTesterSupportTickets(user.id);
+      if(error)setError("Could not load your support tickets. Please refresh.");
+      else setTickets((data||[]) as Ticket[]);
+    } catch {
+      setError("Could not load your support tickets. Please refresh.");
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(()=>{void loadTickets();},[user?.id]);
   useEffect(()=>{if(searchParams.get("new")==="1")setShowForm(true);},[searchParams]);
-  async function createTicket(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!user)return;if(!effectiveRequesterRole){setError("A Tester or Developer workspace role is required to create a support ticket.");return;}setBusy(true);setError("");setNotice("");const result=await createTesterSupportTicket({userId:user.id,requesterRole:effectiveRequesterRole,subject:subject.trim(),category,priority,description:description.trim()});const created=Array.isArray(result.data)?result.data[0]:result.data;setBusy(false);if(result.error||!created){setError("Your ticket could not be created. Please check the details and try again.");return;}setTickets(current=>[created as Ticket,...current]);setSubject("");setDescription("");setPriority("normal");setCategory("technical");setShowForm(false);setNotice("Your support ticket was created successfully.");}
+  async function createTicket(event:FormEvent<HTMLFormElement>){
+    event.preventDefault();
+    if(!user)return;
+    if(!effectiveRequesterRole){setError("A Tester or Developer workspace role is required to create a support ticket.");return;}
+    setBusy(true);setError("");setNotice("");
+    try {
+      const result=await createTesterSupportTicket({userId:user.id,requesterRole:effectiveRequesterRole,subject:subject.trim(),category,priority,description:description.trim()});
+      const created=Array.isArray(result.data)?result.data[0]:result.data;
+      if(result.error||!created){setError("Your ticket could not be created. Please check the details and try again.");return;}
+      setTickets(current=>[created as Ticket,...current]);
+      setSubject("");setDescription("");setPriority("normal");setCategory("technical");setShowForm(false);
+      setNotice("Your support ticket was created successfully.");
+    } catch {
+      setError("Your ticket could not be created because the request failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
   return <div className="td-dashboard sc-dashboard"><TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/><main className="td-main sc-main"><header className="td-topbar sc-topbar"><label className="td-search sc-search"><Icon name="search" size={20}/><input placeholder="Search support tickets…" aria-label="Search support tickets"/></label><div className="td-top-actions"><Link to="/notifications" className="td-notification" aria-label="Notifications"><Icon name="bell" size={21}/></Link><span className="td-top-divider"/><Link to="/profile" className="td-profile-short"><span>{firstName.slice(0,2).toUpperCase()}</span><strong>{name}</strong><b>⌄</b></Link></div></header>
   <div className="sc-content"><Link to="/help" className="sc-back">← Back to Help Center</Link>
   <section className="sc-hero"><div><span className="sc-eyebrow">TESTDZ CUSTOMER CARE</span><h1>We’re here to help.</h1><p>Create a support ticket and track every update in one place.</p><button type="button" onClick={()=>setShowForm(true)} ><Icon name="send" size={18}/> Create a Support Ticket</button></div><div className="sc-hero-art"><Icon name="headset" size={92}/><span>?</span></div></section>

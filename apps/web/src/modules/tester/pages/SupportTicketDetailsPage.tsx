@@ -28,13 +28,28 @@ export default function SupportTicketDetailsPage(){
  const load=useCallback(async()=>{
   if(!user||!id){setLoading(false);return;}
   setLoading(true);setError("");
-  const {ticketResult,messageResult,attachmentResult}=await getTesterSupportTicketDetails(id);
-  const ticketData=ticketResult.data;
-  if(ticketResult.error||!ticketData){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setLoading(false);return;}
-  setTicket(ticketData as Ticket);setNextStatus(ticketData.status);setNextPriority(ticketData.priority);
-  if(messageResult?.error||attachmentResult?.error){setError("Ticket details are available, but conversation or attachment records could not be loaded. Please refresh and try again.");setMessages([]);setAttachments([]);}
-  else {setMessages((messageResult?.data||[]) as Message[]);setAttachments((attachmentResult?.data||[]) as Attachment[]);}
-  setLoading(false);
+  try {
+   const {ticketResult,messageResult,attachmentResult}=await getTesterSupportTicketDetails(id);
+   const ticketData=ticketResult.data;
+   if(ticketResult.error||!ticketData){
+    setError("This ticket could not be loaded. It may not exist or you may not have access to it.");
+    setTicket(null);setMessages([]);setAttachments([]);
+    return;
+   }
+   setTicket(ticketData as Ticket);setNextStatus(ticketData.status);setNextPriority(ticketData.priority);
+   if(messageResult?.error||attachmentResult?.error){
+    setError("Ticket details are available, but conversation or attachment records could not be loaded. Please refresh and try again.");
+    setMessages([]);setAttachments([]);
+   } else {
+    setMessages(((messageResult?.data||[]) as Message[]).filter(message=>!message.internal_note));
+    setAttachments((attachmentResult?.data||[]) as Attachment[]);
+   }
+  } catch {
+   setError("This ticket could not be loaded because the request failed. Please try again.");
+   setTicket(null);setMessages([]);setAttachments([]);
+  } finally {
+   setLoading(false);
+  }
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
  const isSupportStaff=roles.includes("support")||isAdmin;
@@ -43,22 +58,35 @@ export default function SupportTicketDetailsPage(){
  async function sendReply(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(!user||!ticket||!reply.trim())return;
   setSending(true);setError("");setNotice("");
-  if(!supabase){setSending(false);setError("Storage is unavailable.");return;}
+  try {
+   if(!supabase){setError("Storage is unavailable.");return;}
    if(selectedFile&&(selectedFile.size>10*1024*1024||!["image/png","image/jpeg","image/webp","text/plain","application/pdf","application/zip"].includes(selectedFile.type))){
-   setSending(false);setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
-  }
-  const {data:messageData,error:insertError}=await sendTesterSupportMessage(ticket.id,user.id,reply.trim());
-  const messageId=typeof messageData==="string"?messageData:messageData?.id;
-  if(insertError||!messageId){setSending(false);setError("Your reply could not be sent. Please try again.");return;}
-  if(selectedFile){
-   const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
-   const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
+    setError("Choose a PNG, JPEG, WebP, TXT, PDF or ZIP file up to 10 MB.");return;
+   }
+   const {data:messageData,error:insertError}=await sendTesterSupportMessage(ticket.id,user.id,reply.trim());
+   const messageId=typeof messageData==="string"?messageData:messageData?.id;
+   if(insertError||!messageId){setError("Your reply could not be sent. Please try again.");return;}
+   if(selectedFile){
+    const safeName=selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(-180)||"attachment";
+    const storagePath=`${ticket.id}/${user.id}/${crypto.randomUUID()}-${safeName}`;
     const {error:uploadError}=await supabase.storage.from("support-attachments").upload(storagePath,selectedFile,{contentType:selectedFile.type,upsert:false});
-   if(uploadError){setSending(false);setReply("");setSelectedFile(null);setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");await load();return;}
+    if(uploadError){
+     setReply("");setSelectedFile(null);
+     setNotice("Your reply was sent, but the attachment could not be uploaded. You can send it again in a new reply.");
+     await load();return;
+    }
     const {error:metadataError}=await addTesterSupportAttachment({ticketId:ticket.id,messageId,userId:user.id,storagePath,filename:selectedFile.name.slice(0,255),mimeType:selectedFile.type,sizeBytes:selectedFile.size});
-   if(metadataError){setSending(false);setReply("");setSelectedFile(null);await load();setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");return;}
+    if(metadataError){
+     setReply("");setSelectedFile(null);await load();
+     setError("Your reply was sent, but the attachment record could not be saved. Contact support before uploading it again.");return;
+    }
+   }
+   setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
+  } catch {
+   setError("Your reply could not be sent because the request failed. Please try again.");
+  } finally {
+   setSending(false);
   }
-  setSending(false);setReply("");setSelectedFile(null);setNotice("Reply sent.");await load();
  }
  async function updateTicket(event:FormEvent<HTMLFormElement>){
   event.preventDefault();if(!ticket)return;
@@ -68,17 +96,26 @@ export default function SupportTicketDetailsPage(){
   if(!status&&!priority){setError("Choose a new status or priority before saving.");return;}
   if(reason.length<10||reason.length>1000){setError("The audit reason must contain 10–1000 characters.");return;}
   setUpdating(true);setError("");setNotice("");
-  const result=await updateSupportTicket({ticketId:ticket.id,status,priority,reason});
-  setUpdating(false);
-  if(result.error){setError("The ticket update was rejected. Check the allowed status transition and your Support/Admin permissions.");return;}
-  setUpdateReason("");setNotice("Ticket updated. The change and reason were recorded in the audit log.");await load();
+  try {
+   const result=await updateSupportTicket({ticketId:ticket.id,status,priority,reason});
+   if(result.error){setError("The ticket update was rejected. Check the allowed status transition and your Support/Admin permissions.");return;}
+   setUpdateReason("");setNotice("Ticket updated. The change and reason were recorded in the audit log.");await load();
+  } catch {
+   setError("The ticket update failed because the request could not be completed. Please try again.");
+  } finally {
+   setUpdating(false);
+  }
  }
  async function openAttachment(item:Attachment){
   setError("");
   if(!supabase)return;
+  try {
    const {data,error:storageError}=await supabase.storage.from("support-attachments").createSignedUrl(item.storage_path,60);
-  if(storageError||!data?.signedUrl){setError("This attachment is not available or you do not have permission to access it.");return;}
-  window.open(data.signedUrl,"_blank","noopener,noreferrer");
+   if(storageError||!data?.signedUrl){setError("This attachment is not available or you do not have permission to access it.");return;}
+   window.open(data.signedUrl,"_blank","noopener,noreferrer");
+  } catch {
+   setError("This attachment could not be opened. Please try again.");
+  }
  }
  return <div className="td-dashboard std-dashboard">
   <TesterSidebar nav={nav} name={name} firstName={firstName} avatar="" roles={roles} isAdmin={isAdmin} isDeveloper={isDeveloper} workspaceMenuOpen={menuOpen} setWorkspaceMenuOpen={setMenuOpen} previewMode={false}/>

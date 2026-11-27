@@ -38,9 +38,12 @@ export async function getTesterSupportTicketDetails(ticketId: string) {
   const messageColumns = isTesterWorkflowV2Enabled
     ? "id,ticket_id,sender_id,body,internal_note,created_at"
     : "id,ticket_id,sender_id,body,created_at";
+  let messagesQuery = client.from("support_ticket_messages").select(messageColumns)
+    .eq("ticket_id", ticketId);
+  // Internal staff notes must never enter the tester-facing data path.
+  if (isTesterWorkflowV2Enabled) messagesQuery = messagesQuery.eq("internal_note", false);
   const [messageResult, attachmentResult] = await Promise.all([
-    client.from("support_ticket_messages").select(messageColumns)
-      .eq("ticket_id", ticketId).order("created_at", { ascending: true }),
+    messagesQuery.order("created_at", { ascending: true }),
     client.from("support_ticket_attachments").select("id,ticket_id,message_id,uploaded_by,storage_path,original_filename,mime_type,size_bytes,created_at")
       .eq("ticket_id", ticketId).order("created_at", { ascending: true }),
   ]);
