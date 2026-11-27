@@ -57,10 +57,20 @@ JOIN rebuild_v2.tests t ON t.id=ct.test_id
 WHERE t.title='Medical Review Contract Test';
 
 INSERT INTO rebuild_v2.checkins(assignment_id,tester_id,checkin_date,note)
-SELECT a.id,a.tester_id,rebuild_v2_private.algeria_local_date()-2,'Existing valid check-in'
+SELECT a.id,a.tester_id,g.day::date,'Existing valid check-in'
 FROM rebuild_v2.assignments a
 JOIN rebuild_v2.tests t ON t.id=a.test_id
-WHERE t.title='Medical Review Contract Test';
+CROSS JOIN LATERAL generate_series(
+  rebuild_v2_private.algeria_local_date()-10,
+  rebuild_v2_private.algeria_local_date()-1,
+  interval '1 day'
+) g(day)
+WHERE t.title='Medical Review Contract Test'
+  AND g.day::date NOT IN (
+    rebuild_v2_private.algeria_local_date()-5,
+    rebuild_v2_private.algeria_local_date()-4,
+    rebuild_v2_private.algeria_local_date()-3
+  );
 
 INSERT INTO rebuild_v2.feedback(assignment_id,tester_id,category,body,rating)
 SELECT a.id,a.tester_id,'usability',
@@ -84,6 +94,7 @@ DECLARE
   v_extension_before integer;
   v_extension_after integer;
   v_path text;
+  v_checkin uuid;
   v_file constant uuid := '37000000-0000-4000-8000-000000000099';
   v_error text;
 BEGIN
@@ -215,6 +226,15 @@ BEGIN
     ARRAY[v_today-5]::date[]
   );
 
+  -- The pending request provisionally pauses interruption while Admin reviews.
+  v_checkin:=rebuild_v2.submit_checkin(
+    v_assignment,'Current-day check-in while the prior medical date is pending review.'
+  );
+  IF v_checkin IS NULL
+     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'active' THEN
+    RAISE EXCEPTION 'FAIL: pending medical request did not pause missed-day interruption';
+  END IF;
+
   PERFORM set_config('request.jwt.claim.sub',v_admin::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
@@ -225,6 +245,16 @@ BEGIN
   END IF;
   IF (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_assignment)<>v_extension_before+2 THEN
     RAISE EXCEPTION 'FAIL: rejected request changed the extension counter';
+  END IF;
+  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'failed'
+     OR (SELECT count(*) FROM rebuild_v2.audit_events
+         WHERE action='assignment.interrupted' AND target_id=v_assignment
+           AND metadata->>'interruption_reason'='medical_exception_rejected')<>1
+     OR (SELECT count(*) FROM rebuild_v2.events
+         WHERE event_type='notification.requested'
+           AND aggregate_type='assignment' AND aggregate_id=v_assignment
+           AND payload->>'type'='assignment.interrupted')<>1 THEN
+    RAISE EXCEPTION 'FAIL: rejecting an unexcused pending medical date did not fail and notify the assignment';
   END IF;
 
   -- Feedback quality is an Admin-only gate, separate from developer triage.
