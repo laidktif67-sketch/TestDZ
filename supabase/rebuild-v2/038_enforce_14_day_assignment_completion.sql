@@ -222,13 +222,6 @@ BEGIN
     RAISE EXCEPTION 'CHECKIN_BEFORE_ASSIGNMENT_START' USING errcode='22023';
   END IF;
 
-  SELECT c.id INTO v_checkin_id
-  FROM rebuild_v2.checkins c
-  WHERE c.assignment_id=p_assignment_id AND c.checkin_date=v_checkin_date;
-  IF v_checkin_id IS NOT NULL THEN
-    RETURN v_checkin_id;
-  END IF;
-
   SELECT count(*)::integer INTO v_missed_days
   FROM generate_series(v_start_date::timestamp,(v_checkin_date-1)::timestamp,interval '1 day') g(day)
   WHERE NOT EXISTS (
@@ -272,6 +265,13 @@ BEGIN
       jsonb_build_object('assignment_id',p_assignment_id,'missed_required_days',v_missed_days)
     );
     RETURN NULL;
+  END IF;
+
+  SELECT c.id INTO v_checkin_id
+  FROM rebuild_v2.checkins c
+  WHERE c.assignment_id=p_assignment_id AND c.checkin_date=v_checkin_date;
+  IF v_checkin_id IS NOT NULL THEN
+    RETURN v_checkin_id;
   END IF;
 
   IF EXISTS (
