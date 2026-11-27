@@ -1353,3 +1353,43 @@
 - لا توجد إعادة تشغيل جديدة في هذه الجولة. نتائج PASS التاريخية المشار إليها سابقاً تخص commit `9a973cfb` فقط ولا تُعمم على أي SHA آخر.
 - مراجعة الملفات هنا ساكنة: لم نشغل Playwright/Cypress أو Supabase local stack أو Storage HTTP، ولم نغيّر workflow أو التطبيق أو SQL.
 - لا دمج أو حذف فروع أو نشر أو تعديل في Supabase المستضافة.
+
+
+## 39. جرد اختبارات الواجهة وأوامر CI — 2026-11-27
+
+### `TEST-E2E-001` — Medium — لا يظهر إطار أو أمر لاختبارات واجهة المستخدم في إعدادات الفرع الرسمي
+
+- **نطاق الفحص:** شجرة Git الكاملة على `rebuild/testdz-v2` عند SHA `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`، وملفات `package.json` في الجذر و`apps/web/`، وملفات Workflows الخمسة.
+- **الدليل من شجرة الملفات:** لم تظهر أسماء ملفات أو إعدادات Playwright أو Cypress أو Vitest أو Jest أو Testing Library، ولا ملفات `.spec.*` أو `.test.*` ضمن المستودع المفحوص. لا يعني ذلك استحالة وجود اختبار خارجي غير مخزن في Git، لكنه يعني أن المستودع لا يقدم حالياً دليلاً عليه.
+- **الدليل من أوامر الحزم:** أوامر الجذر هي `dev` و`build` و`typecheck` و`check:data-boundary` فقط. أوامر `apps/web` هي `dev` و`build` و`preview` و`typecheck` فقط؛ ولا توجد scripts باسم `test` أو اعتماديات أطر E2E/unit في package manifest المقروء.
+- **الدليل من CI:** `.github/workflows/frontend-ci.yml` يشغل `npm ci` ثم `check:data-boundary` ثم TypeScript typecheck ثم production build. `.github/workflows/ci.yml` يشغل typecheck وbuild فقط. لا يوجد في هذين المسارين تشغيل متصفح أو اختبارات component/integration للواجهة.
+- **الأثر:** لا يوجد تحقق آلي داخل المستودع يثبت أن مستخدماً بأدوار مختلفة يستطيع إكمال الرحلات عبر واجهة المتصفح، أو أن حالات التنقل والتحميل وفشل الشبكة والرفع والرسائل المرئية متوافقة مع عقود SQL. نجاح build لا يختبر هذه السلوكيات.
+- **الحل المقترح بعد اعتماد التدقيق:** اعتماد إطار مجاني مفتوح المصدر ضمن أدوات المشروع (مثل Playwright لاختبارات المتصفح) مع fixtures محلية/بيانات اصطناعية، وإضافة اختبارات مركزة للـAPI/components حيث تعطي قيمة. يجب أن يعمل المسار في GitHub Actions دون حسابات مدفوعة أو مفاتيح إنتاج، وأن يستهدف Supabase محلياً فقط.
+- **اختبار القبول:** CI يشغّل على الأقل رحلات smoke لمستخدم Tester وDeveloper وAdmin وSupport: تسجيل الدخول/حراسة الدور، إنشاء تطبيق واختبار، تصفح/بدء assignment، check-in/submit، رفع/رفض ملف، إنشاء ومراجعة تذكرة دعم، وفشل الشبكة/retry. يجب إثبات أن أي اختبار لا يتصل بمشروع Supabase المستضاف.
+- **الحالة:** Confirmed repository/CI configuration gap عند SHA المذكور؛ لم يتم تثبيت إطار أو كتابة اختبارات أثناء التدقيق.
+
+### `CI-SCOPE-001` — ملاحظة توضيحية حول Workflow الترحيلات القديمة
+
+- `.github/workflows/supabase-migration-tests.yml` يقتصر محفزه على فرعي `architecture-v1` و`main`، ويشغّل `supabase test db` لمسار `supabase/migrations` و`supabase/tests` القديم. لذلك لا أعدّه مسار اختبار Rebuild V2 الرسمي؛ V2 لديه Workflow مستقل `rebuild-v2-tests.yml` يستهدف `rebuild/testdz-v2` ويطبق `supabase/rebuild-v2/`.
+- هذا الفصل يمنع خلط نتائج اختبارات Legacy بنتائج Rebuild V2. لا يوجد في هذه الجولة تشغيل جديد لأي منهما.
+
+### مصفوفة موجزة لما يثبته CI حالياً
+
+| المجال | ما ينفذه CI في الفرع الرسمي | ما لا يثبته وحده |
+|---|---|---|
+| Frontend architecture | Data-boundary static check | صحة تدفق المستخدم في المتصفح |
+| Frontend types | TypeScript typecheck | صحة API runtime أو البيانات |
+| Frontend packaging | Vite production build | Responsive/RTL/accessibility الفعلية |
+| V2 database | إعادة تشغيل 35 SQL وتشغيل 24 عقداً | تطابق FixLab أو الإنتاج |
+| PostgREST | تعرض `rebuild_v2` وإخفاء `rebuild_v2_private` في stack محلي | صحة إعدادات hosted |
+| Edge Functions | Deno typecheck عند تشغيل workflow | نشر الدوال أو HTTP behavior أو البريد |
+| Storage | SQL/RLS/metadata contracts | HTTP upload/download وsigned URL behavior |
+| Browser E2E | لا يظهر مسار إعداد/تشغيل في المستودع | الرحلات الكاملة لكل دور |
+
+### حدود الجولة
+
+- أعيد التحقق من SHA الرسمي قبل الفحص: `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`.
+- لم يتم تشغيل `npm ci` أو بناء محلي في هذه الجولة؛ لم أخلط ذلك بنتائج CI السابقة.
+- لم يتم تثبيت dependencies أو إضافة ملفات أو تعديل أي كود تطبيقي أو SQL أو Workflow.
+- لم يتم تشغيل Supabase محلياً أو اختبار متصفح/Storage HTTP، ولم تتغير Supabase المستضافة أو Vercel.
+- لم يحدث merge أو حذف فروع.
