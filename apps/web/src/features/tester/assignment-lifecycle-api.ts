@@ -43,3 +43,8 @@ export function attachTesterMedicalExceptionEvidence(requestId: string, storageP
     p_storage_path: storagePath,
   });
 }
+
+export function getTesterMedicalExceptionAssignment(assignmentId: string, testerId: string) {
+  return getAppDataClient().from("assignments").select("id,status")
+    .eq("id", assignmentId).eq("tester_id", testerId).maybeSingle();
+}
