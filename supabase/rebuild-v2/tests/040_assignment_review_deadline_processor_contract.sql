@@ -180,6 +180,8 @@ BEGIN
 
   IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_auto_submission)<>'auto_approved'
      OR (SELECT auto_approved_at FROM rebuild_v2.assignment_submissions WHERE id=v_auto_submission) IS NULL
+     OR (SELECT reviewed_at FROM rebuild_v2.assignment_submissions WHERE id=v_auto_submission) IS NULL
+     OR (SELECT reviewed_by FROM rebuild_v2.assignment_submissions WHERE id=v_auto_submission) IS NOT NULL
      OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_auto_assignment)<>'completed' THEN
     RAISE EXCEPTION 'FAIL: eligible 72-hour report was not auto-approved and completed';
   END IF;
