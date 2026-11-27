@@ -12,7 +12,7 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
       client.from("checkins").select("id,checkin_date")
         .eq("assignment_id", assignmentId).eq("tester_id", userId)
         .order("checkin_date", { ascending: true }),
-      client.from("feedback").select("id,quality_status,reviewed_at")
+      client.from("feedback").select("id,quality_status,reviewed_at,reviewed_by")
         .eq("assignment_id", assignmentId).eq("tester_id", userId).maybeSingle(),
       client.from("medical_exception_requests").select("status,requested_dates")
         .eq("assignment_id", assignmentId)
@@ -39,7 +39,7 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
       assignment: {
         id: assignmentResult.data.id,
         status: assignmentResult.data.status,
-        start_date: assignmentResult.data.started_at || assignmentResult.data.assigned_at,
+        start_date: assignmentResult.data.started_at,
         completed_at: assignmentResult.data.completed_at,
         created_at: assignmentResult.data.assigned_at,
         points_awarded: null,
