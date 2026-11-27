@@ -12,7 +12,7 @@ import {
   type MedicalExceptionRequest,
 } from "../../../features/tester/assignment-lifecycle-api";
 import "../styles/tester-dashboard.css";
-import "./medical-exception-request.css";
+import "../styles/medical-exception-request.css";
 
 const todayValue = () => {
   const now = new Date();
