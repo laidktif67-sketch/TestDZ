@@ -327,3 +327,20 @@ Validation:
 - The Edge Function typecheck passed in run 46050157553.
 
 No production database, wallet, rewards, payments, deployment, or merge was touched.
+
+
+## Review deadline processor and feedback recovery — 2026-11-27
+
+Migration `040_assignment_review_deadline_processor.sql` adds a server-only batch processor for the review lifecycle:
+
+- At 48 hours after submission, it queues one developer reminder (idempotent via `reminder_sent_at`).
+- At 72 hours, it revalidates the full server-side completion prerequisites and auto-approves only if no developer decision exists and the reminder has been queued for at least 24 hours.
+- If the processor was unavailable at the 48-hour point, it queues the reminder when it next runs and delays auto-approval for a further 24 hours, preserving a full developer review opportunity.
+- If prerequisites fail, it leaves the report submitted and counts it as blocked; it does not issue rewards, wallet credits, or payments.
+- System decisions are recorded in the review history with a null human actor and a distinct auto-approval timestamp.
+
+The first local contract run exposed a constraint mismatch: system approval intentionally has no human reviewer ID, while the metadata constraint required reviewer ID and review timestamp to be both null or both present. Migration 040 now explicitly permits the system-only state `auto_approved + reviewed_at + auto_approved_at + reviewed_by NULL`, while preserving the human-review pairing. Contract 040 now asserts this metadata state.
+
+Migration 039 also closes the rejected-feedback recovery gap. The tester form parses the structured feedback body using actual newline delimiters, prefills the rejected content, and allows revision only after an Admin rejection; pending and accepted feedback remain locked.
+
+**Operational launch gate:** the processor is server-only and no hosted scheduler/cron invocation has been configured. Therefore the 48-hour reminders and 72-hour auto-approval are implemented but are not operational until a controlled scheduler is configured and monitored. The local disposable Supabase contract run for the metadata fix is pending at [run 46053471779](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46053471779); frontend typecheck and notification/invitation Edge Function checks have passed in that run so far.
