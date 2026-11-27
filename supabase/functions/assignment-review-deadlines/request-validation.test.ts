@@ -14,6 +14,12 @@ Deno.test("dispatch secret comparison accepts only exact matches", () => {
   if (constantTimeEqual("short", "longer")) {
     throw new Error("different-length secrets must not match");
   }
+  if (constantTimeEqual("secret-value", "secret-value-extra")) {
+    throw new Error("matching prefixes with different lengths must not match");
+  }
+  if (constantTimeEqual("secret-value-extra", "secret-value")) {
+    throw new Error("matching suffixes with different lengths must not match");
+  }
 });
 
 Deno.test("bounded body accepts valid UTF-8 within the limit", async () => {
