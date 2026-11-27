@@ -231,3 +231,30 @@ Migration 037 must implement and test the remaining prerequisites as one fail-cl
 6. Keep 48-hour reminders and 72-hour auto-approval server-only and disabled until a verified scheduler invocation exists. Auto-approval must re-check every prerequisite and must never create wallet/reward entries.
 
 No hosted Supabase writes, merge, PR, feature-flag change, or deployment is authorized by this validation.
+
+
+## Migration 037 validation — 2026-11-27
+
+Migration `037_medical_exception_and_feedback_quality.sql` and its contract were added to the isolated candidate chain.
+
+Verified by GitHub Actions run [46046795027](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46046795027), commit `effb57a13d3f09bc72e95a519f4450f17439d977`:
+
+- All 37 numbered candidate SQL scripts applied successfully to a disposable local Supabase stack.
+- `final_state_contract.sql` passed with the new private medical-evidence bucket.
+- `037_medical_exception_and_feedback_quality_contract.sql` passed.
+- Existing tester workflow, assignment review, privacy, wallet, support, invitations and other SQL contracts passed.
+- Frontend TypeScript and notification/invitation Edge Function typechecks passed.
+
+Migration 037 currently provides:
+- A dedicated private `medical-exception-evidence` bucket (5 MiB; JPEG/PNG/WebP/PDF).
+- Tester-owned request creation, date validation, one pending request per assignment, and overlap/duplicate/check-in protections.
+- Evidence registration only after Storage owner/size/MIME verification.
+- Admin-only approval/rejection, assignment locking, one extension day per approved date, before/after audit metadata and tester notification.
+- Admin-only feedback quality review, separate from developer triage, with a one-way pending → accepted/rejected decision, audit metadata and tester notification.
+
+Important remaining boundaries:
+- This run validates the local candidate only; no hosted Supabase writes occurred.
+- Feedback quality and medical decisions now exist, but the 14-day check-in sequence and shared completion prerequisite evaluator are not implemented yet.
+- Migration 036's finalization and developer approval remain deliberately fail-closed.
+- No reward, points, wallet, or payment is issued by these review RPCs.
+- Medical evidence access is limited to the request's tester and Admin; Support and developers are not granted access.
