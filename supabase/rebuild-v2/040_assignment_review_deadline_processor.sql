@@ -3,6 +3,30 @@
 -- deployment/operations launch gate.
 BEGIN;
 
+-- System auto-approval has no human reviewer identity. Keep that distinct from
+-- human review while requiring the timestamp pair and the auto-approval stamp.
+ALTER TABLE rebuild_v2.assignment_submissions
+  DROP CONSTRAINT IF EXISTS assignment_submissions_review_metadata_check,
+  ADD CONSTRAINT assignment_submissions_review_metadata_check
+  CHECK (
+    (
+      reviewed_by IS NULL
+      AND reviewed_at IS NULL
+      AND auto_approved_at IS NULL
+    )
+    OR (
+      reviewed_by IS NOT NULL
+      AND reviewed_at IS NOT NULL
+      AND auto_approved_at IS NULL
+    )
+    OR (
+      status='auto_approved'
+      AND reviewed_by IS NULL
+      AND reviewed_at IS NOT NULL
+      AND auto_approved_at IS NOT NULL
+    )
+  );
+
 ALTER TABLE rebuild_v2.assignment_submission_reviews
   ALTER COLUMN actor_id DROP NOT NULL;
 ALTER TABLE rebuild_v2.assignment_submission_reviews
