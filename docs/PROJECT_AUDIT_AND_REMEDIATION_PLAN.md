@@ -812,3 +812,27 @@
 - لا تغييرات في التطبيق أو SQL أو إعدادات Supabase المستضافة، ولا نشر Vercel، ولا دمج أو حذف فروع.
 - هذه الجولة مراجعة ساكنة لمصدر الفرع الرسمي عند `9a973cfb2d970f37c2bd8523584d29c9c1622ea0` وعقود الاختبار المرتبطة به.
 - تبقى مراحل الخصوصية وRLS وStorage وReports/Disputes بحاجة إلى تشغيل العقود على بيئة محلية مؤقتة، ثم اختبارات تكامل بمستخدمين منفصلين قبل إعلان سلامتها.
+
+
+## 19. مراجعة إدارة الأدوار وطوابير Admin/Support — 2026-11-27
+
+### FUNC-SUPPORT-UI-001 — Medium — واجهة Support تمنع إغلاق التذكرة بعد حلّها رغم سماح الخادم بذلك
+
+- **الملفات:** apps/web/src/modules/support/pages/SupportTicketDetailPage.tsx؛ supabase/rebuild-v2/024_audited_support_ticket_workflow.sql؛ supabase/rebuild-v2/tests/020_support_ticket_audited_workflow_contract.sql.
+- **الدليل:** دالة update_support_ticket_impl تسمح لموظف Support بإغلاق التذكرة إذا كانت حالتها الحالية resolved؛ كما يختبر العقد 020 هذا المسار ويتوقع نجاحه. لكن الواجهة تعرّف statusLocked على أنه true لكل تذكرة resolved عندما لا يكون المستخدم Admin، وتعطّل حقل الحالة. كذلك قائمة allowedStatuses لموظف Support في حالة resolved تحتوي الحالة الحالية فقط ولا تتضمن closed.
+- **الأثر:** لا يستطيع موظف Support تنفيذ انتقال مسموح به في الخادم من واجهة المنتج؛ يضطر إلى ترك التذكرة محلولة دون إغلاقها أو طلب تدخل Admin، ما يخلق فجوة بين صلاحيات الخادم وتجربة التشغيل.
+- **الحل المقترح بعد اعتماد التدقيق:** مواءمة حالة التحكم في الواجهة مع انتقالات SQL المعتمدة: السماح لموظف Support بإغلاق التذكرة المحلولة مع إدخال سبب مطلوب، مع إبقاء إعادة فتح التذاكر المحلولة/المغلقة محصورة في Admin حسب قواعد الخادم. لا توسّع صلاحيات الخادم.
+- **اختبار القبول:** بحساب Support، تظهر إمكانية إغلاق تذكرة resolved فقط، ويُطلب سبب صالح ويُسجل الحدث وسجل التدقيق؛ لا يستطيع Support إعادة فتح تذكرة محلولة أو مغلقة أو إغلاق تذكرة نشطة مباشرة؛ ويظل Admin قادراً على إعادة فتح تذكرة مغلقة وفق RPC.
+- **الحالة:** Confirmed static UI/SQL workflow mismatch؛ عقد SQL موجود لكنه لم يُشغّل في هذه الجولة، ولم يتم اختبار الواجهة في متصفح فعلي. لا إصلاح أثناء التدقيق.
+
+### نتائج داعمة — مراجعة صلاحيات Admin
+
+- مسارات /admin و/admin/developer-reviews و/admin/role-requests و/admin/role-grants تقع تحت RoleGuard requiredRole="admin" في apps/web/src/App.tsx.
+- admin_grant_role وadmin_review_role_request يتحققان من دور Admin داخل قاعدة البيانات، ويمنعان self-grant/self-review، ويفرضان سبباً محدد الطول. اختبار tests/015_admin_role_request_management_contract.sql يحتوي سيناريو رفض المستخدم غير الإداري، واعتماد Admin لطلب، والتحقق من منح الدور ووجود سجل التدقيق.
+- طابور مراجعة التطبيقات والاختبارات يقرأ سجلات apps وtests عبر Data Client مع الاعتماد على RLS، بينما دوال review_app وreview_test تفرض دور Admin وسبب القرار وتتحقق من حالة submitted قبل الانتقال إلى published أو recruiting أو rejected/failed.
+- هذه مراجعة ساكنة لعقود الواجهة وSQL؛ لم يتم تشغيل عقود Admin أو اختبار RLS بمستخدمين منفصلين في قاعدة محلية.
+
+### حدود الإثبات
+
+- لا تعديل على كود التطبيق أو SQL أو إعدادات Supabase المستضافة، ولا نشر Vercel، ولا دمج أو حذف فروع.
+- تبقى اختبارات Admin وSupport وRLS بحاجة إلى تشغيل على قاعدة محلية مؤقتة نظيفة، ثم اختبار متصفح بحسابات Admin وSupport وRequester منفصلة.
