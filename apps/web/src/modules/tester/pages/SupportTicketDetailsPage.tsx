@@ -33,7 +33,7 @@ export default function SupportTicketDetailsPage(){
   if(ticketResult.error||!ticketData){setError("This ticket could not be loaded. It may not exist or you may not have access to it.");setTicket(null);setMessages([]);setAttachments([]);setLoading(false);return;}
   setTicket(ticketData as Ticket);setNextStatus(ticketData.status);setNextPriority(ticketData.priority);
   if(messageResult?.error||attachmentResult?.error){setError("Ticket details are available, but conversation or attachment records could not be loaded. Please refresh and try again.");setMessages([]);setAttachments([]);}
-  else {setMessages((messageResult?.data||[]) as Message[]);setAttachments((attachmentResult?.data||[]) as Attachment[]);}
+  else {setMessages(((messageResult?.data||[]) as Message[]).filter(message=>!message.internal_note));setAttachments((attachmentResult?.data||[]) as Attachment[]);}
   setLoading(false);
  },[id,user?.id]);
  useEffect(()=>{void load();},[load]);
