@@ -147,6 +147,16 @@ BEGIN
     RAISE EXCEPTION 'FAIL: previous attempt history was overwritten';
   END IF;
 
+  -- The public create RPC intentionally creates an editable draft. Promote
+  -- this synthetic fixture to submitted so the review RPC receives the same
+  -- state that the real finalization path will create once its gates are ready.
+  UPDATE rebuild_v2.assignment_submissions
+  SET status='submitted', submitted_at=now(), updated_at=now()
+  WHERE id=v_second_submission AND status='draft';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'FAIL: second attempt fixture could not enter submitted state';
+  END IF;
+
   -- Approval remains fail-closed until the full 14-day, feedback-quality,
   -- medical-exception and evidence prerequisites are implemented and tested.
   PERFORM set_config('request.jwt.claim.sub','36000000-0000-4000-8000-000000000001',true);
