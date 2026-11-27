@@ -9,7 +9,7 @@ import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/support-ticket-details.css";
 
-type Ticket = { id:string; ticket_number:number; user_id:string; subject:string; category:string; priority:string; status:string; description:string; created_at:string; updated_at:string; resolved_at:string|null; resolved_by:string|null };
+type Ticket = { id:string; ticket_number:number; user_id:string; requester_role?: "tester" | "developer"; subject:string; category:string; priority:string; status:string; description:string; created_at:string; updated_at:string; resolved_at:string|null; resolved_by:string|null };
 type Message = { id:string; ticket_id:string; sender_id:string; body:string; internal_note?:boolean; created_at:string; sender?: { display_name?:string; email?:string } };
 type Attachment = { id:string; ticket_id:string; message_id:string; uploaded_by:string; storage_path:string; original_filename:string; mime_type:string; size_bytes:number; created_at:string };
 const statusLabel:Record<string,string>={open:"Open",in_progress:"In Progress",waiting_for_user:"Waiting for You",resolved:"Resolved",closed:"Closed"};
@@ -22,8 +22,8 @@ export default function SupportTicketDetailsPage(){
  const [loading,setLoading]=useState(true),[sending,setSending]=useState(false),[reply,setReply]=useState(""),[selectedFile,setSelectedFile]=useState<File|null>(null),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [nextStatus,setNextStatus]=useState("open"),[nextPriority,setNextPriority]=useState("normal"),[updateReason,setUpdateReason]=useState(""),[updating,setUpdating]=useState(false);
  const [menuOpen,setMenuOpen]=useState(false);
- const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"Tester";
- const firstName=name.split(/[\s._-]+/)[0]||"Tester",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
+ const name=user?.user_metadata?.display_name||user?.email?.split("@")[0]||"User";
+ const firstName=name.split(/[\s._-]+/)[0]||"User",isAdmin=roles.includes("admin"),isDeveloper=roles.includes("developer");
  const nav=[{label:"Dashboard",icon:"home",href:"/tester-dashboard"},{label:"Discover Tests",icon:"search",href:"/discover-tests"},{label:"My Tests",icon:"tests",href:"/my-tests"},{label:"Feedback History",icon:"star",href:"/feedback-history"},{label:"Wallet & Rewards",icon:"wallet",href:"/wallet-rewards"},{label:"Profile",icon:"user",href:"/profile"},{label:"Help Center",icon:"book",href:"/help"},{label:"Support Center",icon:"headset",href:"/support",active:true},{label:"Settings",icon:"settings",href:"/settings"},...(isDeveloper?[{label:"Developer Dashboard",icon:"code",href:"/developer-dashboard"}]:[]),...(roles.includes("support")||isAdmin?[{label:"Support Queue",icon:"headset",href:"/support/queue"}]:[]),...(isAdmin?[{label:"Admin",icon:"shield",href:"/admin"}]:[])];
  const load=useCallback(async()=>{
   if(!user||!id){setLoading(false);return;}
@@ -129,8 +129,8 @@ export default function SupportTicketDetailsPage(){
      {notice&&<p className="std-notice" role="status">{notice}</p>}{error&&<p className="std-error" role="alert">{error}</p>}
      <div className="std-layout"><div className="std-main-column">
       <section className="std-card std-conversation"><div className="std-card-title"><Icon name="message" size={22}/><h2>Conversation ({messages.length+1} messages)</h2></div>
-       <article className="std-message"><div className="std-avatar">{ticket.user_id===user?.id?firstName.slice(0,2).toUpperCase():"T"}</div><div className="std-message-content"><div className="std-message-meta"><strong>{ticket.user_id===user?.id?"You":"Tester"}</strong><span>{dateTime(ticket.created_at)}</span></div><div className={"std-bubble "+(ticket.user_id===user?.id?"own":"")}>{ticket.description}</div></div></article>
-       {messages.map(message=>{const fromCustomer=customerMessages.has(message.id),isCurrentSender=message.sender_id===user?.id;return <article className={"std-message "+(message.internal_note?"std-internal-note":"")} key={message.id}><div className={"std-avatar "+(!fromCustomer?"support":"")}>{fromCustomer?(ticket.user_id===user?.id?firstName.slice(0,2).toUpperCase():"T"):isCurrentSender?firstName.slice(0,2).toUpperCase():"S"}</div><div className="std-message-content"><div className="std-message-meta"><strong>{message.internal_note?"Internal note · staff only":fromCustomer?(ticket.user_id===user?.id?"You":"Tester"):isCurrentSender?"You":"TestDZ Support"}</strong><span>{dateTime(message.created_at)}</span></div><div className={"std-bubble "+(fromCustomer?"own":"")+(message.internal_note?" internal":"")}>{message.body}</div></div></article>})}
+       <article className="std-message"><div className="std-avatar">{ticket.user_id===user?.id?firstName.slice(0,2).toUpperCase():ticket.requester_role==="developer"?"D":"T"}</div><div className="std-message-content"><div className="std-message-meta"><strong>{ticket.user_id===user?.id?"You":ticket.requester_role==="developer"?"Developer":"Tester"}</strong><span>{dateTime(ticket.created_at)}</span></div><div className={"std-bubble "+(ticket.user_id===user?.id?"own":"")}>{ticket.description}</div></div></article>
+       {messages.map(message=>{const fromCustomer=customerMessages.has(message.id),isCurrentSender=message.sender_id===user?.id;return <article className={"std-message "+(message.internal_note?"std-internal-note":"")} key={message.id}><div className={"std-avatar "+(!fromCustomer?"support":"")}>{fromCustomer?(ticket.user_id===user?.id?firstName.slice(0,2).toUpperCase():ticket.requester_role==="developer"?"D":"T"):isCurrentSender?firstName.slice(0,2).toUpperCase():"S"}</div><div className="std-message-content"><div className="std-message-meta"><strong>{message.internal_note?"Internal note · staff only":fromCustomer?(ticket.user_id===user?.id?"You":ticket.requester_role==="developer"?"Developer":"Tester"):isCurrentSender?"You":"TestDZ Support"}</strong><span>{dateTime(message.created_at)}</span></div><div className={"std-bubble "+(fromCustomer?"own":"")+(message.internal_note?" internal":"")}>{message.body}</div></div></article>})}
        {attachments.length>0&&<div className="std-attachments"><h3><Icon name="file" size={18}/> Attachments ({attachments.length})</h3>{attachments.map(item=><div className="std-attachment" key={item.id}><span className="std-file-icon"><Icon name="file" size={23}/></span><div className="std-file-name"><strong>{item.original_filename}</strong><small>{sizeLabel(item.size_bytes)} · {dateTime(item.created_at)}</small></div><button type="button" onClick={()=>void openAttachment(item)}><Icon name="eye" size={17}/> View / Download</button></div>)}</div>}
        {!messages.length&&<p className="std-empty-note">No replies yet. Your support team can respond here.</p>}
       </section>
@@ -139,7 +139,24 @@ export default function SupportTicketDetailsPage(){
      </div><aside className="std-side-column">
       <section className="std-info-card"><h2><Icon name="info" size={22}/> Ticket Information</h2><dl><div><dt>Ticket ID:</dt><dd>SUP-{new Date(ticket.created_at).getFullYear()}-{String(ticket.ticket_number).padStart(4,"0")}</dd></div><div><dt>Subject:</dt><dd>{ticket.subject}</dd></div><div><dt>Category:</dt><dd>{categoryLabel[ticket.category]||ticket.category}</dd></div><div><dt>Priority:</dt><dd className={"std-priority "+ticket.priority}>{ticket.priority}</dd></div><div><dt>Status:</dt><dd><span className={"std-status mini "+ticket.status}>{statusLabel[ticket.status]||ticket.status}</span></dd></div><div><dt>Submitted:</dt><dd>{dateTime(ticket.created_at)}</dd></div><div><dt>Resolved:</dt><dd>{ticket.resolved_at?dateTime(ticket.resolved_at):"—"}</dd></div><div><dt>Handled By:</dt><dd>{ticket.resolved_by?"Support Team":"Not assigned"}</dd></div></dl></section>
       <section className="std-quick-card"><h2><Icon name="bolt" size={21}/> Quick Actions</h2><Link to="/support?new=1"><Icon name="send" size={17}/> Create New Ticket</Link><Link to="/help"><Icon name="book" size={17}/> Back to Help Center</Link></section>
-      <section className="std-guides-card"><h2><Icon name="book" size={21}/> Helpful Guides</h2><Link to="/help">Tester Quick Start Guide <Icon name="chevron" size={15}/></Link><Link to="/help">Rewards System Guide <Icon name="chevron" size={15}/></Link><Link to="/help">Testing Best Practices <Icon name="chevron" size={15}/></Link><Link to="/help">Privacy & Data Management <Icon name="chevron" size={15}/></Link></section>
+      <section className="std-guides-card">
+       <h2><Icon name="book" size={21}/> Helpful Resources</h2>
+       {ticket.requester_role==="developer" ? (
+        <div>
+         <Link to="/developer-dashboard">Developer Workspace <Icon name="chevron" size={15}/></Link>
+         <Link to="/developer-settings">Developer Settings <Icon name="chevron" size={15}/></Link>
+         <Link to="/developer-analytics">Developer Analytics <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Help Center <Icon name="chevron" size={15}/></Link>
+        </div>
+       ) : (
+        <div>
+         <Link to="/help">Tester Quick Start Guide <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Rewards System Guide <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Testing Best Practices <Icon name="chevron" size={15}/></Link>
+         <Link to="/help">Privacy & Data Management <Icon name="chevron" size={15}/></Link>
+        </div>
+       )}
+      </section>
      </aside></div>
      <section className="std-bottom-banners"><article className="std-banner help"><Icon name="book" size={31}/><div><h3>Help Center Shortcut</h3><p>Find answers in our Help Center for common questions.</p><Link to="/help">Go to Help Center <Icon name="arrow" size={14}/></Link></div></article><article className="std-banner live"><span className="std-live-avatar"><Icon name="headset" size={34}/></span><div><h3>Live Support</h3><p>Chat with our support team for instant help.</p><Link to="/live-chat" className="std-live-cta"><Icon name="message" size={14}/> Start Live Chat <Icon name="arrow" size={13}/></Link></div></article><article className="std-banner report"><Icon name="alert" size={31}/><div><h3>Report a Problem</h3><p>Found a bug or security issue? Let us know.</p><Link to="/report-problem">Report Issue <Icon name="arrow" size={14}/></Link></div></article><article className="std-banner guides"><Icon name="book" size={31}/><div><h3>Helpful Guides</h3><p>Explore our guides and tutorials.</p><Link to="/help">View Guides <Icon name="arrow" size={14}/></Link></div></article></section>
     </>}

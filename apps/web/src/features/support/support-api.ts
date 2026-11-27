@@ -3,8 +3,11 @@ import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
 
 /** List the signed-in tester's support tickets. */
 export async function getTesterSupportTickets(userId: string) {
+  const columns = isTesterWorkflowV2Enabled
+    ? "id,ticket_number,requester_role,subject,category,priority,status,created_at"
+    : "id,ticket_number,subject,category,priority,status,created_at";
   return getAppDataClient().from("support_tickets")
-    .select("id,ticket_number,subject,category,priority,status,created_at")
+    .select(columns)
     .eq("user_id", userId).order("created_at", { ascending: false }).limit(30);
 }
 
@@ -29,8 +32,11 @@ export async function createTesterSupportTicket(input: {
 /** Load a ticket and its conversation/attachment metadata under database RLS. */
 export async function getTesterSupportTicketDetails(ticketId: string) {
   const client = getAppDataClient();
+  const ticketColumns = isTesterWorkflowV2Enabled
+    ? "id,ticket_number,user_id,requester_role,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by"
+    : "id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by";
   const ticketResult = await client.from("support_tickets")
-    .select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by")
+    .select(ticketColumns)
     .eq("id", ticketId).maybeSingle();
   if (ticketResult.error || !ticketResult.data) {
     return { ticketResult, messageResult: null, attachmentResult: null };
