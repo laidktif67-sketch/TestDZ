@@ -35,6 +35,7 @@ export default function DiscoverTestsPage(){
  useEffect(()=>{
   const client=supabase;if(!client){setLoading(false);setError("Supabase is not configured.");return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
+   setError("");
    const [profile,wallet,assignments,notifications,testRows]=await Promise.all([
     client.from("profiles").select("display_name,avatar_url").eq("id",userId).maybeSingle(),
     client.from("wallets").select("earned_points").eq("user_id",userId).maybeSingle(),
