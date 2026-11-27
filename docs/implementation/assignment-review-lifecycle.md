@@ -305,3 +305,25 @@ Remaining launch gates:
 - No wallet/reward/payment side effects are connected to report approval.
 - Feedback-quality rejection currently blocks completion; a controlled tester feedback-revision flow still needs a product decision and implementation.
 - The new UI is guarded by the V2 feature flag and has not been deployed or pointed at hosted Supabase.
+
+
+## Feedback revision recovery — 2026-11-27
+
+Migration `039_feedback_quality_revision.sql` closes a recovery gap: previously, a rejected feedback item could never satisfy the accepted-quality gate because the tester had no safe way to revise the existing unique assignment feedback row.
+
+The new `rebuild_v2.revise_tester_feedback` RPC:
+- Is available only to the owning tester.
+- Allows revision only when Admin previously set quality to rejected.
+- Preserves the original feedback ID and assignment relationship.
+- Replaces category/body/rating, resets quality to pending, and clears the previous reviewer metadata.
+- Appends an audit before/after event and notifies the test's developer.
+- Refuses revisions while quality is pending or after it is accepted.
+
+The tester feedback page now checks the current quality state: pending/accepted feedback is locked, rejected feedback is prefilled for correction and can be resubmitted. The admin queue receives the revised row again as pending.
+
+Validation:
+- The SQL replay and all 39 contracts passed in rebuild-v2 job 140679176464 of run [46050157553](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46050157553). That workflow's separate frontend-typecheck job ran on the immediately preceding commit and failed on an implicit-any annotation; the annotation was then fixed.
+- Latest frontend workflow [46050204033](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46050204033) passed after the annotation fix, including TypeScript typecheck and production build.
+- The Edge Function typecheck passed in run 46050157553.
+
+No production database, wallet, rewards, payments, deployment, or merge was touched.
