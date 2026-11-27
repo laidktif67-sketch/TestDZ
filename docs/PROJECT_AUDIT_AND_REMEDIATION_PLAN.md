@@ -1461,3 +1461,22 @@
 - تمت مراجعة source code لمسارات signup/signin، OAuth callback، verify email، password reset، Onboarding، Interests، IdentityProvider وguards على SHA الرسمي `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`.
 - لم يتم إنشاء حساب جديد، أو إرسال/فتح بريد، أو تنفيذ OAuth حقيقي، أو اختبار expired/reused reset token، أو تبديل أدوار بحسابات منفصلة. لم يتم اختبار Supabase Auth configuration أو redirect allowlist على البيئة المستضافة.
 - لم يتم تعديل التطبيق أو SQL أو Workflow أو إعدادات Supabase المستضافة، ولم يحدث نشر أو merge أو حذف.
+
+
+## 42. مراجعة إعدادات الأمان وMFA — 2026-11-27
+
+### `SEC-UI-MFA-001` — Medium — واجهة 2FA قد تعرض حالة خاطئة إذا فشل جلب عوامل المصادقة
+
+- **الملف:** `apps/web/src/modules/tester/pages/SettingsSecurityPage.tsx`.
+- **الدليل الأول:** عند تحميل الإعدادات، يستدعي المكون `Promise.all([profileQuery, supabase.auth.mfa.listFactors()])` ثم يعيّن `twoFactor` إلى `Boolean(factors.data?.totp?.some(...verified))` دون فحص `factors.error`. إذا أعادت `listFactors()` خطأً مع `data` فارغة، تتحول الحالة إلى `false` وتعرض الواجهة `Not active` رغم أن حالة العامل لم تُعرف.
+- **الدليل الثاني:** `disableMfa()` يستدعي `listFactors()` ثم يبحث في `factors.data?.totp`. إذا فشل الطلب ولم توجد بيانات، يدخل فرع `if (!factor)` ويضبط `twoFactor=false` وينهي العملية دون `unenroll` ودون إظهار الخطأ. قد تظهر للمستخدم رسالة أن 2FA غير نشط بينما العامل الموثق ما زال موجوداً في Auth.
+- **الأثر:** حالة أمان مضللة، خصوصاً عند محاولة إيقاف 2FA مع انقطاع الشبكة أو فشل Auth API. لا يوجد دليل على أن هذا يعطل العامل فعلياً؛ الخلل هو أن الواجهة قد تعلن حالة غير مطابقة للحالة الخادمية.
+- **الحل المقترح بعد اعتماد التدقيق:** إضافة حالة ثالثة `unknown/error` وعدم تحويل فشل قراءة العوامل إلى `false`؛ في مسار الإيقاف يجب إظهار خطأ عند فشل `listFactors`، وعدم تغيير الحالة المحلية إلا بعد نجاح `unenroll`، ثم إعادة قراءة العوامل للتحقق.
+- **اختبار القبول:** محاكاة listFactors success مع عامل verified، success بلا عوامل، وerror في التحميل والإيقاف. عند error يجب ألا تعرض الواجهة `Not active` أو رسالة نجاح، ويظل زر الإيقاف قابلاً لإعادة المحاولة؛ وبعد unenroll ناجح يجب أن تؤكد قراءة لاحقة عدم وجود عامل verified.
+- **الحالة:** Confirmed static error-handling defect في مساري القراءة والإيقاف؛ لم يتم اختبار Auth MFA runtime أو تغيير عامل فعلي. التصنيف Medium مبدئي.
+
+### نتائج إيجابية وحدود
+
+- عند نجاح MFA setup، يستخدم التدفق `enroll({ factorType: "totp" })` ثم `challenge` و`verify` قبل تعيين الحالة المحلية Active؛ وعند الإيقاف الناجح يستخدم `unenroll` لعامل TOTP موثق. هذا التسلسل صحيح مبدئياً من حيث عدم إعلان التفعيل قبل التحقق.
+- إعدادات كلمة المرور والبريد تستخدم `supabase.auth.updateUser` وتعرض نتيجة الخطأ/النجاح؛ لم يتم اختبار سياسات إعادة المصادقة أو تأكيد تغيير البريد في Supabase المستضافة.
+- لم يتم تعديل أي كود أو إعداد MFA أو عامل Auth حقيقي؛ لا نشر أو merge أو حذف.
