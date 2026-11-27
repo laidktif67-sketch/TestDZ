@@ -7,6 +7,7 @@ on:
       - work/assignment-review-lifecycle
     paths:
       - "supabase/rebuild-v2/**"
+      - "supabase/functions/**"
       - "supabase/seed.sql"
       - "supabase/config.toml"
       - ".github/workflows/rebuild-v2-tests.yml"
