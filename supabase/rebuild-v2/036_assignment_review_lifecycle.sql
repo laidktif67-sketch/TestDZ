@@ -170,6 +170,7 @@ DECLARE
   v_user_id uuid := (SELECT auth.uid());
   v_submission rebuild_v2.assignment_submissions%ROWTYPE;
   v_assignment rebuild_v2.assignments%ROWTYPE;
+  v_assignment_id uuid;
   v_developer_id uuid;
   v_test_title text;
 BEGIN
@@ -177,6 +178,7 @@ BEGIN
     RAISE EXCEPTION 'AUTH_REQUIRED' USING errcode = '28000';
   END IF;
   IF p_submission_id IS NULL
+     OR p_decision IS NULL
      OR p_decision NOT IN ('approved','changes_requested')
      OR (p_decision = 'changes_requested'
          AND char_length(btrim(COALESCE(p_reason,''))) NOT BETWEEN 10 AND 2000)
@@ -188,7 +190,7 @@ BEGIN
     RAISE EXCEPTION 'DEVELOPER_ROLE_REQUIRED' USING errcode = '42501';
   END IF;
 
-  SELECT s.assignment_id INTO v_submission
+  SELECT s.assignment_id INTO v_assignment_id
   FROM rebuild_v2.assignment_submissions s
   WHERE s.id = p_submission_id;
   IF NOT FOUND THEN
@@ -197,7 +199,7 @@ BEGIN
 
   SELECT * INTO v_assignment
   FROM rebuild_v2.assignments a
-  WHERE a.id = v_submission.assignment_id
+  WHERE a.id = v_assignment_id
   FOR UPDATE;
   IF NOT FOUND OR v_assignment.status <> 'active' THEN
     RAISE EXCEPTION 'ASSIGNMENT_NOT_REVIEWABLE' USING errcode = '55000';
