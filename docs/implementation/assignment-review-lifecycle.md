@@ -367,7 +367,7 @@ The deadline worker is intentionally an authenticated server-to-server endpoint:
 - The function also requires the platform-provided `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The service-role key must remain server-side.
 - Configure a managed scheduler (for example, Supabase Cron with an HTTP request extension or an external secret-capable scheduler) to send an HTTPS POST to `/functions/v1/assignment-review-deadlines` at least hourly. Store the dispatch secret in a managed secret store and send it only as the `x-assignment-review-secret` header.
 - An empty POST body uses the default batch size of 50. An optional JSON body may set `{"limit":50}`; the accepted range is 1–100.
-- Monitor HTTP success/failure and the returned `reminders_sent`, `auto_approved`, and `blocked_by_prerequisites` counts. Alert on repeated non-2xx responses, missing runs, or sustained backlog. Keep request headers and secrets out of logs.
+- Monitor HTTP success/failure and the returned `reminders_queued`, `auto_approved`, and `blocked_by_prerequisites` counts. Alert on repeated non-2xx responses, missing runs, or sustained backlog. Keep request headers and secrets out of logs.
 - Before enabling automatic decisions, run a controlled staging rehearsal covering a 48-hour reminder, delayed first invocation, 72-hour approval eligibility, developer decision precedence, failed prerequisites, idempotent retries, and absence of wallet/reward/payment side effects. Verify the audit and notification records.
 - Rotate the dispatch secret through the managed secret store and Edge Function configuration together; verify the new value before retiring the old one.
 
@@ -394,3 +394,22 @@ The latest candidate workflow [46059714815](https://github.com/laidktif67-sketch
 The production frontend build also passed in [46050204033](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46050204033), including the tester-page data-boundary check and TypeScript typecheck. A GitHub compare from that build's source commit `34b5a70e81a285521136bd531f3c3540a46d4e53` to the latest candidate commit shows 26 subsequent commits and no changes under `apps/web/**`, `packages/**`, or frontend package manifests; subsequent changes were limited to server-side worker validation/tests, workflow configuration, and documentation. Thus the current frontend source is covered by the successful production build, while the latest overall commit is covered by the successful server/database CI run.
 
 No hosted scheduler, hosted Supabase write, deployment, merge, or production feature-flag change was performed. The deadline automation remains non-operational until the documented scheduler runbook is separately approved and executed.
+
+### Delivered-reminder gate — 2026-11-27
+
+A further review found that migration 040 recorded `reminder_sent_at` when the reminder was enqueued, before the notification outbox dispatcher created the in-app notification. That could start the 24-hour auto-approval wait before the developer had an in-app reminder.
+
+Candidate migration `041_wait_for_delivered_review_reminder.sql` corrects this:
+
+- Stores the reminder outbox event ID on the submission.
+- Leaves `reminder_sent_at` null while the event is pending or failed.
+- Sets `reminder_sent_at` only from the event's `processed_at` after the outbox marks the in-app notification as delivered.
+- Requires a full 24 hours from that delivered timestamp before auto-approval.
+- Fails closed if the reminder event cannot be found or remains undelivered; it does not duplicate reminders while an event is pending.
+- Reconciles legacy queued timestamps against outbox state and clears timestamps that cannot be proven delivered.
+
+The deadline processor response now reports `reminders_queued` rather than implying enqueue is delivery. The 040 lifecycle contract was extended to prove that a queued-but-undelivered reminder cannot trigger auto-approval, that dispatch delivery is recorded, that less than 24 hours after delivery blocks approval, and that missing completion prerequisites still block it.
+
+The candidate CI workflow now expects and replays 41 numbered SQL scripts. Run [46060967902](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46060967902) is the validation run for the delivered-reminder change; its final database/contract result must be checked before this change is considered CI-verified.
+
+This remains isolated to `work/assignment-review-lifecycle`. No merge, hosted database write, hosted scheduler, Edge Function deployment, or production feature-flag change was performed.
