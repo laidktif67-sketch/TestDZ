@@ -165,7 +165,10 @@ export async function submitTesterDailyCheckin(assignmentId: string) {
   const client = getAppDataClient();
   const result = await client.rpc("submit_checkin", { p_assignment_id: assignmentId, p_note: null });
   if (result.error || !result.data) {
-    return { error: result.error, checkin: null, recorded: false };
+    if (result.error) return { error: result.error, checkin: null, recorded: false };
+    const assignment = await client.from("assignments").select("status").eq("id", assignmentId).maybeSingle();
+    const error = assignment.data?.status === "failed" ? new Error("ASSIGNMENT_INTERRUPTED") : new Error("CHECKIN_NOT_RECORDED");
+    return { error, checkin: null, recorded: false };
   }
   const checkin = await client.from("checkins").select("id,checkin_date")
     .eq("id", result.data).maybeSingle();
