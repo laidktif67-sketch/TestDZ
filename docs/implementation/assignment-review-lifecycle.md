@@ -447,3 +447,15 @@ The candidate now treats pending medical dates as provisional exclusions only fo
 The 037 contract now creates a pending request for a missed date, submits the next daily check-in while Admin review is pending, confirms the assignment remains active during review, and then verifies that rejection fails the assignment with an audit event and notification. Locking remains assignment-first for both check-in and Admin review to serialize the decision.
 
 This candidate change is included in the latest CI run and is not considered verified until all jobs pass.
+
+### Latest complete validation — 2026-11-27
+
+The candidate head `2866c3a824b7c8a0a4994b0b2d3c3932d0cc2eb7` passed GitHub Actions run [46069381550](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46069381550). All three jobs completed successfully on this exact SHA:
+
+- `frontend-typecheck`: workspace TypeScript check passed.
+- `notification-edge-function`: all Edge Functions passed Deno type-checking and the deadline request-validation tests passed.
+- `rebuild-v2`: all 42 numbered candidate SQL scripts applied to a disposable local Supabase stack; the complete SQL contract list and local PostgREST exposed/private-schema checks passed.
+
+The work branch remains based directly on the pinned official reference `rebuild/testdz-v2@9a973cfb2d970f37c2bd8523584d29c9c1622ea0`; GitHub compare reports 149 commits ahead and zero behind. This confirms ancestry only, not production readiness.
+
+Operational boundary remains unchanged: the deadline Edge Function is source-controlled and validated, but no hosted deployment, dispatch secret, scheduler/cron invocation, hosted database write, feature-flag change, merge, or production deployment has been performed. Therefore reminder and automatic-approval processing is not operational. Treat scheduler setup as a separately reviewed and explicitly approved staging/operations task.
