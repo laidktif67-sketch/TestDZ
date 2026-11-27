@@ -49,10 +49,7 @@ Deno.test("bounded body rejects chunked bodies that exceed the limit", async () 
   const result = await readBoundedBody(new Request("https://example.test", {
     method: "POST",
     body: stream,
-    // Streaming request bodies require the duplex option in Node-compatible runtimes.
-    // Deno accepts this RequestInit extension.
-    duplex: "half",
-  } as RequestInit));
+  }));
   if (!result.tooLarge || result.text !== "") {
     throw new Error("streamed oversized body was not rejected");
   }
