@@ -20,6 +20,7 @@ DECLARE
   v_fourteenth_required_date date;
   v_missing_days integer;
   v_valid_checkins integer;
+  v_total_checkins integer;
 BEGIN
   IF p_assignment_id IS NULL THEN RETURN false; END IF;
   SELECT * INTO v_assignment
@@ -85,6 +86,10 @@ BEGIN
         AND x.excused_date=c.checkin_date
     );
 
+  SELECT count(*)::integer INTO v_total_checkins
+  FROM rebuild_v2.checkins c
+  WHERE c.assignment_id=p_assignment_id;
+
   IF EXISTS (
     SELECT 1
     FROM rebuild_v2.checkins c
@@ -97,7 +102,7 @@ BEGIN
     RETURN false;
   END IF;
 
-  RETURN v_missing_days=0 AND v_valid_checkins=14;
+  RETURN v_missing_days=0 AND v_valid_checkins=14 AND v_total_checkins=14;
 END;
 $function$;
 
