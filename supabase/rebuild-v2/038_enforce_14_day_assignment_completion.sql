@@ -229,7 +229,7 @@ BEGIN
     FROM rebuild_v2.medical_exception_requests r
     CROSS JOIN LATERAL unnest(r.requested_dates) AS x(excused_date)
     WHERE r.assignment_id=p_assignment_id
-      AND r.status='approved'
+      AND r.status IN ('approved','pending')
       AND x.excused_date=g.day::date
   );
 
@@ -241,7 +241,7 @@ BEGIN
       FROM rebuild_v2.medical_exception_requests r
       CROSS JOIN LATERAL unnest(r.requested_dates) AS x(excused_date)
       WHERE r.assignment_id=p_assignment_id
-        AND r.status='approved'
+        AND r.status IN ('approved','pending')
         AND x.excused_date=g.day::date
     )
     ORDER BY g.day
@@ -258,7 +258,7 @@ BEGIN
     FROM rebuild_v2.medical_exception_requests r
     CROSS JOIN LATERAL unnest(r.requested_dates) AS x(excused_date)
     WHERE r.assignment_id=p_assignment_id
-      AND r.status='approved'
+      AND r.status IN ('approved','pending')
       AND x.excused_date=g.day::date
   )
   AND NOT EXISTS (
