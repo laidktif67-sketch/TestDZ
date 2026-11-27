@@ -216,13 +216,14 @@ export default function DeveloperDashboardPage() {
         <Link to="/apps" className="dd-nav-link"><Icon name="apps"/><span>{t.apps}</span><b>{counts.total}</b></Link>
         <Link to="/apps" className="dd-nav-link"><Icon name="plus"/><span>{t.create}</span></Link>
         <Link to="/developer-tests" className="dd-nav-link"><Icon name="tests"/><span>{t.tests}</span></Link>
+        <Link to="/developer-test-results" className="dd-nav-link"><Icon name="chart"/><span>{language === "ar" ? "نتائج الاختبارات" : language === "fr" ? "Résultats des tests" : "Test results"}</span></Link>
         <Link to="/developer-feedback" className="dd-nav-link"><Icon name="file"/><span>{t.feedback}</span></Link>
         <Link to="/developer-notifications" className="dd-nav-link"><Icon name="bell"/><span>{t.notifications}</span></Link>
         <Link to="/developer-analytics" className="dd-nav-link"><Icon name="chart"/><span>{t.analytics}</span></Link>
         <span className="dd-nav-label">DISCOVER & ACCOUNT</span>
         {canTester&&<Link to="/tester-dashboard" className="dd-nav-link"><Icon name="search"/><span>{t.discover}</span></Link>}
-        <Link to="/profile" className="dd-nav-link"><Icon name="wallet"/><span>{t.billing}</span></Link>
-        <Link to="/profile" className="dd-nav-link"><Icon name="settings"/><span>{t.settings}</span></Link>
+        <Link to="/developer-settings" className="dd-nav-link"><Icon name="wallet"/><span>{t.billing}</span></Link>
+        <Link to="/developer-settings" className="dd-nav-link"><Icon name="settings"/><span>{t.settings}</span></Link>
       </nav>
       <div className="dd-promo"><div className="dd-rocket"><Icon name="rocket" size={43}/></div><strong>{t.promoTitle}</strong><p>{t.promoBody}</p><Link to="/apps">{t.promoCta}<Icon name="arrow" size={15}/></Link></div>
       <div className="dd-user-menu-wrap"><button type="button" className="dd-user dd-user-trigger" aria-expanded={workspaceMenuOpen} onClick={()=>setWorkspaceMenuOpen(v=>!v)}><span className="dd-avatar">{avatar?<img src={avatar} alt=""/>:firstName.slice(0,1).toUpperCase()}</span><span><strong>{name}</strong><small>{t.account}</small></span><Icon name="chevron" size={17}/></button>{workspaceMenuOpen&&<div className="dd-workspace-menu"><Link to="/profile" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="settings" size={16}/><span>{t.settings}</span></Link>{canTester&&<><span className="dd-workspace-menu-label">SWITCH WORKSPACE</span><Link to="/tester-dashboard" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="flask" size={16}/><span>Tester Dashboard</span></Link><Link to="/developer-dashboard" className="selected" onClick={()=>setWorkspaceMenuOpen(false)}><Icon name="code" size={16}/><span>Developer Dashboard</span><Icon name="check" size={14}/></Link></>}</div>}</div>
