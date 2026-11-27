@@ -325,19 +325,17 @@ BEGIN
     jsonb_build_object('sub',v_tester,'role','authenticated')::text,true
   );
 
-  -- The lifecycle foundation deliberately fails closed until the complete
-  -- 14-day, feedback-quality, medical-exception and evidence gates land.
-  -- A metadata mismatch and a valid object are both blocked at this stage;
-  -- the later gate migration restores detailed evidence assertions.
+  -- The finalization gate is now implemented; this fixture has only one check-in
+  -- and pending feedback, so both metadata states must remain blocked.
   UPDATE storage.objects
   SET metadata=jsonb_build_object('mimetype','application/pdf','size',1023),
       owner_id=v_tester::text
   WHERE bucket_id='test-evidence' AND name=v_path;
   BEGIN
     PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
-    RAISE EXCEPTION 'FAIL: finalization unexpectedly passed before prerequisites were implemented';
+    RAISE EXCEPTION 'FAIL: finalization unexpectedly passed with incomplete 14-day/feedback prerequisites';
   EXCEPTION WHEN SQLSTATE '55000' THEN
-    IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED' THEN
+    IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_MET' THEN
       RAISE EXCEPTION 'FAIL: unexpected fail-closed response: %',SQLERRM;
     END IF;
   END;
@@ -348,7 +346,7 @@ BEGIN
   WHERE bucket_id='test-evidence' AND name=v_path;
   BEGIN
     PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
-    RAISE EXCEPTION 'FAIL: finalization unexpectedly passed with valid evidence but missing gates';
+    RAISE EXCEPTION 'FAIL: finalization unexpectedly passed with valid evidence but incomplete prerequisites';
   EXCEPTION WHEN SQLSTATE '55000' THEN
     IF SQLERRM <> 'SUBMISSION_PREREQUISITES_NOT_IMPLEMENTED' THEN
       RAISE EXCEPTION 'FAIL: unexpected fail-closed response: %',SQLERRM;
