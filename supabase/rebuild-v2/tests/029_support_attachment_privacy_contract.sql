@@ -72,9 +72,13 @@ BEGIN
   SELECT count(*) INTO v_count FROM storage.objects WHERE bucket_id='support-attachments';
   IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: requester Storage visibility expected 1 public object, got %',v_count; END IF;
 
-  -- Support: staff can read public-message attachments, never internal-note attachments.
+  -- Support: the canonical upload path is accepted and only public-message
+  -- attachments are readable; internal-note attachments remain hidden.
   PERFORM set_config('request.jwt.claim.sub','92800000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"92800000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  IF NOT rebuild_v2_private.can_upload_support_attachment(v_public_path) THEN
+    RAISE EXCEPTION 'FAIL: canonical ticket/uploader path was rejected by the upload policy';
+  END IF;
   IF NOT rebuild_v2_private.can_read_support_attachment(v_public_path)
      OR rebuild_v2_private.can_read_support_attachment(v_internal_path) THEN
     RAISE EXCEPTION 'FAIL: Support attachment helper boundary is incorrect';
