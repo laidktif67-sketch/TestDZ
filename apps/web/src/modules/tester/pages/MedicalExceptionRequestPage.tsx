@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { getAppDataClient } from "../../../lib/supabase-data";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
@@ -86,7 +87,7 @@ export default function MedicalExceptionRequestPage() {
     if (attached.error) throw attached.error;
   }
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session?.user?.id || !isTesterWorkflowV2Enabled || assignmentStatus !== "active" || busy) return;
     const normalizedDates = dates.map(value => value.trim()).filter(Boolean);
