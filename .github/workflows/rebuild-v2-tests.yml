@@ -184,6 +184,9 @@ jobs:
       - name: Type-check all Edge Functions
         run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts supabase/functions/assignment-review-deadlines/index.ts
 
+      - name: Test assignment review deadline request validation
+        run: deno test --no-lock --node-modules-dir=auto supabase/functions/assignment-review-deadlines/request-validation.test.ts
+
 
   frontend-typecheck:
     runs-on: ubuntu-latest
