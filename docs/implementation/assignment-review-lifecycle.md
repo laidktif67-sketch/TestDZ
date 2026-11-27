@@ -137,8 +137,8 @@ implemented in a later migration.
 
 ### Validation status
 
-- Git diff was checked against the pinned base; the branch is eleven commits ahead and
-  has no divergence from the base.
+- Git diff was checked against the pinned base; the branch is ahead of the pinned base and
+  has no divergence from it.
 - SQL was reviewed statically from the repository source.
 - The candidate migration and SQL contract have **not** yet been replayed against a
   disposable PostgreSQL/Supabase database. No claim of passing SQL execution is made.
