@@ -30,7 +30,7 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
       .select("id,title,status,start_date,end_date,app_id")
       .eq("id", assignmentResult.data.test_id).maybeSingle();
     if (testResult.error || !testResult.data) {
-      return { error: testResult.error?.message || "The assigned test could not be found.", assignment: null, checkins: [], feedbackCount: 0 };
+      return { error: testResult.error?.message || "The assigned test could not be found.", assignment: null, checkins: [], feedbackCount: 0, feedback: null, medicalExceptions: [], submission: null };
     }
     const appResult = await client.from("apps").select("name,icon_url")
       .eq("id", testResult.data.app_id).maybeSingle();
