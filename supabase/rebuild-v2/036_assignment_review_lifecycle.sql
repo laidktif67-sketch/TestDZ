@@ -66,8 +66,7 @@ CREATE TABLE rebuild_v2.assignment_submission_reviews (
 CREATE INDEX assignment_submission_reviews_assignment_idx
   ON rebuild_v2.assignment_submission_reviews(assignment_id, created_at DESC);
 
-ALTER TABLE rebuild_v2.assignment_submission_reviews ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rebuild_v2.assignment_submission_reviews FORCE ROW LEVEL SECURITY;
+-- The history table has no client grants; trusted SECURITY DEFINER RPCs are its only writer.
 REVOKE ALL ON TABLE rebuild_v2.assignment_submission_reviews
   FROM PUBLIC, anon, authenticated;
 
