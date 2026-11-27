@@ -137,7 +137,7 @@ implemented in a later migration.
 
 ### Validation status
 
-- Git diff was checked against the pinned base; the branch is four commits ahead and
+- Git diff was checked against the pinned base; the branch is eight commits ahead and
   has no divergence from the base.
 - SQL was reviewed statically from the repository source.
 - The candidate migration and SQL contract have **not** yet been replayed against a
@@ -152,3 +152,10 @@ non-owning developer denial, mandatory revision reason, immutable attempt histor
 attempt-number increment, owning-developer approval, single-decision enforcement,
 audit records, and notification enqueueing. It has not yet been executed against
 PostgreSQL; source-level inspection is not a passing test result.
+
+- The isolated SQL workflow was updated to expect 36 numbered candidate scripts
+  and to run the new `036_assignment_review_lifecycle_contract.sql` contract.
+- No CI run is currently attached to this work branch: the workflow runs on pushes
+  to the official branch or on pull requests. No pull request has been opened.
+- GitHub reports no commit status checks for the latest work-branch commit; this is
+  not equivalent to a successful test run.
