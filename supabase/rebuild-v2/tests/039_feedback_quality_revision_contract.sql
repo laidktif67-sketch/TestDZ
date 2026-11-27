@@ -85,7 +85,7 @@ BEGIN
     jsonb_build_object('sub',v_other,'role','authenticated')::text,true);
   BEGIN
     PERFORM rebuild_v2.revise_tester_feedback(
-      v_assignment,'bug','This is a sufficiently detailed revised feedback body.',4
+      v_assignment,'bug','This is a sufficiently detailed revised feedback body.',4::smallint
     );
     RAISE EXCEPTION 'FAIL: another tester revised feedback they do not own';
   EXCEPTION WHEN SQLSTATE '42501' THEN NULL;
@@ -97,7 +97,7 @@ BEGIN
   v_result := rebuild_v2.revise_tester_feedback(
     v_assignment,'bug',
     'Revised feedback includes reproducible steps, expected behavior and observed results.',
-    4
+    4::smallint
   );
   IF v_result<>v_feedback THEN
     RAISE EXCEPTION 'FAIL: feedback revision must preserve the original feedback id';
@@ -124,7 +124,7 @@ BEGIN
 
   BEGIN
     PERFORM rebuild_v2.revise_tester_feedback(
-      v_assignment,'general','Another revision while the quality decision is pending.',3
+      v_assignment,'general','Another revision while the quality decision is pending.',3::smallint
     );
     RAISE EXCEPTION 'FAIL: pending feedback was revised again before Admin review';
   EXCEPTION WHEN SQLSTATE '55000' THEN
@@ -145,7 +145,7 @@ BEGIN
     jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
   BEGIN
     PERFORM rebuild_v2.revise_tester_feedback(
-      v_assignment,'general','Accepted feedback cannot be edited through revision.',3
+      v_assignment,'general','Accepted feedback cannot be edited through revision.',3::smallint
     );
     RAISE EXCEPTION 'FAIL: accepted feedback was revised';
   EXCEPTION WHEN SQLSTATE '55000' THEN
