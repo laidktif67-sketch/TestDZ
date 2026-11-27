@@ -473,3 +473,52 @@
 - 035_sync_six_step_config_on_test_edit.sql يعيد مزامنة حقول الهدف والتعليمات داخل test_config عند تحديث بيانات الاختبار الأساسية. لم يظهر mismatch ساكن في هذه النقطة.
 - SupportStaffQueuePage.tsx يفحص أدوار Admin/Support داخل الصفحة قبل عرض الطابور، رغم أن route نفسه لا يحمل RoleGuard مستقلاً في App.tsx؛ هذا يدعم تصنيف ARCH-ROLE-002 كملاحظة توزيع حراسة لا كدليل اختراق.
 - لم يتم تنفيذ اختبارات runtime أو تعديل أي كود. يجب اختبار ملكية التطبيق/الاختبار بحسابات منفصلة قبل اعتماد صلاحيات هذه التدفقات.
+
+
+## 10. مراجعة تدفقات Admin/Feedback والرفع وواجهة Developer — 2026-11-27
+
+المراجعة ساكنة على commit الرسمي 9a973cfb2d970f37c2bd8523584d29c9c1622ea0. تمت قراءة ملفات الواجهة وSQL المذكورة أدناه؛ لم يتم تشغيل متصفح أو بيئة قاعدة بيانات.
+
+### مطابقة إضافية لـ RPCs
+
+- طلبات الأدوار: admin-api.ts يرسل p_request_id وp_decision وp_review_note إلى admin_review_role_request، وهي مطابقة لتوقيع 022_admin_role_request_management.sql. SQL يتحقق من دور Admin، وسبب 10–1000 حرف، ويرفض مراجعة طلب المستخدم لنفسه ويقفل الطلب pending قبل تمرير القرار إلى helper.
+- تغذية المطوّر الراجعة: استدعاءات get_developer_feedback وupdate_developer_feedback_review وget_developer_feedback_messages وsend_developer_feedback_message تتطابق في أسماء المعاملات مع 016_private_developer_feedback.sql. SQL يتحقق من دور Developer وملكية الاختبار المرتبط بالملاحظة، ويشترط سبباً عند الإغلاق/رفض الإصلاح، ويحد طول الرد بـ5000 حرف. واجهة المحادثة تعرض تسميات You/Tester بدلاً من اسم/معرّف المختبر، وهو متسق مع هدف تقليل كشف الهوية.
+- المجموعات: update_test_cohort وtransition_test_cohort في apps-api.ts يرسلان p_cohort_id/p_name/p_capacity/p_starts_at/p_ends_at/p_reason وp_new_status/p_reason؛ وهذه مطابقة لتواقيع 012_cohort_management.sql. صفحة DeveloperTestsPage تمرر أسباباً ثابتة واضحة بطول صالح، والـSQL يعيد التحقق من ملكية المجموعة والسعة وعدد المختبرين وحالات الانتقال ويسجل audit event.
+- المراجعة الإدارية للتطبيق والاختبار: review_app وreview_test ترسل p_app_id/p_test_id وp_decision وp_reason، وهي مطابقة للتواقيع في 008_developer_lifecycle.sql. الخادم يفرض دور Admin ويطلب سبباً بطول 5–2000 حرف.
+- تدفق الملفات: واجهة APK تقيد الامتداد والحجم وتطلب MIME محدداً، ثم تسجل metadata، ترفع إلى bucket خاص، وتستدعي finalize. SQL 013 يتحقق من Developer وملكية اختبار APK وحالة الاختبار وحدود البيانات، ثم يتحقق من وجود Storage object ومطابقة الحجم وMIME قبل status=uploaded. تدفق assets مماثل في SQL 015 مع allowlist للامتدادات/MIME وحد أقصى 20 ملفاً و50MB للملف.
+- هذه مطابقة ساكنة؛ لا تثبت سياسات Storage الحية ولا سلوك رفع الملفات عبر المتصفحات.
+
+### `COMPAT-UPLOAD-001` — Medium (محتملة؛ تحتاج إعادة إنتاج) — رفض APK عند اختلاف MIME الذي يبلغه المتصفح
+
+- **الملف:** `apps/web/src/features/apps/apps-api.ts`، الأسطر 289–295.
+- **الدليل:** uploadDeveloperTestBuild يرفض الملف ما لم يكن امتداده .apk و`input.file.type` يساوي حرفياً `application/vnd.android.package-archive`. بخلاف ذلك لا يصل إلى RPC registration.
+- **الأثر المحتمل:** بعض أنظمة التشغيل/المتصفحات أو أدوات اختيار الملفات قد ترجع MIME فارغاً أو `application/octet-stream` لملف APK صحيح، ما يؤدي إلى رفض رفع صحيح رغم تحقق الخادم لاحقاً من حجم الملف وMIME المخزن.
+- **الحل المقترح بعد اعتماد التدقيق:** اختبار مصفوفة متصفحات/أنظمة تشغيل أولاً؛ إن ثبتت الحالة، لا تجعل MIME العميل وحده مانعاً نهائياً، مع الإبقاء على تحقق server-side ومطابقة metadata في finalize وعدم تخفيف قيود التخزين.
+- **اختبار القبول:** APK صالح بنفس المحتوى عبر Chrome/Firefox/Safari وعلى Android/Windows/macOS؛ MIME القياسي يُقبل، والحالات غير القياسية تُعالج برسالة/تحقق آمن دون السماح بملف غير APK أو تجاوز حد 50MB.
+- **الحالة:** لا إصلاح؛ لم يتم اختبار الملف فعلياً.
+
+### ملاحظات UI/UX الأولية
+
+- Developer Dashboard لديه media queries عند 1200/900/560px، تخطيط عمود واحد على الهاتف، وشبكة إحصاءات عمودين، ودعم reduced-motion. هذا دليل على responsive intent في هذا المكون فقط وليس على سلامة جميع الصفحات.
+- معالج الاختبار ذي الخطوات الست يحتوي قواعد responsive متعددة عند 1250/900/760/600px؛ شريط الخطوات يبقى بعرض أفقي قابل للتجاوز في الهاتف، ويجب التحقق بصرياً/باستخدام لوحة المفاتيح من قابلية اكتشاف الخطوات والوصول إليها.
+- Developer Feedback يتحول إلى عمود واحد عند 920px، وإلى نموذج عمودي عند 560px. مدخلات البحث والفلترة لها aria-label، وأخطاء/نجاح العمليات تستخدم role=alert/status.
+- صفحات Admin role grants/requests تحتوي labels ورسائل status/alert، لكن CSS المحلي لـ AdminRoleGrantsPage لا يعرّف focus-visible صراحة. لا أعد ذلك عيباً مؤكداً قبل فحص CSS العام وقياس التباين/التنقل الفعلي بلوحة المفاتيح.
+- لم تُجرَ اختبارات مرئية على أجهزة فعلية، ولا اختبارات WCAG/axe؛ لذلك تبقى Phase 8 جزئية ولم تبدأ كاختبار شامل.
+
+### تحديث سجل التقدم
+
+| المرحلة | الحالة | ملاحظات |
+|---|---|---|
+| 0 — الجرد الأولي | جزئي | — |
+| 1 — Architecture | جزئي | — |
+| 2 — Database & Security | جزئي | مطابقة إضافية RPCs admin/feedback/cohort/storage؛ runtime غير منفذ |
+| 3 — Auth & Identity | جزئي | — |
+| 4 — Tester | جزئي | — |
+| 5 — Developer | جزئي | مطابقة إضافية للرفع والمجموعات والتغذية الراجعة؛ اختبار متصفحات غير منفذ |
+| 6 — Admin & Support | جزئي | مطابقة طلبات الأدوار والمراجعات؛ لم تُختبر بحسابات فعلية |
+| 7 — Integrations | جزئي | — |
+| 8 — UI/UX | جزئي — static only | مراجعة عينات responsive وARIA؛ لا browser/device/automated accessibility QA |
+| 9 — Performance | لم تبدأ | — |
+| 10 — تقرير التدقيق | جارٍ | سجل مخاطر أولي؛ ليس تقرير اعتماد نهائي |
+| 11 — الإصلاح | محظور حتى اعتماد التقرير | لا تغييرات تطبيقية أثناء التدقيق |
+| 12 — Release readiness | لم تبدأ | — |
