@@ -28,7 +28,7 @@ const copy = {
     test: "Test", participation: "Assignments", completed: "Completed", failed: "Failed", feedback: "Feedback", ratings: "Star ratings", average: "Average rating", completionCol: "Completion",
     hidden: "Metrics hidden to protect tester privacy", details: "View details →", noMatch: "No matching results", changeFilters: "Try changing your search or filters.", noResults: "Results will appear after tests begin receiving assignments.",
     privacyTitle: "🔒 Aggregated data only", privacy: "This page does not show tester names, IDs, individual assignments, or feedback content. Metric suppression is respected separately for each test.",
-    footer: "{t.footer}"
+    footer: "TestDZ · Build · Test · Improve"
   },
   fr: {
     app: "Application", active: "Actifs",
@@ -49,14 +49,14 @@ const copy = {
     app: "التطبيق", active: "نشط",
     statuses: { draft: "مسودة", submitted: "قيد المراجعة", recruiting: "يستقبل المختبرين", ready: "جاهز", running: "جارٍ التنفيذ", at_risk: "يحتاج متابعة", completed: "مكتمل", failed: "مرفوض", cancelled: "ملغى" },
     disabled: "نتائج الاختبارات متاحة عند تفعيل مساحة V2 فقط.", signIn: "سجّل الدخول للوصول إلى نتائج اختباراتك.", loadError: "تعذر تحميل نتائج الاختبارات.",
-    dashboard: "لوحة المطوّر", tests: "اختباراتي", testers: "مجتمع المختبرين", back: "{t.back}",
-    eyebrow: "{t.eyebrow}", title: "نتائج الاختبارات", intro: "{t.intro}",
+    dashboard: "لوحة المطوّر", tests: "اختباراتي", testers: "مجتمع المختبرين", back: "← العودة إلى الاختبارات",
+    eyebrow: "مساحة المطوّر · النتائج", title: "نتائج الاختبارات", intro: "ملخصات مجمّعة لكل اختبار تملكه، دون عرض بيانات المشاركين الفردية.",
     refreshing: "جارٍ التحديث…", refresh: "↻ تحديث", export: "تصدير CSV", loading: "جارٍ تحميل النتائج…",
     search: "ابحث باسم الاختبار أو التطبيق…", searchLabel: "البحث", statusLabel: "حالة الاختبار", sortLabel: "ترتيب النتائج",
     all: "كل الحالات", assignments: "الأكثر مشاركة", completion: "أعلى إكمال", rating: "أعلى تقييم",
     testCount: "اختبار", suppressed: "اختبار مخفي المؤشرات حالياً لأن عدد المختبرين لا يحقق حد الخصوصية. لن تظهر أرقامه ولن تدخل في ملف التصدير.",
     test: "الاختبار", participation: "المشاركات", completed: "مكتمل", failed: "فشل", feedback: "الملاحظات", ratings: "التقييمات ذات النجوم", average: "متوسط التقييم", completionCol: "الإكمال",
-    hidden: "{t.hidden}", details: "عرض التفاصيل ←", noMatch: "لا توجد نتائج مطابقة", changeFilters: "جرّب تغيير البحث أو الفلاتر.", noResults: "ستظهر النتائج بعد بدء الاختبارات واستقبال المشاركات.",
+    hidden: "مؤشرات مخفية لحماية خصوصية المختبرين", details: "عرض التفاصيل ←", noMatch: "لا توجد نتائج مطابقة", changeFilters: "جرّب تغيير البحث أو الفلاتر.", noResults: "ستظهر النتائج بعد بدء الاختبارات واستقبال المشاركات.",
     privacyTitle: "🔒 بيانات مجمّعة فقط", privacy: "لا تعرض هذه الصفحة أسماء المختبرين أو معرّفاتهم أو تفاصيل مشاركاتهم الفردية أو محتوى الملاحظات. تُحترم حالة إخفاء المؤشرات لكل اختبار على حدة.",
     footer: "TestDZ · Build · Test · Improve"
   }
