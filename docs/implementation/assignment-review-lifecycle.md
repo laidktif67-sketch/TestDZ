@@ -137,7 +137,7 @@ implemented in a later migration.
 
 ### Validation status
 
-- Git diff was checked against the pinned base; the branch is eight commits ahead and
+- Git diff was checked against the pinned base; the branch is eleven commits ahead and
   has no divergence from the base.
 - SQL was reviewed statically from the repository source.
 - The candidate migration and SQL contract have **not** yet been replayed against a
@@ -159,3 +159,9 @@ PostgreSQL; source-level inspection is not a passing test result.
   to the official branch or on pull requests. No pull request has been opened.
 - GitHub reports no commit status checks for the latest work-branch commit; this is
   not equivalent to a successful test run.
+
+- Isolated GitHub Actions run `46044484272` started from commit
+  `ec888467a6034c7194a8d55af72e263666b1225d`. At the latest inspection,
+  frontend typecheck and Edge Function typecheck had succeeded; the disposable
+  Supabase database job was still starting, so SQL replay and contracts remain
+  unconfirmed.
