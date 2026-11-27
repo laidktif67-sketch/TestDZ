@@ -59,7 +59,7 @@ jobs:
 
           scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
           if [ "${#scripts[@]}" -ne 36 ]; then
-            echo "Expected exactly 36 candidate SQL scripts; found ${#scripts[@]}"
+            echo "Expected exactly 37 candidate SQL scripts; found ${#scripts[@]}"
             exit 1
           fi
 
@@ -86,6 +86,7 @@ jobs:
             supabase/rebuild-v2/tests/031_developer_test_edit_contract.sql
             supabase/rebuild-v2/tests/007_tester_workflow_contract.sql
             supabase/rebuild-v2/tests/036_assignment_review_lifecycle_contract.sql
+            supabase/rebuild-v2/tests/037_medical_exception_and_feedback_quality_contract.sql
             supabase/rebuild-v2/tests/008_developer_feedback_privacy_contract.sql
             supabase/rebuild-v2/tests/009_wallet_idempotency_contract.sql
             supabase/rebuild-v2/tests/011_notification_recipient_roles_contract.sql
