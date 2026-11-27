@@ -340,6 +340,20 @@ BEGIN
     'A detailed reason for the remaining missed date submitted after failure.',
     ARRAY[v_today-2]::date[]
   );
+  v_path := v_partial_assignment::text||'/'||v_partial_tester::text||'/'||
+    v_after_failure_request::text||'/'||v_file::text||'.pdf';
+  IF NOT rebuild_v2_private.can_upload_medical_exception_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: failed assignment did not permit the owner to upload evidence for a pending medical request';
+  END IF;
+  PERFORM set_config('request.jwt.claim.sub',v_support::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_support,'role','authenticated')::text,true);
+  IF rebuild_v2_private.can_upload_medical_exception_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: Support could upload private medical evidence for another tester';
+  END IF;
+  PERFORM set_config('request.jwt.claim.sub',v_partial_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_partial_tester,'role','authenticated')::text,true);
   PERFORM set_config('request.jwt.claim.sub',v_admin::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
