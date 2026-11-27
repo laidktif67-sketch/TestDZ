@@ -169,7 +169,11 @@ export default function DeveloperTestResultsPage() {
         ];
       }),
     ];
-    const csv = data.map(line => line.map(value => '"' + String(value ?? "").replaceAll('"', '""') + '"').join(",")).join("\n");
+    const csv = data.map(line => line.map(value => {
+      const raw = String(value ?? "");
+      const safe = typeof value === "string" && /^[\\u0000-\\u0020]*[=+@-]/.test(raw) ? "'" + raw : raw;
+      return '"' + safe.replaceAll('"', '""') + '"';
+    }).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
     const anchor = document.createElement("a");
     anchor.href = url;
