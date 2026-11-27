@@ -36,7 +36,7 @@ function dateTime(value: string | null) {
   return new Date(value).toLocaleString(undefined, { month: "short", day: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 function algeriaDate(value: string | Date) {
-  if (typeof value === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return value;
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Africa/Algiers", year: "numeric", month: "2-digit", day: "2-digit",
   }).formatToParts(new Date(value));
