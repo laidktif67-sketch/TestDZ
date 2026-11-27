@@ -427,6 +427,22 @@ BEGIN
         WHERE c.assignment_id=v_assignment.id
           AND c.checkin_date=dates.requested_date
       )
+      AND (
+        SELECT count(*)
+        FROM generate_series(
+          rebuild_v2_private.algeria_local_date(v_assignment.started_at)::timestamp,
+          dates.requested_date::timestamp,
+          interval '1 day'
+        ) g(day)
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM rebuild_v2.medical_exception_requests approved_request
+          CROSS JOIN LATERAL unnest(approved_request.requested_dates) AS approved_dates(excused_date)
+          WHERE approved_request.assignment_id=v_assignment.id
+            AND approved_request.status='approved'
+            AND approved_dates.excused_date=g.day::date
+        )
+      )<=14
   ) THEN
     UPDATE rebuild_v2.assignments
     SET status='failed'
