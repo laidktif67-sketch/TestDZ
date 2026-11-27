@@ -155,7 +155,7 @@ BEGIN
 
   UPDATE rebuild_v2.assignment_submissions
   SET status='submitted',submitted_at=now()-interval '73 hours',
-      review_due_at=now()-interval '1 hour',reminder_sent_at=now()-interval '25 hours'
+      review_due_at=now()-interval '1 hour',reminder_sent_at=NULL,reminder_event_id=NULL
   WHERE id=v_blocked_submission;
 
   -- Browser/authenticated callers cannot execute the processor.
