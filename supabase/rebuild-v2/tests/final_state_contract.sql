@@ -47,11 +47,12 @@ BEGIN
     'support-attachments',
     'test-evidence',
     'test-builds',
-    'test-assets'
+    'test-assets',
+    'medical-exception-evidence'
   );
 
-  IF v_buckets <> 7 THEN
-    RAISE EXCEPTION 'expected seven candidate Storage buckets, got %', v_buckets;
+  IF v_buckets <> 8 THEN
+    RAISE EXCEPTION 'expected eight candidate Storage buckets, got %', v_buckets;
   END IF;
 
   IF NOT EXISTS (
@@ -88,6 +89,21 @@ BEGIN
   IF to_regprocedure('rebuild_v2.start_assignment(uuid)') IS NULL
      OR to_regprocedure('rebuild_v2.finalize_assignment_submission(uuid)') IS NULL THEN
     RAISE EXCEPTION 'final assignment schedule/evidence RPC wrappers are missing';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2.create_medical_exception_request(uuid,text,date[])') IS NULL
+     OR to_regprocedure('rebuild_v2.attach_medical_exception_evidence(uuid,text)') IS NULL
+     OR to_regprocedure('rebuild_v2.review_medical_exception(uuid,text,text)') IS NULL
+     OR to_regprocedure('rebuild_v2.review_feedback_quality(uuid,text,text)') IS NULL THEN
+    RAISE EXCEPTION 'medical exception or feedback quality review RPCs are missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='rebuild_v2.feedback'::regclass
+      AND conname='feedback_quality_review_metadata_check'
+  ) THEN
+    RAISE EXCEPTION 'feedback quality review metadata invariant is missing';
   END IF;
 END;
 $contract$;
