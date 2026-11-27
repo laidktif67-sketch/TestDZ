@@ -90,6 +90,7 @@ DECLARE
   v_rejected_request uuid;
   v_partial_assignment uuid;
   v_partial_request uuid;
+  v_after_failure_request uuid;
   v_today date := rebuild_v2_private.algeria_local_date();
   v_due_before timestamptz;
   v_due_after timestamptz;
@@ -318,6 +319,29 @@ BEGIN
            AND target_id=v_partial_request
            AND (metadata->>'remaining_unexcused_missed_days')::integer=1)<>1 THEN
     RAISE EXCEPTION 'FAIL: approval revived an assignment with another unexcused missed date';
+  END IF;
+
+  -- The tester can submit a second request after failure. Once every missed
+  -- date is explicitly approved, the assignment can be reactivated.
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+  v_after_failure_request := rebuild_v2.create_medical_exception_request(
+    v_partial_assignment,
+    'A detailed reason for the remaining missed date submitted after failure.',
+    ARRAY[v_today-2]::date[]
+  );
+  PERFORM set_config('request.jwt.claim.sub',v_admin::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
+  IF NOT rebuild_v2.review_medical_exception(
+    v_after_failure_request,'approved','Approved the remaining missed date after failure.'
+  ) THEN
+    RAISE EXCEPTION 'FAIL: Admin could not review a request created after assignment failure';
+  END IF;
+  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>'active'
+     OR (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>2 THEN
+    RAISE EXCEPTION 'FAIL: final valid late approval did not reactivate the assignment';
   END IF;
 
   -- Feedback quality is an Admin-only gate, separate from developer triage.
