@@ -121,3 +121,16 @@ The approved direction is to preserve the existing candidate schema and data, ar
 - Do not run `supabase db pull` against FixLab as a shortcut; CLI v3 defaults and hosted migration-history behavior must be considered before any hosted command.
 - Do not change `supabase/config.toml` project targeting or run a hosted CLI command until the target project ref is explicitly verified.
 - No Production cutover is authorized by this document.
+
+## Assignment review lifecycle addendum (036–041)
+
+The current candidate extends the original 035-script sequence with the assignment submission review lifecycle, medical exception and feedback-quality review, 14-day completion gates, rejected-feedback revision, and server-only review-deadline processing.
+
+- `036_assignment_review_lifecycle.sql`: submission attempts, developer review decisions, immutable review history, and fail-closed completion.
+- `037_medical_exception_and_feedback_quality.sql`: private medical evidence, Admin-only medical/feedback-quality decisions, audit events, and notifications.
+- `038_enforce_14_day_assignment_completion.sql`: 14 consecutive-day completion prerequisites and finalization guards.
+- `039_feedback_quality_revision.sql`: tester revision of rejected feedback without replacing its identity.
+- `040_assignment_review_deadline_processor.sql`: 48-hour reminder enqueue and guarded 72-hour auto-approval processor.
+- `041_wait_for_delivered_review_reminder.sql`: starts the 24-hour auto-approval wait only after the reminder outbox event is marked delivered and an in-app notification is created. Pending or failed reminders fail closed.
+
+The current CI workflow replays **41** numbered candidate SQL scripts in a disposable local Supabase stack. The deadline contract verifies that enqueueing alone does not start the wait, dispatch delivery does, an insufficient 24-hour interval blocks approval, and missing completion prerequisites continue to block approval. The older 35-script and 40-script counts elsewhere in this historical README describe earlier snapshots and are superseded by this addendum and the current workflow.
