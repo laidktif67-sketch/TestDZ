@@ -15,7 +15,8 @@ INSERT INTO rebuild_v2.user_roles(user_id,role)
 VALUES
   ('36000000-0000-4000-8000-000000000001','developer'),
   ('36000000-0000-4000-8000-000000000002','developer'),
-  ('36000000-0000-4000-8000-000000000003','tester');
+  ('36000000-0000-4000-8000-000000000003','tester')
+ON CONFLICT (user_id, role) DO NOTHING;
 
 INSERT INTO rebuild_v2.apps(developer_id,name,package_name,description,category,status)
 VALUES (
@@ -146,56 +147,41 @@ BEGIN
     RAISE EXCEPTION 'FAIL: previous attempt history was overwritten';
   END IF;
 
-  -- Final developer approval is the only user-driven path in this foundation
-  -- that completes the assignment.
-  UPDATE rebuild_v2.assignment_submissions
-  SET status='submitted',submitted_at=now(),updated_at=now()
-  WHERE id=v_second_submission;
-
+  -- Approval remains fail-closed until the full 14-day, feedback-quality,
+  -- medical-exception and evidence prerequisites are implemented and tested.
   PERFORM set_config('request.jwt.claim.sub','36000000-0000-4000-8000-000000000001',true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub','36000000-0000-4000-8000-000000000001','role','authenticated')::text,true);
-  IF NOT rebuild_v2.review_assignment_submission(v_second_submission,'approved',NULL) THEN
-    RAISE EXCEPTION 'FAIL: owning developer approval failed';
-  END IF;
-  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'completed' THEN
-    RAISE EXCEPTION 'FAIL: approved report must complete assignment';
-  END IF;
-  IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_second_submission)
-     <> 'approved' THEN
-    RAISE EXCEPTION 'FAIL: approved attempt status incorrect';
-  END IF;
-
-  -- A second decision for the same attempt is not allowed.
   BEGIN
     PERFORM rebuild_v2.review_assignment_submission(v_second_submission,'approved',NULL);
-    RAISE EXCEPTION 'FAIL: duplicate review decision unexpectedly succeeded';
+    RAISE EXCEPTION 'FAIL: approval bypassed unimplemented submission prerequisites';
   EXCEPTION WHEN SQLSTATE '55000' THEN
     NULL;
   END;
+  IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment) <> 'active' THEN
+    RAISE EXCEPTION 'FAIL: blocked approval must keep assignment active';
+  END IF;
+  IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_second_submission)
+     <> 'submitted' THEN
+    RAISE EXCEPTION 'FAIL: blocked approval must preserve submitted report';
+  END IF;
 
   IF (SELECT count(*) FROM rebuild_v2.assignment_submission_reviews
-      WHERE assignment_id=v_assignment) <> 2 THEN
-    RAISE EXCEPTION 'FAIL: expected one immutable decision per reviewed attempt';
+      WHERE assignment_id=v_assignment) <> 1 THEN
+    RAISE EXCEPTION 'FAIL: only the changes_requested decision may be recorded';
   END IF;
   IF (SELECT count(*) FROM rebuild_v2.audit_events
       WHERE target_type='assignment_submission'
         AND target_id IN (v_first_submission,v_second_submission)
-        AND action IN (
-          'assignment_submission.approved',
-          'assignment_submission.changes_requested'
-        )) <> 2 THEN
-    RAISE EXCEPTION 'FAIL: review decisions must produce audit events';
+        AND action='assignment_submission.changes_requested') <> 1 THEN
+    RAISE EXCEPTION 'FAIL: changes_requested must produce one audit event';
   END IF;
   IF (SELECT count(*) FROM rebuild_v2.events
       WHERE event_type='notification.requested'
         AND aggregate_type='assignment_submission'
         AND aggregate_id IN (v_first_submission,v_second_submission)
-        AND payload->>'type' IN (
-          'assignment.report_approved',
-          'assignment.report_changes_requested'
-        )) <> 2 THEN
-    RAISE EXCEPTION 'FAIL: each decision must enqueue one notification event';
+        AND payload->>'type'='assignment.report_changes_requested') <> 1 THEN
+    RAISE EXCEPTION 'FAIL: changes_requested must enqueue one notification event';
   END IF;
 END;
 $review_contract$;
