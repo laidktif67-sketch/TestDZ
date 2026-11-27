@@ -186,6 +186,24 @@ BEGIN
     RAISE EXCEPTION 'FAIL: queued reminder must have an event id but no delivered timestamp';
   END IF;
 
+  -- A terminal delivery failure is retried with a fresh event, but does not
+  -- count as delivery and does not permit automatic approval.
+  UPDATE rebuild_v2.events
+  SET status='failed',attempts=5,last_error='Synthetic terminal delivery failure'
+  WHERE id=(SELECT reminder_event_id FROM rebuild_v2.assignment_submissions
+            WHERE id=v_reminder_submission);
+  v_result:=rebuild_v2.process_assignment_review_deadlines(50);
+  IF (v_result->>'reminders_queued')::integer<>1
+     OR (SELECT reminder_delivery_retries FROM rebuild_v2.assignment_submissions
+         WHERE id=v_reminder_submission)<>1
+     OR (SELECT status FROM rebuild_v2.assignment_submissions
+         WHERE id=v_reminder_submission)<>'submitted'
+     OR (SELECT status FROM rebuild_v2.events
+         WHERE id=(SELECT reminder_event_id FROM rebuild_v2.assignment_submissions
+                   WHERE id=v_reminder_submission))<>'pending' THEN
+    RAISE EXCEPTION 'FAIL: terminal reminder delivery failure was not safely retried';
+  END IF;
+
   -- Deliver the in-app notifications through the real outbox dispatcher.
   v_dispatch_count:=rebuild_v2.process_notification_outbox(100);
   IF NOT EXISTS (
