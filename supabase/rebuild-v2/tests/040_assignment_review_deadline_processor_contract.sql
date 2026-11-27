@@ -76,6 +76,7 @@ DECLARE
   v_dispatch_count integer;
   v_retry_iteration integer;
   v_error text;
+  v_report_id uuid;
 BEGIN
   SELECT t.id INTO v_test FROM rebuild_v2.tests t
   WHERE t.title='Deadline Processor Contract Test';
@@ -301,6 +302,32 @@ BEGIN
   IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_short_submission)<>'submitted'
      OR (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_blocked_submission)<>'submitted' THEN
     RAISE EXCEPTION 'FAIL: auto-approval bypassed reminder interval or missing prerequisites';
+  END IF;
+
+  -- An unresolved assignment-linked report/dispute blocks system approval
+  -- even after completion prerequisites and the delivered-reminder window pass.
+  UPDATE rebuild_v2.feedback
+  SET quality_status='accepted',reviewed_by=v_admin,reviewed_at=now()
+  WHERE id=v_blocked_feedback;
+
+  INSERT INTO rebuild_v2.reports(
+    reporter_id,reported_user_id,assignment_id,report_type,description,status
+  ) VALUES (
+    v_blocked_tester,v_developer,v_blocked_assignment,'other',
+    'Synthetic unresolved report must block automatic approval.', 'open'
+  ) RETURNING id INTO v_report_id;
+
+  INSERT INTO rebuild_v2.disputes(opened_by,report_id,status)
+  VALUES(v_blocked_tester,v_report_id,'opened');
+
+  v_result:=rebuild_v2.process_assignment_review_deadlines(50);
+  IF (v_result->>'auto_approved')::integer<>0
+     OR (v_result->>'blocked_by_prerequisites')::integer<>1
+     OR (SELECT status FROM rebuild_v2.assignment_submissions
+         WHERE id=v_blocked_submission)<>'submitted'
+     OR (SELECT status FROM rebuild_v2.assignments
+         WHERE id=v_blocked_assignment)<>'active' THEN
+    RAISE EXCEPTION 'FAIL: unresolved assignment report/dispute did not block automatic approval: %',v_result;
   END IF;
 
   -- A medical request cannot be added after the report has been submitted.
