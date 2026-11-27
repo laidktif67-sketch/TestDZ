@@ -1,10 +1,13 @@
 export const MAX_REQUEST_BODY_BYTES = 4096;
 
 export function constantTimeEqual(left: string, right: string): boolean {
-  if (left.length !== right.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  // Do not return early on a length mismatch or the first differing character.
+  // JavaScript runtimes do not promise hard constant-time execution, but this
+  // avoids the obvious prefix/length timing shortcuts in ordinary comparisons.
+  const length = Math.max(left.length, right.length);
+  let mismatch = left.length ^ right.length;
+  for (let index = 0; index < length; index += 1) {
+    mismatch |= (left.charCodeAt(index) || 0) ^ (right.charCodeAt(index) || 0);
   }
   return mismatch === 0;
 }
