@@ -68,7 +68,7 @@ export default function SupportCenterPage() {
       const result=await createTesterSupportTicket({userId:user.id,requesterRole:effectiveRequesterRole,subject:subject.trim(),category,priority,description:description.trim()});
       const created=Array.isArray(result.data)?result.data[0]:result.data;
       if(result.error||!created){setError("Your ticket could not be created. Please check the details and try again.");return;}
-      setTickets(current=>[created as Ticket,...current]);
+      setTickets(current=>[{...(created as Ticket),requester_role:effectiveRequesterRole},...current]);
       setSubject("");setDescription("");setPriority("normal");setCategory("technical");setShowForm(false);
       setNotice("Your support ticket was created successfully.");
     } catch {
