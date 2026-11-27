@@ -82,6 +82,17 @@ export default function SubmitFeedbackPage() {
   ];
 
   useEffect(() => {
+    // Reset assignment-scoped state before loading another assignment. Without
+    // this, a previous assignment's rejected/pending state can leak into the
+    // next form and select the wrong RPC path.
+    setFeedbackQualityStatus(null);
+    setTitle("");
+    setSeverity("");
+    setDescription("");
+    setSteps("");
+    setFeedbackType("Bug");
+    setMessage("");
+    setFeedbackLoading(false);
     if (!isTesterWorkflowV2Enabled || !session?.user?.id || !assignmentId) return;
     let active = true;
     setFeedbackLoading(true);
@@ -143,17 +154,22 @@ export default function SubmitFeedbackPage() {
       "Description: " + description.trim(),
       steps.trim() ? "Steps to reproduce: " + steps.trim() : ""
     ].filter(Boolean).join("\n\n");
-    const result = isRevision
-      ? await reviseTesterFeedback({ assignmentId, category, body })
-      : await submitTesterFeedback({ assignmentId, category, body });
-    if (result.error) {
-      setMessage("Your feedback could not be submitted. Check that the assignment is active or completed, then try again.");
-    } else {
-      setFeedbackQualityStatus("pending");
-      setMessage(isRevision ? "Your revised feedback has been resubmitted and is awaiting Admin quality review." : "Your feedback has been submitted and is awaiting Admin quality review.");
-      if (!isRevision) { setTitle(""); setSeverity(""); setDescription(""); setSteps(""); setFiles([]); }
+    try {
+      const result = isRevision
+        ? await reviseTesterFeedback({ assignmentId, category, body })
+        : await submitTesterFeedback({ assignmentId, category, body });
+      if (result.error) {
+        setMessage("Your feedback could not be submitted. Check that the assignment is active or completed, then try again.");
+      } else {
+        setFeedbackQualityStatus("pending");
+        setMessage(isRevision ? "Your revised feedback has been resubmitted and is awaiting Admin quality review." : "Your feedback has been submitted and is awaiting Admin quality review.");
+        if (!isRevision) { setTitle(""); setSeverity(""); setDescription(""); setSteps(""); setFiles([]); }
+      }
+    } catch {
+      setMessage("A network error prevented feedback submission. Your form is still available; check your connection and try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   return <div className="td-dashboard sf-dashboard">
