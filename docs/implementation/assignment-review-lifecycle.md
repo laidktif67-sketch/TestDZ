@@ -165,3 +165,21 @@ PostgreSQL; source-level inspection is not a passing test result.
   frontend typecheck and Edge Function typecheck had succeeded; the disposable
   Supabase database job was still starting, so SQL replay and contracts remain
   unconfirmed.
+
+### First isolated SQL replay and correction
+
+The first disposable Supabase replay successfully applied all numbered migrations
+through `036_assignment_review_lifecycle.sql`. It then stopped in
+`tests/final_state_contract.sql` because the contract still expected 48 tables,
+while migration 036 intentionally added the 49th table. The migration itself
+did not fail to apply.
+
+The final-state contract has been updated to expect 49 tables and 49 RLS/FORCE-RLS
+tables. The new review-history table has RLS and FORCE RLS enabled, no client
+policies, and no client grants; its trusted SECURITY DEFINER lifecycle RPCs remain
+the intended access path.
+
+A second isolated run, `46044714103`, is checking this correction. At the latest
+inspection, frontend TypeScript and Edge Function checks passed; the disposable
+database stack was still starting, so the second SQL replay and the new lifecycle
+contract have not yet reported a result.
