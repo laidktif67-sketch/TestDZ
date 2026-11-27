@@ -383,6 +383,40 @@ BEGIN
     RAISE EXCEPTION 'FAIL: escalated dispute did not block automatic approval: %',v_result;
   END IF;
 
+  -- A blocked oldest row must not monopolize a one-item processor batch.
+  UPDATE rebuild_v2.assignment_submissions
+  SET submitted_at=now()-interval '1 hour',review_due_at=NULL,
+      reminder_event_id=NULL,reminder_sent_at=NULL
+  WHERE id=v_short_submission;
+  UPDATE rebuild_v2.events
+  SET processed_at=now()-interval '25 hours'
+  WHERE id=(SELECT reminder_event_id FROM rebuild_v2.assignment_submissions
+            WHERE id=v_reminder_submission);
+  UPDATE rebuild_v2.assignment_submissions
+  SET review_due_at=now()-interval '3 hours',
+      reminder_sent_at=now()-interval '25 hours',
+      deadline_processor_checked_at=NULL
+  WHERE id=v_blocked_submission;
+  UPDATE rebuild_v2.assignment_submissions
+  SET review_due_at=now()-interval '2 hours',
+      reminder_sent_at=now()-interval '25 hours',
+      deadline_processor_checked_at=NULL
+  WHERE id=v_reminder_submission;
+
+  v_result:=rebuild_v2.process_assignment_review_deadlines(1);
+  IF (v_result->>'auto_approved')::integer<>0
+     OR (v_result->>'blocked_by_prerequisites')::integer<>1
+     OR (SELECT deadline_processor_checked_at FROM rebuild_v2.assignment_submissions
+         WHERE id=v_blocked_submission) IS NULL THEN
+    RAISE EXCEPTION 'FAIL: first fair batch did not inspect and rotate the oldest blocked submission: %',v_result;
+  END IF;
+
+  v_result:=rebuild_v2.process_assignment_review_deadlines(1);
+  IF (v_result->>'auto_approved')::integer<>1
+     OR (SELECT status FROM rebuild_v2.assignment_submissions
+         WHERE id=v_reminder_submission)<>'auto_approved' THEN
+    RAISE EXCEPTION 'FAIL: blocked oldest submission starved a later eligible submission: %',v_result;
+  END IF;
   -- A medical request cannot be added after the report has been submitted.
   BEGIN
     INSERT INTO rebuild_v2.medical_exception_requests(

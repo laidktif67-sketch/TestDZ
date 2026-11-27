@@ -74,7 +74,7 @@ A report decision is immutable. A resubmission creates a new attempt; prior atte
 - Feedback quality acceptance is a separate decision from developer feedback triage. The submission gate must use the explicit quality state, not `developer_feedback_reviews.review_status`.
 - The final evidence verification introduced by migration 018 must be preserved.
 
-The current V2 candidate does not yet provide the complete medical-exception decision RPC or a clear feedback-quality review RPC. Those dependencies must be implemented and tested before the finalization gate is enabled; do not silently treat legacy `public` schema functions as V2 functionality.
+The V2 medical-exception and feedback-quality RPCs are implemented in migrations 037–039 and covered by dedicated contracts. Do not silently treat legacy `public` schema functions as V2 functionality; the V2 feature flag remains a separate rollout gate.
 
 ## Contract tests required before merge
 
@@ -483,4 +483,9 @@ Candidate migration `043_block_auto_approval_on_open_assignment_disputes.sql` no
 
 The current V2 schema has no dedicated appeal table or appeal-to-assignment relation. Therefore migration 043 covers the existing report/dispute model only; any future appeal workflow must add an explicit relation and a corresponding auto-approval guard before automatic approval is enabled. This remains a rollout gate, not an inferred feature.
 
-The candidate CI workflow replays 43 numbered SQL scripts. On 2026-11-27, run 46070760881 passed all three jobs at commit ccddd087d25fa4367dde9a46154ce4f27a66a87b. The subsequent independent report/dispute contract refinement passed all three jobs in run 46071150061 at commit 6da906738fc3b26972ecec05288f9c248a4c55e4, including the full disposable-Supabase migration/contract/PostgREST job. The frontend typecheck and notification Edge Function checks also passed.
+The candidate CI workflow replays 44 numbered SQL scripts. On 2026-11-27, run 46070760881 passed all three jobs at commit ccddd087d25fa4367dde9a46154ce4f27a66a87b. The subsequent independent report/dispute contract refinement passed all three jobs in run 46071150061 at commit 6da906738fc3b26972ecec05288f9c248a4c55e4, including the full disposable-Supabase migration/contract/PostgREST job. The frontend typecheck and notification Edge Function checks also passed.
+
+
+### Fair deadline-processor batching — 2026-11-27
+
+Migration `044_fair_deadline_processor_batches.sql` adds a rotating inspection timestamp to submitted reports. Each worker pass records which submission it inspected and orders never-inspected/least-recently-inspected rows first. This prevents a permanently blocked or undelivered old submission from monopolizing every bounded batch. The 040 contract now exercises a one-row batch with an older blocked report followed by a later eligible report and verifies that the second invocation progresses to the eligible work. The full 44-migration replay and contract suite must pass on the resulting commit before this change is accepted.
