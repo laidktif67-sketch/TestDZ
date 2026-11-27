@@ -11,6 +11,18 @@ export type DeveloperAssignmentSubmission = {
   submitted_at: string;
   review_due_at: string | null;
   attempt_number: number;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  review_note?: string | null;
+};
+
+export type DeveloperSubmissionHistoryItem = {
+  id: string;
+  attempt_number: number;
+  status: "draft" | "submitted" | "changes_requested" | "approved" | "auto_approved";
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
 };
 
 export type DeveloperSubmissionTest = {
@@ -28,7 +40,7 @@ export type DeveloperSubmissionAttachment = {
 
 export function listDeveloperAssignmentSubmissions() {
   return getAppDataClient().from("assignment_submissions")
-    .select("id,assignment_id,test_id,tester_id,summary,comments,status,submitted_at,review_due_at,attempt_number")
+    .select("id,assignment_id,test_id,tester_id,summary,comments,status,submitted_at,review_due_at,attempt_number,reviewed_by,reviewed_at,review_note")
     .eq("status", "submitted")
     .order("submitted_at", { ascending: true });
 }
@@ -36,6 +48,13 @@ export function listDeveloperAssignmentSubmissions() {
 export function listDeveloperSubmissionTests(testIds: string[]) {
   if (testIds.length === 0) return Promise.resolve({ data: [], error: null });
   return getAppDataClient().from("tests").select("id,title").in("id", testIds);
+}
+
+export function listDeveloperSubmissionHistory(assignmentId: string) {
+  return getAppDataClient().from("assignment_submissions")
+    .select("id,attempt_number,status,submitted_at,reviewed_at,review_note")
+    .eq("assignment_id", assignmentId)
+    .order("attempt_number", { ascending: false });
 }
 
 export function listDeveloperSubmissionAttachments(submissionId: string) {
