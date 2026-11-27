@@ -256,6 +256,6 @@ GRANT EXECUTE ON FUNCTION rebuild_v2.process_assignment_review_deadlines(integer
 COMMENT ON COLUMN rebuild_v2.assignment_submissions.reminder_event_id IS
   'Outbox event for the developer review reminder; auto-approval waits for that event to reach delivered.';
 COMMENT ON FUNCTION rebuild_v2.process_assignment_review_deadlines(integer) IS
-  'Service-role-only processor: queues one 48h developer reminder and starts the 24h auto-approval wait only after the in-app outbox event is delivered; revalidates completion prerequisites and has no reward/payment side effects.';
+  'Service-role-only processor: queues a 48h developer reminder, retries terminal delivery failures up to the per-submission cap, starts the 24h auto-approval wait only after the in-app outbox event is delivered, revalidates completion prerequisites, and has no reward/payment side effects.';
 
 COMMIT;
