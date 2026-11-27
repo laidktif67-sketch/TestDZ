@@ -321,3 +321,74 @@
 | 10 — تقرير التدقيق | جارٍ | سجل النتائج الأولية أعلاه، وليس التقرير النهائي |
 | 11 — الإصلاح | محظور حتى اعتماد التقرير | لا تغييرات على التطبيق أثناء التدقيق |
 | 12 — Release readiness | لم تبدأ | لا إعلان جاهزية دون أدلة |
+
+
+## 8. نتائج تدقيق مسارات الأدوار وواجهات Tester — 2026-11-27
+
+نطاق هذه الجولة: ملفات الواجهة والـguards وواجهات API على commit الرسمي `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`. هذه مراجعة ساكنة؛ لا تعادل اختباراً بحسابات فعلية أو تشغيل RLS.
+
+### `FUNC-ROLE-001` — Medium — دور Financial مقبول في النظام دون مساحة عمل مقابلة في الواجهة
+
+- **الحالة:** Confirmed as a product-scope gap; هل هو عيب إطلاق يعتمد على نطاق المنتج المعتمد.
+- **الدليل:**
+  - `packages/types/src/identity.ts` يعرّف `AccountRole` ويشمل `financial`.
+  - `supabase/rebuild-v2/023_admin_role_grants.sql` يسمح للمشرف بمنح دور `financial`.
+  - `apps/web/src/features/admin/admin-api.ts` يسمح باستدعاء `admin_grant_role` مع `financial`.
+  - `apps/web/src/shared/guards/RoleGuard.tsx` يحصر `WorkspaceRole` في tester/developer/admin/support، ودالة `getHomePath` لا تحدد مساراً لدور Financial.
+  - `apps/web/src/App.tsx` لا يسجل مسارات أو مساحة عمل مالية.
+- **الأثر:** يمكن منح الحساب دور Financial، لكن لا توجد واجهة تشغيلية مخصصة له، ويقع المستخدم الذي يحمل هذا الدور وحده على fallback إلى `/profile`.
+- **القرار المطلوب:** تأكيد هل دور Financial مطلوب في أول إصدار أم أنه دور محجوز/مؤجل. لا تُنشأ واجهة مالية أثناء التدقيق.
+- **اختبار القبول إذا كان مطلوباً:** حساب Financial فقط بعد تسجيل الدخول يذهب إلى مساحة مالية مخصصة؛ لا يستطيع الوصول إلى وظائف Admin/Support/Developer؛ وتكون جميع العمليات المالية مفوضة ومتحققة في الخادم.
+
+### `ARCH-ROLE-002` — Medium — الحماية من الوصول إلى مسارات العمل موزعة بين route guards وفحوص داخل الصفحات
+
+- **الحالة:** Confirmed architectural observation; لا يوجد دليل على تجاوز صلاحيات الخادم.
+- **الدليل:** في `apps/web/src/App.tsx`، صفحات مثل `/support/queue` و`/assignments/:id` و`/assignments/:id/progress` و`/assignments/:id/submit` تقع تحت `AuthGuard` فقط، بينما `/support/queue/:id` محمية أيضاً بـ`RoleGuard`. بعض الصفحات نفسها تتحقق من الدور بعد التحميل أو قبل عرض الواجهة؛ مثال `SupportStaffQueuePage.tsx` يتحقق من Support/Admin، وصفحات assignment تتحقق من tester.
+- **الأثر:** نمط الحماية غير موحد، وقد تظهر طلبات تحميل قبل اكتمال فحص الدور في بعض الصفحات. الحماية الحقيقية للبيانات يجب أن تبقى في RLS/RPC، ولا يمكن اعتبار فحوص React حاجزاً أمنياً.
+- **الخطوة المطلوبة:** إعداد مصفوفة لكل route تبين AuthGuard وRoleGuard وفحص الصفحة وRLS/RPC المقابل، ثم اختبار مستخدم غير مخول مباشرة على API. لا تغيير مسارات في مرحلة التدقيق.
+
+### نقاط إيجابية مؤكدة من مراجعة API
+
+- `identityApi.getUserRoles` يقرأ الأدوار من جدول `user_roles` عبر Data Client المركزي، ولا يعتمد على الدور القادم من user_metadata.
+- `RoleGuard` ينتظر تحميل الأدوار ويتوقف برسالة retry عند فشل التحقق بدلاً من السماح تلقائياً.
+- واجهات تفاصيل وإرسال تسليم المهمة تضيف قيد `tester_id = userId` في استعلامات assignment/check-in/feedback.
+- واجهات إنشاء الاختبار وتعديله ومراجعة التطبيق/الاختبار تستخدم RPCs مخصصة؛ ورفع APK/المرفقات يسجل metadata أولاً ثم يرفع الملف ويستدعي finalize.
+- واجهات الدعم تفصل مسار requester عن مسار staff، وتستبعد internal notes من مسار رسائل صاحب التذكرة في V2.
+
+### نطاق الملفات الذي تمت مراجعته في هذه الجولة
+
+- `apps/web/src/App.tsx`
+- `apps/web/src/shared/guards/AuthGuard.tsx`
+- `apps/web/src/shared/guards/RoleGuard.tsx`
+- `apps/web/src/shared/auth/identity-api.ts`
+- `apps/web/src/shared/auth/identity-provider.tsx`
+- `apps/web/src/features/identity/identity-api.ts`
+- `apps/web/src/features/profiles/profiles-api.ts`
+- `apps/web/src/features/admin/admin-api.ts`
+- `apps/web/src/features/apps/apps-api.ts`
+- `apps/web/src/features/tester/assignments-api.ts`
+- `apps/web/src/features/tester/dashboard-api.ts`
+- `apps/web/src/features/tester/feedback-api.ts`
+- `apps/web/src/features/wallet/wallet-api.ts`
+- `apps/web/src/features/support/support-api.ts`
+- صفحات assignment وSupport queue/detail ذات الصلة.
+- `packages/types/src/identity.ts`
+- `supabase/rebuild-v2/023_admin_role_grants.sql`
+
+### تحديث سجل التقدم
+
+| المرحلة | الحالة | ملاحظات |
+|---|---|---|
+| 0 — الجرد الأولي | جزئي | — |
+| 1 — Architecture | جزئي | مراجعة App routes وAuth/Role guards وتحديد نمط الحماية الموزع |
+| 2 — Database & Security | جزئي | مراجعة عينات RPC/RLS وملفات العقود؛ التشغيل المحلي لم يتم بعد |
+| 3 — Auth & Identity | جزئي | مراجعة IdentityProvider وقراءة الأدوار؛ لم تختبر تدفقات Auth الحية |
+| 4 — Tester | جزئي | مراجعة dashboard/assignment/submission/feedback API وعينات الصفحات |
+| 5 — Developer | جزئي | مراجعة API للتطبيقات والاختبارات والرفع والمراقبة؛ لم تكتمل مطابقة الصفحات |
+| 6 — Admin & Support | جزئي | مراجعة role grant وqueue/detail ودوال الدعم |
+| 7 — Integrations | جزئي | لا تغيير عن التحديث السابق |
+| 8 — UI/UX | لم تبدأ | — |
+| 9 — Performance | لم تبدأ | — |
+| 10 — تقرير التدقيق | جارٍ | سجل النتائج غير نهائي |
+| 11 — الإصلاح | محظور حتى اعتماد التقرير | — |
+| 12 — Release readiness | لم تبدأ | — |
