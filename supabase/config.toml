@@ -51,3 +51,8 @@ verify_jwt = false
 # Authenticated Developer/Tester invitation API. The function verifies sessions with Auth.
 [functions.developer-invitations]
 verify_jwt = true
+
+# Secret-protected server-to-server assignment review deadline worker.
+# Scheduling is intentionally not configured by this candidate migration.
+[functions.assignment-review-deadlines]
+verify_jwt = false
