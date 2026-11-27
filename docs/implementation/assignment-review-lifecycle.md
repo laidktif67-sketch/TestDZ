@@ -283,3 +283,25 @@ Migration 038 now enforces:
 - A 72-hour review deadline is recorded; no automatic approval, reminder scheduler, wallet credit, or payment is activated.
 
 The first run after the 038 addition caught one stale assertion in the older 007 contract that still expected the previous fail-closed error code. The assertion was updated to the current prerequisite error; the subsequent complete run above passed. No production database was modified, and no merge, PR, or deployment was performed.
+
+
+## Workflow UI integration — 2026-11-27
+
+The V2 lifecycle now has explicit application entry points and role-separated screens:
+
+- Tester: `/assignments/:id/medical-exception` submits 1–14 elapsed dates, a reason, and optional private evidence; shows the tester's request history and supports attaching evidence to a pending request.
+- Admin: `/admin/assignment-lifecycle-reviews` reviews pending medical exceptions and feedback quality. It requires Admin role, decision notes, and obtains short-lived signed URLs for medical evidence.
+- Developer: `/developer-assignment-reviews` lists only submitted reports visible through the existing developer RLS policy, shows report attachments using short-lived signed URLs, and calls the audited approve/changes-requested RPC.
+- Tester progress now renders approved medical dates as excused calendar days, keeps the requirement at 14 valid check-ins, extends the calendar end date, and disables check-in on an approved medical date.
+- When the server marks an assignment failed after an unexcused missed day, the tester API re-reads the committed status and the page displays the interruption state rather than a misleading generic retry.
+
+Frontend CI run [46049609028](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46049609028) passed on commit `a1e8e7f0e9ef0647aa409dd84ebc513cc0c14794`:
+- Tester-page data-boundary check passed (all page data access remains behind feature APIs).
+- TypeScript typecheck passed.
+- Production build passed.
+
+Remaining launch gates:
+- No 48-hour reminder or 72-hour auto-approval scheduler is enabled. The 72-hour review deadline is recorded only.
+- No wallet/reward/payment side effects are connected to report approval.
+- Feedback-quality rejection currently blocks completion; a controlled tester feedback-revision flow still needs a product decision and implementation.
+- The new UI is guarded by the V2 feature flag and has not been deployed or pointed at hosted Supabase.
