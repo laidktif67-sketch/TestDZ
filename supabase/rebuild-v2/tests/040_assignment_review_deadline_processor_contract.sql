@@ -263,8 +263,8 @@ BEGIN
       WHERE event_type='notification.requested'
         AND aggregate_type='assignment_submission'
         AND aggregate_id=v_reminder_submission
-        AND payload->>'type'='assignment.review_reminder')<>1 THEN
-    RAISE EXCEPTION 'FAIL: developer review reminder notification missing';
+        AND payload->>'type'='assignment.review_reminder')<>2 THEN
+    RAISE EXCEPTION 'FAIL: original and replacement developer review reminder events missing';
   END IF;
 
   IF (SELECT status FROM rebuild_v2.assignment_submissions WHERE id=v_short_submission)<>'submitted'
