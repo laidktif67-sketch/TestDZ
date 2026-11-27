@@ -46,7 +46,7 @@ jobs:
           sudo apt-get install --yes postgresql-client
 
       - name: Start disposable local Supabase stack
-        run: supabase start -x studio,edge-runtime,imgproxy,logflare,vector
+        run: supabase start -x studio,edge-runtime,imgproxy,logflare,vector,inbucket
 
       - name: Apply candidate SQL, run contracts, then verify local PostgREST
         shell: bash
