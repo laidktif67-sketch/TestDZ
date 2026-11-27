@@ -193,6 +193,9 @@ DECLARE
   v_checkin_date date := rebuild_v2_private.algeria_local_date();
   v_start_date date;
   v_missed_days integer;
+  v_required_days_elapsed integer;
+  v_fourteenth_required_date date;
+  v_missed_through date;
   v_test_title text;
 BEGIN
   IF v_user_id IS NULL THEN
@@ -222,8 +225,37 @@ BEGIN
     RAISE EXCEPTION 'CHECKIN_BEFORE_ASSIGNMENT_START' USING errcode='22023';
   END IF;
 
+  SELECT count(*)::integer INTO v_required_days_elapsed
+  FROM generate_series(v_start_date::timestamp,v_checkin_date::timestamp,interval '1 day') g(day)
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM rebuild_v2.medical_exception_requests r
+    CROSS JOIN LATERAL unnest(r.requested_dates) AS x(excused_date)
+    WHERE r.assignment_id=p_assignment_id
+      AND r.status='approved'
+      AND x.excused_date=g.day::date
+  );
+
+  IF v_required_days_elapsed>=14 THEN
+    SELECT g.day::date INTO v_fourteenth_required_date
+    FROM generate_series(v_start_date::timestamp,v_checkin_date::timestamp,interval '1 day') g(day)
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM rebuild_v2.medical_exception_requests r
+      CROSS JOIN LATERAL unnest(r.requested_dates) AS x(excused_date)
+      WHERE r.assignment_id=p_assignment_id
+        AND r.status='approved'
+        AND x.excused_date=g.day::date
+    )
+    ORDER BY g.day
+    OFFSET 13 LIMIT 1;
+    v_missed_through := LEAST(v_checkin_date-1,v_fourteenth_required_date);
+  ELSE
+    v_missed_through := v_checkin_date-1;
+  END IF;
+
   SELECT count(*)::integer INTO v_missed_days
-  FROM generate_series(v_start_date::timestamp,(v_checkin_date-1)::timestamp,interval '1 day') g(day)
+  FROM generate_series(v_start_date::timestamp,v_missed_through::timestamp,interval '1 day') g(day)
   WHERE NOT EXISTS (
     SELECT 1
     FROM rebuild_v2.medical_exception_requests r
@@ -250,7 +282,7 @@ BEGIN
       'A required Algeria-local calendar day passed without a check-in or approved medical exception.',
       jsonb_build_object(
         'missed_required_days',v_missed_days,
-        'evaluated_through',v_checkin_date-1,
+        'evaluated_through',v_missed_through,
         'start_date',v_start_date
       )
     );
