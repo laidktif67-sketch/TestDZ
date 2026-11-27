@@ -14,13 +14,15 @@ DECLARE
 BEGIN
   IF (SELECT auth.uid()) IS NULL OR p_object_name IS NULL THEN RETURN false; END IF;
   v_folders := storage.foldername(p_object_name);
-  IF coalesce(array_length(v_folders,1),0) <> 3
-     OR v_folders[1] <> 'v2'
+  -- Match the canonical ticket/uploader/file path used by the upload policy
+  -- and add_support_attachment_impl in 005_support_notifications.sql.
+  IF coalesce(array_length(v_folders,1),0) <> 2
+     OR v_folders[1] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
      OR v_folders[2] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-     OR v_folders[3] !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+     OR split_part(p_object_name,'/',3) !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[^/]+$' THEN
     RETURN false;
   END IF;
-  v_ticket_id := v_folders[2]::uuid;
+  v_ticket_id := v_folders[1]::uuid;
   RETURN EXISTS (
     SELECT 1
     FROM rebuild_v2.support_ticket_attachments att
@@ -29,7 +31,7 @@ BEGIN
     JOIN rebuild_v2.support_tickets st ON st.id=att.ticket_id
     WHERE att.storage_path=p_object_name
       AND st.id=v_ticket_id
-      AND att.uploaded_by=v_folders[3]::uuid
+      AND att.uploaded_by=v_folders[2]::uuid
       AND m.internal_note=false
       AND (
         (st.user_id=(SELECT auth.uid())

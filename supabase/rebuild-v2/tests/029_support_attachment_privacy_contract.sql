@@ -35,29 +35,29 @@ INSERT INTO rebuild_v2.support_ticket_attachments
 VALUES
   ('92800000-0000-4000-8000-000000000301','92800000-0000-4000-8000-000000000101',
    '92800000-0000-4000-8000-000000000201','92800000-0000-4000-8000-000000000002',
-   'v2/92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000301.pdf',
+   '92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000301-public-proof.pdf',
    'public-proof.pdf','application/pdf',1024),
   ('92800000-0000-4000-8000-000000000302','92800000-0000-4000-8000-000000000101',
    '92800000-0000-4000-8000-000000000202','92800000-0000-4000-8000-000000000002',
-   'v2/92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000302.pdf',
+   '92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000302-internal-proof.pdf',
    'internal-proof.pdf','application/pdf',1024);
 
 INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
 VALUES
   ('support-attachments',
-   'v2/92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000301.pdf',
+   '92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000301-public-proof.pdf',
    '92800000-0000-4000-8000-000000000002','92800000-0000-4000-8000-000000000002',
    jsonb_build_object('mimetype','application/pdf','size',1024)),
   ('support-attachments',
-   'v2/92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000302.pdf',
+   '92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000302-internal-proof.pdf',
    '92800000-0000-4000-8000-000000000002','92800000-0000-4000-8000-000000000002',
    jsonb_build_object('mimetype','application/pdf','size',1024));
 
 SET LOCAL ROLE authenticated;
 DO $privacy_boundaries$
 DECLARE
-  v_public_path text := 'v2/92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000301.pdf';
-  v_internal_path text := 'v2/92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000302.pdf';
+  v_public_path text := '92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000301-public-proof.pdf';
+  v_internal_path text := '92800000-0000-4000-8000-000000000101/92800000-0000-4000-8000-000000000002/92800000-0000-4000-8000-000000000302-internal-proof.pdf';
   v_count integer;
 BEGIN
   -- Requester: public message attachment only.
@@ -72,9 +72,13 @@ BEGIN
   SELECT count(*) INTO v_count FROM storage.objects WHERE bucket_id='support-attachments';
   IF v_count <> 1 THEN RAISE EXCEPTION 'FAIL: requester Storage visibility expected 1 public object, got %',v_count; END IF;
 
-  -- Support: staff can read public-message attachments, never internal-note attachments.
+  -- Support: the canonical upload path is accepted and only public-message
+  -- attachments are readable; internal-note attachments remain hidden.
   PERFORM set_config('request.jwt.claim.sub','92800000-0000-4000-8000-000000000002',true);
   PERFORM set_config('request.jwt.claims','{"sub":"92800000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+  IF NOT rebuild_v2_private.can_upload_support_attachment(v_public_path) THEN
+    RAISE EXCEPTION 'FAIL: canonical ticket/uploader path was rejected by the upload policy';
+  END IF;
   IF NOT rebuild_v2_private.can_read_support_attachment(v_public_path)
      OR rebuild_v2_private.can_read_support_attachment(v_internal_path) THEN
     RAISE EXCEPTION 'FAIL: Support attachment helper boundary is incorrect';
