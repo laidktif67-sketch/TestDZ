@@ -32,8 +32,11 @@ export async function createTesterSupportTicket(input: {
 /** Load a ticket and its conversation/attachment metadata under database RLS. */
 export async function getTesterSupportTicketDetails(ticketId: string) {
   const client = getAppDataClient();
+  const ticketColumns = isTesterWorkflowV2Enabled
+    ? "id,ticket_number,user_id,requester_role,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by"
+    : "id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by";
   const ticketResult = await client.from("support_tickets")
-    .select("id,ticket_number,user_id,subject,category,priority,status,description,created_at,updated_at,resolved_at,resolved_by")
+    .select(ticketColumns)
     .eq("id", ticketId).maybeSingle();
   if (ticketResult.error || !ticketResult.data) {
     return { ticketResult, messageResult: null, attachmentResult: null };
