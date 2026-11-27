@@ -91,6 +91,11 @@ BEGIN
     RAISE EXCEPTION 'final assignment schedule/evidence RPC wrappers are missing';
   END IF;
 
+  IF to_regprocedure('rebuild_v2_private.assignment_has_14_valid_checkins(uuid)') IS NULL
+     OR to_regprocedure('rebuild_v2_private.assignment_submission_prerequisites_met(uuid)') IS NULL THEN
+    RAISE EXCEPTION '14-day check-in or shared submission prerequisite evaluator is missing';
+  END IF;
+
   IF to_regprocedure('rebuild_v2.create_medical_exception_request(uuid,text,date[])') IS NULL
      OR to_regprocedure('rebuild_v2.attach_medical_exception_evidence(uuid,text)') IS NULL
      OR to_regprocedure('rebuild_v2.review_medical_exception(uuid,text,text)') IS NULL
