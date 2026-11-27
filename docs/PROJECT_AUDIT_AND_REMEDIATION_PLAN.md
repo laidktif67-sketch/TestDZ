@@ -392,3 +392,74 @@
 | 10 — تقرير التدقيق | جارٍ | سجل النتائج غير نهائي |
 | 11 — الإصلاح | محظور حتى اعتماد التقرير | — |
 | 12 — Release readiness | لم تبدأ | — |
+
+
+## 9. متابعة Developer وAssignment routes — 2026-11-27
+
+نطاق هذه الجولة: App.tsx وواجهات apps-api.ts وassignments-api.ts وصفحات إنشاء الاختبار/تفاصيل المهمة/التقدم/الإرسال/ملخص الإكمال، مع مطابقة عينات من SQL المرشح 007 و008 و011 و023. المراجعة ساكنة على commit الرسمي 9a973cfb2d970f37c2bd8523584d29c9c1622ea0؛ لم يتم تشغيل التطبيق أو قاعدة محلية.
+
+### توضيح مهم لـ ARCH-ROLE-002
+
+- مسارات /assignments/:id و/progress و/submit و/summary غير مغلفة بـ AuthGuard في App.tsx، لكن هذا لا يعني أنها متاحة فعلياً للزائر:
+  - AssignmentDetailsPage.tsx وActiveAssignmentProgressPage.tsx وAssignmentSubmissionPage.tsx وTestCompletionSummaryPage.tsx تنفذ redirect إلى /auth عند غياب session.
+  - صفحات التفاصيل والتقدم والإرسال تتحقق كذلك من دور tester بعد انتهاء التحميل.
+  - assignments-api.ts يضيف tester_id = userId إلى استعلامات بيانات المهمة وcheck-ins وfeedback.
+  - RPC start_assignment في 007_tester_workflow.sql يتحقق من auth.uid() ويقارن tester_id بالمستخدم الحالي قبل بدء المهمة.
+- التقييم المحدّث: ملاحظة معمارية عن تكرار/توزيع حراسة المسارات، وليست ثغرة وصول مؤكدة. يلزم اختبار runtime للزائر، والمستخدم ذي الدور غير المناسب، ومختبر آخر يحاول فتح UUID لا يملكه، بما في ذلك قراءة البيانات والمرفقات وعمليات RPC.
+
+### FUNC-V2-001 — Medium — ملخص إكمال المهمة لا يملك تدفق عرض خاصاً بـ V2
+
+- الحالة: Confirmed product-flow limitation in frontend code; لا تعني فقدان بيانات أو خللاً في RPC.
+- الدليل:
+  - apps/web/src/modules/tester/pages/TestCompletionSummaryPage.tsx: إذا كان isTesterWorkflowV2Enabled صحيحاً، يوقف تحميل بيانات الملخص مباشرة، ثم يحوّل المستخدم إلى /wallet-rewards.
+  - في وضع legacy فقط، يستدعي getLegacyTesterCompletionSummaryPageData لقراءة المهمة وcheck-ins وfeedback وledger والملف الشخصي.
+  - مسار /assignments/:id/summary موجود في App.tsx، لكنه لا يعرض ملخص إكمال المهمة في V2.
+- الأثر: لا يحصل مختبر V2 على صفحة ملخص مخصصة تعرض مدة المهمة وملخص الملاحظات وتفاصيل المكافآت؛ يجري تحويله إلى المحفظة بدلاً من ذلك.
+- قرار المنتج المطلوب: هل ملخص الإكمال جزء من نطاق أول إصدار V2؟ إذا نعم، يجب تصميم مصدر بيانات آمن متوافق مع نموذج V2؛ وإذا لا، يجب توثيق أن الوجهة المعتمدة بعد الإكمال هي المحفظة.
+- اختبار القبول إذا تقرر دعمه: حساب Tester يملك assignment مكتملة في V2 يرى ملخصاً متسقاً مع بيانات المهمة والـledger ولا يستطيع قراءة ملخص مستخدم آخر.
+
+### مطابقة Developer API مع عينات SQL
+
+- apps/web/src/features/apps/apps-api.ts يرسل create_test وupdate_test وsubmit_test_for_review وcreate_test_cohort وsave_test_content بمعاملات تتطابق في الأسماء والترتيب الدلالي مع wrappers/implementations المقروءة في 008_developer_lifecycle.sql و011_test_content_authoring.sql.
+- save_test_content في SQL يتحقق من الدور والملكية وحالة الاختبار، ويفحص JSON array والحد الأقصى 50 خطوة/متطلباً قبل استبدال المحتوى داخل المعاملة؛ لا يظهر mismatch ساكن في أسماء المعاملات التي تمت مراجعتها.
+- admin_grant_role في apps/web/src/features/admin/admin-api.ts يرسل p_user_id وp_role وp_reason، وهي مطابقة لتعريف 023_admin_role_grants.sql. الـRPC يفرض Admin server-side، يمنع self-grant ومنح Admin، ويشترط سبباً بطول 10–1000 حرف.
+- هذه مطابقة ساكنة لعينة من التدفقات وليست تغطية شاملة لكل RPC أو إثباتاً لنجاح التشغيل.
+
+### نقاط تحتاج اختبار runtime
+
+1. مستخدم Tester يفتح assignment لا يملكه ويحاول قراءة بياناتها ومرفقاتها وتنفيذ start/check-in/submit.
+2. مستخدم Developer يفتح تطبيقاً أو اختباراً يملكه مستخدم آخر ويحاول القراءة والتعديل والرفع والإرسال للمراجعة.
+3. مستخدم غير Admin يستدعي admin_grant_role مباشرة، ثم Admin يحاول self-grant أو grant لدور admin.
+4. إعادة المحاولة بعد فشل upload/finalize للتحقق من عدم ترك ملفات أو metadata يتيمة، وعدم إعادة استعمال ملف سبق رفعه بطريقة غير متوقعة.
+
+### نطاق الملفات الإضافي الذي تمت مراجعته
+
+- apps/web/src/modules/tester/pages/AssignmentDetailsPage.tsx
+- apps/web/src/modules/tester/pages/ActiveAssignmentProgressPage.tsx
+- apps/web/src/modules/tester/pages/AssignmentSubmissionPage.tsx
+- apps/web/src/modules/tester/pages/TestCompletionSummaryPage.tsx
+- apps/web/src/features/tester/assignments-api.ts
+- apps/web/src/features/apps/apps-api.ts
+- apps/web/src/features/admin/admin-api.ts
+- supabase/rebuild-v2/007_tester_workflow.sql
+- supabase/rebuild-v2/008_developer_lifecycle.sql
+- supabase/rebuild-v2/011_test_content_authoring.sql
+- supabase/rebuild-v2/023_admin_role_grants.sql
+
+### تحديث سجل التقدم
+
+| المرحلة | الحالة | ملاحظات |
+|---|---|---|
+| 0 — الجرد الأولي | جزئي | — |
+| 1 — Architecture | جزئي | مراجعة routes وتوضيح أن صفحات assignment تحتوي فحوص session/role داخل الصفحة |
+| 2 — Database & Security | جزئي | مطابقة عينات Developer/Admin RPC مع SQL؛ الاختبارات المحلية لم تُشغّل |
+| 3 — Auth & Identity | جزئي | — |
+| 4 — Tester | جزئي | تدقيق assignment details/progress/submission/summary وAPI؛ runtime لم يتم |
+| 5 — Developer | جزئي | مطابقة عينة create/update/content/cohort مع SQL؛ بقية التدفقات قيد المراجعة |
+| 6 — Admin & Support | جزئي | مطابقة admin role grant مع SQL؛ لم تُختبر بحسابات فعلية |
+| 7 — Integrations | جزئي | — |
+| 8 — UI/UX | لم تبدأ | — |
+| 9 — Performance | لم تبدأ | — |
+| 10 — تقرير التدقيق | جارٍ | النتائج أعلاه أولية وغير نهائية |
+| 11 — الإصلاح | محظور حتى اعتماد التقرير | لا تغييرات تطبيقية أثناء التدقيق |
+| 12 — Release readiness | لم تبدأ | — |
