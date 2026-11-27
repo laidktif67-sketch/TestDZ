@@ -1427,3 +1427,37 @@
 - المراجعة الحالية شملت عينات CSS/JSX محددة من Support Center، طابور الموظفين، تفاصيل التذكرة، تسليم المهمة، معالج Developer، الخصوصية والمحفظة. لا تمثل تدقيقاً بصرياً كاملاً لكل 48 صفحة.
 - لا browser/device QA، لا قارئ شاشة فعلي، لا اختبار contrast آلي، ولا قياس لمساحات اللمس في هذه الجولة.
 - لا تعديل كود أو CSS أو SQL أو Workflow؛ لا تشغيل hosted services أو نشر أو merge/delete.
+
+
+## 41. مراجعة Auth وIdentity وOnboarding — 2026-11-27
+
+### `UI-A11Y-AUTH-RESET-001` — Low — رسائل استعادة كلمة المرور لا تعلن حالة النجاح/الخطأ لقارئ الشاشة
+
+- **الملف:** `apps/web/src/pages/ForgotPasswordPage.tsx`.
+- **الدليل:** المكون يعرض `message` داخل `<div className="notice notice-success">` و`error` داخل `<div className="notice notice-error">` من دون `role="status"` أو `role="alert"` أو `aria-live`. بالمقابل، نموذج Auth الرئيسي يستخدم `role="status"` و`role="alert"`، وصفحة Reset Password تستخدم `role="alert"` للخطأ.
+- **الأثر:** مستخدم قارئ الشاشة قد لا يتلقى إعلاناً فورياً عند نجاح طلب الاستعادة أو فشله، رغم ظهور النص بصرياً. لا يؤثر هذا على استدعاء Supabase أو صحة رابط الاستعادة.
+- **الحل المقترح بعد اعتماد التدقيق:** إضافة live region مناسبة؛ status للرسالة العامة غير الكاشفة عن وجود الحساب، وalert للفشل القابل للإجراء. إضافة `autoComplete="email"` إلى حقل البريد لتحسين دعم مديري كلمات المرور.
+- **اختبار القبول:** قارئ شاشة يعلن نتيجة الإرسال مرة واحدة بعد نجاح الطلب وفشله؛ لا يكشف النص ما إذا كان البريد مسجلاً؛ ويمر الحقل باختبار autofill/keyboard.
+- **الحالة:** Static accessibility finding؛ لم يتم اختبار قارئ شاشة أو تدفق بريد حقيقي.
+
+### نتائج إيجابية في مسار المصادقة
+
+- `apps/web/src/lib/auth-routing.ts`: `getSafeAuthRedirect` يقبل فقط مسارات محلية مطابقة لـ`/tests/<id>` مع invite token اختياري بطول/صيغة محددة؛ لا يقبل URL خارجي أو مساراً عاماً تعسفياً. يجب إبقاء هذا التحقق عند كل callback/redirect.
+- `AuthPage.tsx` يستخدم `getSafeAuthRedirect` قبل بناء callback URL، ويستعمل `identityApi` بدلاً من استدعاءات Auth متفرقة؛ حقول البريد وكلمات المرور لها `autoComplete` مناسب، والتسمية عبر `aria-label`، والأخطاء `role=alert`.
+- `AuthCallbackPage.tsx` يتحقق من أخطاء hash، ويتأكد من وجود session، ويستخدم active flag لمنع التنقل بعد unmount؛ كما أن `getPostAuthRoute` يتحقق من حالة onboarding قبل تحويل المستخدم.
+- `VerifyEmailPage.tsx` يطبق cooldown لإعادة الإرسال ويعرض خطأ عند فشل النسخ أو الإرسال؛ البريد معروض باتجاه LTR، و`next` يمر عبر safe redirect.
+- `ResetPasswordPage.tsx` يتحقق من الطول والحرف والرقم وتطابق كلمتي المرور قبل تحديث كلمة المرور؛ الخطأ معلن بـ`role=alert`، وCSS يوفر `:focus-within` لحقل كلمة المرور حتى مع إزالة outline من input الداخلي.
+- `identity-provider.tsx` يستخدم `onAuthStateChange` مع إلغاء الاشتراك عند unmount، ويحمي سباقات تحميل الأدوار بواسطة `rolesRequestId`، ويمنع استجابة `getSession` المتأخرة من استبدال حدث Auth أحدث.
+- `AuthGuard` و`RoleGuard` و`OnboardingGuard` تعرض حالات تحميل/فشل منفصلة وتتيح retry عند فشل قراءة الجلسة/الأدوار/حالة onboarding. هذه أدلة ساكنة على تدفق الحماية وليست إثباتاً لاختبار صلاحيات الخادم.
+
+### إعادة تأكيد `FUNC-SESSION-001` — Low
+
+- `ActiveSessionsPage.tsx` ما زال يعطّل زر `Log Out All Other Sessions` عندما `sessionsUnavailable` صحيح، رغم أن التنفيذ الفعلي يستعمل Supabase Auth `signOut({ scope: "others" })`، وهي عملية مستقلة عن قراءة قائمة الجلسات عبر RPC.
+- هذا يثبت استمرار coupling في واجهة المستخدم: فشل قراءة سجل الجلسات يمنع المستخدم من بدء إنهاء الجلسات الأخرى من هذه الصفحة. لا يثبت أن Supabase Auth نفسه عاجز عن تنفيذ العملية.
+- الحل واختبار القبول كما في سجل `FUNC-SESSION-001`: فصل توفر سجل الجلسات عن صلاحية استدعاء sign-out، ثم محاكاة فشل RPC مع بقاء Auth متاحاً والتأكد من تنفيذ العملية والإبلاغ عن نجاحها حتى إذا فشل تحديث القائمة.
+
+### حدود اختبار Auth وOnboarding
+
+- تمت مراجعة source code لمسارات signup/signin، OAuth callback، verify email، password reset، Onboarding، Interests، IdentityProvider وguards على SHA الرسمي `9a973cfb2d970f37c2bd8523584d29c9c1622ea0`.
+- لم يتم إنشاء حساب جديد، أو إرسال/فتح بريد، أو تنفيذ OAuth حقيقي، أو اختبار expired/reused reset token، أو تبديل أدوار بحسابات منفصلة. لم يتم اختبار Supabase Auth configuration أو redirect allowlist على البيئة المستضافة.
+- لم يتم تعديل التطبيق أو SQL أو Workflow أو إعدادات Supabase المستضافة، ولم يحدث نشر أو merge أو حذف.
