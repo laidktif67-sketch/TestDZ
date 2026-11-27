@@ -63,6 +63,7 @@ export default function MyTestsPage(){
   }
   const client=supabase;if(!client){setLoading(false);return;}let alive=true;
   const load=async(userId:string,email?:string)=>{
+   setError("");
    try{
    const [roleRes,profileRes,walletRes,assignmentRes,feedbackRes,noticeRes]=await Promise.all([
     client.from("user_roles").select("role").eq("user_id",userId),
