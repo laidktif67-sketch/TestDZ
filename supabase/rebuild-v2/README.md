@@ -122,7 +122,7 @@ The approved direction is to preserve the existing candidate schema and data, ar
 - Do not change `supabase/config.toml` project targeting or run a hosted CLI command until the target project ref is explicitly verified.
 - No Production cutover is authorized by this document.
 
-## Assignment review lifecycle addendum (036–042)
+## Assignment review lifecycle addendum (036–043)
 
 The current candidate extends the original 035-script sequence with the assignment submission review lifecycle, medical exception and feedback-quality review, 14-day completion gates, rejected-feedback revision, and server-only review-deadline processing.
 
@@ -135,4 +135,4 @@ The current candidate extends the original 035-script sequence with the assignme
 - `042_retry_failed_review_reminder_delivery.sql`: adds a bounded three-retry recovery counter for terminal reminder delivery failures. Each retry creates a new outbox event while retaining the failed event for audit; auto-approval remains blocked until a reminder is actually delivered.
 - `043_block_auto_approval_on_open_assignment_disputes.sql`: prevents system auto-approval while an assignment-linked report is open/under review or its linked dispute is opened/under review/escalated. Human developer review remains a separate explicit decision path.
 
-The current CI workflow replays **43** numbered candidate SQL scripts in a disposable local Supabase stack. The deadline contract verifies that enqueueing alone does not start the wait, dispatch delivery does, an insufficient 24-hour interval blocks approval, and missing completion prerequisites continue to block approval. The same contract now forces a terminal outbox failure and verifies that a replacement event is queued, the retry counter increments, and the original failure remains recorded. The older 35-script and 40-script counts elsewhere in this historical README describe earlier snapshots and are superseded by this addendum and the current workflow.
+The current CI workflow replays **43** numbered candidate SQL scripts in a disposable local Supabase stack. The deadline contract verifies that enqueueing alone does not start the wait, dispatch delivery does, an insufficient 24-hour interval blocks approval, missing completion prerequisites continue to block approval, and an unresolved assignment-linked report/dispute blocks automatic approval. The same contract now forces a terminal outbox failure and verifies that a replacement event is queued, the retry counter increments, and the original failure remains recorded. The older 35-script and 40-script counts elsewhere in this historical README describe earlier snapshots and are superseded by this addendum and the current workflow.
