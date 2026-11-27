@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
-import { submitTesterFeedback } from "../../../features/tester/feedback-api";
+import { getTesterFeedbackForAssignment, reviseTesterFeedback, submitTesterFeedback } from "../../../features/tester/feedback-api";
 import TesterSidebar, { Icon } from "../components/TesterSidebar";
 import "../styles/tester-dashboard.css";
 import "../styles/submit-feedback.css";
@@ -59,6 +59,10 @@ export default function SubmitFeedbackPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackQualityStatus, setFeedbackQualityStatus] = useState<"pending" | "accepted" | "rejected" | null>(null);
+  const isRevision = feedbackQualityStatus === "rejected";
+  const feedbackLocked = feedbackQualityStatus === "pending" || feedbackQualityStatus === "accepted";
   const fileInput = useRef<HTMLInputElement>(null);
   const name = session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Tester";
   const firstName = name.split(/\s+/)[0];
@@ -77,6 +81,43 @@ export default function SubmitFeedbackPage() {
     ...(isAdmin ? [{ label: "Admin", icon: "shield", href: "/admin" }] : [])
   ];
 
+  useEffect(() => {
+    if (!isTesterWorkflowV2Enabled || !session?.user?.id || !assignmentId) return;
+    let active = true;
+    setFeedbackLoading(true);
+    getTesterFeedbackForAssignment(assignmentId, session.user.id).then(result => {
+      if (!active) return;
+      if (result.error) {
+        setMessage("The current feedback quality status could not be checked. Refresh before submitting.");
+        return;
+      }
+      const existing = result.data as { category: string; body: string; quality_status: "pending" | "accepted" | "rejected" } | null;
+      if (!existing) return;
+      setFeedbackQualityStatus(existing.quality_status);
+      if (existing.quality_status === "rejected") {
+        const titleMatch = existing.body.match(/(?:^|\\n\\n)Title: ([^\\n]*)/);
+        const severityMatch = existing.body.match(/(?:^|\\n\\n)Severity: ([^\\n]*)/);
+        const descriptionMatch = existing.body.match(/(?:^|\\n\\n)Description: ([\\s\\S]*?)(?:\\n\\nSteps to reproduce: |$)/);
+        const stepsMatch = existing.body.match(/(?:^|\\n\\n)Steps to reproduce: ([\\s\\S]*)$/);
+        setTitle(titleMatch?.[1] || "Feedback revision");
+        setSeverity((["Critical", "High", "Medium", "Low"].includes(severityMatch?.[1] || "") ? severityMatch?.[1] : "Medium") as Severity);
+        setDescription(descriptionMatch?.[1] || existing.body);
+        setSteps(stepsMatch?.[1] || "");
+        setFeedbackType(existing.category === "bug" ? "Bug" : existing.category === "usability" ? "UI Issue" : "Suggestion");
+        setMessage("Admin rejected the previous feedback quality review. Update the details below and resubmit for review.");
+      } else if (existing.quality_status === "pending") {
+        setMessage("Your feedback is awaiting Admin quality review. You can revise it only if Admin rejects it.");
+      } else {
+        setMessage("Your feedback quality was accepted. No further revision is available for this assignment.");
+      }
+    }).catch(() => {
+      if (active) setMessage("The current feedback quality status could not be loaded.");
+    }).finally(() => {
+      if (active) setFeedbackLoading(false);
+    });
+    return () => { active = false; };
+  }, [assignmentId, session?.user?.id]);
+
   const addFiles = (incoming: FileList | File[]) => {
     const accepted = Array.from(incoming).filter(file => /image\/(png|jpeg|webp)/.test(file.type) && file.size <= 5 * 1024 * 1024);
     setFiles(current => [...current, ...accepted].slice(0, 5));
@@ -92,7 +133,7 @@ export default function SubmitFeedbackPage() {
       setMessage("Open this form from an active assignment to attach your feedback to the correct test.");
       return;
     }
-    if (submitting) return;
+    if (submitting || feedbackLoading || feedbackLocked) return;
     setSubmitting(true);
     setMessage("");
     const category = feedbackType === "Bug" ? "bug" : feedbackType === "UI Issue" ? "usability" : "general";
@@ -102,12 +143,15 @@ export default function SubmitFeedbackPage() {
       "Description: " + description.trim(),
       steps.trim() ? "Steps to reproduce: " + steps.trim() : ""
     ].filter(Boolean).join("\n\n");
-    const result = await submitTesterFeedback({ assignmentId, category, body });
+    const result = isRevision
+      ? await reviseTesterFeedback({ assignmentId, category, body })
+      : await submitTesterFeedback({ assignmentId, category, body });
     if (result.error) {
       setMessage("Your feedback could not be submitted. Check that the assignment is active or completed, then try again.");
     } else {
-      setMessage("Your feedback has been submitted successfully.");
-      setTitle(""); setSeverity(""); setDescription(""); setSteps(""); setFiles([]);
+      setFeedbackQualityStatus("pending");
+      setMessage(isRevision ? "Your revised feedback has been resubmitted and is awaiting Admin quality review." : "Your feedback has been submitted and is awaiting Admin quality review.");
+      if (!isRevision) { setTitle(""); setSeverity(""); setDescription(""); setSteps(""); setFiles([]); }
     }
     setSubmitting(false);
   };
@@ -133,6 +177,10 @@ export default function SubmitFeedbackPage() {
         </section>
 
         <form className="sf-form-card" onSubmit={submit}>
+          {feedbackLoading && <p className="sf-submit-message" role="status">Checking existing feedback status…</p>}
+          {feedbackQualityStatus === "pending" && <p className="sf-submit-message" role="status">Feedback is pending Admin quality review. Further edits are locked until a rejection decision.</p>}
+          {feedbackQualityStatus === "accepted" && <p className="sf-submit-message" role="status">Feedback quality accepted. This assignment has met the feedback-quality requirement.</p>}
+          {feedbackQualityStatus === "rejected" && <p className="sf-submit-message" role="status">Feedback quality was rejected. Correct the feedback below and resubmit it for Admin review.</p>}
           <section className="sf-type-field">
             <h2><span>1.</span> Feedback Type <em>*</em></h2>
             <div className="sf-type-options">
@@ -181,7 +229,7 @@ export default function SubmitFeedbackPage() {
                 <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={event => { if (event.target.files) addFiles(event.target.files); event.target.value = ""; }}/>
               </div>
             </section>}
-            <div className="sf-submit-wrap"><button type="submit" className="sf-submit" disabled={submitting}><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27 4 5 13l9 4 4 10 9-23ZM14 17l13-13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/></svg> {submitting ? "Submitting…" : "Submit Feedback"}</button>{message && <p className="sf-submit-message" role="status">{message}</p>}</div>
+            <div className="sf-submit-wrap"><button type="submit" className="sf-submit" disabled={submitting || feedbackLoading || feedbackLocked}><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M27 4 5 13l9 4 4 10 9-23ZM14 17l13-13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/></svg> {submitting ? "Submitting…" : isRevision ? "Revise and Resubmit Feedback" : "Submit Feedback"}</button>{message && <p className="sf-submit-message" role="status">{message}</p>}</div>
           </div>
         </form>
       </div>
