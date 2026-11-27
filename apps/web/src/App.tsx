@@ -18,6 +18,7 @@ import MyTestsPage from "./modules/tester/pages/MyTestsPage";
 import DiscoverTestsPage from "./modules/tester/pages/DiscoverTestsPage";
 import TestPreviewPage from "./modules/tester/pages/TestPreviewPage";
 import DeveloperDashboardPage from "./modules/developer/pages/DeveloperDashboardPage";
+import DeveloperWorkspaceSettingsPage from "./modules/developer/pages/DeveloperWorkspaceSettingsPage";
 import DeveloperTestsPage from "./modules/developer/pages/DeveloperTestsPage";
 import DeveloperCreateTestSixStepPage from "./modules/developer/pages/DeveloperCreateTestSixStepPage";
 import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTestMonitoringPage";
@@ -136,6 +137,7 @@ export default function App() {
           </Route>
           <Route element={<RoleGuard requiredRole="developer" />}>
             <Route path="/developer-dashboard" element={<DeveloperDashboardPage />} />
+            <Route path="/developer-settings" element={<DeveloperWorkspaceSettingsPage />} />
             <Route path="/developer-notifications" element={<DeveloperNotificationsPage />} />
             <Route path="/developer-tests" element={<DeveloperTestsPage />} />
             <Route path="/developer/tests/new" element={<DeveloperCreateTestSixStepPage />} />
