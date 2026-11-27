@@ -88,6 +88,20 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
       };
     }
 
+    const medicalResult = await client.from("medical_exception_requests")
+      .select("requested_dates")
+      .eq("assignment_id", assignmentId)
+      .eq("status", "approved");
+    if (medicalResult.error) {
+      return {
+        error: "Approved medical exception dates could not be loaded.",
+        assignment: null, profile, notice, checkins, feedback, earned: 0,
+      };
+    }
+    const approvedMedicalDates = (medicalResult.data ?? [])
+      .flatMap((row: { requested_dates: string[] }) => row.requested_dates ?? [])
+      .sort();
+
     const testResult = await client.from("tests")
       .select("id,title,description,short_summary,start_date,end_date,app_id")
       .eq("id", assignmentResult.data.test_id).maybeSingle();
@@ -109,6 +123,7 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
         status: assignmentResult.data.status,
         start_date: assignmentResult.data.started_at || assignmentResult.data.assigned_at,
         medical_extension_days: assignmentResult.data.medical_extension_days || 0,
+        approved_medical_dates: approvedMedicalDates,
         test: {
           id: testResult.data.id, title: testResult.data.title,
           description: testResult.data.description, short_summary: testResult.data.short_summary,
@@ -136,7 +151,7 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
     error: "",
     profile, notice, checkins, feedback,
     earned: (ledgerResult.data ?? []).reduce((sum: number, row: { amount: number | string }) => sum + Number(row.amount || 0), 0),
-    assignment: assignmentResult.data,
+    assignment: { ...assignmentResult.data, approved_medical_dates: [] },
   };
 }
 
