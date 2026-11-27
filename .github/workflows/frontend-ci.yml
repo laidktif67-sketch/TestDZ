@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - rebuild/testdz-v2
+      - work/assignment-review-lifecycle
     paths:
       - "apps/web/**"
       - "packages/**"
