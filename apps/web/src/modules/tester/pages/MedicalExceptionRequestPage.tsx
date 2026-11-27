@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { getAppDataClient } from "../../../lib/supabase-data";
 import { isTesterWorkflowV2Enabled } from "../../../lib/supabase-v2";
 import { useIdentity } from "../../../shared/auth/hooks/useIdentity";
 import {
   attachTesterMedicalExceptionEvidence,
+  getTesterMedicalExceptionAssignment,
   createTesterMedicalExceptionRequest,
   listTesterMedicalExceptionRequests,
   uploadMedicalExceptionEvidence,
@@ -47,10 +47,8 @@ export default function MedicalExceptionRequestPage() {
     setLoading(true);
     setError("");
     try {
-      const client = getAppDataClient();
       const [assignment, requestResult] = await Promise.all([
-        client.from("assignments").select("id,status")
-          .eq("id", id).eq("tester_id", session.user.id).maybeSingle(),
+        getTesterMedicalExceptionAssignment(id, session.user.id),
         listTesterMedicalExceptionRequests(id),
       ]);
       if (assignment.error || !assignment.data) {
