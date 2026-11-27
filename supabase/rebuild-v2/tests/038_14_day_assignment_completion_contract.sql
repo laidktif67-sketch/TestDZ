@@ -64,6 +64,7 @@ DECLARE
   v_excused_date date;
   v_finalized boolean;
   v_checkin_id uuid;
+  v_attachment_path text;
   v_due_at timestamptz;
 BEGIN
   SELECT t.id INTO v_test
@@ -159,6 +160,36 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+
+  -- Register a real submission attachment and exercise the finalization
+  -- metadata gate only after all check-in and feedback prerequisites pass.
+  v_attachment_path := rebuild_v2.register_assignment_submission_attachment(
+    v_submission,
+    '38000000-0000-4000-8000-000000000099',
+    'pdf',
+    'completion-evidence.pdf',
+    'application/pdf',
+    2048
+  );
+  INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+  VALUES(
+    'test-evidence',v_attachment_path,v_tester,v_tester::text,
+    jsonb_build_object('mimetype','application/pdf','size',2047)
+  );
+
+  BEGIN
+    PERFORM rebuild_v2.finalize_assignment_submission(v_submission);
+    RAISE EXCEPTION 'FAIL: finalization accepted evidence with a mismatched object size';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    IF SQLERRM<>'SUBMISSION_PREREQUISITES_NOT_MET' THEN
+      RAISE EXCEPTION 'FAIL: unexpected attachment metadata gate response: %',SQLERRM;
+    END IF;
+  END;
+
+  UPDATE storage.objects
+  SET metadata=jsonb_build_object('mimetype','application/pdf','size',2048)
+  WHERE bucket_id='test-evidence' AND name=v_attachment_path;
+
   v_finalized := rebuild_v2.finalize_assignment_submission(v_submission);
   IF NOT v_finalized THEN
     RAISE EXCEPTION 'FAIL: complete 14-day assignment could not be finalized';
