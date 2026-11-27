@@ -43,7 +43,7 @@ const copy = {
     test: "Test", participation: "Participations", completed: "Terminés", failed: "Échecs", feedback: "Retours", ratings: "Notes étoilées", average: "Note moyenne", completionCol: "Complétion",
     hidden: "Indicateurs masqués pour protéger la vie privée", details: "Voir les détails →", noMatch: "Aucun résultat correspondant", changeFilters: "Modifiez votre recherche ou vos filtres.", noResults: "Les résultats apparaîtront lorsque les tests recevront des participations.",
     privacyTitle: "🔒 Données agrégées uniquement", privacy: "Cette page n’affiche ni noms ou identifiants de testeurs, ni participations individuelles, ni contenu des retours. Le masquage est appliqué séparément à chaque test.",
-    footer: "{t.footer}"
+    footer: "TestDZ · Build · Test · Improve"
   },
   ar: {
     app: "التطبيق", active: "نشط",
