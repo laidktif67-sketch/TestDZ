@@ -437,3 +437,13 @@ A lifecycle edge-case review found that the original 038 evaluator required the 
 The candidate evaluator now requires all 14 check-ins across the first 14 non-excused required dates, with no missing required date and no check-in on an approved medical-exception date. Additional check-ins after that first 14-day required window no longer invalidate completion. The 038 contract fixture now spans 16 calendar dates with one excused date and 15 check-ins, proving that the 15th required-day check-in does not block completion.
 
 This is a candidate-only change to migration 038 and its contract. It requires the current CI run to complete before verification can be claimed.
+
+### Pending medical exception grace and rejection — 2026-11-27
+
+A further race-condition review found that a tester could submit a medical exception request for a missed day, but the next daily check-in could mark the assignment failed before Admin had time to review the pending request.
+
+The candidate now treats pending medical dates as provisional exclusions only for the missed-day interruption calculation. This does not grant an extension or satisfy completion: the submission prerequisite still blocks while any medical request is pending. When Admin rejects a pending request, the review transaction checks whether its requested date still lacks a check-in; if so, it marks the assignment failed and records an interruption audit event and tester notification. If the tester submitted a check-in for that date while the request was pending, rejection does not fail the assignment for that date.
+
+The 037 contract now creates a pending request for a missed date, submits the next daily check-in while Admin review is pending, confirms the assignment remains active during review, and then verifies that rejection fails the assignment with an audit event and notification. Locking remains assignment-first for both check-in and Admin review to serialize the decision.
+
+This candidate change is included in the latest CI run and is not considered verified until all jobs pass.
