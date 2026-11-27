@@ -16,6 +16,7 @@ type SortKey = "assignments" | "completion" | "rating";
 type Language = "en" | "fr" | "ar";
 const copy = {
   en: {
+    app: "App", active: "Active",
     statuses: { draft: "Draft", submitted: "Under review", recruiting: "Recruiting", ready: "Ready", running: "Running", at_risk: "Needs attention", completed: "Completed", failed: "Rejected", cancelled: "Cancelled" },
     disabled: "Test results are available when the V2 workspace is enabled.", signIn: "Sign in to view your test results.", loadError: "Could not load test results.",
     dashboard: "Developer dashboard", tests: "My tests", testers: "Tester community", back: "← Back to tests",
@@ -30,6 +31,7 @@ const copy = {
     footer: "{t.footer}"
   },
   fr: {
+    app: "Application", active: "Actifs",
     statuses: { draft: "Brouillon", submitted: "En révision", recruiting: "Recrutement", ready: "Prêt", running: "En cours", at_risk: "À surveiller", completed: "Terminé", failed: "Rejeté", cancelled: "Annulé" },
     disabled: "Les résultats sont disponibles lorsque l’espace V2 est activé.", signIn: "Connectez-vous pour consulter vos résultats.", loadError: "Impossible de charger les résultats.",
     dashboard: "Espace développeur", tests: "Mes tests", testers: "Communauté des testeurs", back: "← Retour aux tests",
@@ -44,6 +46,7 @@ const copy = {
     footer: "{t.footer}"
   },
   ar: {
+    app: "التطبيق", active: "نشط",
     statuses: { draft: "مسودة", submitted: "قيد المراجعة", recruiting: "يستقبل المختبرين", ready: "جاهز", running: "جارٍ التنفيذ", at_risk: "يحتاج متابعة", completed: "مكتمل", failed: "مرفوض", cancelled: "ملغى" },
     disabled: "نتائج الاختبارات متاحة عند تفعيل مساحة V2 فقط.", signIn: "سجّل الدخول للوصول إلى نتائج اختباراتك.", loadError: "تعذر تحميل نتائج الاختبارات.",
     dashboard: "لوحة المطوّر", tests: "اختباراتي", testers: "مجتمع المختبرين", back: "{t.back}",
