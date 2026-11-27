@@ -1205,3 +1205,23 @@
 - `LoginActivitySecurityPage.tsx` يستدعي `get_my_security_activity(30)` عبر `identityApi`، ولذلك لا ينطبق هنا افتراض أن صفحة V2 ما زالت تستعمل RPC Legacy؛ الـRPC موجود في migration V2 004. الصفحة لا تخمّن الموقع الجغرافي أو الجهاز عند غياب البيانات وتعرض `Not provided/Not recorded`.
 - `ResetPasswordPage.tsx` يتحقق من طول كلمة المرور ووجود حرف ورقم وتطابق التأكيد، ثم يستدعي `auth.updateUser`، ويعرض رسالة رابط غير صالح/منتهي عند فشل التحديث. هذا تحقق واجهة وتجربة مستخدم؛ سياسة كلمة المرور الفعلية وحدود الرمز تعتمد أيضاً على إعدادات Supabase Auth ولم يتم فحصها على بيئة مستضافة أو تشغيل تدفق بريد إعادة التعيين.
 - لم يتم تشغيل عقود الهوية أو اختبار جلسات متعددة runtime، ولم يتم اختبار تدفق إعادة تعيين كلمة المرور عبر البريد. لا تغييرات على الكود أو SQL أو إعدادات Supabase المستضافة، ولا نشر أو دمج أو حذف فروع.
+
+
+## 34. Onboarding وطلبات تغيير الأدوار — 2026-11-27
+
+### `FUNC-ROLE-REQUEST-001` — Medium (مبدئي) — واجهة مراجعة طلبات الأدوار تعرض نطاقاً أوسع من قيد قاعدة البيانات
+
+- **الملفات:** `apps/web/src/modules/admin/pages/AdminRoleRequestsPage.tsx`؛ `supabase/rebuild-v2/001_schema.sql`؛ `supabase/rebuild-v2/022_admin_role_request_management.sql`.
+- **الدليل:** نص صفحة Admin يقول: `Review Tester and Developer access requests.` بينما جدول `rebuild_v2.role_requests` في migration 001 يفرض القيد `role_requests_requested_role_check CHECK (requested_role = 'developer')` فقط. نوع `AdminRoleRequest` في `apps/web/src/features/admin/admin-api.ts` يعرّف `requested_role` كـ`tester | developer`، لكنه لا يغيّر قيد قاعدة البيانات. migration 022 يوفر قراءة ومراجعة الطلبات فقط، ولا يضيف مسار إنشاء طلب جديد في الواجهة التي تمت مراجعتها.
+- **الأثر:** يصف Admin للمستخدمين قدرة على مراجعة طلبات Tester وDeveloper، لكن مخطط V2 لا يقبل إلا Developer. كما أن إنشاء الطلب من جانب المستخدم غير ظاهر في تدفقات الواجهة التي تمت مراجعتها؛ لا أستنتج من ذلك استحالة الإنشاء عبر كل مصدر آخر، لكنه يعني أن تدفق الطلب من البداية للنهاية غير مثبت في التطبيق.
+- **الحل المقترح بعد اعتماد التدقيق:** حسم الأدوار التي يسمح بطلبها في الإصدار الأول. إما تضييق النص والنوع إلى Developer وإثبات واجهة إنشاء الطلب، أو توسيع عقد قاعدة البيانات ومسار الإنشاء بصورة مدروسة إذا كان Tester request مطلوباً. لا تفتح INSERT مباشر على الجدول؛ استخدم RPC موثقاً مع ملكية المستخدم ومنع الطلبات المكررة وسجل تدقيق للمراجعة.
+- **اختبار القبول:** من حساب Tester يطلب Developer access؛ ينشأ طلب واحد بحالة pending مع سبب وحدود طول صحيحة؛ لا يمكن إنشاء طلب باسم مستخدم آخر أو طلب دور غير مسموح؛ Admin يرى الطلب ويراجعه بسبب 10–1000 حرف؛ إعادة المحاولة لا تنشئ طلبات pending مكررة. اختبر أيضاً طلب Tester إن تقرر دعمه، أو تحقق أن الواجهة لا تعد به إن لم يكن مدعوماً.
+- **الحالة:** Confirmed static schema/UI contract mismatch for Tester request scope؛ لم يتم إنشاء طلب أو تشغيل RLS/RPC runtime. Medium مبدئي.
+
+### نتائج إيجابية — إكمال Onboarding
+
+- `OnboardingPage.tsx` يتيح Tester وDeveloper وBoth، وتحوّل صفحة Interests اختيار Both إلى الدورين `tester` و`developer` قبل استدعاء `complete_onboarding`.
+- `rebuild_v2_private.complete_onboarding_impl` يتحقق خادمياً من وجود مستخدم مصادق، ومن أن قائمة الأدوار بين دور واحد ودورين فقط، وأن الأدوار من allowlist (`tester`, `developer`) ولا تحتوي تكراراً. كما يتحقق أن الاهتمامات JSON array لا تتجاوز 20 عنصراً، وأن كل عنصر نص لا يتجاوز 80 حرفاً.
+- إكمال Onboarding يحدث role rows والاهتمامات و`onboarding_completed_at` داخل RPC واحد؛ الواجهة لا تنتقل إلى مساحة العمل إلا بعد نجاح RPC ثم تحديث الأدوار المشتركة. خيار Skip يحفظ الأدوار مع قائمة اهتمامات فارغة، ولا يتجاوز تحقق الخادم.
+- `OnboardingGuard` يعرض حالة تحميل وخطأ مع Retry، ولا يجبر المستخدم على صفحة Profile Completion في V2 لأن إكمال الملف اختياري حسب تعليق الحارس.
+- حدود الإثبات: لم يتم إنشاء حساب جديد أو تجربة اختيار Both/Skip على قاعدة مؤقتة، ولم يتم تشغيل عقود الهوية. لا تغييرات على الكود أو SQL أو إعدادات Supabase المستضافة، ولا نشر أو دمج أو حذف فروع.
