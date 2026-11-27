@@ -10,17 +10,17 @@ ALTER TABLE rebuild_v2.assignment_submissions
 UPDATE rebuild_v2.assignment_submissions s
 SET reminder_event_id=e.id,
     reminder_sent_at=CASE WHEN e.status='delivered' THEN e.processed_at ELSE NULL END
-FROM LATERAL (
-  SELECT ev.id,ev.status,ev.processed_at
+FROM (
+  SELECT DISTINCT ON (ev.aggregate_id)
+    ev.aggregate_id,ev.id,ev.status,ev.processed_at
   FROM rebuild_v2.events ev
   WHERE ev.event_type='notification.requested'
     AND ev.aggregate_type='assignment_submission'
-    AND ev.aggregate_id=s.id
     AND ev.payload->>'type'='assignment.review_reminder'
-  ORDER BY ev.created_at DESC,ev.id DESC
-  LIMIT 1
+  ORDER BY ev.aggregate_id,ev.created_at DESC,ev.id DESC
 ) e
-WHERE s.reminder_event_id IS NULL
+WHERE e.aggregate_id=s.id
+  AND s.reminder_event_id IS NULL
   AND s.status='submitted';
 
 CREATE INDEX assignment_submissions_reminder_event_idx
