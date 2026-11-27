@@ -26,6 +26,7 @@ import DeveloperCreateTestSixStepPage from "./modules/developer/pages/DeveloperC
 import DeveloperTestMonitoringPage from "./modules/developer/pages/DeveloperTestMonitoringPage";
 import DeveloperTestersPage from "./modules/developer/pages/DeveloperTestersPage";
 import DeveloperFeedbackPage from "./modules/developer/pages/DeveloperFeedbackPage";
+import DeveloperAssignmentReviewsPage from "./modules/developer/pages/DeveloperAssignmentReviewsPage";
 import DeveloperReviewQueuePage from "./modules/developer/pages/DeveloperReviewQueuePage";
 import AdminRoleRequestsPage from "./modules/admin/pages/AdminRoleRequestsPage";
 import AdminRoleGrantsPage from "./modules/admin/pages/AdminRoleGrantsPage";
@@ -152,6 +153,7 @@ export default function App() {
             <Route path="/developer/tests/:id/monitoring" element={<DeveloperTestMonitoringPage />} />
             <Route path="/developer/testers" element={<DeveloperTestersPage />} />
             <Route path="/developer-feedback" element={<DeveloperFeedbackPage />} />
+            <Route path="/developer-assignment-reviews" element={<DeveloperAssignmentReviewsPage />} />
             <Route path="/apps" element={<AppsPage />} />
             <Route path="/apps/:id" element={<AppDetailPage />} />
           </Route>
