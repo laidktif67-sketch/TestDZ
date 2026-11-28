@@ -6,6 +6,7 @@ on:
       - security/dependency-fix-v1
     paths:
       - ".github/workflows/dependency-fix.yml"
+      - ".dependency-fix-trigger"
   workflow_dispatch:
 
 permissions:
