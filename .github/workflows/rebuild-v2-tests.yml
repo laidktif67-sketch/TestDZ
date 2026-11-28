@@ -245,6 +245,17 @@ jobs:
           assert_signed_url_allowed() {
             local role="$1"
             local jwt="$2"
+            local direct_status
+            direct_status="$(curl --silent --show-error --output "$RUNNER_TEMP/direct-$role.bin" --write-out "%{http_code}" \
+              --header "apikey: $ANON_KEY" \
+              --header "Authorization: Bearer $jwt" \
+              "$API_URL/storage/v1/object/authenticated/test-evidence/$submission_path")"
+            if [[ "$direct_status" != "200" ]]; then
+              echo "FAIL: $role could not directly download permitted evidence; HTTP $direct_status"
+              exit 1
+            fi
+            cmp "$RUNNER_TEMP/testdz-submission.png" "$RUNNER_TEMP/direct-$role.bin"
+
             local sign_status
             sign_status="$(curl --silent --show-error --output "$RUNNER_TEMP/signed-$role.json" --write-out "%{http_code}" \
               --request POST \
@@ -290,6 +301,21 @@ jobs:
             local role="$1"
             local jwt="$2"
             local auth_args=()
+            if [[ -n "$jwt" ]]; then
+              auth_args+=(--header "Authorization: Bearer $jwt")
+            fi
+            local direct_status
+            direct_status="$(curl --silent --show-error --output "$RUNNER_TEMP/direct-denied-$role.bin" --write-out "%{http_code}" \
+              --header "apikey: $ANON_KEY" \
+              "${auth_args[@]}" \
+              "$API_URL/storage/v1/object/authenticated/test-evidence/$submission_path")"
+            case "$direct_status" in
+              400|401|403|404) ;;
+              *)
+                echo "FAIL: expected direct object download to be denied for $role; received HTTP $direct_status"
+                exit 1
+                ;;
+            esac
             if [[ -n "$jwt" ]]; then
               auth_args+=(--header "Authorization: Bearer $jwt")
             fi
