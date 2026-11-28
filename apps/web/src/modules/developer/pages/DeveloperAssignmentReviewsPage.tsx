@@ -127,10 +127,10 @@ export default function DeveloperAssignmentReviewsPage() {
     }
   }
 
-  async function decide(decision: "approved" | "changes_requested") {
+  async function decide() {
     if (!selected || busy) return;
     const normalized = note.trim();
-    if (decision === "changes_requested" && normalized.length < 10) {
+    if (normalized.length < 10) {
       setError("A change request needs a clear review reason of at least 10 characters.");
       return;
     }
@@ -142,11 +142,9 @@ export default function DeveloperAssignmentReviewsPage() {
     setError("");
     setNotice("");
     try {
-      const result = await reviewDeveloperAssignmentSubmission(selected.id, decision, normalized || null);
+      const result = await reviewDeveloperAssignmentSubmission(selected.id, "changes_requested", normalized);
       if (result.error) throw result.error;
-      setNotice(decision === "approved"
-        ? "Report approved. The assignment is now completed."
-        : "Changes requested. The tester can create a new attempt while the previous report remains in history.");
+      setNotice("Changes requested. The tester can create a new attempt while the previous report remains in history.");
       setNote("");
       await load();
     } catch {
@@ -165,7 +163,7 @@ export default function DeveloperAssignmentReviewsPage() {
 
   return <main className="dar-shell">
     <header className="dar-header"><Link to="/developer-dashboard">← Developer workspace</Link><span>TESTDZ · DEVELOPER REVIEWS</span></header>
-    <section className="dar-hero"><span>ASSIGNMENT DELIVERY</span><h1>Tester report reviews</h1><p>Review final reports submitted by testers assigned to your tests. Approval rechecks the 14-day, feedback-quality, medical-exception and evidence prerequisites on the server.</p></section>
+    <section className="dar-hero"><span>ASSIGNMENT DELIVERY</span><h1>Tester report reviews</h1><p>Review final reports submitted by testers assigned to your tests. In this V2 build, you can request changes; final approval remains disabled until all server-side completion gates are ready.</p></section>
     {error && <p className="dar-alert error" role="alert">{error}</p>}
     {notice && <p className="dar-alert success" role="status">{notice}</p>}
     <div className="dar-layout">
@@ -199,11 +197,11 @@ export default function DeveloperAssignmentReviewsPage() {
             {attachmentsLoading ? <p>Loading attachments…</p> : attachments.length === 0 ? <p>No supporting files attached.</p> : attachments.map(file => <div className="dar-file" key={file.id}><span>▣</span><div><strong>{file.original_filename}</strong><small>{file.mime_type} · {(file.size_bytes/1024/1024).toFixed(2)} MiB</small></div><button type="button" onClick={() => void openEvidence(file.storage_path)}>Open file</button></div>)}
           </div>
           <label className="dar-note">Review note
-            <textarea rows={4} maxLength={2000} value={note} onChange={event => setNote(event.target.value)} placeholder="Add a clear reason. Required when requesting changes; optional when approving."/>
+            <textarea rows={4} maxLength={2000} value={note} onChange={event => setNote(event.target.value)} placeholder="Explain clearly what the tester must correct. At least 10 characters are required."/>
             <small>{note.trim().length}/2000 characters</small>
           </label>
-          <div className="dar-policy"><strong>Approval safety</strong><p>Approval is blocked unless the assignment still has exactly 14 valid required-day check-ins, accepted feedback quality, no pending medical request and verified attachment metadata.</p></div>
-          <div className="dar-actions"><button type="button" className="approve" disabled={busy} onClick={() => void decide("approved")}>{busy ? "Saving…" : "Approve final report"}</button><button type="button" className="changes" disabled={busy || note.trim().length < 10} onClick={() => void decide("changes_requested")}>Request changes</button></div>
+          <div className="dar-policy"><strong>Final approval is not enabled in this V2 build</strong><p>The server intentionally rejects approval until the complete 14-day, feedback-quality, medical-exception and evidence prerequisites are implemented and verified together. You can request changes now; final approval will become available only after that server-side gate is ready.</p></div>
+          <div className="dar-actions"><button type="button" className="changes" disabled={busy || note.trim().length < 10} onClick={() => void decide()}>{busy ? "Saving…" : "Request changes"}</button></div>
         </>}
       </section>
     </div>
