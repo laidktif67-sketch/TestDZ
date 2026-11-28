@@ -211,6 +211,56 @@ BEGIN
  SELECT count(*) INTO v_count FROM storage.objects
  WHERE bucket_id='test-evidence' AND name=current_setting('testdz.report_storage_path');
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Support cannot download permitted report evidence from Storage'; END IF;
+
+ -- Emit the complete storage.objects policy catalog so any legacy policy is visible
+ -- in the local replay. PostgreSQL combines PERMISSIVE policies with OR semantics.
+ DECLARE
+   v_policy record;
+   v_report_policy_count integer;
+ BEGIN
+   FOR v_policy IN
+     SELECT policyname, cmd, roles, qual, with_check, permissive
+     FROM pg_catalog.pg_policies
+     WHERE schemaname='storage' AND tablename='objects'
+     ORDER BY policyname
+   LOOP
+     RAISE NOTICE 'storage.objects policy: name=% command=% roles=% mode=% using=% check=%',
+       v_policy.policyname, v_policy.cmd, v_policy.roles, v_policy.permissive,
+       v_policy.qual, v_policy.with_check;
+   END LOOP;
+
+   SELECT count(*) INTO v_report_policy_count
+   FROM pg_catalog.pg_policies
+   WHERE schemaname='storage' AND tablename='objects'
+     AND policyname='report_evidence_select_v2'
+     AND cmd='SELECT'
+     AND permissive='PERMISSIVE'
+     AND roles @> ARRAY['authenticated']::name[]
+     AND qual ILIKE '%test-evidence%';
+   IF v_report_policy_count<>1 THEN
+     RAISE EXCEPTION 'FAIL: expected exactly one authenticated PERMISSIVE test-evidence SELECT policy named report_evidence_select_v2; found %',
+       v_report_policy_count;
+   END IF;
+
+   FOR v_policy IN
+     SELECT policyname, cmd, roles, qual, with_check, permissive
+     FROM pg_catalog.pg_policies
+     WHERE schemaname='storage' AND tablename='objects'
+       AND cmd IN ('SELECT','ALL')
+       AND permissive='PERMISSIVE'
+       AND (roles @> ARRAY['authenticated']::name[] OR roles @> ARRAY['public']::name[])
+   LOOP
+     IF v_policy.qual IS NULL OR v_policy.qual !~* 'bucket_id' THEN
+       RAISE EXCEPTION 'FAIL: potentially unscoped PERMISSIVE Storage read policy % applies to authenticated/public; USING=%',
+         v_policy.policyname, v_policy.qual;
+     END IF;
+     IF v_policy.qual ILIKE '%test-evidence%'
+        AND v_policy.policyname<>'report_evidence_select_v2' THEN
+       RAISE EXCEPTION 'FAIL: unexpected PERMISSIVE Storage read policy % also references test-evidence; USING=%',
+         v_policy.policyname, v_policy.qual;
+     END IF;
+   END LOOP;
+ END;
 END;
 $support_tester_data_boundary$;
 
