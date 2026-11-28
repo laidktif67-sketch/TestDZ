@@ -31,10 +31,10 @@ async function installIdentity(page, role) {
     }
     if (url.pathname === "/rest/v1/assignments") {
       const scopedToOwner = url.searchParams.get("tester_id") === `eq.${TESTER_ID}`;
-      const scopedToAssignment = url.searchParams.get("id") === `eq.${ASSIGNMENT_ID}`;
-      const rows = scopedToOwner && scopedToAssignment
+      const requestedAssignment = url.searchParams.get("id");
+      const rows = scopedToOwner && requestedAssignment === `eq.${ASSIGNMENT_ID}`
         ? [{ id: ASSIGNMENT_ID, status: "active" }]
-        : [{ id: OTHER_ASSIGNMENT_ID, status: "active" }];
+        : [];
       await route.fulfill({ status: 200, contentType: "application/json",
         headers: { "content-range": `0-${rows.length - 1}/${rows.length}` }, body: JSON.stringify(rows) });
       return;
@@ -109,5 +109,18 @@ test("non-tester role cannot open the medical exception workspace", async ({ pag
 
   await expect(page).toHaveURL(/\/developer-dashboard$/);
   await expect(page.getByRole("heading", { name: "Medical exception request" })).toHaveCount(0);
+  expect(medicalRequests).toHaveLength(0);
+});
+
+test("tester cannot load medical history for another tester's assignment", async ({ page }) => {
+  const medicalRequests = [];
+  page.on("request", request => {
+    if (request.url().includes("/rest/v1/medical_exception_requests")) medicalRequests.push(request.url());
+  });
+  await installIdentity(page, "tester");
+  await page.goto(`/assignments/${OTHER_ASSIGNMENT_ID}/medical-exception`);
+
+  await expect(page.getByText("This assignment could not be found in your Tester workspace.")).toBeVisible();
+  await expect(page.getByText(/OTHER TESTER PRIVATE MEDICAL REQUEST/)).toHaveCount(0);
   expect(medicalRequests).toHaveLength(0);
 });
