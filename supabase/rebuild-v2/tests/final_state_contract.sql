@@ -1,5 +1,5 @@
--- Final-state contract for the curated 34-script rebuild_v2 candidate.
--- Run after all numbered candidate scripts, 001–034.
+-- Final-state contract for the curated rebuild_v2 candidate.
+-- Run after all numbered candidate scripts.
 -- Read-only: this contract does not create or modify application data.
 
 DO $contract$
@@ -14,8 +14,8 @@ BEGIN
   JOIN pg_namespace n ON n.oid = c.relnamespace
   WHERE n.nspname = 'rebuild_v2' AND c.relkind = 'r';
 
-  IF v_tables <> 48 THEN
-    RAISE EXCEPTION 'expected 48 rebuild_v2 tables, got %', v_tables;
+  IF v_tables <> 49 THEN
+    RAISE EXCEPTION 'expected 49 rebuild_v2 tables, got %', v_tables;
   END IF;
 
   SELECT count(*) INTO v_rls_tables
@@ -26,8 +26,8 @@ BEGIN
     AND c.relrowsecurity
     AND c.relforcerowsecurity;
 
-  IF v_rls_tables <> 48 THEN
-    RAISE EXCEPTION 'expected RLS and FORCE RLS on all 48 tables, got %', v_rls_tables;
+  IF v_rls_tables <> 49 THEN
+    RAISE EXCEPTION 'expected RLS and FORCE RLS on all 49 tables, got %', v_rls_tables;
   END IF;
 
   SELECT count(DISTINCT tablename) INTO v_policy_tables
@@ -47,11 +47,12 @@ BEGIN
     'support-attachments',
     'test-evidence',
     'test-builds',
-    'test-assets'
+    'test-assets',
+    'medical-exception-evidence'
   );
 
-  IF v_buckets <> 7 THEN
-    RAISE EXCEPTION 'expected seven candidate Storage buckets, got %', v_buckets;
+  IF v_buckets <> 8 THEN
+    RAISE EXCEPTION 'expected eight candidate Storage buckets, got %', v_buckets;
   END IF;
 
   IF NOT EXISTS (
@@ -88,6 +89,34 @@ BEGIN
   IF to_regprocedure('rebuild_v2.start_assignment(uuid)') IS NULL
      OR to_regprocedure('rebuild_v2.finalize_assignment_submission(uuid)') IS NULL THEN
     RAISE EXCEPTION 'final assignment schedule/evidence RPC wrappers are missing';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2.process_assignment_review_deadlines(integer)') IS NULL THEN
+    RAISE EXCEPTION 'service-only assignment review deadline processor is missing';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2.revise_tester_feedback(uuid,text,text,smallint)') IS NULL THEN
+    RAISE EXCEPTION 'tester feedback quality revision RPC is missing';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2_private.assignment_has_14_valid_checkins(uuid)') IS NULL
+     OR to_regprocedure('rebuild_v2_private.assignment_submission_prerequisites_met(uuid)') IS NULL THEN
+    RAISE EXCEPTION '14-day check-in or shared submission prerequisite evaluator is missing';
+  END IF;
+
+  IF to_regprocedure('rebuild_v2.create_medical_exception_request(uuid,text,date[])') IS NULL
+     OR to_regprocedure('rebuild_v2.attach_medical_exception_evidence(uuid,text)') IS NULL
+     OR to_regprocedure('rebuild_v2.review_medical_exception(uuid,text,text)') IS NULL
+     OR to_regprocedure('rebuild_v2.review_feedback_quality(uuid,text,text)') IS NULL THEN
+    RAISE EXCEPTION 'medical exception or feedback quality review RPCs are missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid='rebuild_v2.feedback'::regclass
+      AND conname='feedback_quality_review_metadata_check'
+  ) THEN
+    RAISE EXCEPTION 'feedback quality review metadata invariant is missing';
   END IF;
 END;
 $contract$;
