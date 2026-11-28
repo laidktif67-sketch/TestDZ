@@ -4,14 +4,18 @@ on:
   push:
     branches:
       - rebuild/testdz-v2
+      - work/assignment-review-lifecycle
+      - reorg/assignment-lifecycle-clean-v1
     paths:
       - "supabase/rebuild-v2/**"
+      - "supabase/functions/**"
       - "supabase/seed.sql"
       - "supabase/config.toml"
       - ".github/workflows/rebuild-v2-tests.yml"
   pull_request:
     paths:
       - "supabase/rebuild-v2/**"
+      - "supabase/functions/**"
       - "supabase/seed.sql"
       - "supabase/config.toml"
       - ".github/workflows/rebuild-v2-tests.yml"
@@ -43,7 +47,7 @@ jobs:
           sudo apt-get install --yes postgresql-client
 
       - name: Start disposable local Supabase stack
-        run: supabase start -x studio,edge-runtime,imgproxy,logflare,vector
+        run: supabase start -x studio,edge-runtime,imgproxy,logflare,vector,mailpit
 
       - name: Apply candidate SQL, run contracts, then verify local PostgREST
         shell: bash
@@ -57,8 +61,8 @@ jobs:
           test -n "${DB_URL:-}" || { echo "DB_URL was not exported by Supabase CLI"; exit 1; }
 
           scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
-          if [ "${#scripts[@]}" -ne 35 ]; then
-            echo "Expected exactly 35 candidate SQL scripts; found ${#scripts[@]}"
+          if [ "${#scripts[@]}" -ne 47 ]; then
+            echo "Expected exactly 47 candidate SQL scripts; found ${#scripts[@]}"
             exit 1
           fi
 
@@ -84,6 +88,11 @@ jobs:
             supabase/rebuild-v2/tests/030_cohort_assignment_delete_safety_contract.sql
             supabase/rebuild-v2/tests/031_developer_test_edit_contract.sql
             supabase/rebuild-v2/tests/007_tester_workflow_contract.sql
+            supabase/rebuild-v2/tests/036_assignment_review_lifecycle_contract.sql
+            supabase/rebuild-v2/tests/037_medical_exception_and_feedback_quality_contract.sql
+            supabase/rebuild-v2/tests/038_14_day_assignment_completion_contract.sql
+            supabase/rebuild-v2/tests/039_feedback_quality_revision_contract.sql
+            supabase/rebuild-v2/tests/040_assignment_review_deadline_processor_contract.sql
             supabase/rebuild-v2/tests/008_developer_feedback_privacy_contract.sql
             supabase/rebuild-v2/tests/009_wallet_idempotency_contract.sql
             supabase/rebuild-v2/tests/011_notification_recipient_roles_contract.sql
@@ -173,8 +182,11 @@ jobs:
         with:
           deno-version: 2.9.8
 
-      - name: Type-check notification and invitation Edge Functions
-        run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts
+      - name: Type-check all Edge Functions
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts supabase/functions/assignment-review-deadlines/index.ts
+
+      - name: Test assignment review deadline request validation
+        run: deno test --no-lock --node-modules-dir=auto supabase/functions/assignment-review-deadlines/request-validation.test.ts
 
 
   frontend-typecheck:

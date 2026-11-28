@@ -5,24 +5,32 @@ import { isTesterWorkflowV2Enabled } from "../../lib/supabase-v2";
 export async function getAssignmentSubmissionPageData(assignmentId: string, userId: string) {
   const client = getAppDataClient();
   if (isTesterWorkflowV2Enabled) {
-    const [assignmentResult, checkinsResult, feedbackResult] = await Promise.all([
+    const [assignmentResult, checkinsResult, feedbackResult, medicalResult, submissionResult] = await Promise.all([
       client.from("assignments")
         .select("id,status,test_id,assigned_at,started_at,completed_at")
         .eq("id", assignmentId).eq("tester_id", userId).maybeSingle(),
       client.from("checkins").select("id,checkin_date")
         .eq("assignment_id", assignmentId).eq("tester_id", userId)
         .order("checkin_date", { ascending: true }),
-      client.from("feedback").select("id", { count: "exact", head: true })
-        .eq("assignment_id", assignmentId).eq("tester_id", userId),
+      client.from("feedback").select("id,quality_status,reviewed_at,reviewed_by")
+        .eq("assignment_id", assignmentId).eq("tester_id", userId).maybeSingle(),
+      client.from("medical_exception_requests").select("status,requested_dates")
+        .eq("assignment_id", assignmentId)
+        .in("status", ["approved", "pending"]),
+      client.from("assignment_submissions").select("id,status,attempt_number")
+        .eq("assignment_id", assignmentId).order("attempt_number", { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (assignmentResult.error || !assignmentResult.data) {
-      return { error: assignmentResult.error?.message || "This assignment could not be found.", assignment: null, checkins: [], feedbackCount: 0 };
+      return { error: assignmentResult.error?.message || "This assignment could not be found.", assignment: null, checkins: [], feedbackCount: 0, feedback: null, medicalExceptions: [], submission: null };
+    }
+    if (checkinsResult.error || feedbackResult.error || medicalResult.error || submissionResult.error) {
+      return { error: "Some submission requirements could not be verified. Refresh and try again.", assignment: null, checkins: [], feedbackCount: 0, feedback: null, medicalExceptions: [], submission: null };
     }
     const testResult = await client.from("tests")
       .select("id,title,status,start_date,end_date,app_id")
       .eq("id", assignmentResult.data.test_id).maybeSingle();
     if (testResult.error || !testResult.data) {
-      return { error: testResult.error?.message || "The assigned test could not be found.", assignment: null, checkins: [], feedbackCount: 0 };
+      return { error: testResult.error?.message || "The assigned test could not be found.", assignment: null, checkins: [], feedbackCount: 0, feedback: null, medicalExceptions: [], submission: null };
     }
     const appResult = await client.from("apps").select("name,icon_url")
       .eq("id", testResult.data.app_id).maybeSingle();
@@ -31,7 +39,7 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
       assignment: {
         id: assignmentResult.data.id,
         status: assignmentResult.data.status,
-        start_date: assignmentResult.data.started_at || assignmentResult.data.assigned_at,
+        start_date: assignmentResult.data.started_at,
         completed_at: assignmentResult.data.completed_at,
         created_at: assignmentResult.data.assigned_at,
         points_awarded: null,
@@ -42,7 +50,10 @@ export async function getAssignmentSubmissionPageData(assignmentId: string, user
         },
       },
       checkins: checkinsResult.data || [],
-      feedbackCount: feedbackResult.count || 0,
+      feedbackCount: feedbackResult.data ? 1 : 0,
+      feedback: feedbackResult.data || null,
+      medicalExceptions: medicalResult.data || [],
+      submission: submissionResult.data || null,
     };
   }
 
@@ -88,6 +99,20 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
       };
     }
 
+    const medicalResult = await client.from("medical_exception_requests")
+      .select("requested_dates")
+      .eq("assignment_id", assignmentId)
+      .eq("status", "approved");
+    if (medicalResult.error) {
+      return {
+        error: "Approved medical exception dates could not be loaded.",
+        assignment: null, profile, notice, checkins, feedback, earned: 0,
+      };
+    }
+    const approvedMedicalDates = (medicalResult.data ?? [])
+      .flatMap((row: { requested_dates: string[] }) => row.requested_dates ?? [])
+      .sort();
+
     const testResult = await client.from("tests")
       .select("id,title,description,short_summary,start_date,end_date,app_id")
       .eq("id", assignmentResult.data.test_id).maybeSingle();
@@ -109,6 +134,7 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
         status: assignmentResult.data.status,
         start_date: assignmentResult.data.started_at || assignmentResult.data.assigned_at,
         medical_extension_days: assignmentResult.data.medical_extension_days || 0,
+        approved_medical_dates: approvedMedicalDates,
         test: {
           id: testResult.data.id, title: testResult.data.title,
           description: testResult.data.description, short_summary: testResult.data.short_summary,
@@ -136,7 +162,7 @@ export async function getActiveAssignmentProgressPageData(assignmentId: string, 
     error: "",
     profile, notice, checkins, feedback,
     earned: (ledgerResult.data ?? []).reduce((sum: number, row: { amount: number | string }) => sum + Number(row.amount || 0), 0),
-    assignment: assignmentResult.data,
+    assignment: { ...assignmentResult.data, approved_medical_dates: [] },
   };
 }
 
@@ -150,7 +176,10 @@ export async function submitTesterDailyCheckin(assignmentId: string) {
   const client = getAppDataClient();
   const result = await client.rpc("submit_checkin", { p_assignment_id: assignmentId, p_note: null });
   if (result.error || !result.data) {
-    return { error: result.error, checkin: null, recorded: false };
+    if (result.error) return { error: result.error, checkin: null, recorded: false };
+    const assignment = await client.from("assignments").select("status").eq("id", assignmentId).maybeSingle();
+    const error = assignment.data?.status === "failed" ? new Error("ASSIGNMENT_INTERRUPTED") : new Error("CHECKIN_NOT_RECORDED");
+    return { error, checkin: null, recorded: false };
   }
   const checkin = await client.from("checkins").select("id,checkin_date")
     .eq("id", result.data).maybeSingle();
@@ -160,7 +189,8 @@ export async function submitTesterDailyCheckin(assignmentId: string) {
 /** Read the current submission state for the signed-in tester's assignment. */
 export async function getTesterAssignmentSubmission(assignmentId: string) {
   return getAppDataClient().from("assignment_submissions")
-    .select("id,status").eq("assignment_id", assignmentId).maybeSingle();
+    .select("id,status,attempt_number").eq("assignment_id", assignmentId)
+    .order("attempt_number", { ascending: false }).limit(1).maybeSingle();
 }
 
 /** Create or retrieve the server-managed submission draft. */

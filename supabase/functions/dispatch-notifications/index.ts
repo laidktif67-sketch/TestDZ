@@ -1,15 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.95.0";
+import { constantTimeEqual, readBoundedBody } from "../_shared/request-validation.ts";
 
 const jsonHeaders = { "content-type": "application/json; charset=utf-8" };
-
-function constantTimeEqual(left: string, right: string): boolean {
-  if (left.length !== right.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  }
-  return mismatch === 0;
-}
 
 function respond(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), { status, headers: jsonHeaders });
@@ -22,7 +14,11 @@ Deno.serve(async (request: Request) => {
 
   const dispatchSecret = Deno.env.get("NOTIFICATION_DISPATCH_SECRET") ?? "";
   const suppliedSecret = request.headers.get("x-dispatch-secret") ?? "";
-  if (!dispatchSecret || !constantTimeEqual(suppliedSecret, dispatchSecret)) {
+  if (!dispatchSecret) {
+    console.error("Notification dispatcher is missing its dispatch secret.");
+    return respond(503, { error: "dispatcher_not_configured" });
+  }
+  if (!constantTimeEqual(suppliedSecret, dispatchSecret)) {
     return respond(401, { error: "unauthorized" });
   }
 
@@ -34,13 +30,26 @@ Deno.serve(async (request: Request) => {
   }
 
   let limit = 50;
-  try {
-    const body = await request.json();
-    if (body && typeof body === "object" && "limit" in body) {
+  const boundedBody = await readBoundedBody(request);
+  if (boundedBody.tooLarge) {
+    return respond(413, { error: "request_body_too_large" });
+  }
+  if (boundedBody.invalidUtf8) {
+    return respond(400, { error: "invalid_json" });
+  }
+  if (boundedBody.text.trim()) {
+    let body: unknown;
+    try {
+      body = JSON.parse(boundedBody.text);
+    } catch {
+      return respond(400, { error: "invalid_json" });
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return respond(400, { error: "invalid_request_body" });
+    }
+    if ("limit" in body) {
       limit = Number((body as { limit: unknown }).limit);
     }
-  } catch {
-    return respond(400, { error: "invalid_json" });
   }
 
   if (!Number.isInteger(limit) || limit < 1 || limit > 100) {

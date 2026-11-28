@@ -218,6 +218,7 @@ export default function DeveloperDashboardPage() {
         <Link to="/developer-tests" className="dd-nav-link"><Icon name="tests"/><span>{t.tests}</span></Link>
         <Link to="/developer-test-results" className="dd-nav-link"><Icon name="chart"/><span>{language === "ar" ? "نتائج الاختبارات" : language === "fr" ? "Résultats des tests" : "Test results"}</span></Link>
         <Link to="/developer-feedback" className="dd-nav-link"><Icon name="file"/><span>{t.feedback}</span></Link>
+        <Link to="/developer-assignment-reviews" className="dd-nav-link"><Icon name="check"/><span>{language === "ar" ? "مراجعة تقارير المختبرين" : language === "fr" ? "Rapports des testeurs" : "Tester report reviews"}</span></Link>
         <Link to="/developer-notifications" className="dd-nav-link"><Icon name="bell"/><span>{t.notifications}</span></Link>
         <Link to="/developer-analytics" className="dd-nav-link"><Icon name="chart"/><span>{t.analytics}</span></Link>
         <span className="dd-nav-label">DISCOVER & ACCOUNT</span>
