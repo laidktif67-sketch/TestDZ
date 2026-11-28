@@ -194,12 +194,12 @@ jobs:
           support_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000005")"
           printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lS8AAAAASUVORK5CYII=' | base64 --decode > "$RUNNER_TEMP/testdz-submission.png"
 
-          upload_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-upload.json" --write-out "%{http_code}" \\
-            --request POST \\
-            --header "apikey: $ANON_KEY" \\
-            --header "Authorization: Bearer $tester_jwt" \\
-            --header "Content-Type: image/png" \\
-            --data-binary @"$RUNNER_TEMP/testdz-submission.png" \\
+          upload_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-upload.json" --write-out "%{http_code}" \
+            --request POST \
+            --header "apikey: $ANON_KEY" \
+            --header "Authorization: Bearer $tester_jwt" \
+            --header "Content-Type: image/png" \
+            --data-binary @"$RUNNER_TEMP/testdz-submission.png" \
             "$API_URL/storage/v1/object/test-evidence/$submission_path")"
           if [[ "$upload_status" != "200" && "$upload_status" != "201" ]]; then
             cat "$RUNNER_TEMP/storage-upload.json"
@@ -207,9 +207,9 @@ jobs:
             exit 1
           fi
 
-          tester_read_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-tester-read.json" --write-out "%{http_code}" \\
-            --header "apikey: $ANON_KEY" \\
-            --header "Authorization: Bearer $tester_jwt" \\
+          tester_read_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-tester-read.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Authorization: Bearer $tester_jwt" \
             "$API_URL/storage/v1/object/authenticated/test-evidence/$submission_path")"
           if [[ "$tester_read_status" != "200" ]]; then
             cat "$RUNNER_TEMP/storage-tester-read.json"
@@ -217,9 +217,9 @@ jobs:
             exit 1
           fi
 
-          support_read_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-support-read.json" --write-out "%{http_code}" \\
-            --header "apikey: $ANON_KEY" \\
-            --header "Authorization: Bearer $support_jwt" \\
+          support_read_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-support-read.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Authorization: Bearer $support_jwt" \
             "$API_URL/storage/v1/object/authenticated/test-evidence/$submission_path")"
           case "$support_read_status" in
             400|403|404)
