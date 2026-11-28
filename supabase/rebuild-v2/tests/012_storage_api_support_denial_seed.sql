@@ -102,7 +102,7 @@ BEGIN
  v_request:=rebuild_v2.create_medical_exception_request(
    v_assignment,
    'Synthetic medical evidence request for isolated Storage HTTP authorization.',
-   ARRAY[rebuild_v2_private.algeria_local_date()-4]::date[]
+   ARRAY[((now() AT TIME ZONE 'Africa/Algiers')::date - 4)]::date[]
  );
  PERFORM set_config('testdz.medical_http_request_id',v_request::text,true);
  PERFORM set_config('testdz.medical_http_assignment_id',v_assignment::text,true);
