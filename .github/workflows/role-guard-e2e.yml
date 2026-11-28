@@ -1,0 +1,55 @@
+name: Isolated role-guard browser tests
+
+on:
+  push:
+    branches:
+      - security/e2e-role-guard-isolated-v1
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/role-guard-e2e.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/role-guard-e2e.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: role-guard-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  role-guard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked application dependencies
+        run: npm ci
+
+      - name: Install temporary Playwright test runner
+        run: npm install --no-save --package-lock=false @playwright/test@1.58.2
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run isolated role-guard browser tests
+        run: npx playwright test --config apps/web/e2e/playwright.config.mjs
+        env:
+          CI: "true"
