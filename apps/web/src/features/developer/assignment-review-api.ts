@@ -65,7 +65,7 @@ export function listDeveloperSubmissionAttachments(submissionId: string) {
 
 export function reviewDeveloperAssignmentSubmission(
   submissionId: string,
-  decision: "approved" | "changes_requested",
+  decision: "changes_requested",
   reason: string | null,
 ) {
   return getAppDataClient().rpc("review_assignment_submission", {
