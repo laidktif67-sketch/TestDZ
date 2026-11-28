@@ -165,6 +165,74 @@ jobs:
             exit 1
           fi
           echo "PASS: rebuild_v2 is exposed and rebuild_v2_private remains unexposed."
+          echo "::group::Storage HTTP API Support denial contract"
+          psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/rebuild-v2/tests/012_storage_api_support_denial_seed.sql
+
+          submission_path="$(psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT storage_path FROM rebuild_v2.assignment_submission_attachments WHERE tester_id='80000000-0000-4000-8000-000000000003' ORDER BY created_at DESC LIMIT 1;")"
+          test -n "$submission_path" || { echo "Storage API fixture did not produce a submission path"; exit 1; }
+
+          make_test_jwt() {
+            python3 - "$1" <<'PY'
+          import base64, hashlib, hmac, json, os, sys, time
+          def b64url(value):
+              return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+          header = b64url(json.dumps({"alg":"HS256","typ":"JWT"}, separators=(",",":")).encode())
+          payload = b64url(json.dumps({
+              "aud":"authenticated",
+              "role":"authenticated",
+              "sub":sys.argv[1],
+              "iat":int(time.time()),
+              "exp":int(time.time())+300
+          }, separators=(",",":")).encode())
+          signing_input=f"{header}.{payload}".encode()
+          signature=hmac.new(os.environ["JWT_SECRET"].encode(), signing_input, hashlib.sha256).digest()
+          print(f"{header}.{payload}.{b64url(signature)}")
+          PY
+          }
+
+          tester_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000003")"
+          support_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000005")"
+          printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lS8AAAAASUVORK5CYII=' | base64 --decode > "$RUNNER_TEMP/testdz-submission.png"
+
+          upload_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-upload.json" --write-out "%{http_code}" \\
+            --request POST \\
+            --header "apikey: $ANON_KEY" \\
+            --header "Authorization: Bearer $tester_jwt" \\
+            --header "Content-Type: image/png" \\
+            --data-binary @"$RUNNER_TEMP/testdz-submission.png" \\
+            "$API_URL/storage/v1/object/test-evidence/$submission_path")"
+          if [[ "$upload_status" != "200" && "$upload_status" != "201" ]]; then
+            cat "$RUNNER_TEMP/storage-upload.json"
+            echo "Tester upload failed: HTTP $upload_status"
+            exit 1
+          fi
+
+          tester_read_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-tester-read.json" --write-out "%{http_code}" \\
+            --header "apikey: $ANON_KEY" \\
+            --header "Authorization: Bearer $tester_jwt" \\
+            "$API_URL/storage/v1/object/authenticated/test-evidence/$submission_path")"
+          if [[ "$tester_read_status" != "200" ]]; then
+            cat "$RUNNER_TEMP/storage-tester-read.json"
+            echo "Positive control failed: Tester could not download own evidence; HTTP $tester_read_status"
+            exit 1
+          fi
+
+          support_read_status="$(curl --silent --show-error --output "$RUNNER_TEMP/storage-support-read.json" --write-out "%{http_code}" \\
+            --header "apikey: $ANON_KEY" \\
+            --header "Authorization: Bearer $support_jwt" \\
+            "$API_URL/storage/v1/object/authenticated/test-evidence/$submission_path")"
+          case "$support_read_status" in
+            400|403|404)
+              echo "PASS: Storage API denied Support access (HTTP $support_read_status); Tester positive control returned HTTP 200."
+              ;;
+            *)
+              cat "$RUNNER_TEMP/storage-support-read.json"
+              echo "FAIL: Expected Storage API to deny Support with HTTP 400/403/404; received HTTP $support_read_status"
+              exit 1
+              ;;
+          esac
+          echo "::endgroup::"
+
           echo "::endgroup::"
 
       - name: Stop disposable local Supabase stack
