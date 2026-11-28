@@ -12,7 +12,6 @@ VALUES
  ('80000000-0000-4000-8000-000000000004','authenticated','authenticated','v2-feedback-outsider@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Developer"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000005','authenticated','authenticated','v2-feedback-support@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Support Agent"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000006','authenticated','authenticated','v2-feedback-other-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Tester"}'::jsonb,now(),now()),
- ('80000000-0000-4000-8000-000000000007','authenticated','authenticated','v2-medical-http-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Medical HTTP Tester"}'::jsonb,now(),now());
 
 -- The auth-user trigger grants the default tester role to every new account.
 -- Remove that default from synthetic staff/outsider fixtures before assigning their intended roles.
@@ -96,23 +95,10 @@ BEGIN
   3::smallint
  );
 
- -- Separate tester/cohort fixture for real HTTP Storage authorization of
- -- medical evidence. The request targets today, before any check-in exists.
- PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000001',true);
- PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
- v_cohort:=rebuild_v2.create_test_cohort(v_test,'Medical Evidence HTTP Cohort',1,NULL,NULL);
- PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000007',true);
- PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000007","role":"authenticated"}',true);
- v_assignment:=rebuild_v2.join_test(v_test);
- PERFORM set_config('testdz.cohort_id',v_cohort::text,true);
- PERFORM set_config('testdz.assignment_id',v_assignment::text,true);
- PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000001',true);
- PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
- PERFORM rebuild_v2.transition_test_cohort(v_cohort,'ready','Medical evidence HTTP fixture ready');
- PERFORM rebuild_v2.transition_test_cohort(v_cohort,'running','Medical evidence HTTP fixture started');
- PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000007',true);
- PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000007","role":"authenticated"}',true);
- PERFORM rebuild_v2.start_assignment(v_assignment);
+ -- Reuse the existing tester assignment. Its check-in is for today,
+ -- so the earlier target date is valid and no second cohort is needed.
+ PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000003',true);
+ PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
  v_request:=rebuild_v2.create_medical_exception_request(
    v_assignment,
    'Synthetic medical evidence request for isolated Storage HTTP authorization.',
