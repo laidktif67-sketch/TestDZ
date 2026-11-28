@@ -362,8 +362,8 @@ SELECT jsonb_build_object(
  'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%'),
  'reports_after_rollback',(SELECT count(*) FROM rebuild_v2.reports WHERE id='80000000-0000-4000-8000-000000000101'),
  'report_attachments_after_rollback',(SELECT count(*) FROM rebuild_v2.report_attachments WHERE report_id='80000000-0000-4000-8000-000000000101'),
- 'storage_objects_after_rollback',(SELECT count(*) FROM storage.objects WHERE bucket_id='test-evidence' AND name IN (
-   current_setting('testdz.submission_storage_path',true),
-   current_setting('testdz.report_storage_path',true)
- ))
+ 'storage_objects_after_rollback',(SELECT count(*) FROM storage.objects
+   WHERE bucket_id='test-evidence'
+     AND (name LIKE '%/80000000-0000-4000-8000-000000000099.png'
+       OR name LIKE '%/80000000-0000-4000-8000-000000000102.pdf'))
 ) AS rollback_cleanup_check;
