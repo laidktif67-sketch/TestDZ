@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/dependency-fix.yml"
       - ".dependency-fix-trigger"
+      - "package.json"
   workflow_dispatch:
 
 permissions:
@@ -31,8 +32,8 @@ jobs:
           node --version
           npm --version
 
-      - name: Apply compatible security fixes
-        run: npm audit fix
+      - name: Resolve lockfile with explicit patched dependency overrides
+        run: npm install --package-lock-only
 
       - name: Install exact locked dependencies
         run: npm ci
