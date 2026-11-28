@@ -132,6 +132,22 @@ SELECT set_config(
  'v2/'||current_setting('testdz.test_id')||'/80000000-0000-4000-8000-000000000003/80000000-0000-4000-8000-000000000101/80000000-0000-4000-8000-000000000102.pdf',
  true
 );
+INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+VALUES
+ (
+  'test-evidence',
+  current_setting('testdz.submission_storage_path'),
+  '80000000-0000-4000-8000-000000000003',
+  '80000000-0000-4000-8000-000000000003',
+  jsonb_build_object('mimetype','image/png','size',1024)
+ ),
+ (
+  'test-evidence',
+  current_setting('testdz.report_storage_path'),
+  '80000000-0000-4000-8000-000000000003',
+  '80000000-0000-4000-8000-000000000003',
+  jsonb_build_object('mimetype','application/pdf','size',1024)
+ );
 SET LOCAL ROLE authenticated;
 
 -- The tester retains access to their own feedback and assignment.
@@ -168,6 +184,12 @@ BEGIN
  IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.report_storage_path')) THEN
   RAISE EXCEPTION 'FAIL: Support lost access to permitted report evidence';
  END IF;
+ SELECT count(*) INTO v_count FROM storage.objects
+ WHERE bucket_id='test-evidence' AND name=current_setting('testdz.submission_storage_path');
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can download raw submission evidence from Storage'; END IF;
+ SELECT count(*) INTO v_count FROM storage.objects
+ WHERE bucket_id='test-evidence' AND name=current_setting('testdz.report_storage_path');
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Support cannot download permitted report evidence from Storage'; END IF;
 END;
 $support_tester_data_boundary$;
 
@@ -193,6 +215,10 @@ BEGIN
  IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.report_storage_path')) THEN
   RAISE EXCEPTION 'FAIL: Admin lost report evidence access';
  END IF;
+ SELECT count(*) INTO v_count FROM storage.objects
+ WHERE bucket_id='test-evidence'
+   AND name IN (current_setting('testdz.submission_storage_path'),current_setting('testdz.report_storage_path'));
+ IF v_count<>2 THEN RAISE EXCEPTION 'FAIL: Admin lost Storage evidence oversight access'; END IF;
 END;
 $admin_tester_data_access$;
 
