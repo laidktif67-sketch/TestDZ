@@ -3,6 +3,53 @@
 -- Candidate V2 migration only. Never apply to hosted Supabase without approval.
 BEGIN;
 
+-- Do not silently strand pending requests created under the former wider date
+-- range. Require an explicit manual decision before this migration can proceed.
+DO $medical_request_schedule_preflight$
+DECLARE
+  v_invalid_count integer;
+BEGIN
+  WITH assignment_bounds AS (
+    SELECT a.id,
+      (
+        SELECT g.day::date
+        FROM generate_series(
+          rebuild_v2_private.algeria_local_date(a.started_at)::timestamp,
+          rebuild_v2_private.algeria_local_date()::timestamp,
+          interval '1 day'
+        ) g(day)
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM rebuild_v2.medical_exception_requests approved
+          CROSS JOIN LATERAL unnest(approved.requested_dates) AS x(excused_date)
+          WHERE approved.assignment_id=a.id
+            AND approved.status='approved'
+            AND x.excused_date=g.day::date
+        )
+        ORDER BY g.day
+        OFFSET 13 LIMIT 1
+      ) AS fourteenth_required_date
+    FROM rebuild_v2.assignments a
+    WHERE a.started_at IS NOT NULL
+  )
+  SELECT count(*)::integer INTO v_invalid_count
+  FROM rebuild_v2.medical_exception_requests r
+  JOIN assignment_bounds b ON b.id=r.assignment_id
+  WHERE r.status='pending'
+    AND b.fourteenth_required_date IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM unnest(r.requested_dates) d
+      WHERE d > b.fourteenth_required_date
+    );
+
+  IF v_invalid_count>0 THEN
+    RAISE EXCEPTION
+      'MEDICAL_REQUESTS_OUTSIDE_REQUIRED_SCHEDULE_REQUIRE_MANUAL_REVIEW: %',
+      v_invalid_count;
+  END IF;
+END;
+$medical_request_schedule_preflight$;
+
 CREATE OR REPLACE FUNCTION rebuild_v2_private.create_medical_exception_request_impl(
   p_assignment_id uuid,
   p_reason text,
