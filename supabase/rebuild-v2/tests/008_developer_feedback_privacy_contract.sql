@@ -101,6 +101,39 @@ BEGIN
 END;
 $create_workflow$;
 
+-- Build a synthetic report-evidence record as the trusted migration-test owner.
+-- Support must retain access to this evidence while losing submission evidence.
+RESET ROLE;
+INSERT INTO rebuild_v2.reports
+ (id,reporter_id,reported_user_id,assignment_id,report_type,description,status)
+VALUES (
+ '80000000-0000-4000-8000-000000000101',
+ '80000000-0000-4000-8000-000000000003',
+ '80000000-0000-4000-8000-000000000001',
+ current_setting('testdz.assignment_id')::uuid,
+ 'other',
+ 'Synthetic report used to preserve Support access to report evidence.',
+ 'open'
+);
+INSERT INTO rebuild_v2.report_attachments
+ (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+VALUES (
+ '80000000-0000-4000-8000-000000000101',
+ current_setting('testdz.assignment_id')::uuid,
+ current_setting('testdz.test_id')::uuid,
+ '80000000-0000-4000-8000-000000000003',
+ '80000000-0000-4000-8000-000000000102',
+ 'pdf',
+ 'support-report-proof.pdf',
+ 'v2/'||current_setting('testdz.test_id')||'/80000000-0000-4000-8000-000000000003/80000000-0000-4000-8000-000000000101/80000000-0000-4000-8000-000000000102.pdf'
+);
+SELECT set_config(
+ 'testdz.report_storage_path',
+ 'v2/'||current_setting('testdz.test_id')||'/80000000-0000-4000-8000-000000000003/80000000-0000-4000-8000-000000000101/80000000-0000-4000-8000-000000000102.pdf',
+ true
+);
+SET LOCAL ROLE authenticated;
+
 -- The tester retains access to their own feedback and assignment.
 DO $tester_access$
 BEGIN
@@ -132,6 +165,9 @@ BEGIN
  IF rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
   RAISE EXCEPTION 'FAIL: Support can read raw tester submission evidence from Storage';
  END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.report_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Support lost access to permitted report evidence';
+ END IF;
 END;
 $support_tester_data_boundary$;
 
@@ -153,6 +189,9 @@ BEGIN
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost submission attachment oversight access'; END IF;
  IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
   RAISE EXCEPTION 'FAIL: Admin lost submission evidence access';
+ END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.report_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Admin lost report evidence access';
  END IF;
 END;
 $admin_tester_data_access$;
