@@ -106,8 +106,8 @@ export default function App() {
           <Route path="/withdrawal-status" element={<WithdrawalStatusPage />} />
           <Route path="/help" element={<HelpSupportPage />} />
           <Route path="/support" element={<SupportCenterPage />} />
-          <Route path="/support/queue" element={<SupportStaffQueuePage />} />
           <Route element={<RoleGuard requiredRole="support" />}>
+            <Route path="/support/queue" element={<SupportStaffQueuePage />} />
             <Route path="/support/queue/:id" element={<SupportTicketDetailPage />} />
           </Route>
           <Route path="/support/:id" element={<SupportTicketDetailsPage />} />
