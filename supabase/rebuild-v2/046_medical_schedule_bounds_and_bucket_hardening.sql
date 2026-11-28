@@ -3,6 +3,10 @@
 -- Candidate V2 migration only. Never apply to hosted Supabase without approval.
 BEGIN;
 
+-- Serialize the migration preflight with request creation and Admin review.
+LOCK TABLE rebuild_v2.assignments IN SHARE ROW EXCLUSIVE MODE;
+LOCK TABLE rebuild_v2.medical_exception_requests IN SHARE ROW EXCLUSIVE MODE;
+
 -- Do not silently strand pending requests created under the former wider date
 -- range. Require an explicit manual decision before this migration can proceed.
 DO $medical_request_schedule_preflight$
