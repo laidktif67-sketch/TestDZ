@@ -353,7 +353,7 @@ BEGIN
   )
   SELECT cohort_id,test_id,v_partial_tester,'active',
     (v_today-5)::timestamp AT TIME ZONE 'Africa/Algiers',
-    now()+interval '10 days'
+    NULL::timestamptz
   FROM rebuild_v2.assignments WHERE id=v_assignment
   RETURNING id INTO v_partial_assignment;
 
@@ -392,6 +392,10 @@ BEGIN
            AND (metadata->>'remaining_unexcused_missed_days')::integer=1)<>1 THEN
     RAISE EXCEPTION 'FAIL: approval revived an assignment with another unexcused missed date';
   END IF;
+  IF (SELECT due_at FROM rebuild_v2.assignments WHERE id=v_partial_assignment) IS NOT NULL
+     OR (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>1 THEN
+    RAISE EXCEPTION 'FAIL: approval invented a due_at for an assignment whose cohort has no deadline';
+  END IF;
 
   -- The tester can submit a second request after failure. Once every missed
   -- date is explicitly approved, the assignment can be reactivated.
@@ -426,8 +430,9 @@ BEGIN
     RAISE EXCEPTION 'FAIL: Admin could not review a request created after assignment failure';
   END IF;
   IF (SELECT status FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>'active'
-     OR (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>2 THEN
-    RAISE EXCEPTION 'FAIL: final valid late approval did not reactivate the assignment';
+     OR (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>2
+     OR (SELECT due_at FROM rebuild_v2.assignments WHERE id=v_partial_assignment) IS NOT NULL THEN
+    RAISE EXCEPTION 'FAIL: final late approval did not reactivate safely while preserving a NULL due_at';
   END IF;
 
   -- Once 14 required dates have elapsed and been completed, a request for
