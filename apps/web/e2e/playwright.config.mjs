@@ -18,7 +18,7 @@ export default defineConfig({
     env: {
       VITE_SUPABASE_URL: "http://testdz-e2e.localhost:54321",
       VITE_SUPABASE_PUBLISHABLE_KEY: "test-only-publishable-key",
-      VITE_TESTER_WORKFLOW_V2_ENABLED: "false",
+      VITE_TESTER_WORKFLOW_V2_ENABLED: "true",
     },
   },
 });
