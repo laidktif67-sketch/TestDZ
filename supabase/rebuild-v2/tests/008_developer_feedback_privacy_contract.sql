@@ -356,8 +356,14 @@ RESET ROLE;
 ROLLBACK;
 
 SELECT jsonb_build_object(
- 'auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id BETWEEN '80000000-0000-4000-8000-000000000001'::uuid AND '80000000-0000-4000-8000-000000000005'::uuid),
+ 'auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id BETWEEN '80000000-0000-4000-8000-000000000001'::uuid AND '80000000-0000-4000-8000-000000000006'::uuid),
  'feedback_after_rollback',(SELECT count(*) FROM rebuild_v2.feedback WHERE body LIKE 'The app navigation is confusing%'),
  'developer_reviews_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_reviews WHERE resolution_note='Not my test'),
- 'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%')
+ 'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%'),
+ 'reports_after_rollback',(SELECT count(*) FROM rebuild_v2.reports WHERE id='80000000-0000-4000-8000-000000000101'),
+ 'report_attachments_after_rollback',(SELECT count(*) FROM rebuild_v2.report_attachments WHERE report_id='80000000-0000-4000-8000-000000000101'),
+ 'storage_objects_after_rollback',(SELECT count(*) FROM storage.objects WHERE bucket_id='test-evidence' AND name IN (
+   current_setting('testdz.submission_storage_path',true),
+   current_setting('testdz.report_storage_path',true)
+ ))
 ) AS rollback_cleanup_check;
