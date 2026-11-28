@@ -184,11 +184,31 @@ $tester_access$;
 -- Support handles support tickets, not raw tester assignments, check-in notes or feedback.
 SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000005',true);
 SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000005","role":"authenticated"}',true);
+
+-- Behavioral regression test: Support must not see a different tester's
+-- submission evidence through Storage, regardless of which policies grant
+-- access. This deliberately asserts rows returned, not policy names.
+DO $support_submission_storage_read_denied$
+DECLARE
+ v_visible_objects integer;
+BEGIN
+ SELECT count(*) INTO v_visible_objects
+ FROM storage.objects
+ WHERE bucket_id='test-evidence'
+   AND name=current_setting('testdz.submission_storage_path');
+
+ IF v_visible_objects<>0 THEN
+   RAISE EXCEPTION
+     'FAIL: Support can read another tester submission evidence through storage.objects; visible rows=%',
+     v_visible_objects;
+ END IF;
+END;
+$support_submission_storage_read_denied$;
+
 DO $support_tester_data_boundary$
 DECLARE
  v_count integer;
  v_policy record;
- v_report_policy_count integer;
 BEGIN
  SELECT count(*) INTO v_count FROM rebuild_v2.assignments WHERE id=current_setting('testdz.assignment_id')::uuid;
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read a raw tester assignment'; END IF;
@@ -228,19 +248,6 @@ BEGIN
        v_policy.qual, v_policy.with_check;
    END LOOP;
 
-   SELECT count(*) INTO v_report_policy_count
-   FROM pg_catalog.pg_policies
-   WHERE schemaname='storage' AND tablename='objects'
-     AND policyname='report_evidence_select_v2'
-     AND cmd='SELECT'
-     AND permissive='PERMISSIVE'
-     AND roles @> ARRAY['authenticated']::name[]
-     AND qual ILIKE '%test-evidence%';
-   IF v_report_policy_count<>1 THEN
-     RAISE EXCEPTION 'FAIL: expected exactly one authenticated PERMISSIVE test-evidence SELECT policy named report_evidence_select_v2; found %',
-       v_report_policy_count;
-   END IF;
-
    FOR v_policy IN
      SELECT policyname, cmd, roles, qual, with_check, permissive
      FROM pg_catalog.pg_policies
@@ -251,11 +258,6 @@ BEGIN
    LOOP
      IF v_policy.qual IS NULL OR v_policy.qual !~* 'bucket_id' THEN
        RAISE EXCEPTION 'FAIL: potentially unscoped PERMISSIVE Storage read policy % applies to authenticated/public; USING=%',
-         v_policy.policyname, v_policy.qual;
-     END IF;
-     IF v_policy.qual ILIKE '%test-evidence%'
-        AND v_policy.policyname<>'report_evidence_select_v2' THEN
-       RAISE EXCEPTION 'FAIL: unexpected PERMISSIVE Storage read policy % also references test-evidence; USING=%',
          v_policy.policyname, v_policy.qual;
      END IF;
  END LOOP;
