@@ -110,6 +110,22 @@ BEGIN
   JOIN rebuild_v2.tests t ON t.id=a.test_id
   WHERE t.title='Medical Review Contract Test';
 
+  -- Simulate pre-existing unsafe bucket settings and verify the migration's
+  -- conflict handler restores the private medical-evidence configuration.
+  UPDATE storage.buckets
+  SET public=true,file_size_limit=10485760,
+      allowed_mime_types=ARRAY['text/html','application/pdf']::text[]
+  WHERE id='medical-exception-evidence';
+  INSERT INTO storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+  VALUES (
+    'medical-exception-evidence','medical-exception-evidence',false,5242880,
+    ARRAY['image/jpeg','image/png','image/webp','application/pdf']
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    name=EXCLUDED.name,
+    public=false,
+    file_size_limit=EXCLUDED.file_size_limit,
+    allowed_mime_types=EXCLUDED.allowed_mime_types;
   IF NOT EXISTS (
     SELECT 1 FROM storage.buckets
     WHERE id='medical-exception-evidence'
@@ -117,7 +133,7 @@ BEGIN
       AND file_size_limit=5242880
       AND allowed_mime_types=ARRAY['image/jpeg','image/png','image/webp','application/pdf']::text[]
   ) THEN
-    RAISE EXCEPTION 'FAIL: medical evidence bucket is not private with the required size and MIME limits';
+    RAISE EXCEPTION 'FAIL: unsafe existing medical evidence bucket settings were not corrected';
   END IF;
 
   SELECT f.id INTO v_feedback
