@@ -25,6 +25,8 @@ function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [busy, setBusy] = useState(false);
+  // Synchronous guard prevents rapid/double form submits before React updates `busy`.
+  const submitInFlight = useRef(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const passwordRules = [
@@ -137,6 +139,8 @@ function AuthPage() {
       navigate(`/signup-success?email=${encodeURIComponent(email.trim())}`, { replace: true });
       return;
     }
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
     setBusy(true);
     try {
       if (mode === "signup") {
@@ -157,6 +161,7 @@ function AuthPage() {
     } catch (err) {
       setError(err instanceof Error ? translateAuthError(err.message) : "حدث خطأ غير متوقع. حاول مرة أخرى.");
     } finally {
+      submitInFlight.current = false;
       setBusy(false);
     }
   }
