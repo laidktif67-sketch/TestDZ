@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { gsap } from "gsap";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Brand } from "../shared/components/Brand";
