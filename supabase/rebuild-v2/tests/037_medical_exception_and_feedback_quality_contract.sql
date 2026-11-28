@@ -110,6 +110,16 @@ BEGIN
   JOIN rebuild_v2.tests t ON t.id=a.test_id
   WHERE t.title='Medical Review Contract Test';
 
+  IF NOT EXISTS (
+    SELECT 1 FROM storage.buckets
+    WHERE id='medical-exception-evidence'
+      AND public=false
+      AND file_size_limit=5242880
+      AND allowed_mime_types=ARRAY['image/jpeg','image/png','image/webp','application/pdf']::text[]
+  ) THEN
+    RAISE EXCEPTION 'FAIL: medical evidence bucket is not private with the required size and MIME limits';
+  END IF;
+
   SELECT f.id INTO v_feedback
   FROM rebuild_v2.feedback f WHERE f.assignment_id=v_assignment;
 
@@ -366,6 +376,34 @@ BEGIN
      OR (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_partial_assignment)<>2 THEN
     RAISE EXCEPTION 'FAIL: final valid late approval did not reactivate the assignment';
   END IF;
+
+  -- Once 14 required dates have elapsed and been completed, a request for
+  -- day 15 is outside the schedule and must not create an orphan review item.
+  DELETE FROM rebuild_v2.checkins WHERE assignment_id=v_partial_assignment;
+  UPDATE rebuild_v2.assignments
+  SET started_at=(v_today-20)::timestamp AT TIME ZONE 'Africa/Algiers',
+      due_at=now()+interval '30 days'
+  WHERE id=v_partial_assignment;
+  INSERT INTO rebuild_v2.checkins(assignment_id,tester_id,checkin_date,note)
+  SELECT v_partial_assignment,v_partial_tester,g.day::date,'Completed required schedule fixture'
+  FROM generate_series(v_today-20,v_today-7,interval '1 day') g(day);
+
+  PERFORM set_config('request.jwt.claim.sub',v_partial_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_partial_tester,'role','authenticated')::text,true);
+  BEGIN
+    PERFORM rebuild_v2.create_medical_exception_request(
+      v_partial_assignment,
+      'A detailed reason attempting to request an out-of-schedule medical date.',
+      ARRAY[v_today-6]::date[]
+    );
+    RAISE EXCEPTION 'FAIL: a medical request beyond the 14th required date was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    GET STACKED DIAGNOSTICS v_error = MESSAGE_TEXT;
+    IF v_error<>'MEDICAL_EXCEPTION_DATE_OUTSIDE_REQUIRED_SCHEDULE' THEN
+      RAISE;
+    END IF;
+  END;
 
   -- Feedback quality is an Admin-only gate, separate from developer triage.
   PERFORM set_config('request.jwt.claim.sub',v_support::text,true);
