@@ -316,9 +316,6 @@ jobs:
                 exit 1
                 ;;
             esac
-            if [[ -n "$jwt" ]]; then
-              auth_args+=(--header "Authorization: Bearer $jwt")
-            fi
             local sign_status
             sign_status="$(curl --silent --show-error --output "$RUNNER_TEMP/signed-denied-$role.json" --write-out "%{http_code}" \
               --request POST \
