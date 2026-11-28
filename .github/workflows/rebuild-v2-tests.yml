@@ -353,11 +353,7 @@ jobs:
 
           medical_tester_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000007")"
           medical_file="$RUNNER_TEMP/testdz-medical-evidence.pdf"
-          printf '%s' '%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj
-trailer<</Root 1 0 R>>
-%%EOF' > "$medical_file"
+          printf '%b' '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF' > "$medical_file"
 
           medical_upload_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-upload.json" --write-out "%{http_code}" \
             --request POST --header "apikey: $ANON_KEY" --header "Authorization: Bearer $medical_tester_jwt" \
