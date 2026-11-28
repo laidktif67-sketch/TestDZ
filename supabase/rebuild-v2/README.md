@@ -121,3 +121,21 @@ The approved direction is to preserve the existing candidate schema and data, ar
 - Do not run `supabase db pull` against FixLab as a shortcut; CLI v3 defaults and hosted migration-history behavior must be considered before any hosted command.
 - Do not change `supabase/config.toml` project targeting or run a hosted CLI command until the target project ref is explicitly verified.
 - No Production cutover is authorized by this document.
+
+## Assignment review lifecycle addendum (036–047)
+
+The current candidate extends the original 035-script sequence with the assignment submission review lifecycle, medical exception and feedback-quality review, 14-day completion gates, rejected-feedback revision, and server-only review-deadline processing.
+
+- `036_assignment_review_lifecycle.sql`: submission attempts, developer review decisions, immutable review history, and fail-closed completion.
+- `037_medical_exception_and_feedback_quality.sql`: private medical evidence, Admin-only medical/feedback-quality decisions, audit events, and notifications.
+- `038_enforce_14_day_assignment_completion.sql`: 14 consecutive-day completion prerequisites and finalization guards.
+- `039_feedback_quality_revision.sql`: tester revision of rejected feedback without replacing its identity.
+- `040_assignment_review_deadline_processor.sql`: 48-hour reminder enqueue and guarded 72-hour auto-approval processor.
+- `041_wait_for_delivered_review_reminder.sql`: starts the 24-hour auto-approval wait only after the reminder outbox event is marked delivered and an in-app notification is created.
+- `042_retry_failed_review_reminder_delivery.sql`: adds a bounded three-retry recovery counter for terminal reminder delivery failures. Each retry creates a new outbox event while retaining the failed event for audit; auto-approval remains blocked until a reminder is actually delivered.
+- `043_block_auto_approval_on_open_assignment_disputes.sql`: prevents system auto-approval while an assignment-linked report is open/under review or its linked dispute is opened/under review/escalated. Human developer review remains a separate explicit decision path.
+- `044_fair_deadline_processor_batches.sql`: rotates blocked deadline-worker candidates so one undelivered or disputed report cannot starve later eligible reports.\n- `045_strict_medical_exception_recovery.sql`: pending requests never pause the schedule; Admin can adjudicate after failure, and late approval reactivates only if no other elapsed required day is missing.
+- `046_medical_schedule_bounds_and_bucket_hardening.sql`: rejects medical dates beyond the current 14-required-day window (after accounting for already-approved dates), fails closed if legacy pending requests fall outside that boundary, and enforces the evidence bucket's private flag, 5 MiB size limit, and MIME allowlist even when the bucket already exists.
+- `047_preserve_optional_assignment_deadlines.sql`: approval extends a defined assignment `due_at`; when the cohort has no deadline, `due_at` remains NULL while approved dates still extend the 14-required-day sequence.
+
+The current CI workflow replays **47** numbered candidate SQL scripts in a disposable local Supabase stack. The deadline contract verifies that enqueueing alone does not start the wait, dispatch delivery does, an insufficient 24-hour interval blocks approval, missing completion prerequisites continue to block approval, and an unresolved assignment-linked report/dispute blocks automatic approval. The same contract now forces a terminal outbox failure and verifies that a replacement event is queued, the retry counter increments, and the original failure remains recorded. The medical-exception contract verifies strict pending semantics and safe recovery after interruption. GitHub Actions run [#508](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46077744257) passed all three jobs on candidate commit `525bf26e473df2affeef1cf7a611fd91162ffc0c`, including the 45-migration disposable-Supabase replay, medical recovery/evidence-access contract, frontend typecheck, Edge Function checks, and PostgREST exposure boundary. The older 35-script and 40-script counts elsewhere in this historical README describe earlier snapshots and are superseded by this addendum and the current workflow.
