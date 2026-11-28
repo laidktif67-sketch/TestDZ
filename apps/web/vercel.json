@@ -5,7 +5,8 @@
   ],
   "git": {
     "deploymentEnabled": {
-      "rebuild/testdz-v2": false
+      "rebuild/testdz-v2": false,
+      "infra/vercel-v2-preview-fix-v1": true
     }
   },
   "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"rebuild/testdz-v2\" ]; then exit 0; else exit 1; fi"
