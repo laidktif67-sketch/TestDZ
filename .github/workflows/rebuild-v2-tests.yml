@@ -1,0 +1,208 @@
+name: Rebuild V2 isolated database tests
+
+on:
+  push:
+    branches:
+      - rebuild/testdz-v2
+      - work/assignment-review-lifecycle
+      - reorg/assignment-lifecycle-clean-v1
+    paths:
+      - "supabase/rebuild-v2/**"
+      - "supabase/functions/**"
+      - "supabase/seed.sql"
+      - "supabase/config.toml"
+      - ".github/workflows/rebuild-v2-tests.yml"
+  pull_request:
+    paths:
+      - "supabase/rebuild-v2/**"
+      - "supabase/functions/**"
+      - "supabase/seed.sql"
+      - "supabase/config.toml"
+      - ".github/workflows/rebuild-v2-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rebuild-v2-local-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rebuild-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Start disposable local Supabase stack
+        run: supabase start -x studio,edge-runtime,imgproxy,logflare,vector,mailpit
+
+      - name: Apply candidate SQL, run contracts, then verify local PostgREST
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          supabase status --output env > "$RUNNER_TEMP/supabase.env"
+          set -a
+          source "$RUNNER_TEMP/supabase.env"
+          set +a
+          test -n "${DB_URL:-}" || { echo "DB_URL was not exported by Supabase CLI"; exit 1; }
+
+          scripts=(supabase/rebuild-v2/[0-9][0-9][0-9]_*.sql)
+          if [ "${#scripts[@]}" -ne 50 ]; then
+            echo "Expected exactly 50 candidate SQL scripts; found ${#scripts[@]}"
+            exit 1
+          fi
+
+          for script in "${scripts[@]}"; do
+            echo "::group::Apply $script"
+            psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$script"
+            if [[ "$script" == "supabase/rebuild-v2/006_storage_policies.sql" ]]; then
+              echo "::group::Phase-one security contract"
+              psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/rebuild-v2/tests/security_contract.sql
+              echo "::endgroup::"
+            fi
+            echo "::endgroup::"
+          done
+
+          contracts=(
+            supabase/rebuild-v2/tests/final_state_contract.sql
+            supabase/rebuild-v2/tests/010_security_definer_boundary_contract.sql
+            supabase/rebuild-v2/tests/003_app_lifecycle_contract.sql
+            supabase/rebuild-v2/tests/004_profile_contract.sql
+            supabase/rebuild-v2/tests/005_developer_lifecycle_contract.sql
+            supabase/rebuild-v2/tests/006_test_media_assets_contract.sql
+            supabase/rebuild-v2/tests/030_apk_build_storage_contract.sql
+            supabase/rebuild-v2/tests/030_cohort_assignment_delete_safety_contract.sql
+            supabase/rebuild-v2/tests/031_developer_test_edit_contract.sql
+            supabase/rebuild-v2/tests/007_tester_workflow_contract.sql
+            supabase/rebuild-v2/tests/036_assignment_review_lifecycle_contract.sql
+            supabase/rebuild-v2/tests/037_medical_exception_and_feedback_quality_contract.sql
+            supabase/rebuild-v2/tests/038_14_day_assignment_completion_contract.sql
+            supabase/rebuild-v2/tests/039_feedback_quality_revision_contract.sql
+            supabase/rebuild-v2/tests/040_assignment_review_deadline_processor_contract.sql
+            supabase/rebuild-v2/tests/008_developer_feedback_privacy_contract.sql
+            supabase/rebuild-v2/tests/009_wallet_idempotency_contract.sql
+            supabase/rebuild-v2/tests/011_notification_recipient_roles_contract.sql
+            supabase/rebuild-v2/tests/015_admin_role_request_management_contract.sql
+            supabase/rebuild-v2/tests/016_admin_role_grant_contract.sql
+            supabase/rebuild-v2/tests/020_support_ticket_audited_workflow_contract.sql
+            supabase/rebuild-v2/tests/024_report_evidence_metadata_contract.sql
+            supabase/rebuild-v2/tests/022_reports_disputes_fail_closed_contract.sql
+            supabase/rebuild-v2/tests/025_six_step_test_config_contract.sql
+            supabase/rebuild-v2/tests/029_support_attachment_privacy_contract.sql
+            supabase/rebuild-v2/tests/026_developer_test_monitoring_privacy_contract.sql
+            supabase/rebuild-v2/tests/027_role_explicit_support_ticket_creation_contract.sql
+            supabase/rebuild-v2/tests/028_developer_test_invitations_contract.sql
+          )
+
+          for contract in "${contracts[@]}"; do
+            echo "::group::Run $contract"
+            psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$contract"
+            echo "::endgroup::"
+          done
+
+          echo "::group::Verify local PostgREST schema exposure"
+          test -n "${API_URL:-}" || { echo "API_URL was not exported by Supabase CLI"; exit 1; }
+          test -n "${ANON_KEY:-}" || { echo "ANON_KEY was not exported by Supabase CLI"; exit 1; }
+          test -n "${JWT_SECRET:-}" || { echo "JWT_SECRET was not exported by Supabase CLI"; exit 1; }
+          psql "$DB_URL" -X -v ON_ERROR_STOP=1 -c "NOTIFY pgrst, 'reload schema';"
+          sleep 1
+
+          test_jwt="$(python3 - <<'PY'
+          import base64, hashlib, hmac, json, os, time
+
+          def b64url(value):
+              return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+          header = b64url(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
+          payload = b64url(json.dumps({
+              "aud": "authenticated",
+              "role": "authenticated",
+              "sub": "00000000-0000-4000-8000-000000000001",
+              "iat": int(time.time()),
+              "exp": int(time.time()) + 300,
+          }, separators=(",", ":")).encode())
+          signing_input = f"{header}.{payload}".encode()
+          signature = hmac.new(os.environ["JWT_SECRET"].encode(), signing_input, hashlib.sha256).digest()
+          print(f"{header}.{payload}.{b64url(signature)}")
+          PY
+          )"
+
+          v2_status="$(curl --silent --show-error --output "$RUNNER_TEMP/rebuild-v2-response.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Authorization: Bearer $test_jwt" \
+            --header "Accept-Profile: rebuild_v2" \
+            "$API_URL/rest/v1/profiles?select=id&limit=0")"
+          if [[ "$v2_status" != "200" ]]; then
+            cat "$RUNNER_TEMP/rebuild-v2-response.json"
+            echo "Expected authenticated PostgREST access to rebuild_v2.profiles; received HTTP $v2_status"
+            exit 1
+          fi
+
+          private_status="$(curl --silent --show-error --output "$RUNNER_TEMP/rebuild-v2-private-openapi.json" --write-out "%{http_code}" \
+            --header "apikey: $ANON_KEY" \
+            --header "Authorization: Bearer $test_jwt" \
+            --header "Accept-Profile: rebuild_v2_private" \
+            --header "Accept: application/openapi+json" \
+            "$API_URL/rest/v1/")"
+          if [[ "$private_status" != "406" ]]; then
+            cat "$RUNNER_TEMP/rebuild-v2-private-openapi.json"
+            echo "Expected rebuild_v2_private to remain unexposed; received HTTP $private_status"
+            exit 1
+          fi
+          echo "PASS: rebuild_v2 is exposed and rebuild_v2_private remains unexposed."
+          echo "::endgroup::"
+
+      - name: Stop disposable local Supabase stack
+        if: always()
+        run: supabase stop --no-backup
+
+  notification-edge-function:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@e95548e56dfa95d4e1a28d6f422fafe75c4c26fb
+        with:
+          deno-version: 2.9.8
+
+      - name: Type-check all Edge Functions
+        run: deno check --no-lock --node-modules-dir=auto supabase/functions/dispatch-notifications/index.ts supabase/functions/developer-invitations/index.ts supabase/functions/assignment-review-deadlines/index.ts
+
+      - name: Test assignment review deadline request validation
+        run: deno test --no-lock --node-modules-dir=auto supabase/functions/assignment-review-deadlines/request-validation.test.ts
+
+  frontend-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      - name: Type-check frontend workspace
+        run: npm run typecheck
