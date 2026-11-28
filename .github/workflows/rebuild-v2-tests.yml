@@ -346,12 +346,12 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::Medical exception evidence Storage HTTP authorization contract"
-          medical_request_id="$(psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT id FROM rebuild_v2.medical_exception_requests WHERE tester_id='80000000-0000-4000-8000-000000000007' ORDER BY created_at DESC LIMIT 1;")"
+          medical_request_id="$(psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT id FROM rebuild_v2.medical_exception_requests WHERE tester_id='80000000-0000-4000-8000-000000000003' ORDER BY created_at DESC LIMIT 1;")"
           medical_assignment_id="$(psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT assignment_id FROM rebuild_v2.medical_exception_requests WHERE id='$medical_request_id';")"
-          medical_path="$medical_assignment_id/80000000-0000-4000-8000-000000000007/$medical_request_id/80000000-0000-4000-8000-000000000099.pdf"
+          medical_path="$medical_assignment_id/80000000-0000-4000-8000-000000000003/$medical_request_id/80000000-0000-4000-8000-000000000099.pdf"
           test -n "$medical_request_id" && test -n "$medical_assignment_id" || { echo "Medical HTTP fixture did not create a request and assignment"; exit 1; }
 
-          medical_tester_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000007")"
+          medical_tester_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000003")"
           medical_file="$RUNNER_TEMP/testdz-medical-evidence.pdf"
           printf '%b' '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF' > "$medical_file"
 
