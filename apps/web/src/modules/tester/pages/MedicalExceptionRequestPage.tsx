@@ -131,7 +131,9 @@ export default function MedicalExceptionRequestPage() {
     } catch (submitError) {
       setError(submitError instanceof Error && submitError.message === "MEDICAL_EXCEPTION_DUPLICATE_DATES"
         ? "A date in this request has already been requested or excused."
-        : "The request could not be submitted. Check the dates and assignment status, then try again.");
+        : submitError instanceof Error && submitError.message === "MEDICAL_EXCEPTION_DATE_OUTSIDE_REQUIRED_SCHEDULE"
+          ? "Choose dates within the current 14-required-day schedule. Previously approved medical dates extend that schedule; pending requests do not."
+          : "The request could not be submitted. Check the dates and assignment status, then try again.");
     } finally {
       setBusy(false);
     }
@@ -172,7 +174,7 @@ export default function MedicalExceptionRequestPage() {
     {loading ? <section className="mer-card">Loading assignment and request history…</section> : <>
       {!["active", "failed"].includes(assignmentStatus) && <section className="mer-card mer-warning"><strong>Medical requests are unavailable for this assignment state.</strong><p>Current assignment status: {assignmentStatus || "Unavailable"}</p></section>}{assignmentStatus === "failed" && <section className="mer-card mer-warning"><strong>Your assignment was interrupted, but you can still submit or complete a pending medical request.</strong><p>Admin can review it after failure. Approval restores the assignment only if no other required day remains unexcused.</p></section>}
       <form className="mer-card mer-form" onSubmit={event => void submit(event)}>
-        <div className="mer-card-heading"><div><h2>Request details</h2><p>Choose the dates that need to be excused.</p></div><span>1–14 dates</span></div>
+        <div className="mer-card-heading"><div><h2>Request details</h2><p>Choose missed dates within the current 14-required-day schedule. Previously approved exceptions extend that schedule.</p></div><span>1–14 dates</span></div>
         <div className="mer-date-list">
           {dates.map((date, index) => <label key={index}>Date {index + 1}
             <div className="mer-date-row">
