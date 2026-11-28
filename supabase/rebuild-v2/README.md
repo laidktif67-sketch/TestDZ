@@ -54,12 +54,12 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 35 selected scripts in numeric order: `001_schema.sql` through `035_sync_six_step_config_on_test_edit.sql`. This is still a candidate-only sequence, separate from `supabase/migrations`.
+Apply all 50 selected scripts in numeric order: `001_schema.sql` through `050_support_submission_evidence_privacy_boundary.sql`. This is still a candidate-only sequence, separate from `supabase/migrations`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 35 selected scripts, run:
+After all 50 selected scripts, run:
 - `tests/final_state_contract.sql` — checks the final 48-table / seven-bucket candidate, including the forced-RLS invitation table and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
@@ -86,7 +86,7 @@ After all 35 selected scripts, run:
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 35 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the 23 post-phase contracts, including the final-state contract. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 50 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the post-phase contracts, including the final-state contract. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
@@ -137,5 +137,8 @@ The current candidate extends the original 035-script sequence with the assignme
 - `044_fair_deadline_processor_batches.sql`: rotates blocked deadline-worker candidates so one undelivered or disputed report cannot starve later eligible reports.\n- `045_strict_medical_exception_recovery.sql`: pending requests never pause the schedule; Admin can adjudicate after failure, and late approval reactivates only if no other elapsed required day is missing.
 - `046_medical_schedule_bounds_and_bucket_hardening.sql`: rejects medical dates beyond the current 14-required-day window (after accounting for already-approved dates), fails closed if legacy pending requests fall outside that boundary, and enforces the evidence bucket's private flag, 5 MiB size limit, and MIME allowlist even when the bucket already exists.
 - `047_preserve_optional_assignment_deadlines.sql`: approval extends a defined assignment `due_at`; when the cohort has no deadline, `due_at` remains NULL while approved dates still extend the 14-required-day sequence.
+- `048_support_play_opt_in_privacy_boundary.sql`: restricts raw Play opt-in event reads to the tester, owning developer, and Admin; Support is excluded from raw activity.
+- `049_preserve_current_day_after_medical_rejection.sql`: keeps an assignment active for same-day check-in after a medical exception is rejected on that same local day.
+- `050_support_submission_evidence_privacy_boundary.sql`: removes Support access to raw assignment submissions and their Storage evidence while preserving Support access to permitted report evidence.
 
-The current CI workflow replays **47** numbered candidate SQL scripts in a disposable local Supabase stack. The deadline contract verifies that enqueueing alone does not start the wait, dispatch delivery does, an insufficient 24-hour interval blocks approval, missing completion prerequisites continue to block approval, and an unresolved assignment-linked report/dispute blocks automatic approval. The same contract now forces a terminal outbox failure and verifies that a replacement event is queued, the retry counter increments, and the original failure remains recorded. The medical-exception contract verifies strict pending semantics and safe recovery after interruption. GitHub Actions run [#508](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46077744257) passed all three jobs on candidate commit `525bf26e473df2affeef1cf7a611fd91162ffc0c`, including the 45-migration disposable-Supabase replay, medical recovery/evidence-access contract, frontend typecheck, Edge Function checks, and PostgREST exposure boundary. The older 35-script and 40-script counts elsewhere in this historical README describe earlier snapshots and are superseded by this addendum and the current workflow.
+The current CI workflow replays **50** numbered candidate SQL scripts in a disposable local Supabase stack. The deadline contract verifies that enqueueing alone does not start the wait, dispatch delivery does, an insufficient 24-hour interval blocks approval, missing completion prerequisites continue to block approval, and an unresolved assignment-linked report/dispute blocks automatic approval. The same contract now forces a terminal outbox failure and verifies that a replacement event is queued, the retry counter increments, and the original failure remains recorded. The medical-exception contract verifies strict pending semantics and safe recovery after interruption. GitHub Actions run [#508](https://github.com/laidktif67-sketch/TestDZ/actions/runs/46077744257) passed all three jobs on candidate commit `525bf26e473df2affeef1cf7a611fd91162ffc0c`, including the 45-migration disposable-Supabase replay, medical recovery/evidence-access contract, frontend typecheck, Edge Function checks, and PostgREST exposure boundary. The older 35-script and 40-script counts elsewhere in this historical README describe earlier snapshots and are superseded by this addendum and the current workflow.
