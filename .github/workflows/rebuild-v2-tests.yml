@@ -233,6 +233,95 @@ jobs:
           esac
           echo "::endgroup::"
 
+          echo "::group::Storage signed URL authorization contract"
+          # Signed URLs are bearer capabilities: authorized roles may mint one,
+          # while unauthorized roles must not. The resulting URL must download
+          # the object without a session token.
+          developer_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000001")"
+          admin_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000002")"
+          other_developer_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000004")"
+          other_tester_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000006")"
+
+          assert_signed_url_allowed() {
+            local role="$1"
+            local jwt="$2"
+            local sign_status
+            sign_status="$(curl --silent --show-error --output "$RUNNER_TEMP/signed-$role.json" --write-out "%{http_code}" \
+              --request POST \
+              --header "apikey: $ANON_KEY" \
+              --header "Authorization: Bearer $jwt" \
+              --header "Content-Type: application/json" \
+              --data '{"expiresIn":60}' \
+              "$API_URL/storage/v1/object/sign/test-evidence/$submission_path")"
+            if [[ "$sign_status" != "200" ]]; then
+              cat "$RUNNER_TEMP/signed-$role.json"
+              echo "FAIL: $role could not create a signed URL for permitted evidence; HTTP $sign_status"
+              exit 1
+            fi
+
+            local signed_path signed_url download_status
+            signed_path="$(python3 - "$RUNNER_TEMP/signed-$role.json" <<'PY'
+          import json,sys
+          with open(sys.argv[1], encoding="utf-8") as f:
+              data=json.load(f)
+          value=data.get("signedURL") or data.get("signedUrl")
+          if not value:
+              raise SystemExit("Storage response did not contain signedURL")
+          print(value)
+          PY
+            )"
+            case "$signed_path" in
+              http://*|https://*) signed_url="$signed_path" ;;
+              /storage/v1/*) signed_url="$API_URL$signed_path" ;;
+              /*) signed_url="$API_URL/storage/v1$signed_path" ;;
+              *) signed_url="$API_URL/storage/v1/$signed_path" ;;
+            esac
+
+            download_status="$(curl --silent --show-error --output "$RUNNER_TEMP/signed-$role-download.bin" --write-out "%{http_code}" "$signed_url")"
+            if [[ "$download_status" != "200" ]]; then
+              echo "FAIL: $role signed URL did not download the object; HTTP $download_status"
+              exit 1
+            fi
+            cmp "$RUNNER_TEMP/testdz-submission.png" "$RUNNER_TEMP/signed-$role-download.bin"
+            echo "PASS: $role created a signed URL and downloaded the exact object."
+          }
+
+          assert_signed_url_denied() {
+            local role="$1"
+            local jwt="$2"
+            local auth_args=()
+            if [[ -n "$jwt" ]]; then
+              auth_args+=(--header "Authorization: Bearer $jwt")
+            fi
+            local sign_status
+            sign_status="$(curl --silent --show-error --output "$RUNNER_TEMP/signed-denied-$role.json" --write-out "%{http_code}" \
+              --request POST \
+              --header "apikey: $ANON_KEY" \
+              "${auth_args[@]}" \
+              --header "Content-Type: application/json" \
+              --data '{"expiresIn":60}' \
+              "$API_URL/storage/v1/object/sign/test-evidence/$submission_path")"
+            case "$sign_status" in
+              400|401|403|404)
+                echo "PASS: signed URL creation denied for $role (HTTP $sign_status)."
+                ;;
+              *)
+                cat "$RUNNER_TEMP/signed-denied-$role.json"
+                echo "FAIL: expected signed URL creation to be denied for $role; received HTTP $sign_status"
+                exit 1
+                ;;
+            esac
+          }
+
+          assert_signed_url_allowed "tester" "$tester_jwt"
+          assert_signed_url_allowed "owning-developer" "$developer_jwt"
+          assert_signed_url_allowed "admin" "$admin_jwt"
+          assert_signed_url_denied "support" "$support_jwt"
+          assert_signed_url_denied "unrelated-developer" "$other_developer_jwt"
+          assert_signed_url_denied "other-tester" "$other_tester_jwt"
+          assert_signed_url_denied "anonymous" ""
+          echo "::endgroup::"
+
           echo "::endgroup::"
 
       - name: Stop disposable local Supabase stack
