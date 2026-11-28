@@ -1,6 +1,11 @@
 name: Dependency Fix (isolated)
 
 on:
+  push:
+    branches:
+      - security/dependency-fix-v1
+    paths:
+      - ".github/workflows/dependency-fix.yml"
   workflow_dispatch:
 
 permissions:
@@ -41,8 +46,6 @@ jobs:
           npm run build
 
       - name: Commit lockfile-only update
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           if git diff --quiet -- package-lock.json; then
             echo "No package-lock changes were needed."
