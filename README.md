@@ -5,7 +5,7 @@ TestDZ is an Algeria-first platform that helps Android developers organize close
 ## Project status
 
 - Phase: active implementation and architecture refactoring; not launch-ready.
-- Repository: private.
+- Repository: public.
 - Web client: React + TypeScript + Vite in `apps/web/`, with React Router and PWA configuration.
 - Mobile client: React Native + Expo is planned under `apps/mobile/`; it has not been created yet.
 - Backend: dedicated Supabase project.
