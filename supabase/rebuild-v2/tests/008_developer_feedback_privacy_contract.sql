@@ -42,6 +42,8 @@ DECLARE
  v_test uuid;
  v_cohort uuid;
  v_assignment uuid;
+ v_submission uuid;
+ v_storage_path text;
  v_feedback uuid;
 BEGIN
  v_app:=rebuild_v2.create_app(
@@ -84,16 +86,85 @@ BEGIN
  PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
  PERFORM rebuild_v2.start_assignment(v_assignment);
  PERFORM rebuild_v2.submit_checkin(v_assignment,'Synthetic private check-in note for Support boundary verification.');
+ v_submission:=rebuild_v2.create_assignment_submission(v_assignment,'Synthetic submission summary used to verify tester evidence privacy boundaries.','Synthetic comments.');
+ v_storage_path:=rebuild_v2.register_assignment_submission_attachment(v_submission,'80000000-0000-4000-8000-000000000099'::uuid,'png','privacy-evidence.png','image/png',1024);
  v_feedback:=rebuild_v2.submit_tester_feedback(
   v_assignment,'usability',
   'The app navigation is confusing and the settings control is difficult to locate during the test.',
   3::smallint
  );
  PERFORM set_config('testdz.feedback_id',v_feedback::text,true);
+ PERFORM set_config('testdz.submission_id',v_submission::text,true);
+ PERFORM set_config('testdz.submission_storage_path',v_storage_path,true);
  PERFORM set_config('testdz.assignment_id',v_assignment::text,true);
  PERFORM set_config('testdz.test_id',v_test::text,true);
 END;
 $create_workflow$;
+
+-- Insert a synthetic Play opt-in event as the migration-test owner; client roles are read-only.
+RESET ROLE;
+INSERT INTO rebuild_v2.play_opt_in_events(assignment_id,tester_id,event_type,occurred_at,evidence_url,notes,recorded_by)
+VALUES(
+ current_setting('testdz.assignment_id')::uuid,
+ '80000000-0000-4000-8000-000000000003',
+ 'opted_in',now(),'https://example.invalid/synthetic-opt-in-proof',
+ 'Synthetic private Play opt-in event','80000000-0000-4000-8000-000000000003'
+) RETURNING id;
+SELECT set_config('testdz.play_opt_in_event_id',id::text,true)
+FROM rebuild_v2.play_opt_in_events
+WHERE assignment_id=current_setting('testdz.assignment_id')::uuid
+  AND tester_id='80000000-0000-4000-8000-000000000003'
+  AND notes='Synthetic private Play opt-in event';
+SET LOCAL ROLE authenticated;
+
+-- Build a synthetic report-evidence record as the trusted migration-test owner.
+-- Support must retain access to this evidence while losing submission evidence.
+RESET ROLE;
+INSERT INTO rebuild_v2.reports
+ (id,reporter_id,reported_user_id,assignment_id,report_type,description,status)
+VALUES (
+ '80000000-0000-4000-8000-000000000101',
+ '80000000-0000-4000-8000-000000000003',
+ '80000000-0000-4000-8000-000000000001',
+ current_setting('testdz.assignment_id')::uuid,
+ 'other',
+ 'Synthetic report used to preserve Support access to report evidence.',
+ 'open'
+);
+INSERT INTO rebuild_v2.report_attachments
+ (report_id,assignment_id,test_id,tester_id,file_id,file_extension,original_filename,storage_path)
+VALUES (
+ '80000000-0000-4000-8000-000000000101',
+ current_setting('testdz.assignment_id')::uuid,
+ current_setting('testdz.test_id')::uuid,
+ '80000000-0000-4000-8000-000000000003',
+ '80000000-0000-4000-8000-000000000102',
+ 'pdf',
+ 'support-report-proof.pdf',
+ 'v2/'||current_setting('testdz.test_id')||'/80000000-0000-4000-8000-000000000003/80000000-0000-4000-8000-000000000101/80000000-0000-4000-8000-000000000102.pdf'
+);
+SELECT set_config(
+ 'testdz.report_storage_path',
+ 'v2/'||current_setting('testdz.test_id')||'/80000000-0000-4000-8000-000000000003/80000000-0000-4000-8000-000000000101/80000000-0000-4000-8000-000000000102.pdf',
+ true
+);
+INSERT INTO storage.objects(bucket_id,name,owner,owner_id,metadata)
+VALUES
+ (
+  'test-evidence',
+  current_setting('testdz.submission_storage_path'),
+  '80000000-0000-4000-8000-000000000003',
+  '80000000-0000-4000-8000-000000000003',
+  jsonb_build_object('mimetype','image/png','size',1024)
+ ),
+ (
+  'test-evidence',
+  current_setting('testdz.report_storage_path'),
+  '80000000-0000-4000-8000-000000000003',
+  '80000000-0000-4000-8000-000000000003',
+  jsonb_build_object('mimetype','application/pdf','size',1024)
+ );
+SET LOCAL ROLE authenticated;
 
 -- The tester retains access to their own feedback and assignment.
 DO $tester_access$
@@ -103,6 +174,9 @@ BEGIN
  END IF;
  IF (SELECT count(*) FROM rebuild_v2.assignments WHERE id=current_setting('testdz.assignment_id')::uuid)<>1 THEN
   RAISE EXCEPTION 'FAIL: tester cannot read own assignment';
+ END IF;
+ IF (SELECT count(*) FROM rebuild_v2.play_opt_in_events WHERE id=current_setting('testdz.play_opt_in_event_id')::uuid)<>1 THEN
+  RAISE EXCEPTION 'FAIL: tester cannot read own Play opt-in event';
  END IF;
 END;
 $tester_access$;
@@ -119,6 +193,24 @@ BEGIN
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read private tester check-in notes'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester feedback'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.play_opt_in_events WHERE id=current_setting('testdz.play_opt_in_event_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester Play opt-in activity'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester submission'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester submission attachment metadata'; END IF;
+ IF rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Support can read raw tester submission evidence from Storage';
+ END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.report_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Support lost access to permitted report evidence';
+ END IF;
+ SELECT count(*) INTO v_count FROM storage.objects
+ WHERE bucket_id='test-evidence' AND name=current_setting('testdz.submission_storage_path');
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can download raw submission evidence from Storage'; END IF;
+ SELECT count(*) INTO v_count FROM storage.objects
+ WHERE bucket_id='test-evidence' AND name=current_setting('testdz.report_storage_path');
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Support cannot download permitted report evidence from Storage'; END IF;
 END;
 $support_tester_data_boundary$;
 
@@ -134,6 +226,22 @@ BEGIN
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost check-in oversight access'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost feedback oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.play_opt_in_events WHERE id=current_setting('testdz.play_opt_in_event_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost Play opt-in oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost submission oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost submission attachment oversight access'; END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Admin lost submission evidence access';
+ END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.report_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Admin lost report evidence access';
+ END IF;
+ SELECT count(*) INTO v_count FROM storage.objects
+ WHERE bucket_id='test-evidence'
+   AND name IN (current_setting('testdz.submission_storage_path'),current_setting('testdz.report_storage_path'));
+ IF v_count<>2 THEN RAISE EXCEPTION 'FAIL: Admin lost Storage evidence oversight access'; END IF;
 END;
 $admin_tester_data_access$;
 
@@ -149,6 +257,13 @@ BEGIN
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: developer can read tester check-ins'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: developer can read raw feedback row'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: owning developer cannot read submission'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: owning developer cannot read submission attachment metadata'; END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: owning developer cannot read submission evidence';
+ END IF;
 
  SELECT count(*) INTO v_count FROM rebuild_v2.get_developer_feedback()
  WHERE feedback_id=current_setting('testdz.feedback_id')::uuid
@@ -236,6 +351,13 @@ DECLARE v_count integer;
 BEGIN
  SELECT count(*) INTO v_count FROM rebuild_v2.get_developer_feedback();
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: other developer can see foreign test feedback'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: other developer can read foreign submission'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: other developer can read foreign submission attachment metadata'; END IF;
+ IF rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: other developer can read foreign submission evidence';
+ END IF;
  BEGIN
   PERFORM rebuild_v2.update_developer_feedback_review(
    current_setting('testdz.feedback_id')::uuid,'resolved','normal','Not my test'
@@ -257,8 +379,15 @@ RESET ROLE;
 ROLLBACK;
 
 SELECT jsonb_build_object(
- 'auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id BETWEEN '80000000-0000-4000-8000-000000000001'::uuid AND '80000000-0000-4000-8000-000000000005'::uuid),
+ 'auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id BETWEEN '80000000-0000-4000-8000-000000000001'::uuid AND '80000000-0000-4000-8000-000000000006'::uuid),
  'feedback_after_rollback',(SELECT count(*) FROM rebuild_v2.feedback WHERE body LIKE 'The app navigation is confusing%'),
  'developer_reviews_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_reviews WHERE resolution_note='Not my test'),
- 'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%')
+ 'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%'),
+ 'reports_after_rollback',(SELECT count(*) FROM rebuild_v2.reports WHERE id='80000000-0000-4000-8000-000000000101'),
+ 'play_opt_in_events_after_rollback',(SELECT count(*) FROM rebuild_v2.play_opt_in_events WHERE notes='Synthetic private Play opt-in event'),
+ 'report_attachments_after_rollback',(SELECT count(*) FROM rebuild_v2.report_attachments WHERE report_id='80000000-0000-4000-8000-000000000101'),
+ 'storage_objects_after_rollback',(SELECT count(*) FROM storage.objects
+   WHERE bucket_id='test-evidence'
+     AND (name LIKE '%/80000000-0000-4000-8000-000000000099.png'
+       OR name LIKE '%/80000000-0000-4000-8000-000000000102.pdf'))
 ) AS rollback_cleanup_check;

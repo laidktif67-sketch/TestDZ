@@ -195,6 +195,37 @@ BEGIN
   END IF;
   PERFORM set_config('role','none',true);
 
+  -- The request owner can read their own private medical evidence through
+  -- both the authorization helper and Storage object RLS.
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+  IF NOT rebuild_v2_private.can_read_medical_exception_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: request owner cannot read their own medical evidence';
+  END IF;
+  PERFORM set_config('role','authenticated',true);
+  IF (SELECT count(*) FROM storage.objects
+      WHERE bucket_id='medical-exception-evidence' AND name=v_path)<>1 THEN
+    RAISE EXCEPTION 'FAIL: request owner cannot read their own medical evidence through Storage RLS';
+  END IF;
+  PERFORM set_config('role','none',true);
+
+  -- Another tester cannot read the request or its private evidence.
+  PERFORM set_config('request.jwt.claim.sub',v_partial_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_partial_tester,'role','authenticated')::text,true);
+  IF rebuild_v2_private.can_read_medical_exception_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: another tester can read someone else medical evidence';
+  END IF;
+  PERFORM set_config('role','authenticated',true);
+  IF EXISTS (
+    SELECT 1 FROM storage.objects
+    WHERE bucket_id='medical-exception-evidence' AND name=v_path
+  ) THEN
+    RAISE EXCEPTION 'FAIL: another tester can read someone else medical evidence through Storage RLS';
+  END IF;
+  PERFORM set_config('role','none',true);
+
   -- Support must not approve medical exceptions or read medical evidence.
   PERFORM set_config('request.jwt.claim.sub',v_support::text,true);
   PERFORM set_config('request.jwt.claims',
@@ -323,8 +354,8 @@ BEGIN
     RAISE EXCEPTION 'FAIL: valid late medical approval did not extend and safely reactivate the assignment';
   END IF;
 
-  -- Rejection still adds no extension and fails an active assignment when the
-  -- requested current required date remains unchecked.
+  -- Rejection of today's date must not fail the assignment before the
+  -- Algeria-local day ends; the tester can still record today's check-in.
   PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
@@ -342,8 +373,23 @@ BEGIN
     RAISE EXCEPTION 'FAIL: Admin could not reject a valid medical request';
   END IF;
   IF (SELECT medical_extension_days FROM rebuild_v2.assignments WHERE id=v_assignment)<>v_extension_before+3
-     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'failed' THEN
-    RAISE EXCEPTION 'FAIL: rejected request changed extension days or failed to interrupt the assignment';
+     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'active' THEN
+    RAISE EXCEPTION 'FAIL: rejecting a current-day request must not extend or interrupt the still-open assignment day';
+  END IF;
+
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+  v_checkin := rebuild_v2.submit_checkin(
+    v_assignment,'Current-day check-in after the medical request was rejected.'
+  );
+  IF v_checkin IS NULL
+     OR (SELECT status FROM rebuild_v2.assignments WHERE id=v_assignment)<>'active'
+     OR NOT EXISTS (
+       SELECT 1 FROM rebuild_v2.checkins
+       WHERE assignment_id=v_assignment AND checkin_date=v_today
+     ) THEN
+    RAISE EXCEPTION 'FAIL: tester could not check in on the current day after medical rejection';
   END IF;
 
   -- A late approval must not revive an assignment if another elapsed required
