@@ -95,6 +95,22 @@ BEGIN
 END;
 $create_workflow$;
 
+-- Insert a synthetic Play opt-in event as the migration-test owner; client roles are read-only.
+RESET ROLE;
+INSERT INTO rebuild_v2.play_opt_in_events(assignment_id,tester_id,event_type,occurred_at,evidence_url,notes,recorded_by)
+VALUES(
+ current_setting('testdz.assignment_id')::uuid,
+ '80000000-0000-4000-8000-000000000003',
+ 'opted_in',now(),'https://example.invalid/synthetic-opt-in-proof',
+ 'Synthetic private Play opt-in event','80000000-0000-4000-8000-000000000003'
+) RETURNING id;
+SELECT set_config('testdz.play_opt_in_event_id',id::text,true)
+FROM rebuild_v2.play_opt_in_events
+WHERE assignment_id=current_setting('testdz.assignment_id')::uuid
+  AND tester_id='80000000-0000-4000-8000-000000000003'
+  AND notes='Synthetic private Play opt-in event';
+SET LOCAL ROLE authenticated;
+
 -- The tester retains access to their own feedback and assignment.
 DO $tester_access$
 BEGIN
@@ -104,10 +120,13 @@ BEGIN
  IF (SELECT count(*) FROM rebuild_v2.assignments WHERE id=current_setting('testdz.assignment_id')::uuid)<>1 THEN
   RAISE EXCEPTION 'FAIL: tester cannot read own assignment';
  END IF;
+ IF (SELECT count(*) FROM rebuild_v2.play_opt_in_events WHERE id=current_setting('testdz.play_opt_in_event_id')::uuid)<>1 THEN
+  RAISE EXCEPTION 'FAIL: tester cannot read own Play opt-in event';
+ END IF;
 END;
 $tester_access$;
 
--- Support handles support tickets, not raw tester assignments, check-in notes or feedback.
+-- Support handles support tickets, not raw tester assignments, check-in notes, feedback or Play opt-in history.
 SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000005',true);
 SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000005","role":"authenticated"}',true);
 DO $support_tester_data_boundary$
@@ -119,6 +138,8 @@ BEGIN
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read private tester check-in notes'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester feedback'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.play_opt_in_events WHERE id=current_setting('testdz.play_opt_in_event_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester Play opt-in activity'; END IF;
 END;
 $support_tester_data_boundary$;
 
@@ -134,6 +155,8 @@ BEGIN
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost check-in oversight access'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost feedback oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.play_opt_in_events WHERE id=current_setting('testdz.play_opt_in_event_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost Play opt-in oversight access'; END IF;
 END;
 $admin_tester_data_access$;
 
@@ -260,5 +283,6 @@ SELECT jsonb_build_object(
  'auth_users_after_rollback',(SELECT count(*) FROM auth.users WHERE id BETWEEN '80000000-0000-4000-8000-000000000001'::uuid AND '80000000-0000-4000-8000-000000000005'::uuid),
  'feedback_after_rollback',(SELECT count(*) FROM rebuild_v2.feedback WHERE body LIKE 'The app navigation is confusing%'),
  'developer_reviews_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_reviews WHERE resolution_note='Not my test'),
- 'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%')
+ 'developer_messages_after_rollback',(SELECT count(*) FROM rebuild_v2.developer_feedback_messages WHERE body LIKE 'We are reviewing%'),
+ 'play_opt_in_events_after_rollback',(SELECT count(*) FROM rebuild_v2.play_opt_in_events WHERE notes='Synthetic private Play opt-in event')
 ) AS rollback_cleanup_check;
