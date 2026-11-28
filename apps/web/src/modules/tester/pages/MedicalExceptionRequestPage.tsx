@@ -34,7 +34,7 @@ const extensionFor = (file: File) => {
 
 export default function MedicalExceptionRequestPage() {
   const { id = "" } = useParams();
-  const { session, roles = [], loading: identityLoading } = useIdentity();
+  const { session, roles = [], loading: identityLoading, rolesLoading } = useIdentity();
   const [assignmentStatus, setAssignmentStatus] = useState("");
   const [requests, setRequests] = useState<MedicalExceptionRequest[]>([]);
   const [dates, setDates] = useState<string[]>([todayValue()]);
@@ -53,16 +53,17 @@ export default function MedicalExceptionRequestPage() {
     setLoading(true);
     setError("");
     try {
-      const [assignment, requestResult] = await Promise.all([
-        getTesterMedicalExceptionAssignment(id, session.user.id),
-        listTesterMedicalExceptionRequests(id),
-      ]);
+      setRequests([]);
+      const assignment = await getTesterMedicalExceptionAssignment(id, session.user.id);
       if (assignment.error || !assignment.data) {
         setError("This assignment could not be found in your Tester workspace.");
         setAssignmentStatus("");
-      } else {
-        setAssignmentStatus(assignment.data.status);
+        return;
       }
+      setAssignmentStatus(assignment.data.status);
+
+      // Do not request private medical history until assignment ownership is confirmed.
+      const requestResult = await listTesterMedicalExceptionRequests(id);
       if (requestResult.error) {
         setError("Medical request history could not be loaded.");
         setRequests([]);
@@ -76,7 +77,9 @@ export default function MedicalExceptionRequestPage() {
     }
   }, [id, session?.user?.id]);
 
-  useEffect(() => { if (!identityLoading) void load(); }, [identityLoading, load]);
+  useEffect(() => {
+    if (!identityLoading && !rolesLoading && session && roles.includes("tester")) void load();
+  }, [identityLoading, rolesLoading, session, roles, load]);
 
   async function uploadEvidence(requestId: string, selectedFile: File) {
     if (!session?.user?.id) throw new Error("AUTH_REQUIRED");
@@ -162,7 +165,8 @@ export default function MedicalExceptionRequestPage() {
   }
 
   if (!identityLoading && !session) return <Navigate to="/auth" replace />;
-  if (!identityLoading && session && !roles.includes("tester")) return <Navigate to="/dashboard" replace />;
+  if (identityLoading || (session && rolesLoading)) return <main className="mer-shell"><section className="mer-card">Checking Tester permissions…</section></main>;
+  if (session && !roles.includes("tester")) return <Navigate to="/dashboard" replace />;
 
   if (!isTesterWorkflowV2Enabled) {
     return <main className="mer-shell"><section className="mer-card"><h1>Medical exceptions</h1><p>The V2 medical request workflow is not enabled in this environment. No legacy workflow was used.</p><Link to={"/assignments/" + id + "/progress"}>Back to assignment</Link></section></main>;
