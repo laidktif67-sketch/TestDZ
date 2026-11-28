@@ -185,7 +185,10 @@ $tester_access$;
 SELECT set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000005',true);
 SELECT set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000005","role":"authenticated"}',true);
 DO $support_tester_data_boundary$
-DECLARE v_count integer;
+DECLARE
+ v_count integer;
+ v_policy record;
+ v_report_policy_count integer;
 BEGIN
  SELECT count(*) INTO v_count FROM rebuild_v2.assignments WHERE id=current_setting('testdz.assignment_id')::uuid;
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read a raw tester assignment'; END IF;
@@ -214,11 +217,7 @@ BEGIN
 
  -- Emit the complete storage.objects policy catalog so any legacy policy is visible
  -- in the local replay. PostgreSQL combines PERMISSIVE policies with OR semantics.
- DECLARE
-   v_policy record;
-   v_report_policy_count integer;
- BEGIN
-   FOR v_policy IN
+ FOR v_policy IN
      SELECT policyname, cmd, roles, qual, with_check, permissive
      FROM pg_catalog.pg_policies
      WHERE schemaname='storage' AND tablename='objects'
@@ -259,8 +258,7 @@ BEGIN
        RAISE EXCEPTION 'FAIL: unexpected PERMISSIVE Storage read policy % also references test-evidence; USING=%',
          v_policy.policyname, v_policy.qual;
      END IF;
-   END LOOP;
- END;
+ END LOOP;
 END;
 $support_tester_data_boundary$;
 
