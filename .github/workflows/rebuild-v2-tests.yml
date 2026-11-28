@@ -345,6 +345,99 @@ jobs:
           assert_signed_url_denied "anonymous" ""
           echo "::endgroup::"
 
+          echo "::group::Medical exception evidence Storage HTTP authorization contract"
+          medical_request_id="$(psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT id FROM rebuild_v2.medical_exception_requests WHERE tester_id='80000000-0000-4000-8000-000000000007' ORDER BY created_at DESC LIMIT 1;")"
+          medical_assignment_id="$(psql "$DB_URL" -X -At -v ON_ERROR_STOP=1 -c "SELECT assignment_id FROM rebuild_v2.medical_exception_requests WHERE id='$medical_request_id';")"
+          medical_path="$medical_assignment_id/80000000-0000-4000-8000-000000000007/$medical_request_id/80000000-0000-4000-8000-000000000099.pdf"
+          test -n "$medical_request_id" && test -n "$medical_assignment_id" || { echo "Medical HTTP fixture did not create a request and assignment"; exit 1; }
+
+          medical_tester_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000007")"
+          medical_file="$RUNNER_TEMP/testdz-medical-evidence.pdf"
+          printf '%s' '%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj
+trailer<</Root 1 0 R>>
+%%EOF' > "$medical_file"
+
+          medical_upload_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-upload.json" --write-out "%{http_code}" \
+            --request POST --header "apikey: $ANON_KEY" --header "Authorization: Bearer $medical_tester_jwt" \
+            --header "Content-Type: application/pdf" --data-binary @"$medical_file" \
+            "$API_URL/storage/v1/object/medical-exception-evidence/$medical_path")"
+          if [[ "$medical_upload_status" != "200" && "$medical_upload_status" != "201" ]]; then
+            cat "$RUNNER_TEMP/medical-upload.json"
+            echo "Medical evidence upload failed: HTTP $medical_upload_status"; exit 1
+          fi
+
+          attach_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-attach.json" --write-out "%{http_code}" \
+            --request POST --header "apikey: $ANON_KEY" --header "Authorization: Bearer $medical_tester_jwt" \
+            --header "Content-Type: application/json" --header "Content-Profile: rebuild_v2" --header "Accept-Profile: rebuild_v2" \
+            --data "{\"p_request_id\":\"$medical_request_id\",\"p_storage_path\":\"$medical_path\"}" \
+            "$API_URL/rest/v1/rpc/attach_medical_exception_evidence")"
+          if [[ "$attach_status" != "200" ]]; then
+            cat "$RUNNER_TEMP/medical-attach.json"
+            echo "Medical evidence attachment registration failed: HTTP $attach_status"; exit 1
+          fi
+
+          assert_medical_read_allowed() {
+            local role="$1" jwt="$2"
+            local direct_status
+            direct_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-direct-$role.bin" --write-out "%{http_code}" \
+              --header "apikey: $ANON_KEY" --header "Authorization: Bearer $jwt" \
+              "$API_URL/storage/v1/object/authenticated/medical-exception-evidence/$medical_path")"
+            if [[ "$direct_status" != "200" ]]; then echo "FAIL: $role medical evidence direct read HTTP $direct_status"; exit 1; fi
+            cmp "$medical_file" "$RUNNER_TEMP/medical-direct-$role.bin"
+
+            local sign_status
+            sign_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-signed-$role.json" --write-out "%{http_code}" \
+              --request POST --header "apikey: $ANON_KEY" --header "Authorization: Bearer $jwt" \
+              --header "Content-Type: application/json" --data '{"expiresIn":60}' \
+              "$API_URL/storage/v1/object/sign/medical-exception-evidence/$medical_path")"
+            if [[ "$sign_status" != "200" ]]; then cat "$RUNNER_TEMP/medical-signed-$role.json"; echo "FAIL: $role could not sign medical evidence; HTTP $sign_status"; exit 1; fi
+            local signed_path signed_url download_status
+            signed_path="$(python3 - "$RUNNER_TEMP/medical-signed-$role.json" <<'PY'
+          import json,sys
+          with open(sys.argv[1], encoding="utf-8") as f: data=json.load(f)
+          value=data.get("signedURL") or data.get("signedUrl")
+          if not value: raise SystemExit("Storage response did not contain signedURL")
+          print(value)
+          PY
+            )"
+            case "$signed_path" in
+              http://*|https://*) signed_url="$signed_path" ;;
+              /storage/v1/*) signed_url="$API_URL$signed_path" ;;
+              /*) signed_url="$API_URL/storage/v1$signed_path" ;;
+              *) signed_url="$API_URL/storage/v1/$signed_path" ;;
+            esac
+            download_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-signed-$role-download.bin" --write-out "%{http_code}" "$signed_url")"
+            if [[ "$download_status" != "200" ]]; then echo "FAIL: $role signed medical URL download HTTP $download_status"; exit 1; fi
+            cmp "$medical_file" "$RUNNER_TEMP/medical-signed-$role-download.bin"
+            echo "PASS: $role directly read and signed/downloaded the exact medical evidence object."
+          }
+
+          assert_medical_read_denied() {
+            local role="$1" jwt="$2" auth_args=()
+            if [[ -n "$jwt" ]]; then auth_args+=(--header "Authorization: Bearer $jwt"); fi
+            local direct_status
+            direct_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-denied-$role.bin" --write-out "%{http_code}" \
+              --header "apikey: $ANON_KEY" "${auth_args[@]}" \
+              "$API_URL/storage/v1/object/authenticated/medical-exception-evidence/$medical_path")"
+            case "$direct_status" in 400|401|403|404) ;; *) echo "FAIL: medical direct read unexpectedly allowed for $role (HTTP $direct_status)"; exit 1;; esac
+            local sign_status
+            sign_status="$(curl --silent --show-error --output "$RUNNER_TEMP/medical-sign-denied-$role.json" --write-out "%{http_code}" \
+              --request POST --header "apikey: $ANON_KEY" "${auth_args[@]}" --header "Content-Type: application/json" \
+              --data '{"expiresIn":60}' "$API_URL/storage/v1/object/sign/medical-exception-evidence/$medical_path")"
+            case "$sign_status" in 400|401|403|404) echo "PASS: medical evidence direct read and signed URL creation denied for $role." ;; *) cat "$RUNNER_TEMP/medical-sign-denied-$role.json"; echo "FAIL: medical signed URL unexpectedly created for $role (HTTP $sign_status)"; exit 1;; esac
+          }
+
+          medical_admin_jwt="$(make_test_jwt "80000000-0000-4000-8000-000000000002")"
+          assert_medical_read_allowed "owner-tester" "$medical_tester_jwt"
+          assert_medical_read_allowed "admin" "$medical_admin_jwt"
+          assert_medical_read_denied "support" "$support_jwt"
+          assert_medical_read_denied "owning-developer" "$developer_jwt"
+          assert_medical_read_denied "other-tester" "$other_tester_jwt"
+          assert_medical_read_denied "anonymous" ""
+          echo "::endgroup::"
+
           echo "::endgroup::"
 
       - name: Stop disposable local Supabase stack
