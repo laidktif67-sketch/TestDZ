@@ -95,8 +95,15 @@ BEGIN
   3::smallint
  );
 
- -- Reuse the existing tester assignment. Its check-in is for today,
- -- so the earlier target date is valid and no second cohort is needed.
+ -- Reuse the existing tester assignment, but move its synthetic start
+ -- date back far enough that the requested past date belongs to its schedule.
+ -- This is a disposable local fixture; reset the role for the fixture-only update.
+ RESET ROLE;
+ UPDATE rebuild_v2.assignments
+ SET started_at=((now() AT TIME ZONE 'Africa/Algiers')::date - 10)::timestamp
+     AT TIME ZONE 'Africa/Algiers'
+ WHERE id=v_assignment;
+ SET LOCAL ROLE authenticated;
  PERFORM set_config('request.jwt.claim.sub','80000000-0000-4000-8000-000000000003',true);
  PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
  v_request:=rebuild_v2.create_medical_exception_request(
