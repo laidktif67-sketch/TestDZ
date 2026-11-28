@@ -54,12 +54,12 @@ Before enabling it in any hosted environment, deploy the Edge Function only afte
 
 This folder is deliberately separate from `supabase/migrations`. Do not move it into the active migration path or apply it to Production until the remaining compatibility, history, backup, and rollback gates pass.
 
-Apply all 35 selected scripts in numeric order: `001_schema.sql` through `035_sync_six_step_config_on_test_edit.sql`. This is still a candidate-only sequence, separate from `supabase/migrations`.
+Apply all 47 current candidate scripts in numeric order: `001_schema.sql` through `047_preserve_optional_assignment_deadlines.sql`. This is still a candidate-only sequence, separate from `supabase/migrations`.
 
 Run the phase-one security contract immediately after scripts 001–006:
 - `tests/security_contract.sql` — intentionally checks the 43-table / five-bucket foundation at that checkpoint. It must not be run as a final-state assertion.
 
-After all 35 selected scripts, run:
+After all 47 current candidate scripts, run:
 - `tests/final_state_contract.sql` — checks the final 48-table / seven-bucket candidate, including the forced-RLS invitation table and the Financial role.
 - `tests/003_app_lifecycle_contract.sql`
 - `tests/004_profile_contract.sql`
@@ -86,7 +86,7 @@ After all 35 selected scripts, run:
 
 The tester workflow contract runs after script 018 because it exercises the scheduled-start behavior introduced by 017 and the final evidence metadata verification introduced by 018. The notification recipient-role contract runs after script 019. The tester workflow contract also asserts that test enrollment and final submission enqueue developer events, tester feedback notifies the owning developer, and developer review/replies notify the tester; scripts 020 and 021 supply the private enqueue helper and lifecycle producers. All contract tests use rolled-back transactions; the final-state contract is read-only.
 
-The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 35 selected candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the 23 post-phase contracts, including the final-state contract. It never connects to a hosted project.
+The dedicated [Rebuild V2 CI workflow](../../.github/workflows/rebuild-v2-tests.yml) starts a disposable local Supabase stack, applies the 47 current candidate scripts in order, runs the phase-one contract at the 001–006 checkpoint, and then runs the 23 post-phase contracts, including the final-state contract. It never connects to a hosted project.
 
 ## Validation completed (2026-11-16)
 
