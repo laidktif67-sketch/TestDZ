@@ -107,7 +107,7 @@ test("non-tester role cannot open the medical exception workspace", async ({ pag
   await installIdentity(page, "developer");
   await page.goto(`/assignments/${ASSIGNMENT_ID}/medical-exception`);
 
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/developer-dashboard$/);
   await expect(page.getByRole("heading", { name: "Medical exception request" })).toHaveCount(0);
   expect(medicalRequests).toHaveLength(0);
 });
