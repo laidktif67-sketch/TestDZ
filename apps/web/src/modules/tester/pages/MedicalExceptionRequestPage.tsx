@@ -53,16 +53,17 @@ export default function MedicalExceptionRequestPage() {
     setLoading(true);
     setError("");
     try {
-      const [assignment, requestResult] = await Promise.all([
-        getTesterMedicalExceptionAssignment(id, session.user.id),
-        listTesterMedicalExceptionRequests(id),
-      ]);
+      setRequests([]);
+      const assignment = await getTesterMedicalExceptionAssignment(id, session.user.id);
       if (assignment.error || !assignment.data) {
         setError("This assignment could not be found in your Tester workspace.");
         setAssignmentStatus("");
-      } else {
-        setAssignmentStatus(assignment.data.status);
+        return;
       }
+      setAssignmentStatus(assignment.data.status);
+
+      // Do not request private medical history until assignment ownership is confirmed.
+      const requestResult = await listTesterMedicalExceptionRequests(id);
       if (requestResult.error) {
         setError("Medical request history could not be loaded.");
         setRequests([]);
