@@ -1,0 +1,10 @@
+# Dependencies and generated output
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+coverage/
+**/coverage/
+.playwright/
+playwright-report/
+test-results/
