@@ -42,6 +42,8 @@ DECLARE
  v_test uuid;
  v_cohort uuid;
  v_assignment uuid;
+ v_submission uuid;
+ v_storage_path text;
  v_feedback uuid;
 BEGIN
  v_app:=rebuild_v2.create_app(
@@ -84,12 +86,16 @@ BEGIN
  PERFORM set_config('request.jwt.claims','{"sub":"80000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
  PERFORM rebuild_v2.start_assignment(v_assignment);
  PERFORM rebuild_v2.submit_checkin(v_assignment,'Synthetic private check-in note for Support boundary verification.');
+ v_submission:=rebuild_v2.create_assignment_submission(v_assignment,'Synthetic submission summary used to verify tester evidence privacy boundaries.','Synthetic comments.');
+ v_storage_path:=rebuild_v2.register_assignment_submission_attachment(v_submission,'80000000-0000-4000-8000-000000000099'::uuid,'png','privacy-evidence.png','image/png',1024);
  v_feedback:=rebuild_v2.submit_tester_feedback(
   v_assignment,'usability',
   'The app navigation is confusing and the settings control is difficult to locate during the test.',
   3::smallint
  );
  PERFORM set_config('testdz.feedback_id',v_feedback::text,true);
+ PERFORM set_config('testdz.submission_id',v_submission::text,true);
+ PERFORM set_config('testdz.submission_storage_path',v_storage_path,true);
  PERFORM set_config('testdz.assignment_id',v_assignment::text,true);
  PERFORM set_config('testdz.test_id',v_test::text,true);
 END;
@@ -119,6 +125,13 @@ BEGIN
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read private tester check-in notes'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester feedback'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester submission'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: Support can read raw tester submission attachment metadata'; END IF;
+ IF rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Support can read raw tester submission evidence from Storage';
+ END IF;
 END;
 $support_tester_data_boundary$;
 
@@ -134,6 +147,13 @@ BEGIN
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost check-in oversight access'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost feedback oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost submission oversight access'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Admin lost submission attachment oversight access'; END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: Admin lost submission evidence access';
+ END IF;
 END;
 $admin_tester_data_access$;
 
@@ -149,6 +169,13 @@ BEGIN
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: developer can read tester check-ins'; END IF;
  SELECT count(*) INTO v_count FROM rebuild_v2.feedback WHERE id=current_setting('testdz.feedback_id')::uuid;
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: developer can read raw feedback row'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: owning developer cannot read submission'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: owning developer cannot read submission attachment metadata'; END IF;
+ IF NOT rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: owning developer cannot read submission evidence';
+ END IF;
 
  SELECT count(*) INTO v_count FROM rebuild_v2.get_developer_feedback()
  WHERE feedback_id=current_setting('testdz.feedback_id')::uuid
@@ -236,6 +263,13 @@ DECLARE v_count integer;
 BEGIN
  SELECT count(*) INTO v_count FROM rebuild_v2.get_developer_feedback();
  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: other developer can see foreign test feedback'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submissions WHERE id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: other developer can read foreign submission'; END IF;
+ SELECT count(*) INTO v_count FROM rebuild_v2.assignment_submission_attachments WHERE submission_id=current_setting('testdz.submission_id')::uuid;
+ IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: other developer can read foreign submission attachment metadata'; END IF;
+ IF rebuild_v2_private.can_read_test_evidence(current_setting('testdz.submission_storage_path')) THEN
+  RAISE EXCEPTION 'FAIL: other developer can read foreign submission evidence';
+ END IF;
  BEGIN
   PERFORM rebuild_v2.update_developer_feedback_review(
    current_setting('testdz.feedback_id')::uuid,'resolved','normal','Not my test'
