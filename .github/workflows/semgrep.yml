@@ -1,0 +1,52 @@
+name: Semgrep Community Security Scan
+
+on:
+  push:
+    branches:
+      - security/semgrep-ci-v1
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "supabase/**"
+      - "scripts/**"
+      - ".github/workflows/semgrep.yml"
+      - ".semgrepignore"
+  pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "supabase/**"
+      - "scripts/**"
+      - ".github/workflows/semgrep.yml"
+      - ".semgrepignore"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: semgrep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: Semgrep Community Edition
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      - name: Scan with community security rules
+        run: >-
+          semgrep scan
+          --config p/default
+          --config p/owasp-top-ten
+          --metrics=off
+          --error
+          --severity ERROR
+          .
