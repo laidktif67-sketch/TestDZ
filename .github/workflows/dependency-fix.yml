@@ -1,0 +1,55 @@
+name: Dependency Fix (isolated)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dependency-fix-v1
+  cancel-in-progress: false
+
+jobs:
+  fix-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout isolated fix branch
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: security/dependency-fix-v1
+
+      - name: Show toolchain
+        run: |
+          node --version
+          npm --version
+
+      - name: Apply compatible security fixes to lockfile only
+        run: npm audit fix --package-lock-only
+
+      - name: Install exact locked dependencies
+        run: npm ci
+
+      - name: Require clean dependency audit
+        run: npm audit --audit-level=moderate
+
+      - name: Run project checks
+        run: |
+          npm run typecheck
+          npm run check:data-boundary
+          npm run build
+
+      - name: Commit lockfile-only update
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "No package-lock changes were needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "fix(deps): apply compatible npm security updates"
+          git push origin HEAD:security/dependency-fix-v1
