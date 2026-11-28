@@ -195,6 +195,37 @@ BEGIN
   END IF;
   PERFORM set_config('role','none',true);
 
+  -- The request owner can read their own private medical evidence through
+  -- both the authorization helper and Storage object RLS.
+  PERFORM set_config('request.jwt.claim.sub',v_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_tester,'role','authenticated')::text,true);
+  IF NOT rebuild_v2_private.can_read_medical_exception_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: request owner cannot read their own medical evidence';
+  END IF;
+  PERFORM set_config('role','authenticated',true);
+  IF (SELECT count(*) FROM storage.objects
+      WHERE bucket_id='medical-exception-evidence' AND name=v_path)<>1 THEN
+    RAISE EXCEPTION 'FAIL: request owner cannot read their own medical evidence through Storage RLS';
+  END IF;
+  PERFORM set_config('role','none',true);
+
+  -- Another tester cannot read the request or its private evidence.
+  PERFORM set_config('request.jwt.claim.sub',v_partial_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_partial_tester,'role','authenticated')::text,true);
+  IF rebuild_v2_private.can_read_medical_exception_evidence(v_path) THEN
+    RAISE EXCEPTION 'FAIL: another tester can read someone else medical evidence';
+  END IF;
+  PERFORM set_config('role','authenticated',true);
+  IF EXISTS (
+    SELECT 1 FROM storage.objects
+    WHERE bucket_id='medical-exception-evidence' AND name=v_path
+  ) THEN
+    RAISE EXCEPTION 'FAIL: another tester can read someone else medical evidence through Storage RLS';
+  END IF;
+  PERFORM set_config('role','none',true);
+
   -- Support must not approve medical exceptions or read medical evidence.
   PERFORM set_config('request.jwt.claim.sub',v_support::text,true);
   PERFORM set_config('request.jwt.claims',
