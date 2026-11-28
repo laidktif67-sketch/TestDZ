@@ -515,3 +515,10 @@ A lifecycle audit found two edge cases worth closing before merge:
 - Migration 037 created the private evidence bucket with `ON CONFLICT DO NOTHING`, which did not correct an existing bucket with unsafe settings. Migration 046 now upserts the reserved bucket to `public=false`, a 5 MiB maximum, and the JPEG/PNG/WebP/PDF allowlist.
 
 The medical contract simulates an existing bucket with public access, a 10 MiB limit and an unsafe MIME allowlist, then verifies the migration's conflict handler restores the private 5 MiB allowlist. It also rejects a day-15 request after the first 14 required dates have been completed and checks that medical request rows are visible to the owner and Admin but not Support or another tester. This patch is candidate-only and still requires the full 46-migration CI replay on the exact resulting commit.
+
+### Optional assignment deadline preservation — 2026-11-28
+
+The assignment schema permits `cohorts.ends_at` and therefore `assignments.due_at` to be NULL. Cohort enrollment copies `cohorts.ends_at` into `assignments.due_at`; it does not synthesize a deadline when the cohort has none. The previous medical approval implementation used `COALESCE(due_at, started_at)`, which incorrectly invented a due date at assignment start plus the approved-day count.
+
+Migration `047_preserve_optional_assignment_deadlines.sql` corrects this: a non-NULL `due_at` is extended by exactly the approved date count; a NULL `due_at` remains NULL. The 14-required-day sequence still extends because approved dates are excluded from required-day counting. The medical contract now exercises late approval with a NULL due date, including both a partial approval that leaves the assignment failed and the final approval that safely reactivates it.
+
