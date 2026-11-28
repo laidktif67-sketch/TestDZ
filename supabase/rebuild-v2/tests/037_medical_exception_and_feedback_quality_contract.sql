@@ -171,6 +171,14 @@ BEGIN
     RAISE EXCEPTION 'FAIL: tester could not create a valid medical exception request';
   END IF;
 
+  PERFORM set_config('role','authenticated',true);
+  IF NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.medical_exception_requests WHERE id=v_request
+  ) THEN
+    RAISE EXCEPTION 'FAIL: request owner cannot read their own medical request';
+  END IF;
+  PERFORM set_config('role','none',true);
+
   -- Evidence upload is isolated, private, and bound to this tester/request.
   v_path := v_assignment::text||'/'||v_tester::text||'/'||v_request::text||'/'||v_file::text||'.pdf';
   IF NOT rebuild_v2_private.can_upload_medical_exception_evidence(v_path) THEN
@@ -191,6 +199,28 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub',v_support::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_support,'role','authenticated')::text,true);
+  PERFORM set_config('role','authenticated',true);
+  IF EXISTS (
+    SELECT 1 FROM rebuild_v2.medical_exception_requests WHERE id=v_request
+  ) THEN
+    RAISE EXCEPTION 'FAIL: Support can read a tester medical request row';
+  END IF;
+  PERFORM set_config('role','none',true);
+
+  PERFORM set_config('request.jwt.claim.sub',v_partial_tester::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_partial_tester,'role','authenticated')::text,true);
+  PERFORM set_config('role','authenticated',true);
+  IF EXISTS (
+    SELECT 1 FROM rebuild_v2.medical_exception_requests WHERE id=v_request
+  ) THEN
+    RAISE EXCEPTION 'FAIL: another tester can read a medical request they do not own';
+  END IF;
+  PERFORM set_config('role','none',true);
+
+  PERFORM set_config('request.jwt.claim.sub',v_support::text,true);
+  PERFORM set_config('request.jwt.claims',
+    jsonb_build_object('sub',v_support,'role','authenticated')::text,true);
   IF rebuild_v2_private.can_read_medical_exception_evidence(v_path) THEN
     RAISE EXCEPTION 'FAIL: Support can read sensitive medical evidence';
   END IF;
@@ -204,6 +234,13 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub',v_admin::text,true);
   PERFORM set_config('request.jwt.claims',
     jsonb_build_object('sub',v_admin,'role','authenticated')::text,true);
+  PERFORM set_config('role','authenticated',true);
+  IF NOT EXISTS (
+    SELECT 1 FROM rebuild_v2.medical_exception_requests WHERE id=v_request
+  ) THEN
+    RAISE EXCEPTION 'FAIL: Admin cannot read the medical request review queue';
+  END IF;
+  PERFORM set_config('role','none',true);
   IF NOT rebuild_v2_private.can_read_medical_exception_evidence(v_path) THEN
     RAISE EXCEPTION 'FAIL: Admin cannot read attached medical evidence';
   END IF;
