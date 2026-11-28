@@ -11,9 +11,5 @@
     "build": "npm run build --workspace testdz-frontend",
     "typecheck": "npm run typecheck --workspace testdz-frontend",
     "check:data-boundary": "node scripts/check-tester-page-data-boundary.mjs"
-  },
-  "overrides": {
-    "glob": "14.0.2",
-    "minimatch": "11.0.1"
   }
 }
