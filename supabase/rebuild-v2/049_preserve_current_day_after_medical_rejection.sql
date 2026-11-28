@@ -107,9 +107,11 @@ BEGIN
   v_old_due_at := v_assignment.due_at;
   v_old_extension_days := v_assignment.medical_extension_days;
   v_old_assignment_status := v_assignment.status;
-  v_new_due_at := CASE WHEN v_days>0
-    THEN COALESCE(v_assignment.due_at,v_assignment.started_at)+make_interval(days=>v_days)
-    ELSE v_assignment.due_at END;
+  v_new_due_at := CASE
+    WHEN v_days>0 AND v_assignment.due_at IS NOT NULL
+      THEN v_assignment.due_at+make_interval(days=>v_days)
+    ELSE v_assignment.due_at
+  END;
   v_new_extension_days := v_old_extension_days+v_days;
 
   UPDATE rebuild_v2.medical_exception_requests
