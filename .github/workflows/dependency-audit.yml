@@ -1,0 +1,54 @@
+name: Dependency Audit (read-only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - security/dependency-audit-v1
+    paths:
+      - "package-lock.json"
+      - "package.json"
+      - ".github/workflows/dependency-audit.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Run read-only npm audit
+        shell: bash
+        run: |
+          set +e
+          npm audit --json > npm-audit.json
+          audit_exit=$?
+          set -e
+          node <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          const counts = report.metadata?.vulnerabilities || {};
+          console.log('Vulnerability totals:', JSON.stringify(counts));
+          for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
+            console.log(JSON.stringify({
+              package: name,
+              severity: item.severity,
+              isDirect: item.isDirect,
+              range: item.range,
+              via: item.via,
+              fixAvailable: item.fixAvailable
+            }));
+          }
+          if (report.error) console.log('Audit error:', JSON.stringify(report.error));
+          NODE
+          echo "npm audit exit code: ${audit_exit}"
