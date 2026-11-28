@@ -118,7 +118,7 @@ test("support ticket detail excludes internal notes and their private attachment
   await page.goto(`/support/queue/${TICKET_ID}`);
 
   await expect(page.getByRole("heading", { name: "Evidence access request" })).toBeVisible();
-  await expect(page.getByText("Public conversation message")).toBeVisible();
+  await expect(page.getByText("Public conversation message", { exact: true })).toBeVisible();
   await expect(page.getByText(/INTERNAL STAFF NOTE/)).toHaveCount(0);
   await expect(page.getByText(/INTERNAL-PRIVATE-MEDICAL-RECORD/)).toHaveCount(0);
   await expect(page.getByText("public-evidence.pdf")).toBeVisible();
