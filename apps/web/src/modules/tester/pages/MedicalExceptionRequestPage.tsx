@@ -15,8 +15,14 @@ import "../styles/tester-dashboard.css";
 import "../styles/medical-exception-request.css";
 
 const todayValue = () => {
-  const now = new Date();
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Algiers",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find(item => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
 };
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const extensionFor = (file: File) => {
