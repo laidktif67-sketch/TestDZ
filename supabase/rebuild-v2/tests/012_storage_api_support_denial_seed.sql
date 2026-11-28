@@ -11,7 +11,7 @@ VALUES
  ('80000000-0000-4000-8000-000000000003','authenticated','authenticated','v2-feedback-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Feedback Tester"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000004','authenticated','authenticated','v2-feedback-outsider@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Developer"}'::jsonb,now(),now()),
  ('80000000-0000-4000-8000-000000000005','authenticated','authenticated','v2-feedback-support@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Support Agent"}'::jsonb,now(),now()),
- ('80000000-0000-4000-8000-000000000006','authenticated','authenticated','v2-feedback-other-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Tester"}'::jsonb,now(),now()),
+ ('80000000-0000-4000-8000-000000000006','authenticated','authenticated','v2-feedback-other-tester@example.invalid','',now(),'{"provider":"email","providers":["email"]}'::jsonb,'{"name":"Other Tester"}'::jsonb,now(),now());
 
 -- The auth-user trigger grants the default tester role to every new account.
 -- Remove that default from synthetic staff/outsider fixtures before assigning their intended roles.
